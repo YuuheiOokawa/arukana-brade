@@ -1,0 +1,261 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { QUEST_WORLDS } from '../../data/quests';
+import { getActiveEvents } from '../../data/events';
+import { useQuestStore } from '../../stores/questStore';
+import { usePlayerStore } from '../../stores/playerStore';
+import { usePartyStore } from '../../stores/partyStore';
+import { TopBar } from '../../components/layout/TopBar';
+import { StaminaModal } from '../../components/ui/StaminaModal';
+import type { QuestArea, QuestStage } from '../../types';
+
+type MainTab = 'story' | 'event';
+
+export const QuestsPage = () => {
+  const navigate = useNavigate();
+  const { isCleared, setPendingStage } = useQuestStore();
+  const { player } = usePlayerStore();
+  const { getActiveParty } = usePartyStore();
+
+  const [mainTab, setMainTab] = useState<MainTab>('story');
+  const [selectedWorldId, setSelectedWorldId] = useState(QUEST_WORLDS[0].id);
+  const [selectedArea, setSelectedArea] = useState<QuestArea | null>(null);
+  const [staminaModal, setStaminaModal] = useState<{ stageId: string; cost: number } | null>(null);
+
+  const selectedWorld = QUEST_WORLDS.find(w => w.id === selectedWorldId)!;
+  const party = getActiveParty();
+  const hasParty = party.slots.some(Boolean);
+  const activeEvents = getActiveEvents();
+
+  const handleStageSelect = (stage: QuestStage) => {
+    if (!hasParty) { navigate('/party'); return; }
+    if (player.stamina < stage.staminaCost) {
+      setStaminaModal({ stageId: stage.id, cost: stage.staminaCost });
+      return;
+    }
+    setPendingStage(stage.id);
+    navigate('/friends');
+  };
+
+  const handleStaminaUsed = () => {
+    if (!staminaModal) return;
+    const { stageId, cost } = staminaModal;
+    if (player.stamina >= cost) {
+      setStaminaModal(null);
+      setPendingStage(stageId);
+      navigate('/friends');
+    }
+  };
+
+  // 残り時間計算
+  const formatTimeLeft = (endTs: number) => {
+    const diff = endTs - Date.now();
+    if (diff <= 0) return '終了';
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    return d > 0 ? `残り${d}日${h}時間` : `残り${h}時間`;
+  };
+
+  return (
+    <div className="min-h-screen pb-24">
+      <TopBar title="クエスト" />
+
+      {/* メインタブ */}
+      <div className="px-4 mb-4 flex gap-2">
+        <button onClick={() => setMainTab('story')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${mainTab === 'story' ? 'tab-active' : 'tab-inactive'}`}>
+          📖 ストーリー
+        </button>
+        <button onClick={() => setMainTab('event')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all relative ${mainTab === 'event' ? 'tab-active' : 'tab-inactive'}`}>
+          🎉 イベント
+          {activeEvents.length > 0 && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">
+              {activeEvents.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* ストーリー */}
+      {mainTab === 'story' && (
+        <>
+          {/* ワールドタブ */}
+          <div className="px-4 mb-4">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+              {QUEST_WORLDS.map(w => (
+                <button key={w.id} onClick={() => { setSelectedWorldId(w.id); setSelectedArea(null); }}
+                  className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                    selectedWorldId === w.id ? 'tab-active' : 'tab-inactive'
+                  }`}>
+                  {w.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {!selectedArea ? (
+            <div className="px-4 space-y-3">
+              <p className="text-gray-600 text-xs font-bold uppercase tracking-widest mb-3">エリア選択</p>
+              {selectedWorld.areas.map(area => {
+                const totalStages = area.stages.length;
+                const cleared = area.stages.filter(s => isCleared(s.id)).length;
+                const isComplete = cleared === totalStages;
+                return (
+                  <button key={area.id} onClick={() => setSelectedArea(area)}
+                    className="w-full card-base p-4 text-left unit-card-hover">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 ${
+                        isComplete ? 'bg-emerald-900/50 border border-emerald-700/40' : 'bg-purple-900/40 border border-purple-700/30'
+                      }`}>
+                        {area.emoji}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <p className="text-white font-bold text-sm">{area.name}</p>
+                          {isComplete && <span className="text-emerald-400 text-xs">✓</span>}
+                        </div>
+                        <p className="text-gray-500 text-xs mb-2">{area.description}</p>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full transition-all ${isComplete ? 'bg-emerald-500' : 'bg-purple-500'}`}
+                              style={{ width: `${(cleared / totalStages) * 100}%` }} />
+                          </div>
+                          <span className="text-xs text-gray-500 tabular-nums">{cleared}/{totalStages}</span>
+                        </div>
+                      </div>
+                      <span className="text-gray-600 text-lg flex-shrink-0">›</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <StageList
+              stages={selectedArea.stages}
+              title={`${selectedArea.emoji} ${selectedArea.name}`}
+              onBack={() => setSelectedArea(null)}
+              onSelect={handleStageSelect}
+              isCleared={isCleared}
+              playerStamina={player.stamina}
+            />
+          )}
+        </>
+      )}
+
+      {/* イベント */}
+      {mainTab === 'event' && (
+        <div className="px-4 space-y-4">
+          {activeEvents.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <p className="text-5xl mb-4">🎉</p>
+              <p className="text-white font-bold text-lg">開催中のイベントはありません</p>
+              <p className="text-gray-500 text-sm mt-1">次のイベントをお楽しみに！</p>
+            </div>
+          ) : (
+            activeEvents.map(event => (
+              <div key={event.id}>
+                {/* イベントバナー */}
+                <div className="rounded-2xl overflow-hidden border border-purple-800/30 mb-3 p-4"
+                  style={{ background: event.bannerColor }}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-4xl">{event.emoji}</span>
+                    <div>
+                      <p className="text-white font-black text-lg">{event.name}</p>
+                      <p className="text-gray-300 text-xs">{event.description}</p>
+                      <p className="text-yellow-400 text-xs font-bold mt-1">{formatTimeLeft(event.endTimestamp)}</p>
+                    </div>
+                  </div>
+                </div>
+                <StageList
+                  stages={event.stages}
+                  title=""
+                  onBack={() => {}}
+                  onSelect={handleStageSelect}
+                  isCleared={isCleared}
+                  playerStamina={player.stamina}
+                  showBack={false}
+                />
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* スタミナ不足モーダル */}
+      {staminaModal && (
+        <StaminaModal
+          requiredStamina={staminaModal.cost}
+          onClose={() => setStaminaModal(null)}
+          onUsed={handleStaminaUsed}
+        />
+      )}
+    </div>
+  );
+};
+
+// ステージリスト（共通コンポーネント）
+const StageList = ({
+  stages, title, onBack, onSelect, isCleared, playerStamina, showBack = true,
+}: {
+  stages: QuestStage[];
+  title: string;
+  onBack: () => void;
+  onSelect: (s: QuestStage) => void;
+  isCleared: (id: string) => boolean;
+  playerStamina: number;
+  showBack?: boolean;
+}) => (
+  <div className="px-4 space-y-3">
+    {showBack && (
+      <div className="flex items-center gap-3 mb-3">
+        <button onClick={onBack} className="w-8 h-8 rounded-full bg-gray-800/60 flex items-center justify-center text-gray-400 text-sm">
+          ‹
+        </button>
+        <p className="text-white font-bold">{title}</p>
+      </div>
+    )}
+    {stages.map((stage, idx) => {
+      const cleared = isCleared(stage.id);
+      const noStamina = playerStamina < stage.staminaCost;
+      return (
+        <button key={stage.id} onClick={() => onSelect(stage)}
+          className={`w-full card-base p-4 text-left transition-all unit-card-hover ${cleared ? 'border-emerald-700/30' : ''}`}>
+          <div className="flex items-start gap-3">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5 ${
+              cleared ? 'bg-emerald-700/40 text-emerald-400' : 'bg-gray-800 text-gray-500'
+            }`}>
+              {cleared ? '✓' : idx + 1}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-bold text-sm mb-1">{stage.name}</p>
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-500 mb-2">
+                <span className={noStamina ? 'text-red-400 font-bold' : ''}>⚡ {stage.staminaCost}</span>
+                <span>⚔️ {stage.recommendedPower.toLocaleString()}</span>
+                <span>🪙 {stage.rewardGold.toLocaleString()}</span>
+                <span>✨ {stage.rewardExp}</span>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {stage.waves.map((wave, i) => (
+                  <div key={i} className="flex gap-1">
+                    {wave.isBoss && <span className="text-red-400 text-xs font-bold">BOSS</span>}
+                    {wave.enemies.map((e, j) => (
+                      <span key={j} className="text-xs bg-gray-800/60 border border-gray-700/40 rounded px-1.5 py-0.5">
+                        {e.enemyId.includes('dragon') ? '🐉' : e.enemyId.includes('boss') || e.enemyId.includes('lich') ? '💀' : '👺'} {e.level}
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {noStamina && (
+              <div className="flex-shrink-0">
+                <span className="text-xs bg-red-900/50 text-red-400 rounded-lg px-2 py-1 border border-red-900/40">⚡ 不足</span>
+              </div>
+            )}
+          </div>
+        </button>
+      );
+    })}
+  </div>
+);

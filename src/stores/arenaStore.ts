@@ -1,0 +1,117 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import type { ArenaRecord, ArenaOpponent } from '../types';
+import { UNIT_MASTER } from '../data/units';
+
+const ARENA_OPPONENTS: ArenaOpponent[] = [
+  { id: 'ao_1', playerName: '紅蓮の剣士',   playerRank: 15, power: 25000, leaderUnitMasterId: 'unit_001', leaderUnitLevel: 40, leaderUnitAwakenRank: 2, arenaPoints: 1850 },
+  { id: 'ao_2', playerName: '水の巫女',     playerRank: 22, power: 38000, leaderUnitMasterId: 'unit_003', leaderUnitLevel: 55, leaderUnitAwakenRank: 3, arenaPoints: 2100 },
+  { id: 'ao_3', playerName: '闇の魔王',     playerRank: 30, power: 52000, leaderUnitMasterId: 'unit_006', leaderUnitLevel: 70, leaderUnitAwakenRank: 4, arenaPoints: 2400 },
+  { id: 'ao_4', playerName: '風の踊り子',   playerRank: 12, power: 18000, leaderUnitMasterId: 'unit_009', leaderUnitLevel: 30, leaderUnitAwakenRank: 1, arenaPoints: 1600 },
+  { id: 'ao_5', playerName: 'アルカナ卿',   playerRank: 45, power: 80000, leaderUnitMasterId: 'unit_002', leaderUnitLevel: 80, leaderUnitAwakenRank: 5, arenaPoints: 2900 },
+  { id: 'ao_6', playerName: '炎の大賢者',   playerRank: 18, power: 30000, leaderUnitMasterId: 'unit_007', leaderUnitLevel: 45, leaderUnitAwakenRank: 2, arenaPoints: 1950 },
+  { id: 'ao_7', playerName: '光の聖女',     playerRank: 8,  power: 12000, leaderUnitMasterId: 'unit_011', leaderUnitLevel: 20, leaderUnitAwakenRank: 0, arenaPoints: 1400 },
+  { id: 'ao_8', playerName: '鋼の守護者',   playerRank: 35, power: 65000, leaderUnitMasterId: 'unit_004', leaderUnitLevel: 75, leaderUnitAwakenRank: 4, arenaPoints: 2700 },
+];
+
+const INITIAL_RECORD: ArenaRecord = { wins: 0, losses: 0, rank: 999, points: 1000, season: 1 };
+
+export interface ArenaBattleResult {
+  won: boolean;
+  pointsGained: number;
+  goldReward: number;
+  diamondReward: number;
+}
+
+interface ArenaStore {
+  record: ArenaRecord;
+  opponents: ArenaOpponent[];
+  battleHistory: { timestamp: number; opponentName: string; won: boolean; points: number }[];
+  refreshOpponents: () => void;
+  recordWin: (opponentId: string) => ArenaBattleResult;
+  recordLoss: (opponentId: string) => ArenaBattleResult;
+  getMatchOpponents: () => ArenaOpponent[];
+}
+
+export const useArenaStore = create<ArenaStore>()(
+  persist(
+    (set, get) => ({
+      record: INITIAL_RECORD,
+      opponents: ARENA_OPPONENTS,
+      battleHistory: [],
+
+      refreshOpponents: () => {
+        // 現在のポイント付近の相手を返す (refreshは自動)
+      },
+
+      getMatchOpponents: () => {
+        const { points } = get().record;
+        const sorted = [...ARENA_OPPONENTS].sort((a, b) =>
+          Math.abs(a.arenaPoints - points) - Math.abs(b.arenaPoints - points)
+        );
+        return sorted.slice(0, 3);
+      },
+
+      recordWin: (opponentId) => {
+        const opponent = get().opponents.find(o => o.id === opponentId);
+        const pointsGained = opponent ? Math.floor(20 + (opponent.arenaPoints - get().record.points) * 0.1) : 20;
+        const safePtsGain = Math.max(10, Math.min(50, pointsGained));
+        const goldReward = 500 + safePtsGain * 10;
+        const diamondReward = safePtsGain > 30 ? 5 : 0;
+
+        set(s => {
+          const newPoints = s.record.points + safePtsGain;
+          const newRank = Math.max(1, s.record.rank - 1);
+          return {
+            record: { ...s.record, wins: s.record.wins + 1, points: newPoints, rank: newRank },
+            battleHistory: [
+              {
+                timestamp: Date.now(),
+                opponentName: opponent?.playerName ?? '???',
+                won: true,
+                points: safePtsGain,
+              },
+              ...s.battleHistory,
+            ].slice(0, 20),
+          };
+        });
+        return { won: true, pointsGained: safePtsGain, goldReward, diamondReward };
+      },
+
+      recordLoss: (opponentId) => {
+        const opponent = get().opponents.find(o => o.id === opponentId);
+        const pointsLost = 15;
+
+        set(s => {
+          const newPoints = Math.max(0, s.record.points - pointsLost);
+          const newRank = Math.min(9999, s.record.rank + 1);
+          return {
+            record: { ...s.record, losses: s.record.losses + 1, points: newPoints, rank: newRank },
+            battleHistory: [
+              {
+                timestamp: Date.now(),
+                opponentName: opponent?.playerName ?? '???',
+                won: false,
+                points: -pointsLost,
+              },
+              ...s.battleHistory,
+            ].slice(0, 20),
+          };
+        });
+        return { won: false, pointsGained: -pointsLost, goldReward: 100, diamondReward: 0 };
+      },
+    }),
+    {
+      name: 'arcana-arena',
+      // UnitMasterを参照するので初期化後にopponentsを補完
+      onRehydrateStorage: () => (state) => {
+        if (state && UNIT_MASTER.length > 0) {
+          // masterId の存在確認
+          state.opponents = ARENA_OPPONENTS.filter(o =>
+            UNIT_MASTER.some(m => m.id === o.leaderUnitMasterId)
+          );
+        }
+      },
+    }
+  )
+);
