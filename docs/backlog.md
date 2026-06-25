@@ -1,7 +1,7 @@
 # バックログ
 # アルカナブレイド
 
-最終更新: 2026-06-25
+最終更新: 2026-06-26
 
 ---
 
@@ -66,6 +66,14 @@ MVP完成度: 約98%
 | 種族マスタ (5種族) | data/races.ts | ✅ 完成 |
 | チュートリアル状態管理 | stores/tutorialStore.ts | ✅ 完成 |
 | MainGuard (チュートリアル完了ガード) | App.tsx | ✅ 完成 |
+| シナリオシステム (タイプライター式) | features/scenario/ScenarioScreen.tsx | ✅ 完成 |
+| シナリオデータ 第1章1-1〜1-5 | data/scenarios.ts | ✅ 完成 |
+| ガチャ演出強化 (★1〜★3/魔法陣/クリスタル/カードフリップ) | features/summon/SummonPage.tsx | ✅ 完成 |
+| SVGアイコンライブラリ (絵文字廃止) | components/ui/FantasyIcon.tsx | ✅ 完成 |
+| ファンタジーボタンコンポーネント | components/ui/FantasyButton.tsx | ✅ 完成 |
+| BottomNav SVGアイコン化 | components/layout/BottomNav.tsx | ✅ 完成 |
+| ホーム画面 魔法陣背景・SVGアイコン化 | features/home/HomePage.tsx | ✅ 完成 |
+| 召喚神殿CSS (神殿背景・カードフリップ・パーティクル) | index.css | ✅ 完成 |
 
 ---
 

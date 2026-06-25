@@ -21,6 +21,7 @@ import { PlayerNameInputScreen } from './features/tutorial/PlayerNameInputScreen
 import { HeroSelectScreen } from './features/tutorial/HeroSelectScreen';
 import { TutorialBattleScreen } from './features/tutorial/TutorialBattleScreen';
 import { TutorialCompleteScreen } from './features/tutorial/TutorialCompleteScreen';
+import { ScenarioScreen } from './features/scenario/ScenarioScreen';
 import { useTutorialStore } from './stores/tutorialStore';
 
 // チュートリアル完了済みでないと本編へアクセスできないガード
@@ -30,7 +31,7 @@ const MainGuard = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const HIDE_NAV_PATHS = ['/battle', '/friends', '/title', '/tutorial'];
+const HIDE_NAV_PATHS = ['/battle', '/friends', '/title', '/tutorial', '/scenario'];
 
 const AppContent = () => {
   const { pathname } = useLocation();
@@ -46,6 +47,7 @@ const AppContent = () => {
         <Route path="/tutorial/hero"     element={<HeroSelectScreen />} />
         <Route path="/tutorial/battle"   element={<TutorialBattleScreen />} />
         <Route path="/tutorial/complete" element={<TutorialCompleteScreen />} />
+        <Route path="/scenario/:stageId" element={<MainGuard><ScenarioScreen /></MainGuard>} />
 
         {/* 本編（チュートリアル完了後のみ） */}
         <Route path="/"         element={<MainGuard><HomePage /></MainGuard>} />
