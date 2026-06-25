@@ -39,8 +39,16 @@ export const HomePage = () => {
   const missionPending   = missionCompleted - missionClaimed;
 
   return (
-    <div className="min-h-screen pb-28 relative"
-      style={{ background: 'radial-gradient(ellipse at 50% 0%, #1a0a38 0%, #08081a 55%)' }}>
+    <div className="min-h-screen pb-28 relative overflow-hidden">
+      {/* 背景画像 */}
+      <img
+        src="/assets/images/backgrounds/home/bg_ui_home_night.webp"
+        alt=""
+        className="fixed inset-0 w-full h-full object-cover pointer-events-none"
+        style={{ opacity: 0.35 }}
+      />
+      {/* グラデーションオーバーレイ */}
+      <div className="fixed inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(26,10,56,0.82) 0%, rgba(8,8,26,0.88) 55%)' }} />
 
       {/* 背景装飾：魔法陣リング */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
