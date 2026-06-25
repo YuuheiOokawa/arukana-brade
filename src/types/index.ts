@@ -525,6 +525,7 @@ export type TutorialPhase =
   | 'name_input'
   | 'hero_select'
   | 'tutorial_battle'
+  | 'initial_gacha'
   | 'complete';
 
 export interface TutorialProgress {
