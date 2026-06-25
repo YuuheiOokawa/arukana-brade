@@ -22,6 +22,7 @@ import { HeroSelectScreen } from './features/tutorial/HeroSelectScreen';
 import { TutorialBattleScreen } from './features/tutorial/TutorialBattleScreen';
 import { TutorialCompleteScreen } from './features/tutorial/TutorialCompleteScreen';
 import { ScenarioScreen } from './features/scenario/ScenarioScreen';
+import { ProfilePage } from './features/profile/ProfilePage';
 import { useTutorialStore } from './stores/tutorialStore';
 
 // チュートリアル完了済みでないと本編へアクセスできないガード
@@ -65,6 +66,7 @@ const AppContent = () => {
         <Route path="/raid"     element={<MainGuard><RaidPage /></MainGuard>} />
         <Route path="/guild"    element={<MainGuard><GuildPage /></MainGuard>} />
         <Route path="/pvp"      element={<MainGuard><PvPPage /></MainGuard>} />
+        <Route path="/profile"  element={<MainGuard><ProfilePage /></MainGuard>} />
 
         {/* デフォルト: タイトルへ */}
         <Route path="*" element={<Navigate to="/title" replace />} />

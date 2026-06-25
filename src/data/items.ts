@@ -33,7 +33,8 @@ export const ITEM_MASTER: ItemMaster[] = [
   { id: 'item_light_gem',        name: '光の宝玉',           description: '光属性ユニットの覚醒に使用',       category: 'awaken_material', emoji: '🟡', sellPrice: 100 },
   { id: 'item_dark_gem',         name: '闇の宝玉',           description: '闇属性ユニットの覚醒に使用',       category: 'awaken_material', emoji: '🟣', sellPrice: 100 },
   { id: 'item_thunder_gem',      name: '雷の宝玉',           description: '雷属性ユニットの覚醒に使用',       category: 'awaken_material', emoji: '🟡', sellPrice: 100 },
-  { id: 'item_arcana_shard',     name: 'アルカナの欠片',     description: '上位覚醒に必要な希少素材',         category: 'awaken_material', emoji: '✨', sellPrice: 500 },
+  { id: 'item_arcana_shard',       name: 'アルカナの欠片',     description: '上位覚醒に必要な希少素材',         category: 'awaken_material', emoji: '✨', sellPrice: 500 },
+  { id: 'item_awakening_crystal',  name: '覚醒結晶',           description: 'ガチャ被りで覚醒上限に達した際に得られる結晶。将来的に覚醒素材として使用可能。', category: 'awaken_material', emoji: '💠', sellPrice: 300 },
   { id: 'item_arcana_orb',       name: 'アルカナオーブ',     description: '最高位覚醒に必要な至高素材',       category: 'awaken_material', emoji: '🌟', sellPrice: 2000 },
   { id: 'item_elemental_core',   name: '元素核',             description: 'あらゆる属性の覚醒に使用できる万能素材', category: 'awaken_material', emoji: '🎯', sellPrice: 1500 },
 

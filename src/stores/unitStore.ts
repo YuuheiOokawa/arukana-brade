@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { OwnedUnit, UnitStats } from '../types';
+import type { OwnedUnit, UnitStats, GachaApplyResult, StarRarity } from '../types';
 import { getUnitMaster, calcUnitStats } from '../data/units';
+import { RARITY_TYPE_TO_STAR, AWAKENING_CONFIG } from '../data/rarityConfig';
 
 interface UnitStore {
   ownedUnits: OwnedUnit[];
@@ -11,31 +12,62 @@ interface UnitStore {
   toggleLock: (instanceId: string) => void;
   getUnit: (instanceId: string) => OwnedUnit | undefined;
   calcStats: (unit: OwnedUnit) => UnitStats;
+  processSummonResults: (masterIds: string[]) => GachaApplyResult[];
 }
 
 let instanceCounter = Date.now();
 
+// 旧データの安全なマイグレーション
+function migrateUnit(raw: Partial<OwnedUnit> & { instanceId: string; masterId: string }): OwnedUnit {
+  const master = getUnitMaster(raw.masterId);
+  const awakeningCount = raw.awakeningCount ?? 0;
+  const awakenRank = raw.awakenRank ?? 0;
+  const level = raw.level ?? 1;
+  const currentRarity: StarRarity = raw.currentRarity ?? (master ? (RARITY_TYPE_TO_STAR[master.rarity] ?? 1) : 1);
+  const currentStats =
+    raw.currentStats && raw.currentStats.hp > 0
+      ? raw.currentStats
+      : master
+        ? calcUnitStats(master, level, awakenRank, awakeningCount)
+        : { hp: 1000, atk: 300, def: 200, rec: 150 };
+  return {
+    instanceId: raw.instanceId,
+    masterId: raw.masterId,
+    level,
+    exp: raw.exp ?? 0,
+    awakenRank,
+    awakeningCount,
+    currentRarity,
+    currentStats,
+    isLocked: raw.isLocked ?? false,
+    acquiredAt: raw.acquiredAt ?? Date.now(),
+  };
+}
+
 const createInitialUnits = (): OwnedUnit[] => {
   const now = Date.now();
   return [
-    createOwnedUnit('unit_001', 1, 0, now - 3000),
-    createOwnedUnit('unit_007', 1, 0, now - 2000),
-    createOwnedUnit('unit_009', 1, 0, now - 1000),
-    createOwnedUnit('unit_013', 1, 0, now),
-    createOwnedUnit('unit_015', 1, 0, now + 1),
+    makeUnit('unit_001', 1, 0, now - 3000),
+    makeUnit('unit_007', 1, 0, now - 2000),
+    makeUnit('unit_009', 1, 0, now - 1000),
+    makeUnit('unit_013', 1, 0, now),
+    makeUnit('unit_015', 1, 0, now + 1),
   ];
 };
 
-function createOwnedUnit(masterId: string, level: number, awakenRank: number, acquiredAt: number): OwnedUnit {
+function makeUnit(masterId: string, level: number, awakenRank: number, acquiredAt: number): OwnedUnit {
   const master = getUnitMaster(masterId)!;
-  const stats = calcUnitStats(master, level, awakenRank);
+  const awakeningCount = 0;
+  const currentRarity: StarRarity = RARITY_TYPE_TO_STAR[master.rarity] ?? 1;
   return {
     instanceId: `unit_${instanceCounter++}_${masterId}`,
     masterId,
     level,
     exp: 0,
     awakenRank,
-    currentStats: stats,
+    awakeningCount,
+    currentRarity,
+    currentStats: calcUnitStats(master, level, awakenRank, awakeningCount),
     isLocked: false,
     acquiredAt,
   };
@@ -50,14 +82,17 @@ export const useUnitStore = create<UnitStore>()(
 
       addUnit: (masterId) => {
         const master = getUnitMaster(masterId)!;
-        const stats = calcUnitStats(master, 1, 0);
+        const awakeningCount = 0;
+        const currentRarity: StarRarity = RARITY_TYPE_TO_STAR[master.rarity] ?? 1;
         const newUnit: OwnedUnit = {
           instanceId: `unit_${Date.now()}_${masterId}`,
           masterId,
           level: 1,
           exp: 0,
           awakenRank: 0,
-          currentStats: stats,
+          awakeningCount,
+          currentRarity,
+          currentStats: calcUnitStats(master, 1, 0, awakeningCount),
           isLocked: false,
           acquiredAt: Date.now(),
         };
@@ -77,7 +112,7 @@ export const useUnitStore = create<UnitStore>()(
               level++;
             }
             if (level >= master.maxLevel) exp = 0;
-            const currentStats = calcUnitStats(master, level, unit.awakenRank);
+            const currentStats = calcUnitStats(master, level, unit.awakenRank, unit.awakeningCount ?? 0);
             return { ...unit, level, exp, currentStats };
           }),
         }));
@@ -92,7 +127,7 @@ export const useUnitStore = create<UnitStore>()(
           ownedUnits: s.ownedUnits.map(u => {
             if (u.instanceId !== instanceId) return u;
             const newAwaken = u.awakenRank + 1;
-            const currentStats = calcUnitStats(master, u.level, newAwaken);
+            const currentStats = calcUnitStats(master, u.level, newAwaken, u.awakeningCount ?? 0);
             return { ...u, awakenRank: newAwaken, currentStats };
           }),
         }));
@@ -111,9 +146,77 @@ export const useUnitStore = create<UnitStore>()(
 
       calcStats: (unit) => {
         const master = getUnitMaster(unit.masterId)!;
-        return calcUnitStats(master, unit.level, unit.awakenRank);
+        return calcUnitStats(master, unit.level, unit.awakenRank, unit.awakeningCount ?? 0);
+      },
+
+      // ガチャ被り処理: masterIds 配列を受け取り 新規/覚醒/覚醒結晶 を一括処理
+      processSummonResults: (masterIds: string[]): GachaApplyResult[] => {
+        let currentOwned = [...get().ownedUnits];
+        const newUnits: OwnedUnit[] = [];
+        const results: GachaApplyResult[] = [];
+
+        for (const masterId of masterIds) {
+          const master = getUnitMaster(masterId);
+          if (!master) { results.push({ type: 'new' }); continue; }
+
+          const allForMaster = [
+            ...currentOwned.filter(u => u.masterId === masterId),
+            ...newUnits.filter(u => u.masterId === masterId),
+          ].sort((a, b) => a.awakeningCount - b.awakeningCount);
+
+          const target = allForMaster[0];
+
+          if (!target) {
+            // 未所持 → 新規追加
+            const awakeningCount = 0;
+            const currentRarity: StarRarity = RARITY_TYPE_TO_STAR[master.rarity] ?? 1;
+            const newUnit: OwnedUnit = {
+              instanceId: `unit_${Date.now()}_${masterId}_${newUnits.length}`,
+              masterId, level: 1, exp: 0, awakenRank: 0,
+              awakeningCount, currentRarity,
+              currentStats: calcUnitStats(master, 1, 0, awakeningCount),
+              isLocked: false, acquiredAt: Date.now(),
+            };
+            newUnits.push(newUnit);
+            results.push({ type: 'new' });
+
+          } else if (target.awakeningCount >= AWAKENING_CONFIG.maxAwakeningCount) {
+            // 覚醒上限 → 覚醒結晶
+            results.push({ type: 'crystal' });
+
+          } else {
+            // 覚醒 +1
+            const newCount = target.awakeningCount + 1;
+            const newStats = calcUnitStats(master, target.level, target.awakenRank, newCount);
+            const existIdx = currentOwned.findIndex(u => u.instanceId === target.instanceId);
+            if (existIdx >= 0) {
+              currentOwned = currentOwned.map(u =>
+                u.instanceId === target.instanceId
+                  ? { ...u, awakeningCount: newCount, currentStats: newStats }
+                  : u
+              );
+            } else {
+              const newIdx = newUnits.findIndex(u => u.instanceId === target.instanceId);
+              if (newIdx >= 0) newUnits[newIdx] = { ...newUnits[newIdx], awakeningCount: newCount, currentStats: newStats };
+            }
+            results.push({ type: 'awakening', awakeningCount: newCount });
+          }
+        }
+
+        set(() => ({ ownedUnits: [...currentOwned, ...newUnits] }));
+        return results;
       },
     }),
-    { name: 'arcana-units' }
+    {
+      name: 'arcana-units',
+      merge: (persisted, current) => {
+        const p = persisted as Partial<UnitStore>;
+        if (!p?.ownedUnits) return current;
+        return {
+          ...current,
+          ownedUnits: (p.ownedUnits as Array<Parameters<typeof migrateUnit>[0]>).map(migrateUnit),
+        };
+      },
+    }
   )
 );

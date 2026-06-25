@@ -5,9 +5,10 @@ import { usePlayerStore } from '../../stores/playerStore';
 import { useUnitStore } from '../../stores/unitStore';
 import { useMissionStore } from '../../stores/missionStore';
 import { ELEMENT_NAMES } from '../../types';
-import type { SummonPool, RarityType, UnitMaster } from '../../types';
+import type { SummonPool, RarityType, UnitMaster, GachaApplyResult } from '../../types';
 import type { GachaStar } from '../../types';
 import { RARITY_TO_STAR, STAR_COLORS, STAR_LABELS } from '../../types';
+import { AWAKENING_CONFIG } from '../../data/rarityConfig';
 
 /* ============================================================
    パーティクル
@@ -127,8 +128,10 @@ interface CardRevealProps {
   total: number;
   onOpen: () => void;
   opened: boolean;
+  resultType?: 'new' | 'awakening' | 'crystal';
+  awakeningCount?: number;
 }
-const CardReveal = ({ unit, star, index, total, onOpen, opened }: CardRevealProps) => {
+const CardReveal = ({ unit, star, index, total, onOpen, opened, resultType, awakeningCount }: CardRevealProps) => {
   const color = STAR_COLORS[star];
   const elemColor = ELEMENT_COLOR[unit.element] ?? '#fff';
   return (
@@ -161,6 +164,29 @@ const CardReveal = ({ unit, star, index, total, onOpen, opened }: CardRevealProp
             <div className="card-unit-element" style={{ color: elemColor }}>
               {ELEMENT_NAMES[unit.element]}属性 · {unit.title}
             </div>
+            {/* 被り結果バッジ */}
+            {resultType === 'awakening' && awakeningCount !== undefined && (
+              <div style={{
+                marginTop: '6px',
+                background: 'rgba(255,200,80,0.25)',
+                border: '1px solid rgba(255,200,80,0.7)',
+                borderRadius: '6px', padding: '3px 8px',
+                fontSize: '11px', fontWeight: 'bold', color: '#ffe48d',
+              }}>
+                覚醒 +1 ({awakeningCount}/{AWAKENING_CONFIG.maxAwakeningCount})
+              </div>
+            )}
+            {resultType === 'crystal' && (
+              <div style={{
+                marginTop: '6px',
+                background: 'rgba(80,180,255,0.25)',
+                border: '1px solid rgba(80,180,255,0.7)',
+                borderRadius: '6px', padding: '3px 8px',
+                fontSize: '11px', fontWeight: 'bold', color: '#7bc8ff',
+              }}>
+                覚醒結晶に変換
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -179,8 +205,9 @@ const CardReveal = ({ unit, star, index, total, onOpen, opened }: CardRevealProp
 /* ============================================================
    ResultGrid
 ============================================================ */
-const ResultGrid = ({ units, onClose, onAgain }: {
+const ResultGrid = ({ units, resultTypes, onClose, onAgain }: {
   units: UnitMaster[];
+  resultTypes: GachaApplyResult[];
   onClose: () => void;
   onAgain: () => void;
 }) => (
@@ -190,6 +217,7 @@ const ResultGrid = ({ units, onClose, onAgain }: {
       {units.map((u, i) => {
         const star = RARITY_TO_STAR[u.rarity];
         const elemColor = ELEMENT_COLOR[u.element] ?? '#fff';
+        const rt = resultTypes[i];
         return (
           <div key={i} className={`summon-mini-card star-${star}`}
             style={{ animationDelay: `${i * 0.07}s` }}>
@@ -201,6 +229,16 @@ const ResultGrid = ({ units, onClose, onAgain }: {
               <div className="mini-card-elem" style={{ color: elemColor }}>
                 {ELEMENT_NAMES[u.element]}
               </div>
+              {rt?.type === 'awakening' && (
+                <div style={{ fontSize: '9px', color: '#ffe48d', fontWeight: 'bold', marginTop: '2px' }}>
+                  覚醒+1 ({rt.awakeningCount}/4)
+                </div>
+              )}
+              {rt?.type === 'crystal' && (
+                <div style={{ fontSize: '9px', color: '#7bc8ff', fontWeight: 'bold', marginTop: '2px' }}>
+                  覚醒結晶
+                </div>
+              )}
             </div>
           </div>
         );
@@ -224,13 +262,14 @@ type Phase = 'idle' | 'summon' | 'crystal' | 'shatter' | 'reveal' | 'results';
 type CrystalPhase = 'idle' | 'appear' | 'shatter';
 
 export const SummonPage = () => {
-  const { player, spendDiamond, useItem, items } = usePlayerStore();
-  const { addUnit } = useUnitStore();
+  const { player, spendDiamond, useItem, items, addItem } = usePlayerStore();
+  const { processSummonResults } = useUnitStore();
   const { addDailyProgress } = useMissionStore();
 
   const [selectedPool, setSelectedPool] = useState(SUMMON_POOLS[0]);
   const [phase, setPhase] = useState<Phase>('idle');
   const [summonResults, setSummonResults] = useState<UnitMaster[]>([]);
+  const [summonResultTypes, setSummonResultTypes] = useState<GachaApplyResult[]>([]);
   const [revealIndex, setRevealIndex] = useState(0);
   const [openedCards, setOpenedCards] = useState<Set<number>>(new Set());
   const [shakePage, setShakePage] = useState(false);
@@ -326,6 +365,7 @@ export const SummonPage = () => {
     const maxStar = Math.max(...summonedMasters.map(u => RARITY_TO_STAR[u.rarity])) as GachaStar;
     setCurrentStar(maxStar);
     setSummonResults(summonedMasters);
+    setSummonResultTypes([]);
     setRevealIndex(0);
     setOpenedCards(new Set());
 
@@ -354,8 +394,12 @@ export const SummonPage = () => {
     setWhiteFlash(false);
     await sleep(700);
 
-    // Phase: reveal (card flip)
-    summonedMasters.forEach(m => addUnit(m.id));
+    // Phase: reveal (card flip) - 被り処理込みで一括処理
+    const gachaResults = processSummonResults(summonedMasters.map(m => m.id));
+    // 覚醒結晶の付与
+    const crystalCount = gachaResults.filter(r => r.type === 'crystal').length;
+    if (crystalCount > 0) addItem(AWAKENING_CONFIG.crystalItemId, crystalCount);
+    setSummonResultTypes(gachaResults);
     addDailyProgress('summon');
     setPhase('reveal');
   };
@@ -391,6 +435,7 @@ export const SummonPage = () => {
   const reset = () => {
     setPhase('idle');
     setSummonResults([]);
+    setSummonResultTypes([]);
     setRevealIndex(0);
     setOpenedCards(new Set());
     setCurrentStar(1);
@@ -511,21 +556,27 @@ export const SummonPage = () => {
       )}
 
       {/* カード開封フェーズ */}
-      {showReveal && summonResults[revealIndex] && (
-        <CardReveal
-          unit={summonResults[revealIndex]}
-          star={RARITY_TO_STAR[summonResults[revealIndex].rarity]}
-          index={revealIndex}
-          total={summonResults.length}
-          onOpen={openCard}
-          opened={openedCards.has(revealIndex)}
-        />
-      )}
+      {showReveal && summonResults[revealIndex] && (() => {
+        const rt = summonResultTypes[revealIndex];
+        return (
+          <CardReveal
+            unit={summonResults[revealIndex]}
+            star={RARITY_TO_STAR[summonResults[revealIndex].rarity]}
+            index={revealIndex}
+            total={summonResults.length}
+            onOpen={openCard}
+            opened={openedCards.has(revealIndex)}
+            resultType={rt?.type}
+            awakeningCount={rt?.type === 'awakening' ? rt.awakeningCount : undefined}
+          />
+        );
+      })()}
 
       {/* 結果一覧 */}
       {showResults && (
         <ResultGrid
           units={summonResults}
+          resultTypes={summonResultTypes}
           onClose={reset}
           onAgain={reset}
         />

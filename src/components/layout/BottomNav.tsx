@@ -4,7 +4,7 @@ import { useMissionStore } from '../../stores/missionStore';
 import {
   IconHome, IconSword, IconCrystal, IconTeam,
   IconMenu, IconScroll, IconGear, IconBag,
-  IconArrowUp, IconShield, IconDragon, IconTrophy, IconCastle,
+  IconArrowUp, IconShield, IconDragon, IconTrophy, IconCastle, IconCrown,
 } from '../ui/FantasyIcon';
 
 const MAIN_NAV = [
@@ -23,6 +23,7 @@ const MENU_ITEMS = [
   { path: '/raid',      label: 'レイド',     Icon: IconDragon },
   { path: '/pvp',       label: 'アリーナ',   Icon: IconTrophy },
   { path: '/guild',     label: 'ギルド',     Icon: IconCastle },
+  { path: '/profile',   label: 'プロフィール', Icon: IconCrown },
 ];
 
 export const BottomNav = () => {

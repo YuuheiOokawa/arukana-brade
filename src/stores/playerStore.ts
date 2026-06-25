@@ -21,6 +21,8 @@ interface PlayerStore {
   addItem: (itemId: string, quantity: number) => void;
   useItem: (itemId: string, quantity: number) => boolean;
   setLastUsedFriend: (friendId: string) => void;
+  updateProfile: (patch: { name?: string; title?: string; bio?: string; favoriteUnitInstanceId?: string | null }) => void;
+  recordLogin: () => void;
 }
 
 const INITIAL_PLAYER: PlayerData = {
@@ -34,6 +36,11 @@ const INITIAL_PLAYER: PlayerData = {
   staminaRecoveryTime: Date.now() + STAMINA_RECOVERY_INTERVAL,
   lastLoginAt: Date.now(),
   createdAt: Date.now(),
+  playerId: `ARC-${Date.now().toString(36).toUpperCase()}`,
+  title: '駆け出しの勇者',
+  bio: '',
+  favoriteUnitInstanceId: null,
+  loginDays: 1,
 };
 
 const RANK_EXP_TABLE = Array.from({ length: 200 }, (_, i) => Math.floor(100 * Math.pow(i + 1, 1.5)));
@@ -72,6 +79,11 @@ export const usePlayerStore = create<PlayerStore>()(
             staminaRecoveryTime: now + STAMINA_RECOVERY_INTERVAL,
             lastLoginAt: now,
             createdAt: s.player.createdAt || now,
+            playerId: s.player.playerId || `ARC-${now.toString(36).toUpperCase()}`,
+            title: s.player.title || '駆け出しの勇者',
+            bio: s.player.bio || '',
+            favoriteUnitInstanceId: s.player.favoriteUnitInstanceId ?? null,
+            loginDays: s.player.loginDays || 1,
           },
           items: [
             { itemId: 'item_exp_s', quantity: 5 },
@@ -164,6 +176,20 @@ export const usePlayerStore = create<PlayerStore>()(
       },
 
       setLastUsedFriend: (friendId) => set({ lastUsedFriendId: friendId }),
+
+      updateProfile: (patch) => {
+        set(s => ({ player: { ...s.player, ...patch } }));
+      },
+
+      recordLogin: () => {
+        set(s => ({
+          player: {
+            ...s.player,
+            loginDays: (s.player.loginDays ?? 0) + 1,
+            lastLoginAt: Date.now(),
+          },
+        }));
+      },
     }),
     { name: 'arcana-player' }
   )
