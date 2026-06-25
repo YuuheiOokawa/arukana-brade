@@ -384,8 +384,8 @@
 
 /* ===== ステージエリア ===== */
 .summon-stage {
-  position:absolute; left:50%; top:53%; z-index:6;
-  width:min(900px,94vw); height:min(680px,78vh);
+  position:absolute; left:50%; top:46%; z-index:6;
+  width:min(900px,94vw); height:min(560px,62vh);
   transform:translate(-50%,-50%);
   display:flex; align-items:center; justify-content:center; flex-direction:column;
   text-align:center;
@@ -438,8 +438,18 @@
 .facet.f4{transform:rotateX(34deg) translateZ(14px);opacity:.52;}
 .facet.f5{transform:rotateX(-34deg) translateZ(14px);opacity:.52;}
 
-/* ===== 召喚コントロール ===== */
+/* ===== 召喚コントロール（画面下部固定ドック） ===== */
 .summon-controls { width:100%; padding:0 8px; margin-top:12px; }
+.summon-controls-dock {
+  position: fixed;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 100%; max-width: min(900px, 100vw);
+  z-index: 8;
+  padding: 12px 16px max(20px, env(safe-area-inset-bottom, 20px));
+  background: linear-gradient(to bottom, transparent 0%, rgba(2,7,19,0.85) 22%, rgba(2,4,14,0.97) 50%);
+  backdrop-filter: blur(2px);
+}
 .summon-pool-tabs {
   display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:12px; justify-content:center;
 }

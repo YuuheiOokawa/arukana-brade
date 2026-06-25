@@ -481,77 +481,75 @@ export const SummonPage = () => {
         </div>
       </header>
 
-      {/* メインステージ (idle / summon / crystal / shatter) */}
+      {/* メインステージ (idle / summon / crystal / shatter) — ビジュアルのみ */}
       {showStage && (
         <div className="summon-stage" style={{ opacity: showReveal ? 0 : 1, transition: 'opacity 0.6s' }}>
           {/* 光柱 */}
           <div className={`summon-light-column ${isAnimating ? 'active' : ''}`} />
-
           {/* 魔法陣 */}
           <MagicCircle active={isAnimating} star={currentStar} />
-
           {/* クリスタル */}
           <Crystal phase={
             phase === 'shatter' ? 'shatter' :
             phase === 'crystal' ? 'appear' : 'idle'
           } />
+        </div>
+      )}
 
-          {/* 召喚台の選択 + ボタン */}
-          {showButtons && (
-            <div className="summon-controls animate-fade-in">
-              {/* 台座タブ */}
-              <div className="summon-pool-tabs">
-                {SUMMON_POOLS.map(pool => (
-                  <button key={pool.id} onClick={() => setSelectedPool(pool)}
-                    className={`summon-pool-tab ${selectedPool.id === pool.id ? 'active' : ''}`}>
-                    {pool.name}
-                  </button>
-                ))}
-              </div>
+      {/* 召喚コントロール — 常に画面下部に固定 */}
+      {showButtons && (
+        <div className="summon-controls-dock animate-fade-in">
+          {/* 台座タブ */}
+          <div className="summon-pool-tabs">
+            {SUMMON_POOLS.map(pool => (
+              <button key={pool.id} onClick={() => setSelectedPool(pool)}
+                className={`summon-pool-tab ${selectedPool.id === pool.id ? 'active' : ''}`}>
+                {pool.name}
+              </button>
+            ))}
+          </div>
 
-              {/* 排出率 */}
-              <div className="summon-rates">
-                <div className="summon-rate-item star3">
-                  <span className="rate-star">★★★</span>
-                  <span className="rate-val">
-                    {((selectedPool.rates.find(r => r.rarity === 'SSR')?.rate ?? 0) * 100).toFixed(1)}%
-                  </span>
-                </div>
-                <div className="summon-rate-item star2">
-                  <span className="rate-star">★★</span>
-                  <span className="rate-val">
-                    {((selectedPool.rates.find(r => r.rarity === 'SR')?.rate ?? 0) * 100).toFixed(1)}%
-                  </span>
-                </div>
-                <div className="summon-rate-item star1">
-                  <span className="rate-star">★</span>
-                  <span className="rate-val">
-                    {(((selectedPool.rates.find(r => r.rarity === 'R')?.rate ?? 0) +
-                       (selectedPool.rates.find(r => r.rarity === 'N')?.rate ?? 0)) * 100).toFixed(1)}%
-                  </span>
-                </div>
-              </div>
-
-              {/* 召喚ボタン */}
-              <div className="summon-btn-row">
-                <button className="arcana-btn arcana-btn-blue" onClick={() => startSummon(1)}>
-                  <span className="btn-main-text">1回召喚</span>
-                  <span className="btn-sub-text">ダイヤ {selectedPool.cost1}</span>
-                </button>
-                <button className="arcana-btn arcana-btn-gold" onClick={() => startSummon(10)}>
-                  <span className="btn-main-text">10連召喚</span>
-                  <span className="btn-sub-text">ダイヤ {selectedPool.cost10} · ★★保証</span>
-                </button>
-              </div>
-              {ticketCount > 0 && (
-                <button className="arcana-btn arcana-btn-ticket" onClick={() => startSummon(1, true)}>
-                  <span className="btn-main-text">チケット召喚</span>
-                  <span className="btn-sub-text">残り {ticketCount} 枚</span>
-                </button>
-              )}
-              <p className="summon-diamond-count">所持ダイヤ：{player.diamond}</p>
+          {/* 排出率 */}
+          <div className="summon-rates">
+            <div className="summon-rate-item star3">
+              <span className="rate-star">★★★</span>
+              <span className="rate-val">
+                {((selectedPool.rates.find(r => r.rarity === 'SSR')?.rate ?? 0) * 100).toFixed(1)}%
+              </span>
             </div>
+            <div className="summon-rate-item star2">
+              <span className="rate-star">★★</span>
+              <span className="rate-val">
+                {((selectedPool.rates.find(r => r.rarity === 'SR')?.rate ?? 0) * 100).toFixed(1)}%
+              </span>
+            </div>
+            <div className="summon-rate-item star1">
+              <span className="rate-star">★</span>
+              <span className="rate-val">
+                {(((selectedPool.rates.find(r => r.rarity === 'R')?.rate ?? 0) +
+                   (selectedPool.rates.find(r => r.rarity === 'N')?.rate ?? 0)) * 100).toFixed(1)}%
+              </span>
+            </div>
+          </div>
+
+          {/* 召喚ボタン */}
+          <div className="summon-btn-row">
+            <button className="arcana-btn arcana-btn-blue" onClick={() => startSummon(1)}>
+              <span className="btn-main-text">1回召喚</span>
+              <span className="btn-sub-text">ダイヤ {selectedPool.cost1}</span>
+            </button>
+            <button className="arcana-btn arcana-btn-gold" onClick={() => startSummon(10)}>
+              <span className="btn-main-text">10連召喚</span>
+              <span className="btn-sub-text">ダイヤ {selectedPool.cost10} · ★★保証</span>
+            </button>
+          </div>
+          {ticketCount > 0 && (
+            <button className="arcana-btn arcana-btn-ticket" onClick={() => startSummon(1, true)}>
+              <span className="btn-main-text">チケット召喚</span>
+              <span className="btn-sub-text">残り {ticketCount} 枚</span>
+            </button>
           )}
+          <p className="summon-diamond-count">所持ダイヤ：{player.diamond}</p>
         </div>
       )}
 
