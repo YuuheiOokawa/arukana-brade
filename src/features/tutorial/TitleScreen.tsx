@@ -38,9 +38,18 @@ export const TitleScreen = () => {
   return (
     <div
       className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden cursor-pointer select-none"
-      style={{ background: 'radial-gradient(ellipse at 50% 30%, #1a0535 0%, #08081a 60%, #000 100%)' }}
       onClick={handleTap}
     >
+      {/* 背景画像 */}
+      <img
+        src="/assets/images/backgrounds/title/bg_ui_title.webp"
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ opacity: 0.75 }}
+      />
+      {/* グラデーションオーバーレイ */}
+      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 30%, rgba(26,5,53,0.5) 0%, rgba(8,8,26,0.55) 60%, rgba(0,0,0,0.6) 100%)' }} />
+
       {/* 星エフェクト */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {Array.from({ length: 60 }).map((_, i) => (

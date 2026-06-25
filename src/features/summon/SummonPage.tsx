@@ -491,6 +491,13 @@ export const SummonPage = () => {
 
   return (
     <div className={`summon-page ${shakePage ? 'summon-shake' : ''}`}>
+      {/* 背景画像 */}
+      <img
+        src="/assets/images/backgrounds/summon/bg_ui_summon.webp"
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ opacity: 0.4 }}
+      />
       {/* Canvas パーティクル */}
       <canvas ref={canvasRef} className="summon-particle-canvas" />
 

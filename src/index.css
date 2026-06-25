@@ -274,9 +274,9 @@
 /* ===== 神殿背景 ===== */
 .summon-temple-bg {
   position: absolute; inset: 0; overflow: hidden;
-  background: radial-gradient(circle at 50% 27%, rgba(176,244,255,.26), transparent 16%),
-              radial-gradient(circle at 48% 38%, rgba(123,88,255,.16), transparent 30%),
-              linear-gradient(180deg, #07172c 0%, #050818 46%, #02030a 100%);
+  background: radial-gradient(circle at 50% 27%, rgba(176,244,255,.22), transparent 16%),
+              radial-gradient(circle at 48% 38%, rgba(123,88,255,.14), transparent 30%),
+              linear-gradient(180deg, rgba(7,23,44,0.6) 0%, rgba(5,8,24,0.65) 46%, rgba(2,3,10,0.75) 100%);
 }
 .summon-temple-bg::before {
   content:''; position:absolute; inset:-12%;
