@@ -53,6 +53,52 @@ export const RARITY_COLORS: Record<RarityType, string> = {
   SSR: 'rarity-ssr',
 };
 
+// ===== ガチャ星レアリティ (★1〜★3) =====
+export type GachaStar = 1 | 2 | 3;
+
+export const RARITY_TO_STAR: Record<RarityType, GachaStar> = {
+  N: 1,
+  R: 1,
+  SR: 2,
+  SSR: 3,
+};
+
+export const STAR_COLORS: Record<GachaStar, string> = {
+  1: 'rgba(123,200,255,.88)',
+  2: 'rgba(183,115,255,.92)',
+  3: 'rgba(255,228,141,.98)',
+};
+
+export const STAR_LABELS: Record<GachaStar, string> = {
+  1: 'NORMAL',
+  2: 'RARE',
+  3: 'ARCANA',
+};
+
+// ===== シナリオ =====
+export type SceneType = 'narration' | 'dialogue';
+export type CharacterPosition = 'left' | 'center' | 'right';
+
+export interface ScenarioLine {
+  lineId: string;
+  type: SceneType;
+  speakerName?: string;
+  characterId?: string;
+  position?: CharacterPosition;
+  text: string;
+  expression?: string;
+  effect?: string;
+}
+
+export interface ScenarioMaster {
+  scenarioId: string;
+  questId: string;
+  stageId: string;
+  backgroundKey: 'forest' | 'ruins' | 'temple' | 'cave' | 'castle' | 'sky' | 'darkness';
+  bgmKey?: string;
+  lines: ScenarioLine[];
+}
+
 // ===== スキル =====
 export type SkillTargetType = 'single_enemy' | 'all_enemies' | 'single_ally' | 'all_allies' | 'self';
 export type SkillEffectType = 'damage' | 'heal' | 'buff_atk' | 'buff_def' | 'buff_rec' | 'debuff_atk' | 'debuff_def' | 'status_poison' | 'status_paralyze';

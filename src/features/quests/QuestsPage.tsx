@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QUEST_WORLDS } from '../../data/quests';
 import { getActiveEvents } from '../../data/events';
+import { getScenario } from '../../data/scenarios';
 import { useQuestStore } from '../../stores/questStore';
 import { usePlayerStore } from '../../stores/playerStore';
 import { usePartyStore } from '../../stores/partyStore';
@@ -27,14 +28,19 @@ export const QuestsPage = () => {
   const hasParty = party.slots.some(Boolean);
   const activeEvents = getActiveEvents();
 
+  const navigateToStage = (stageId: string) => {
+    setPendingStage(stageId);
+    const hasScenario = !!getScenario(stageId);
+    navigate(hasScenario ? `/scenario/${stageId}` : '/friends');
+  };
+
   const handleStageSelect = (stage: QuestStage) => {
     if (!hasParty) { navigate('/party'); return; }
     if (player.stamina < stage.staminaCost) {
       setStaminaModal({ stageId: stage.id, cost: stage.staminaCost });
       return;
     }
-    setPendingStage(stage.id);
-    navigate('/friends');
+    navigateToStage(stage.id);
   };
 
   const handleStaminaUsed = () => {
@@ -42,8 +48,7 @@ export const QuestsPage = () => {
     const { stageId, cost } = staminaModal;
     if (player.stamina >= cost) {
       setStaminaModal(null);
-      setPendingStage(stageId);
-      navigate('/friends');
+      navigateToStage(stageId);
     }
   };
 
@@ -64,11 +69,11 @@ export const QuestsPage = () => {
       <div className="px-4 mb-4 flex gap-2">
         <button onClick={() => setMainTab('story')}
           className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${mainTab === 'story' ? 'tab-active' : 'tab-inactive'}`}>
-          📖 ストーリー
+          ストーリー
         </button>
         <button onClick={() => setMainTab('event')}
           className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all relative ${mainTab === 'event' ? 'tab-active' : 'tab-inactive'}`}>
-          🎉 イベント
+          イベント
           {activeEvents.length > 0 && (
             <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">
               {activeEvents.length}
