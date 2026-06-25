@@ -15,7 +15,7 @@ const TUTORIAL_REWARDS = [
 
 export const TutorialCompleteScreen = () => {
   const navigate = useNavigate();
-  const { playerName, selectedHeroId, selectedGender, selectedRace, completeTutorial } = useTutorialStore();
+  const { playerName, selectedHeroId, selectedGender, selectedRace, setPhase } = useTutorialStore();
   const { setupFromTutorial } = usePlayerStore();
   const { addUnit } = useUnitStore();
 
@@ -49,8 +49,9 @@ export const TutorialCompleteScreen = () => {
       try { addUnit(heroMaster.unitMasterId); } catch { /* ignore */ }
     }
 
-    completeTutorial();
-    navigate('/');
+    // 初回ガチャへ遷移（completeTutorial はガチャ後に呼ばれる）
+    setPhase('initial_gacha');
+    navigate('/tutorial/gacha');
   };
 
   return (

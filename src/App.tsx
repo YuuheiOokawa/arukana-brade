@@ -22,6 +22,7 @@ import { PlayerNameInputScreen } from './features/tutorial/PlayerNameInputScreen
 import { HeroSelectScreen } from './features/tutorial/HeroSelectScreen';
 import { TutorialBattleScreen } from './features/tutorial/TutorialBattleScreen';
 import { TutorialCompleteScreen } from './features/tutorial/TutorialCompleteScreen';
+import { TutorialGachaScreen } from './features/tutorial/TutorialGachaScreen';
 import { ScenarioScreen } from './features/scenario/ScenarioScreen';
 import { ProfilePage } from './features/profile/ProfilePage';
 import { LoginPage } from './features/auth/LoginPage';
@@ -81,6 +82,7 @@ const AppContent = () => {
         <Route path="/tutorial/hero"     element={<AuthGuard><HeroSelectScreen /></AuthGuard>} />
         <Route path="/tutorial/battle"   element={<AuthGuard><TutorialBattleScreen /></AuthGuard>} />
         <Route path="/tutorial/complete" element={<AuthGuard><TutorialCompleteScreen /></AuthGuard>} />
+        <Route path="/tutorial/gacha"    element={<AuthGuard><TutorialGachaScreen /></AuthGuard>} />
 
         {/* 認証必須・チュートリアル完了必須 */}
         <Route path="/"         element={<AuthGuard><MainGuard><HomePage /></MainGuard></AuthGuard>} />
