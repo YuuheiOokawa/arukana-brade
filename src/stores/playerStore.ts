@@ -10,6 +10,7 @@ interface PlayerStore {
   lastUsedFriendId: string | null;
 
   initPlayer: () => void;
+  setupFromTutorial: (name: string) => void;
   addGold: (amount: number) => void;
   spendGold: (amount: number) => boolean;
   addDiamond: (amount: number) => void;
@@ -56,6 +57,33 @@ export const usePlayerStore = create<PlayerStore>()(
         if (!player.createdAt) {
           set({ player: INITIAL_PLAYER });
         }
+      },
+
+      setupFromTutorial: (name) => {
+        const now = Date.now();
+        set(s => ({
+          player: {
+            ...s.player,
+            name,
+            gold: 5000,
+            diamond: 500,
+            stamina: 50,
+            maxStamina: 50,
+            staminaRecoveryTime: now + STAMINA_RECOVERY_INTERVAL,
+            lastLoginAt: now,
+            createdAt: s.player.createdAt || now,
+          },
+          items: [
+            { itemId: 'item_exp_s', quantity: 5 },
+            { itemId: 'item_stamina_potion', quantity: 3 },
+            { itemId: 'item_summon_ticket', quantity: 3 },
+            { itemId: 'item_fire_gem', quantity: 3 },
+            { itemId: 'item_water_gem', quantity: 3 },
+            { itemId: 'item_wind_gem', quantity: 3 },
+            { itemId: 'item_goblin_fang', quantity: 5 },
+            { itemId: 'item_diamond', quantity: 0 },
+          ],
+        }));
       },
 
       addGold: (amount) => set(s => ({ player: { ...s.player, gold: s.player.gold + amount } })),

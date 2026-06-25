@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { OwnedUnit, UnitStats } from '../types';
-import { UNIT_MASTER, calcUnitStats } from '../data/units';
+import { getUnitMaster, calcUnitStats } from '../data/units';
 
 interface UnitStore {
   ownedUnits: OwnedUnit[];
@@ -27,7 +27,7 @@ const createInitialUnits = (): OwnedUnit[] => {
 };
 
 function createOwnedUnit(masterId: string, level: number, awakenRank: number, acquiredAt: number): OwnedUnit {
-  const master = UNIT_MASTER.find(u => u.id === masterId)!;
+  const master = getUnitMaster(masterId)!;
   const stats = calcUnitStats(master, level, awakenRank);
   return {
     instanceId: `unit_${instanceCounter++}_${masterId}`,
@@ -49,7 +49,7 @@ export const useUnitStore = create<UnitStore>()(
       ownedUnits: createInitialUnits(),
 
       addUnit: (masterId) => {
-        const master = UNIT_MASTER.find(u => u.id === masterId)!;
+        const master = getUnitMaster(masterId)!;
         const stats = calcUnitStats(master, 1, 0);
         const newUnit: OwnedUnit = {
           instanceId: `unit_${Date.now()}_${masterId}`,
@@ -69,7 +69,7 @@ export const useUnitStore = create<UnitStore>()(
         set(s => ({
           ownedUnits: s.ownedUnits.map(unit => {
             if (unit.instanceId !== instanceId) return unit;
-            const master = UNIT_MASTER.find(u => u.id === unit.masterId)!;
+            const master = getUnitMaster(unit.masterId)!;
             let { level, exp } = unit;
             exp += expAmount;
             while (level < master.maxLevel && exp >= EXP_PER_LEVEL(level)) {
@@ -86,7 +86,7 @@ export const useUnitStore = create<UnitStore>()(
       awakenUnit: (instanceId) => {
         const unit = get().ownedUnits.find(u => u.instanceId === instanceId);
         if (!unit) return false;
-        const master = UNIT_MASTER.find(u => u.id === unit.masterId)!;
+        const master = getUnitMaster(unit.masterId)!;
         if (unit.awakenRank >= master.maxAwaken) return false;
         set(s => ({
           ownedUnits: s.ownedUnits.map(u => {
@@ -110,7 +110,7 @@ export const useUnitStore = create<UnitStore>()(
       getUnit: (instanceId) => get().ownedUnits.find(u => u.instanceId === instanceId),
 
       calcStats: (unit) => {
-        const master = UNIT_MASTER.find(u => u.id === unit.masterId)!;
+        const master = getUnitMaster(unit.masterId)!;
         return calcUnitStats(master, unit.level, unit.awakenRank);
       },
     }),
