@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTutorialStore } from '../../stores/tutorialStore';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useUnitStore } from '../../stores/unitStore';
+import { useAuthStore } from '../../stores/authStore';
 import { HERO_MASTER } from '../../data/heroes';
 import { ELEMENT_NAMES } from '../../types';
 
@@ -16,8 +17,9 @@ const TUTORIAL_REWARDS = [
 export const TutorialCompleteScreen = () => {
   const navigate = useNavigate();
   const { playerName, selectedHeroId, selectedGender, selectedRace, setPhase: setTutorialPhase } = useTutorialStore();
-  const { setupFromTutorial } = usePlayerStore();
-  const { addUnit } = useUnitStore();
+  const { setupFromTutorial, player } = usePlayerStore();
+  const { addUnit, ownedUnits } = useUnitStore();
+  const { syncPlayerName, syncCurrency, syncTutorialComplete } = useAuthStore();
 
   const [screenPhase, setScreenPhase] = useState<'rewards' | 'hero' | 'ready'>('rewards');
   const [rewardIndex, setRewardIndex] = useState(0);
@@ -48,6 +50,21 @@ export const TutorialCompleteScreen = () => {
     if (heroMaster?.unitMasterId) {
       try { addUnit(heroMaster.unitMasterId); } catch { /* ignore */ }
     }
+
+    // [DB SAVE] プレイヤー名を DB に保存
+    void syncPlayerName(playerName || '勇者');
+
+    // [DB SAVE] 初期ゴールド・ダイヤ・スタミナを DB に同期
+    void syncCurrency({
+      gold: player.gold,
+      diamond: player.diamond,
+      stamina: player.stamina,
+      exp: player.exp,
+      playerRank: player.rank,
+    });
+
+    // [DB SAVE] tutorialCompleted = true を DB に保存
+    void syncTutorialComplete();
 
     // 初回ガチャへ遷移（completeTutorial はガチャ後に呼ばれる）
     setTutorialPhase('initial_gacha');
