@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePartyStore } from '../../stores/partyStore';
 import { useUnitStore } from '../../stores/unitStore';
 import { UNIT_MASTER } from '../../data/units';
+import { RARITY_TYPE_TO_STAR } from '../../data/rarityConfig';
 import { ElementBadge } from '../../components/ui/ElementBadge';
 import { RarityBadge } from '../../components/ui/RarityBadge';
 import { TopBar } from '../../components/layout/TopBar';
@@ -120,7 +121,7 @@ export const PartyPage = () => {
                       </div>
                       <div className="flex-1">
                         <div className="flex gap-1 mb-0.5">
-                          <RarityBadge rarity={master.rarity} size="sm" />
+                          <RarityBadge rarity={unit.currentRarity ?? RARITY_TYPE_TO_STAR[master.rarity] ?? 1} size="sm" />
                           <ElementBadge element={master.element} size="sm" />
                         </div>
                         <p className="text-white font-bold text-sm">{master.name}</p>

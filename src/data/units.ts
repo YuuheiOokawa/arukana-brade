@@ -718,17 +718,20 @@ export const UNIT_MASTER: UnitMaster[] = [
 export const getUnitMaster = (id: string): UnitMaster | undefined =>
   UNIT_MASTER.find(u => u.id === id) ?? HERO_UNIT_MASTERS.find(u => u.id === id);
 
-export const calcUnitStats = (master: UnitMaster, level: number, awakenRank: number) => {
+// awakeningCount: ガチャ被り覚醒 (0〜4)。1回ごとに +5% 全ステータス上昇
+export const calcUnitStats = (master: UnitMaster, level: number, awakenRank: number, awakeningCount = 0) => {
   const ratio = (level - 1) / (master.maxLevel - 1);
   const bonus = master.awakenBonus?.slice(0, awakenRank).reduce(
     (acc, b) => ({ hp: acc.hp + b.hp, atk: acc.atk + b.atk, def: acc.def + b.def, rec: acc.rec + b.rec }),
     { hp: 0, atk: 0, def: 0, rec: 0 }
   ) ?? { hp: 0, atk: 0, def: 0, rec: 0 };
 
+  const awakMult = 1 + awakeningCount * 0.05;
+
   return {
-    hp:  Math.floor(master.baseStats.hp  + (master.maxStats.hp  - master.baseStats.hp)  * ratio) + bonus.hp,
-    atk: Math.floor(master.baseStats.atk + (master.maxStats.atk - master.baseStats.atk) * ratio) + bonus.atk,
-    def: Math.floor(master.baseStats.def + (master.maxStats.def - master.baseStats.def) * ratio) + bonus.def,
-    rec: Math.floor(master.baseStats.rec + (master.maxStats.rec - master.baseStats.rec) * ratio) + bonus.rec,
+    hp:  Math.floor((Math.floor(master.baseStats.hp  + (master.maxStats.hp  - master.baseStats.hp)  * ratio) + bonus.hp)  * awakMult),
+    atk: Math.floor((Math.floor(master.baseStats.atk + (master.maxStats.atk - master.baseStats.atk) * ratio) + bonus.atk) * awakMult),
+    def: Math.floor((Math.floor(master.baseStats.def + (master.maxStats.def - master.baseStats.def) * ratio) + bonus.def) * awakMult),
+    rec: Math.floor((Math.floor(master.baseStats.rec + (master.maxStats.rec - master.baseStats.rec) * ratio) + bonus.rec) * awakMult),
   };
 };

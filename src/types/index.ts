@@ -42,7 +42,11 @@ export const ELEMENT_ADVANTAGE: Record<ElementType, Partial<Record<ElementType, 
   thunder: { water: 1.5, wind: 0.75 },
 };
 
-// ===== レアリティ =====
+// ===== 星レアリティ (★1〜★7 + ★👑) =====
+// ガチャ排出: ★1〜★3のみ。★4以上は育成・進化・覚醒で到達
+export type StarRarity = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 'CROWN';
+
+// ===== レアリティ (UnitMaster 内部用: 既存互換) =====
 export type RarityType = 'N' | 'R' | 'SR' | 'SSR';
 
 export const RARITY_ORDER: Record<RarityType, number> = { N: 0, R: 1, SR: 2, SSR: 3 };
@@ -53,7 +57,7 @@ export const RARITY_COLORS: Record<RarityType, string> = {
   SSR: 'rarity-ssr',
 };
 
-// ===== ガチャ星レアリティ (★1〜★3) =====
+// ===== ガチャ表示用星レアリティ (★1〜★3、排出上限) =====
 export type GachaStar = 1 | 2 | 3;
 
 export const RARITY_TO_STAR: Record<RarityType, GachaStar> = {
@@ -166,11 +170,19 @@ export interface OwnedUnit {
   masterId: string;
   level: number;
   exp: number;
-  awakenRank: number;
+  awakenRank: number;     // 素材覚醒ランク (0〜maxAwaken)
+  awakeningCount: number; // ガチャ被り覚醒カウント (0〜4)
+  currentRarity: StarRarity; // 現在のレアリティ (進化で上昇)
   currentStats: UnitStats;
   isLocked: boolean;
   acquiredAt: number;
 }
+
+// ===== ガチャ結果タイプ =====
+export type GachaApplyResult =
+  | { type: 'new' }
+  | { type: 'awakening'; awakeningCount: number }
+  | { type: 'crystal' };
 
 // ===== 敵 =====
 export interface EnemyMaster {
@@ -315,6 +327,24 @@ export interface PlayerData {
   maxStamina: number;
   staminaRecoveryTime: number;
   lastLoginAt: number;
+  createdAt: number;
+  // プロフィール拡張 (オプション: 旧データとの互換)
+  playerId?: string;
+  title?: string;
+  bio?: string;
+  favoriteUnitInstanceId?: string | null;
+  loginDays?: number;
+}
+
+// ===== プロフィール =====
+export interface PlayerProfile {
+  playerId: string;
+  name: string;
+  rank: number;
+  title: string;
+  bio: string;
+  favoriteUnitInstanceId: string | null;
+  loginDays: number;
   createdAt: number;
 }
 

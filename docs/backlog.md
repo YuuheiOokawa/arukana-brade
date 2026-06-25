@@ -74,6 +74,17 @@ MVP完成度: 約98%
 | BottomNav SVGアイコン化 | components/layout/BottomNav.tsx | ✅ 完成 |
 | ホーム画面 魔法陣背景・SVGアイコン化 | features/home/HomePage.tsx | ✅ 完成 |
 | 召喚神殿CSS (神殿背景・カードフリップ・パーティクル) | index.css | ✅ 完成 |
+| ★1〜★7+★👑 StarRarity型定義 | data/rarityConfig.ts + types/index.ts | ✅ 完成 |
+| レアリティ別レベル上限 (RARITY_LEVEL_CAPS) | data/rarityConfig.ts | ✅ 完成 |
+| ガチャ被り覚醒システム (processSummonResults) | stores/unitStore.ts | ✅ 完成 |
+| 覚醒結晶アイテム (item_awakening_crystal) | data/items.ts | ✅ 完成 |
+| RarityBadge StarRarity対応 | components/ui/RarityBadge.tsx | ✅ 完成 |
+| UnitCard 覚醒カウント表示 | components/ui/UnitCard.tsx | ✅ 完成 |
+| UnitsPage ★フィルター対応 | features/units/UnitsPage.tsx | ✅ 完成 |
+| UnitDetailPage レアリティ・覚醒詳細表示 | features/units/UnitDetailPage.tsx | ✅ 完成 |
+| SummonPage 被り覚醒+1/覚醒結晶演出 | features/summon/SummonPage.tsx | ✅ 完成 |
+| ProfilePage (ソシャゲ風プロフィール画面) | features/profile/ProfilePage.tsx | ✅ 完成 |
+| playerStore プロフィールフィールド追加 | stores/playerStore.ts | ✅ 完成 |
 
 ---
 
