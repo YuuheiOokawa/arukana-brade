@@ -1,4 +1,5 @@
 import type { UnitMaster } from '../types';
+import { HERO_UNIT_MASTERS } from './heroes';
 
 export const UNIT_MASTER: UnitMaster[] = [
   // ========================================
@@ -715,7 +716,7 @@ export const UNIT_MASTER: UnitMaster[] = [
 ];
 
 export const getUnitMaster = (id: string): UnitMaster | undefined =>
-  UNIT_MASTER.find(u => u.id === id);
+  UNIT_MASTER.find(u => u.id === id) ?? HERO_UNIT_MASTERS.find(u => u.id === id);
 
 export const calcUnitStats = (master: UnitMaster, level: number, awakenRank: number) => {
   const ratio = (level - 1) / (master.maxLevel - 1);

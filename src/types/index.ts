@@ -417,6 +417,49 @@ export interface Guild {
   createdAt: number;
 }
 
+// ===== チュートリアル =====
+export type GenderType = 'male' | 'female';
+export type RaceType = 'human' | 'demon' | 'goddess' | 'beastkin' | 'spirit';
+
+export interface RaceMaster {
+  id: RaceType;
+  name: string;
+  description: string;
+  emoji: string;
+  traitDescription: string;
+  statFocus: string;
+}
+
+export interface HeroMaster {
+  heroId: string;
+  name: string;
+  title: string;
+  gender: GenderType;
+  race: RaceType;
+  element: ElementType;
+  emoji: string;
+  description: string;
+  catchphrase: string;
+  unitMasterId: string;
+}
+
+export type TutorialPhase =
+  | 'title'
+  | 'intro'
+  | 'name_input'
+  | 'hero_select'
+  | 'tutorial_battle'
+  | 'complete';
+
+export interface TutorialProgress {
+  completed: boolean;
+  phase: TutorialPhase;
+  playerName: string;
+  selectedHeroId: string | null;
+  selectedGender: GenderType | null;
+  selectedRace: RaceType | null;
+}
+
 // ===== アリーナ/PvP =====
 export interface ArenaRecord {
   wins: number;
