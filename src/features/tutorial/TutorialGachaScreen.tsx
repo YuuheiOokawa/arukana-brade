@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { UNIT_MASTER } from '../../data/units';
 import { useUnitStore } from '../../stores/unitStore';
 import { useTutorialStore } from '../../stores/tutorialStore';
+import { useAuthStore } from '../../stores/authStore';
 import { ELEMENT_NAMES, RARITY_TO_STAR, STAR_COLORS, STAR_LABELS } from '../../types';
 import type { UnitMaster, GachaStar, RarityType, GachaApplyResult } from '../../types';
 
@@ -74,6 +75,7 @@ export const TutorialGachaScreen = () => {
   const navigate = useNavigate();
   const { completeTutorial } = useTutorialStore();
   const { processSummonResults } = useUnitStore();
+  const { syncSummonResult } = useAuthStore();
 
   const [phase, setPhase] = useState<Phase>('pre');
   const [results, setResults] = useState<UnitMaster[]>([]);
@@ -83,6 +85,7 @@ export const TutorialGachaScreen = () => {
   const [whiteFlash, setWhiteFlash] = useState(false);
   const [shake, setShake] = useState(false);
   const [currentStar, setCurrentStar] = useState<GachaStar>(1);
+  const skipRef = useRef(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
@@ -146,6 +149,7 @@ export const TutorialGachaScreen = () => {
   }, []);
 
   const startGacha = async () => {
+    skipRef.current = false;
     const summonedMasters = performTutorialSummon();
     const maxStar = Math.max(...summonedMasters.map(u => RARITY_TO_STAR[u.rarity])) as GachaStar;
     setCurrentStar(maxStar);
@@ -153,28 +157,58 @@ export const TutorialGachaScreen = () => {
     setRevealIndex(0);
     setOpened(new Set());
 
+    // [localStorage SAVE] ユニット追加・被り処理
+    const gachaResults = processSummonResults(summonedMasters.map(m => m.id));
+    setResultTypes(gachaResults);
+
+    // [DB SAVE] 初回ガチャ結果を DB に保存（無料なのでダイヤ消費は 0）
+    void syncSummonResult(
+      'tutorial_free',
+      summonedMasters.map((m, i) => ({
+        masterId: m.id,
+        rarity: m.rarity,
+        resultType: gachaResults[i]?.type ?? 'new',
+      })),
+      0,
+    );
+
     setPhase('summon');
     const pColor = maxStar === 3 ? 'rgba(255,228,141,.8)' : maxStar === 2 ? 'rgba(183,115,255,.8)' : 'rgba(123,200,255,.8)';
     spawnBurst(100, pColor, 0.4);
+    if (skipRef.current) { setPhase('results'); return; }
     await sleep(800);
 
+    if (skipRef.current) { setPhase('results'); return; }
     spawnBurst(200, 'rgba(255,244,190,.85)', 0.55);
     await sleep(700);
 
+    if (skipRef.current) { setPhase('results'); return; }
     setShake(true);
     spawnBurst(240, pColor, 0.9);
     await sleep(400);
     setShake(false);
 
+    if (skipRef.current) { setPhase('results'); return; }
     spawnBurst(260, 'rgba(190,249,255,.9)', 1.0);
     setWhiteFlash(true);
     await sleep(180);
     setWhiteFlash(false);
+    if (skipRef.current) { setPhase('results'); return; }
     await sleep(600);
 
-    const gachaResults = processSummonResults(summonedMasters.map(m => m.id));
-    setResultTypes(gachaResults);
     setPhase('reveal');
+  };
+
+  const handleSkip = () => {
+    skipRef.current = true;
+    setShake(false);
+    setWhiteFlash(false);
+    if (phase === 'reveal') {
+      setOpened(new Set(results.map((_, i) => i)));
+      setTimeout(() => setPhase('results'), 80);
+    } else {
+      setPhase('results');
+    }
   };
 
   const openCard = async () => {
@@ -206,6 +240,7 @@ export const TutorialGachaScreen = () => {
   };
 
   const handleToHome = () => {
+    // [DB SAVE] チュートリアル完了フラグを DB に保存
     completeTutorial();
     navigate('/');
   };
@@ -225,10 +260,26 @@ export const TutorialGachaScreen = () => {
       )}
 
       {/* ヘッダー */}
-      <div className="relative z-10 pt-safe pt-8 pb-4 text-center px-6">
-        <p className="text-xs tracking-[0.4em] mb-1" style={{ color: '#8b5cf6' }}>TUTORIAL</p>
-        <h1 className="text-xl font-black text-white">初回無料召喚</h1>
-        <p className="text-xs mt-1" style={{ color: '#6b7280' }}>★2以上 1体確定！</p>
+      <div className="relative z-10 pt-8 pb-4 px-6 flex items-start justify-between">
+        <div className="text-center flex-1">
+          <p className="text-xs tracking-[0.4em] mb-1" style={{ color: '#8b5cf6' }}>TUTORIAL</p>
+          <h1 className="text-xl font-black text-white">初回無料召喚</h1>
+          <p className="text-xs mt-1" style={{ color: '#6b7280' }}>★2以上 1体確定！</p>
+        </div>
+        {/* スキップボタン: アニメーション中のみ表示 */}
+        {(phase === 'summon' || phase === 'reveal') && (
+          <button
+            onClick={handleSkip}
+            className="text-xs font-bold px-3 py-1.5 rounded-lg active:scale-95 transition-all flex-shrink-0"
+            style={{
+              background: 'rgba(0,0,0,0.5)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              color: 'rgba(255,255,255,0.7)',
+              backdropFilter: 'blur(4px)',
+            }}>
+            SKIP ▶▶
+          </button>
+        )}
       </div>
 
       {/* 魔法陣エリア */}

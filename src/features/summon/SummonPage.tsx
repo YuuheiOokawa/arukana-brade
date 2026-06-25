@@ -4,6 +4,7 @@ import { UNIT_MASTER } from '../../data/units';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useUnitStore } from '../../stores/unitStore';
 import { useMissionStore } from '../../stores/missionStore';
+import { useAuthStore } from '../../stores/authStore';
 import { ELEMENT_NAMES } from '../../types';
 import type { SummonPool, RarityType, UnitMaster, GachaApplyResult } from '../../types';
 import type { GachaStar } from '../../types';
@@ -265,6 +266,7 @@ export const SummonPage = () => {
   const { player, spendDiamond, useItem, items, addItem } = usePlayerStore();
   const { processSummonResults } = useUnitStore();
   const { addDailyProgress } = useMissionStore();
+  const { syncSummonResult } = useAuthStore();
 
   const [selectedPool, setSelectedPool] = useState(SUMMON_POOLS[0]);
   const [phase, setPhase] = useState<Phase>('idle');
@@ -275,6 +277,8 @@ export const SummonPage = () => {
   const [shakePage, setShakePage] = useState(false);
   const [whiteFlash, setWhiteFlash] = useState(false);
   const [currentStar, setCurrentStar] = useState<GachaStar>(1);
+  // スキップフラグ: true になると演出を即座に中断してresultsへ
+  const skipRef = useRef(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
@@ -353,12 +357,16 @@ export const SummonPage = () => {
   /* ---- 召喚アニメーション ---- */
   const startSummon = async (count: number, useTicket = false) => {
     if (phase !== 'idle') return;
+    skipRef.current = false;
+
+    let diamondSpent = 0;
     if (useTicket) {
       if (ticketCount < count) { alert('チケットが足りません'); return; }
       useItem('item_summon_ticket', count);
     } else {
       const cost = count === 1 ? selectedPool.cost1 : selectedPool.cost10;
       if (!spendDiamond(cost)) { alert('ダイヤが足りません'); return; }
+      diamondSpent = cost;
     }
 
     const summonedMasters = performSummon(selectedPool, count);
@@ -369,39 +377,70 @@ export const SummonPage = () => {
     setRevealIndex(0);
     setOpenedCards(new Set());
 
+    // [localStorage SAVE] processSummonResults を先に実行してから演出開始
+    // → スキップ時も正しい結果を使えるようにする
+    const gachaResults = processSummonResults(summonedMasters.map(m => m.id));
+    const crystalCount = gachaResults.filter(r => r.type === 'crystal').length;
+    if (crystalCount > 0) addItem(AWAKENING_CONFIG.crystalItemId, crystalCount);
+    setSummonResultTypes(gachaResults);
+    addDailyProgress('summon');
+
+    // [DB SAVE] ガチャ結果を非同期でDBに保存（演出と並行）
+    void syncSummonResult(
+      selectedPool.id,
+      summonedMasters.map((m, i) => ({
+        masterId: m.id,
+        rarity: m.rarity,
+        resultType: gachaResults[i]?.type ?? 'new',
+      })),
+      diamondSpent,
+    );
+
     // Phase: summon
     setPhase('summon');
     const pColor = maxStar === 3 ? 'rgba(255,228,141,.8)' : maxStar === 2 ? 'rgba(183,115,255,.8)' : 'rgba(123,200,255,.8)';
     spawnBurst(120, pColor, 0.45);
+    if (skipRef.current) { setPhase('results'); return; }
     await sleep(1000);
 
     // Phase: crystal
+    if (skipRef.current) { setPhase('results'); return; }
     setPhase('crystal');
     spawnBurst(160, 'rgba(255,244,190,.85)', 0.6);
     await sleep(900);
 
     // Shake
+    if (skipRef.current) { setPhase('results'); return; }
     setShakePage(true);
     spawnBurst(220, pColor, 1.0);
     await sleep(500);
     setShakePage(false);
 
     // Shatter + flash
+    if (skipRef.current) { setPhase('results'); return; }
     setPhase('shatter');
     spawnBurst(260, 'rgba(190,249,255,.9)', 1.1);
     setWhiteFlash(true);
     await sleep(200);
     setWhiteFlash(false);
+    if (skipRef.current) { setPhase('results'); return; }
     await sleep(700);
 
-    // Phase: reveal (card flip) - 被り処理込みで一括処理
-    const gachaResults = processSummonResults(summonedMasters.map(m => m.id));
-    // 覚醒結晶の付与
-    const crystalCount = gachaResults.filter(r => r.type === 'crystal').length;
-    if (crystalCount > 0) addItem(AWAKENING_CONFIG.crystalItemId, crystalCount);
-    setSummonResultTypes(gachaResults);
-    addDailyProgress('summon');
     setPhase('reveal');
+  };
+
+  /* スキップ: 演出中断 → 即results表示 */
+  const handleSkip = () => {
+    skipRef.current = true;
+    setShakePage(false);
+    setWhiteFlash(false);
+    // reveal フェーズ中は全カードを開封状態にしてresultsへ
+    if (phase === 'reveal') {
+      setOpenedCards(new Set(summonResults.map((_, i) => i)));
+      setTimeout(() => setPhase('results'), 80);
+    } else {
+      setPhase('results');
+    }
   };
 
   const openCard = async () => {
@@ -433,6 +472,7 @@ export const SummonPage = () => {
   };
 
   const reset = () => {
+    skipRef.current = false;
     setPhase('idle');
     setSummonResults([]);
     setSummonResultTypes([]);
@@ -475,9 +515,25 @@ export const SummonPage = () => {
       {/* ヘッダー */}
       <header className="summon-header">
         <h1 className="summon-title">召喚神殿</h1>
-        <div className="summon-currency">
-          <div className="currency-gem" />
-          <span className="font-black text-sm text-yellow-200">{player.diamond}</span>
+        <div className="flex items-center gap-3">
+          {/* スキップボタン: アニメーション中またはカード開封中のみ表示 */}
+          {(phase === 'summon' || phase === 'crystal' || phase === 'shatter' || phase === 'reveal') && (
+            <button
+              onClick={handleSkip}
+              className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all active:scale-95"
+              style={{
+                background: 'rgba(0,0,0,0.5)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: 'rgba(255,255,255,0.7)',
+                backdropFilter: 'blur(4px)',
+              }}>
+              SKIP ▶▶
+            </button>
+          )}
+          <div className="summon-currency">
+            <div className="currency-gem" />
+            <span className="font-black text-sm text-yellow-200">{player.diamond}</span>
+          </div>
         </div>
       </header>
 
