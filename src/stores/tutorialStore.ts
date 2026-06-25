@@ -16,6 +16,7 @@ interface TutorialStore {
   selectRace: (race: RaceType) => void;
   selectHero: (heroId: string) => void;
   completeTutorial: () => void;
+  forceComplete: () => void;
   resetTutorial: () => void;
 }
 
@@ -35,6 +36,7 @@ export const useTutorialStore = create<TutorialStore>()(
       selectRace: (race) => set({ selectedRace: race }),
       selectHero: (heroId) => set({ selectedHeroId: heroId }),
       completeTutorial: () => set({ completed: true, phase: 'complete' }),
+      forceComplete: () => set({ completed: true, phase: 'complete' }),
       resetTutorial: () => set({
         completed: false,
         phase: 'title',

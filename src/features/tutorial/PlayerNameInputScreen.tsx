@@ -77,19 +77,6 @@ export const PlayerNameInputScreen = () => {
           {error && <p className="mt-2 text-xs text-red-400 text-center">{error}</p>}
         </div>
 
-        {/* 候補名 */}
-        <div className="mb-8">
-          <p className="text-xs text-gray-500 text-center mb-3">おすすめの名前</p>
-          <div className="flex flex-wrap gap-2 justify-center">
-            {['アルカナ', 'ソレイユ', 'レイン', 'カイト', 'シオン', 'ルーナ'].map(n => (
-              <button key={n} onClick={() => { setName(n); setError(''); }}
-                className="px-3 py-1 text-xs rounded-lg border border-gray-700 text-gray-300 cursor-pointer hover:border-purple-500 hover:text-purple-300 transition-colors">
-                {n}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* 次へボタン */}
         <button onClick={handleNext} disabled={!isValid}
           className="w-full py-4 rounded-2xl font-bold text-white text-base cursor-pointer active:scale-95 transition-all duration-200"

@@ -1,8 +1,8 @@
 # システムアーキテクチャドキュメント
 # アルカナブレイド
 
-最終更新: 2026-06-24
-バージョン: MVP 2.0
+最終更新: 2026-06-25
+バージョン: MVP 6.0 (Auth)
 
 ---
 
@@ -16,8 +16,15 @@
 | Tailwind CSS v4 | 4.x | スタイリング (@tailwindcss/vite) |
 | Zustand | 5.x | クライアント状態管理 |
 | React Router v7 | 7.x | SPA ルーティング |
-| localStorage | — | データ永続化 (Zustand persist) |
+| localStorage | — | ゲームデータ永続化 (Zustand persist) |
 | vite-plugin-pwa | 1.x | PWA・Service Worker 生成 ✅ |
+| **Neon PostgreSQL** | — | **クラウドDB (認証・プレイヤーデータ)** |
+| **Prisma ORM** | 5.x | **DBアクセス・スキーマ管理** |
+| **bcryptjs** | 3.x | **パスワードハッシュ化** |
+| **jsonwebtoken** | 9.x | **JWT認証トークン生成・検証** |
+| **cookie** | 1.x | **HTTP Only Cookie管理** |
+| **Vercel Functions** | — | **サーバーレスAPIエンドポイント** |
+| **Vercel** | — | **ホスティング (SPA + API)** |
 
 ---
 
@@ -25,6 +32,19 @@
 
 ```
 arukanabrade/
+├── api/                            # Vercel Serverless Functions ★新規
+│   ├── auth/
+│   │   ├── register.ts             # POST /api/auth/register
+│   │   ├── login.ts                # POST /api/auth/login
+│   │   ├── logout.ts               # POST /api/auth/logout
+│   │   └── me.ts                   # GET /api/auth/me
+│   └── player/
+│       └── save.ts                 # POST /api/player/save
+├── lib/                            # APIユーティリティ ★新規
+│   ├── prisma.ts                   # Prismaクライアントシングルトン
+│   └── auth.ts                     # JWT生成・検証・Cookie操作
+├── prisma/                         # Prisma ORM ★新規
+│   └── schema.prisma               # DBスキーマ定義
 ├── docs/                           # 設計・仕様ドキュメント
 ├── public/                         # 静的アセット
 │   └── favicon.png                 # アプリアイコン
@@ -49,6 +69,7 @@ arukanabrade/
 │   │   └── events.ts               # EventQuest × 2 / RaidBoss × 2 ★新規
 │   │
 │   ├── stores/                     # Zustand状態管理
+│   │   ├── authStore.ts            # 認証状態管理 (user/player/isChecked) ★新規
 │   │   ├── playerStore.ts          # プレイヤーデータ・通貨・スタミナ・アイテム
 │   │   ├── unitStore.ts            # 所持ユニット
 │   │   ├── partyStore.ts           # パーティ編成
@@ -60,6 +81,9 @@ arukanabrade/
 │   │   └── arenaStore.ts           # アリーナ対戦記録・ランク ★新規
 │   │
 │   ├── features/                   # 画面単位のコンポーネント
+│   │   ├── auth/                   # 認証画面 ★新規
+│   │   │   ├── LoginPage.tsx       # ログイン画面
+│   │   │   └── RegisterPage.tsx    # 新規登録画面
 │   │   ├── home/HomePage.tsx       # バナー・バッジ・ミッション通知対応
 │   │   ├── units/
 │   │   │   ├── UnitsPage.tsx
@@ -97,14 +121,82 @@ arukanabrade/
 │       └── format.ts               # 数値フォーマット・戦力計算
 │
 ├── index.html                      # SPAエントリHTML (favicon.png)
-├── vite.config.ts                  # Vite設定 (React + Tailwind + VitePWA)
-├── tsconfig.json
+├── vite.config.ts                  # Vite設定 (React + Tailwind + VitePWA + APIプロキシ)
+├── vercel.json                     # Vercel設定 (ビルド・SPAリライト) ★新規
+├── tsconfig.json                   # プロジェクト参照 (app/node/api)
+├── tsconfig.api.json               # API用TypeScript設定 ★新規
+├── .env.local.example              # 環境変数テンプレート ★新規
 └── package.json
 ```
 
 ---
 
-## 3. ルーティング
+## 3. 認証システム (MVP 6.0 新規)
+
+### 認証フロー
+
+```
+アプリ起動
+  └─ checkAuth() → GET /api/auth/me (Cookie送信)
+       ├─ 200 OK → user + player データ取得 → authStore にセット
+       │     ├─ tutorialCompleted = true → completeTutorial() → ホーム画面
+       │     └─ tutorialCompleted = false → チュートリアル画面
+       └─ 401 → タイトル画面 (/title)
+                 ├─ ログイン → /login → POST /api/auth/login → JWT Cookie発行
+                 └─ 新規登録 → /register → POST /api/auth/register → JWT Cookie発行
+```
+
+### JWT仕様
+
+| 項目 | 値 |
+|------|-----|
+| アルゴリズム | HS256 |
+| 有効期限 | 30日 |
+| ペイロード | `{ userId, email, iat, exp }` |
+| 秘密鍵 | 環境変数 `JWT_SECRET` (32文字以上) |
+
+### Cookie仕様
+
+| 項目 | 値 |
+|------|-----|
+| 名前 | `arcana_session` |
+| HttpOnly | true (JS不可) |
+| Secure | true (本番のみ) |
+| SameSite | lax |
+| MaxAge | 2592000 (30日) |
+| Path | / |
+
+### APIエンドポイント
+
+| メソッド | パス | 説明 | 認証 |
+|---------|------|------|------|
+| POST | /api/auth/register | 新規登録 | 不要 |
+| POST | /api/auth/login | ログイン | 不要 |
+| POST | /api/auth/logout | ログアウト | Cookie |
+| GET | /api/auth/me | 認証状態確認 | Cookie |
+| POST | /api/player/save | プレイヤーデータ保存 | Cookie |
+
+### DBテーブル
+
+| テーブル | 説明 | 主な列 |
+|---------|------|--------|
+| users | ユーザーアカウント | id, email, passwordHash, emailVerified |
+| players | プレイヤーデータ | playerId, userId, playerName, tutorialCompleted |
+| owned_units | 所持ユニット (将来用) | playerId, masterId, level, awakeningCount |
+| player_items | 所持アイテム (将来用) | playerId, itemId, quantity |
+| summon_history | ガチャ履歴 (将来用) | playerId, masterId, rarity, resultType |
+
+### 環境変数
+
+| 変数名 | 説明 | 設定箇所 |
+|--------|------|---------|
+| `DATABASE_URL` | Neon 接続プーラURL | .env.local / Vercel |
+| `DIRECT_URL` | Neon 直接接続URL (migrate用) | .env.local / Vercel |
+| `JWT_SECRET` | JWT署名シークレット (32文字以上) | .env.local / Vercel |
+
+---
+
+## 4. ルーティング
 
 `src/App.tsx` で定義。React Router v7 使用。
 
