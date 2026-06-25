@@ -15,11 +15,11 @@ const TUTORIAL_REWARDS = [
 
 export const TutorialCompleteScreen = () => {
   const navigate = useNavigate();
-  const { playerName, selectedHeroId, selectedGender, selectedRace, setPhase } = useTutorialStore();
+  const { playerName, selectedHeroId, selectedGender, selectedRace, setPhase: setTutorialPhase } = useTutorialStore();
   const { setupFromTutorial } = usePlayerStore();
   const { addUnit } = useUnitStore();
 
-  const [phase, setPhase] = useState<'rewards' | 'hero' | 'ready'>('rewards');
+  const [screenPhase, setScreenPhase] = useState<'rewards' | 'hero' | 'ready'>('rewards');
   const [rewardIndex, setRewardIndex] = useState(0);
   const [done, setDone] = useState(false);
 
@@ -34,8 +34,8 @@ export const TutorialCompleteScreen = () => {
     TUTORIAL_REWARDS.forEach((_, i) => {
       timers.push(setTimeout(() => setRewardIndex(i + 1), 400 + i * 600));
     });
-    timers.push(setTimeout(() => setPhase('hero'), 400 + TUTORIAL_REWARDS.length * 600 + 200));
-    timers.push(setTimeout(() => setPhase('ready'), 400 + TUTORIAL_REWARDS.length * 600 + 1400));
+    timers.push(setTimeout(() => setScreenPhase('hero'), 400 + TUTORIAL_REWARDS.length * 600 + 200));
+    timers.push(setTimeout(() => setScreenPhase('ready'), 400 + TUTORIAL_REWARDS.length * 600 + 1400));
     return () => timers.forEach(clearTimeout);
   }, []);
 
@@ -50,7 +50,7 @@ export const TutorialCompleteScreen = () => {
     }
 
     // 初回ガチャへ遷移（completeTutorial はガチャ後に呼ばれる）
-    setPhase('initial_gacha');
+    setTutorialPhase('initial_gacha');
     navigate('/tutorial/gacha');
   };
 
@@ -116,7 +116,7 @@ export const TutorialCompleteScreen = () => {
         </div>
 
         {/* 主人公カード */}
-        {phase !== 'rewards' && heroMaster && (
+        {screenPhase !== 'rewards' && heroMaster && (
           <div className="w-full card-glass rounded-2xl p-4 mb-6 animate-slide-up">
             <div className="text-xs text-yellow-400 font-bold tracking-widest mb-3 text-center">
               ── 主人公ユニット獲得！ ──
@@ -143,7 +143,7 @@ export const TutorialCompleteScreen = () => {
         )}
 
         {/* ホームへボタン */}
-        {phase === 'ready' && (
+        {screenPhase === 'ready' && (
           <button
             onClick={handleComplete}
             disabled={done}
