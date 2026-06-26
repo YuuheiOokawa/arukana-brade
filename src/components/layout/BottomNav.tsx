@@ -63,7 +63,7 @@ export const BottomNav = () => {
               <div className="flex justify-center mb-5">
                 <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(139,92,246,0.4)' }} />
               </div>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-4 gap-2">
                 {MENU_ITEMS.map(item => {
                   const active = isActive(item.path);
                   return (
@@ -81,7 +81,7 @@ export const BottomNav = () => {
                             boxShadow: active ? '0 0 16px rgba(139,92,246,0.2)' : 'none',
                           }}>
                           <item.Icon size={22} color={active ? '#c4b5fd' : '#4b5563'} />
-                          <span style={{ fontSize: 10, fontWeight: 700, color: active ? '#c4b5fd' : '#4b5563' }}>
+                          <span style={{ fontSize: 9, fontWeight: 700, color: active ? '#c4b5fd' : '#4b5563', whiteSpace: 'nowrap' }}>
                             {item.label}
                           </span>
                         </button>
@@ -93,6 +93,12 @@ export const BottomNav = () => {
                   );
                 })}
               </div>
+              <button
+                onClick={() => { setMenuOpen(false); navigate('/title'); }}
+                className="w-full mt-3 py-2.5 rounded-xl text-center text-xs font-bold transition-all active:scale-98"
+                style={{ color: '#9ca3af', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)' }}>
+                ← タイトルに戻る
+              </button>
             </div>
           </div>
         </div>

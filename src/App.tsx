@@ -77,6 +77,20 @@ const AppContent = () => {
     if (user?.email === ADMIN_EMAIL) setAdminMode();
   }, [user, setAdminMode]);
 
+  const syncCurrencyToServer = usePlayerStore(s => s.syncCurrencyToServer);
+  useEffect(() => {
+    if (!user) return;
+    const sync = () => { void syncCurrencyToServer(); };
+    window.addEventListener('blur', sync);
+    window.addEventListener('beforeunload', sync);
+    const interval = setInterval(sync, 3 * 60 * 1000);
+    return () => {
+      window.removeEventListener('blur', sync);
+      window.removeEventListener('beforeunload', sync);
+      clearInterval(interval);
+    };
+  }, [user, syncCurrencyToServer]);
+
   return (
     <div className="max-w-lg mx-auto relative min-h-screen">
       <Routes>
