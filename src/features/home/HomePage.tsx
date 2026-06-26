@@ -1,16 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useMissionStore } from '../../stores/missionStore';
+import { useLoginBonusStore } from '../../stores/loginBonusStore';
 import { getActiveEvents, getActiveRaids } from '../../data/events';
-import { formatNumber } from '../../utils/format';
+import { formatCompact } from '../../utils/format';
+import { RANK_EXP_TABLE } from '../../stores/playerStore';
 import {
   IconSword, IconTeam, IconCrystal, IconArrowUp,
-  IconGear, IconShield, IconTrophy, IconCastle,
-  IconDragon, IconScroll,
+  IconGear, IconShield, IconDragon, IconScroll,
 } from '../../components/ui/FantasyIcon';
-import { GaugeBar } from '../../components/ui/game/GaugeBar';
-import { CurrencyIcon } from '../../components/ui/game/GameIcons';
+import { LoginBonusModal } from '../login/LoginBonusModal';
 
 const QUICK_ACTIONS = [
   { label: 'クエスト',  Icon: IconSword,   path: '/quests',   desc: 'ストーリー・イベント',  color: 'from-red-950/70 to-red-800/40',   accent: '#ef4444' },
@@ -25,19 +25,25 @@ export const HomePage = () => {
   const navigate = useNavigate();
   const { player, recoverStamina } = usePlayerStore();
   const { checkDailyReset, getCompletedCount, getClaimedCount } = useMissionStore();
+  const { canClaim } = useLoginBonusStore();
+  const [showLoginBonus, setShowLoginBonus] = useState(false);
 
   useEffect(() => {
     recoverStamina();
     checkDailyReset();
     const interval = setInterval(recoverStamina, 60000);
+    // ログインボーナスを自動表示
+    if (canClaim()) setTimeout(() => setShowLoginBonus(true), 800);
     return () => clearInterval(interval);
-  }, [recoverStamina, checkDailyReset]);
+  }, [recoverStamina, checkDailyReset, canClaim]);
 
   const activeEvents = getActiveEvents();
   const activeRaids = getActiveRaids();
   const missionCompleted = getCompletedCount();
   const missionClaimed   = getClaimedCount();
   const missionPending   = missionCompleted - missionClaimed;
+  const rankExpNeeded = RANK_EXP_TABLE[player.rank - 1] ?? 9999;
+  const expPercent = Math.min(100, (player.exp / rankExpNeeded) * 100);
 
   return (
     <div className="min-h-screen pb-28 relative overflow-hidden">
@@ -92,55 +98,92 @@ export const HomePage = () => {
       </div>
 
       {/* プレイヤー情報パネル */}
-      <div className="px-4 mb-4">
-        <div className="rounded-2xl p-4 relative overflow-hidden"
+      <div className="px-4 mb-3">
+        <div className="rounded-2xl overflow-hidden relative"
           style={{
-            background: 'linear-gradient(145deg, rgba(26,18,58,0.9), rgba(18,12,40,0.95))',
-            border: '1px solid rgba(139,92,246,0.3)',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)',
+            background: 'linear-gradient(145deg, rgba(22,12,55,0.96) 0%, rgba(14,8,36,0.98) 100%)',
+            border: '1px solid rgba(139,92,246,0.35)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)',
           }}>
-          {/* 背景光 */}
-          <div className="absolute inset-0 pointer-events-none" style={{
-            background: 'radial-gradient(ellipse at 30% 0%, rgba(139,92,246,0.12), transparent 60%)',
-          }} />
-          <div className="relative">
-            <div className="flex items-center justify-between mb-4">
+          {/* 装飾ライン */}
+          <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, transparent, #7c3aed, #a855f7, transparent)' }} />
+          <div className="p-4">
+            {/* 名前・ランク行 */}
+            <div className="flex items-start justify-between mb-3">
               <div>
-                <p className="text-xs mb-0.5" style={{ color: '#6b7280' }}>召喚士</p>
-                <p className="text-lg font-black text-white">{player.name}</p>
+                <p className="text-[10px] font-bold tracking-widest mb-0.5" style={{ color: '#6b7280' }}>SUMMONER</p>
+                <p className="text-xl font-black text-white leading-none">{player.name}</p>
+                {player.title && <p className="text-xs mt-0.5" style={{ color: '#a78bfa' }}>{player.title}</p>}
               </div>
-              <div className="text-right">
-                <p className="text-xs mb-0.5" style={{ color: '#6b7280' }}>ランク</p>
-                <p className="text-2xl font-black" style={{
-                  background: 'linear-gradient(135deg, #f0c040, #d97706)',
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                }}>{player.rank}</p>
+              <div className="text-center">
+                <div className="rounded-xl px-3 py-1.5" style={{ background: 'linear-gradient(135deg, rgba(240,192,64,0.15), rgba(217,119,6,0.1))', border: '1px solid rgba(240,192,64,0.3)' }}>
+                  <p className="text-[9px] font-bold tracking-widest" style={{ color: '#d97706' }}>RANK</p>
+                  <p className="text-2xl font-black leading-none" style={{
+                    background: 'linear-gradient(135deg, #fde68a, #f0c040, #d97706)',
+                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                  }}>{player.rank}</p>
+                </div>
+                {canClaim() && (
+                  <button onClick={() => setShowLoginBonus(true)}
+                    className="mt-1.5 text-[9px] font-bold px-2 py-0.5 rounded-full animate-pulse"
+                    style={{ background: 'rgba(240,192,64,0.2)', color: '#f0c040', border: '1px solid rgba(240,192,64,0.4)' }}>
+                    🎁 受取
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* 通貨 */}
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              <div className="rounded-xl px-3 py-2.5 flex items-center gap-2.5"
-                style={{ background: 'rgba(240,192,64,0.08)', border: '1px solid rgba(240,192,64,0.18)' }}>
-                <CurrencyIcon type="gold" size={32} />
-                <div>
-                  <p className="text-xs" style={{ color: '#9ca3af' }}>ゴールド</p>
-                  <p className="text-sm font-black" style={{ color: '#f0c040' }}>{formatNumber(player.gold)}</p>
-                </div>
+            {/* EXPゲージ */}
+            <div className="mb-3">
+              <div className="flex justify-between mb-1">
+                <span className="text-[10px] font-bold" style={{ color: '#4b5563' }}>EXP</span>
+                <span className="text-[10px]" style={{ color: '#6b7280' }}>{player.exp.toLocaleString()} / {rankExpNeeded.toLocaleString()}</span>
               </div>
-              <div className="rounded-xl px-3 py-2.5 flex items-center gap-2.5"
-                style={{ background: 'rgba(99,202,255,0.08)', border: '1px solid rgba(99,202,255,0.18)' }}>
-                <CurrencyIcon type="diamond" size={32} />
-                <div>
-                  <p className="text-xs" style={{ color: '#9ca3af' }}>ダイヤ</p>
-                  <p className="text-sm font-black" style={{ color: '#7bc8ff' }}>{formatNumber(player.diamond)}</p>
-                </div>
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
+                <div className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${expPercent}%`, background: 'linear-gradient(90deg, #7c3aed, #a855f7, #c084fc)' }} />
               </div>
             </div>
 
             {/* スタミナ */}
-            <GaugeBar type="stamina" value={player.stamina} max={player.maxStamina} />
+            <div className="mb-3">
+              <div className="flex justify-between mb-1">
+                <span className="text-[10px] font-bold" style={{ color: '#4b5563' }}>⚡ スタミナ</span>
+                <span className="text-[10px] font-bold" style={{ color: player.stamina >= player.maxStamina ? '#34d399' : '#f59e0b' }}>
+                  {player.stamina} / {player.maxStamina}
+                </span>
+              </div>
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
+                <div className="h-full rounded-full transition-all duration-300"
+                  style={{
+                    width: `${Math.min(100, (player.stamina / player.maxStamina) * 100)}%`,
+                    background: player.stamina >= player.maxStamina ? 'linear-gradient(90deg, #10b981, #34d399)' : 'linear-gradient(90deg, #f59e0b, #fbbf24)',
+                  }} />
+              </div>
+            </div>
+
+            {/* 通貨 */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-xl px-3 py-2 flex items-center gap-2"
+                style={{ background: 'rgba(240,192,64,0.08)', border: '1px solid rgba(240,192,64,0.2)' }}>
+                <span className="text-lg">🪙</span>
+                <div>
+                  <p className="text-[9px] font-bold" style={{ color: '#6b7280' }}>GOLD</p>
+                  <p className="text-sm font-black" style={{ color: '#f0c040' }}>{formatCompact(player.gold)}</p>
+                </div>
+              </div>
+              <div className="rounded-xl px-3 py-2 flex items-center gap-2"
+                style={{ background: 'rgba(99,202,255,0.08)', border: '1px solid rgba(99,202,255,0.2)' }}>
+                <span className="text-lg">💎</span>
+                <div>
+                  <p className="text-[9px] font-bold" style={{ color: '#6b7280' }}>DIAMOND</p>
+                  <p className="text-sm font-black" style={{ color: '#7bc8ff' }}>{formatCompact(player.diamond)}</p>
+                </div>
+              </div>
+            </div>
           </div>
+          {/* 下装飾ライン */}
+          <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.3), transparent)' }} />
         </div>
       </div>
 
@@ -240,6 +283,9 @@ export const HomePage = () => {
           );
         })}
       </div>
+
+      {/* ログインボーナスモーダル */}
+      {showLoginBonus && <LoginBonusModal onClose={() => setShowLoginBonus(false)} />}
     </div>
   );
 };

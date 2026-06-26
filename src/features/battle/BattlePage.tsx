@@ -35,7 +35,7 @@ const logColor = (line: string) => {
 
 export const BattlePage = () => {
   const navigate = useNavigate();
-  const { pendingStageId, pendingFriendId, clearPending, markCleared } = useQuestStore();
+  const { pendingStageId, pendingFriendId, clearPending, markCleared, checkAreaComplete, claimAreaReward } = useQuestStore();
   const { getActiveParty } = usePartyStore();
   const { ownedUnits, levelUpUnit } = useUnitStore();
   const { spendStamina, addGold, addExp, addItem, syncCurrencyToServer } = usePlayerStore();
@@ -320,11 +320,17 @@ export const BattlePage = () => {
                     setRewardGold(gold);
                     setRewardExp(exp);
                     setRewardItems(items);
+                    const isAreaClear = checkAreaComplete(curStage.id);
                     markCleared(curStage.id);
                     clearPending();
                     addGold(gold);
                     addExp(exp);
                     items.forEach(id => addItem(id, 1));
+                    if (isAreaClear) {
+                      const parts = curStage.id.split('_');
+                      if (parts.length >= 3) claimAreaReward(`${parts[1]}_${parts[2]}`);
+                      addItem('item_summon_ticket', 5);
+                    }
                     const nonFriendAlive = updAllies.filter(a => !a.isFriend && a.currentHp > 0);
                     const nonFriendCount = updAllies.filter(a => !a.isFriend).length || 1;
                     nonFriendAlive.forEach(a => levelUpUnit(a.instanceId, Math.floor(exp / nonFriendCount)));
@@ -418,11 +424,17 @@ export const BattlePage = () => {
                     setRewardGold(gold);
                     setRewardExp(exp);
                     setRewardItems(items);
+                    const isAreaClear = checkAreaComplete(curStage.id);
                     markCleared(curStage.id);
                     clearPending();
                     addGold(gold);
                     addExp(exp);
                     items.forEach(id => addItem(id, 1));
+                    if (isAreaClear) {
+                      const parts = curStage.id.split('_');
+                      if (parts.length >= 3) claimAreaReward(`${parts[1]}_${parts[2]}`);
+                      addItem('item_summon_ticket', 5);
+                    }
                     const nonFriendAlive = updAllies.filter(a => !a.isFriend && a.currentHp > 0);
                     const nonFriendCount = updAllies.filter(a => !a.isFriend).length || 1;
                     nonFriendAlive.forEach(a => levelUpUnit(a.instanceId, Math.floor(exp / nonFriendCount)));

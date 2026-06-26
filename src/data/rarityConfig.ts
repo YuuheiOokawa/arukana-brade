@@ -55,15 +55,21 @@ export const AWAKENING_CONFIG = {
   crystalItemId: 'item_awakening_crystal',
 } as const;
 
-// 進化素材定義
+// 進化素材定義（マナクリスタル + ゴールドで進化）
 export const EVOLUTION_MATERIALS: Record<string, { itemId: string; quantity: number; label: string }[]> = {
-  '1': [{ itemId: 'item_stone_core',     quantity: 5,  label: '強化の石' }],
-  '2': [{ itemId: 'item_stone_core',     quantity: 10, label: '強化の石' }, { itemId: 'item_magic_crystal', quantity: 3, label: '魔法結晶' }],
-  '3': [{ itemId: 'item_magic_crystal',  quantity: 5,  label: '魔法結晶' }, { itemId: 'item_elemental_core', quantity: 2, label: '属性核' }],
-  '4': [{ itemId: 'item_elemental_core', quantity: 5,  label: '属性核' },  { itemId: 'item_arcana_orb',     quantity: 1, label: 'アルカナ珠' }],
-  '5': [{ itemId: 'item_elemental_core', quantity: 10, label: '属性核' },  { itemId: 'item_arcana_orb',     quantity: 3, label: 'アルカナ珠' }],
-  '6': [{ itemId: 'item_arcana_orb',     quantity: 5,  label: 'アルカナ珠' }, { itemId: 'item_awakening_crystal', quantity: 2, label: '覚醒結晶' }],
-  '7': [{ itemId: 'item_arcana_orb',     quantity: 10, label: 'アルカナ珠' }, { itemId: 'item_awakening_crystal', quantity: 5, label: '覚醒結晶' }],
+  '1': [{ itemId: 'item_mana_crystal', quantity: 3,  label: 'マナクリスタル' }],
+  '2': [{ itemId: 'item_mana_crystal', quantity: 5,  label: 'マナクリスタル' }],
+  '3': [{ itemId: 'item_mana_crystal', quantity: 8,  label: 'マナクリスタル' }],
+  '4': [{ itemId: 'item_mana_crystal', quantity: 12, label: 'マナクリスタル' }],
+  '5': [{ itemId: 'item_mana_crystal', quantity: 18, label: 'マナクリスタル' }],
+  '6': [{ itemId: 'item_mana_crystal', quantity: 25, label: 'マナクリスタル' }],
+  '7': [{ itemId: 'item_mana_crystal', quantity: 35, label: 'マナクリスタル' }],
+};
+
+// 進化に必要なゴールド
+export const EVOLUTION_GOLD_COST: Record<string, number> = {
+  '1': 5000, '2': 15000, '3': 40000,
+  '4': 100000, '5': 250000, '6': 600000, '7': 1500000,
 };
 
 export const getLevelCap = (rarity: StarRarity): number =>

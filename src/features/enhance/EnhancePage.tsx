@@ -10,7 +10,7 @@ import { GaugeBar } from '../../components/ui/game/GaugeBar';
 import { GameButton } from '../../components/ui/game/GameButton';
 import { TopBar } from '../../components/layout/TopBar';
 import { formatNumber, calcTotalPower, getExpForLevel } from '../../utils/format';
-import { getLevelCap, getStarDisplay, NEXT_RARITY, AWAKENING_CONFIG, EVOLUTION_MATERIALS } from '../../data/rarityConfig';
+import { getLevelCap, getStarDisplay, NEXT_RARITY, AWAKENING_CONFIG, EVOLUTION_MATERIALS, EVOLUTION_GOLD_COST } from '../../data/rarityConfig';
 
 export const EnhancePage = () => {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ export const EnhancePage = () => {
   const initTab = (params.get('tab') as 'level' | 'awaken') ?? 'level';
 
   const { ownedUnits, levelUpUnit, awakenUnit, incrementAwakeningCount, rarityUp } = useUnitStore();
-  const { items, useItem } = usePlayerStore();
+  const { items, useItem, player, spendGold } = usePlayerStore();
   const { addDailyProgress } = useMissionStore();
   const [selectedId, setSelectedId] = useState<string | null>(initUnit);
   const [tab, setTab] = useState<'level' | 'awaken'>(initTab);
@@ -98,6 +98,7 @@ export const EnhancePage = () => {
     const lvCap = getLevelCap(unit.currentRarity);
     if (unit.level < lvCap) { setMessage(`Lv${lvCap}に達してから進化できます`); return; }
     const mats = EVOLUTION_MATERIALS[String(unit.currentRarity)] ?? [];
+    const goldCost = EVOLUTION_GOLD_COST[String(unit.currentRarity)] ?? 0;
     for (const mat of mats) {
       const owned = items.find(i => i.itemId === mat.itemId);
       if (!owned || owned.quantity < mat.quantity) {
@@ -106,7 +107,13 @@ export const EnhancePage = () => {
         return;
       }
     }
+    if (player.gold < goldCost) {
+      setMessage(`ゴールド不足: ${goldCost.toLocaleString()} G 必要`);
+      setTimeout(() => setMessage(''), 2500);
+      return;
+    }
     for (const mat of mats) useItem(mat.itemId, mat.quantity);
+    spendGold(goldCost);
     const nextR = NEXT_RARITY[String(unit.currentRarity)];
     const ok = rarityUp(unit.instanceId);
     if (!ok) { setMessage('進化できません'); return; }
@@ -193,7 +200,7 @@ export const EnhancePage = () => {
                       const itemMaster = getItemMaster(mat.itemId);
                       return (
                         <div key={mat.itemId} className="flex items-center gap-2 text-sm">
-                          <span className="text-base">{itemMaster?.emoji ?? '📦'}</span>
+                          <span className="text-base">{itemMaster?.emoji ?? '🔷'}</span>
                           <span className="flex-1 text-gray-300 text-xs">{mat.label}</span>
                           <span className={`text-xs font-bold ${enough ? 'text-green-400' : 'text-red-400'}`}>
                             {owned}/{mat.quantity} {enough ? '✓' : '✗'}
@@ -201,6 +208,20 @@ export const EnhancePage = () => {
                         </div>
                       );
                     })}
+                    {/* ゴールドコスト */}
+                    {(() => {
+                      const cost = EVOLUTION_GOLD_COST[String(unit.currentRarity)] ?? 0;
+                      const enough = player.gold >= cost;
+                      return (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-base">🪙</span>
+                          <span className="flex-1 text-gray-300 text-xs">ゴールド</span>
+                          <span className={`text-xs font-bold ${enough ? 'text-green-400' : 'text-red-400'}`}>
+                            {player.gold.toLocaleString()}/{cost.toLocaleString()} {enough ? '✓' : '✗'}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
                   <GameButton variant="gold" fullWidth onClick={handleRarityUp}>
                     進化する

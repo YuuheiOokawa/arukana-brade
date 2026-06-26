@@ -59,86 +59,89 @@ export const PvPPage = () => {
   }, [record.points]);
 
   const calcPlayerPower = () => {
-    const party = getActiveParty();
-    return party.slots
-      .filter(Boolean)
-      .reduce((sum, id) => {
-        const unit = ownedUnits.find(u => u.instanceId === id);
-        if (!unit) return sum;
-        const master = UNIT_MASTER.find(m => m.id === unit.masterId);
-        if (!master) return sum;
-        const stats = calcUnitStats(master, unit.level, unit.awakenRank);
-        return sum + calcTotalPower(stats);
-      }, 0);
+    try {
+      const party = getActiveParty();
+      if (!party) return 0;
+      return (party.slots ?? [])
+        .filter(Boolean)
+        .reduce((sum, id) => {
+          const unit = ownedUnits.find(u => u.instanceId === id);
+          if (!unit) return sum;
+          const master = UNIT_MASTER.find(m => m.id === unit.masterId);
+          if (!master) return sum;
+          const stats = calcUnitStats(master, unit.level, unit.awakenRank);
+          return sum + calcTotalPower(stats);
+        }, 0);
+    } catch { return 0; }
   };
 
   const simulateBattle = (opponent: ArenaOpponent) => {
     const playerPower = calcPlayerPower();
     const oppPower = opponent.power;
-
-    // 勝率計算: 戦力比 + ランダム要素
     const ratio = playerPower / Math.max(1, oppPower);
     const winChance = Math.min(0.85, Math.max(0.15, 0.5 + (ratio - 1) * 0.3));
     const won = Math.random() < winChance;
 
-    // バトルログ生成
     const party = getActiveParty();
-    const partyUnits = party.slots
+    const slots = party?.slots ?? [];
+    const partyUnits = slots
       .filter(Boolean)
       .map(id => ownedUnits.find(u => u.instanceId === id))
-      .filter(Boolean);
+      .filter((u): u is NonNullable<typeof u> => u != null);
 
     const oppMaster = UNIT_MASTER.find(m => m.id === opponent.leaderUnitMasterId);
     const logs: string[] = [];
-    logs.push(`アリーナバトル開始！`);
+    logs.push('アリーナバトル開始！');
     logs.push(`${opponent.playerName} の ${oppMaster?.name ?? '???'} に挑戦...`);
 
-    for (let i = 0; i < 3; i++) {
-      const unit = partyUnits[i % partyUnits.length];
-      if (!unit) continue;
-      const master = UNIT_MASTER.find(m => m.id === unit.masterId);
-      if (!master) continue;
-      const dmg = Math.floor(Math.random() * 5000 + 2000);
-      logs.push(`${master.emoji} ${master.name} が ${dmg.toLocaleString()} ダメージ！`);
+    if (partyUnits.length > 0) {
+      for (let i = 0; i < 3; i++) {
+        const unit = partyUnits[i % partyUnits.length];
+        if (!unit) continue;
+        const master = UNIT_MASTER.find(m => m.id === unit.masterId);
+        if (!master) continue;
+        const dmg = Math.floor(Math.random() * 5000 + 2000);
+        logs.push(`${master.emoji} ${master.name} が ${dmg.toLocaleString()} ダメージ！`);
+      }
     }
 
-    if (won) {
-      logs.push(`✨ 勝利！相手のHPを削り切った！`);
-    } else {
-      logs.push(`💀 敗北...HPが尽きた`);
-    }
-
+    logs.push(won ? '✨ 勝利！相手のHPを削り切った！' : '💀 敗北...HPが尽きた');
     return { won, logs };
   };
 
   const handleChallenge = (opponent: ArenaOpponent) => {
-    const party = getActiveParty();
-    if (!party.slots.some(Boolean)) {
-      alert('パーティを編成してください');
-      return;
-    }
-    setCurrentOpponent(opponent);
-    setPhase('battle');
-    setIsBattling(true);
-    setBattleLog([]);
-
-    const { won, logs } = simulateBattle(opponent);
-
-    let i = 0;
-    const timer = setInterval(() => {
-      if (i < logs.length) {
-        setBattleLog(prev => [...prev, logs[i]]);
-        i++;
-      } else {
-        clearInterval(timer);
-        setIsBattling(false);
-        const battleResult = won ? recordWin(opponent.id) : recordLoss(opponent.id);
-        if (battleResult.goldReward) addGold(battleResult.goldReward);
-        if (battleResult.diamondReward) addDiamond(battleResult.diamondReward);
-        setResult({ won, pointsGained: battleResult.pointsGained, gold: battleResult.goldReward, diamond: battleResult.diamondReward });
-        setPhase('result');
+    try {
+      const party = getActiveParty();
+      if (!party || !(party.slots ?? []).some(Boolean)) {
+        setBattleLog(['パーティを編成してください']);
+        return;
       }
-    }, 500);
+      setCurrentOpponent(opponent);
+      setPhase('battle');
+      setIsBattling(true);
+      setBattleLog([]);
+
+      const { won, logs } = simulateBattle(opponent);
+
+      let i = 0;
+      const timer = setInterval(() => {
+        if (i < logs.length) {
+          setBattleLog(prev => [...prev, logs[i++]]);
+        } else {
+          clearInterval(timer);
+          setIsBattling(false);
+          const battleResult = won ? recordWin(opponent.id) : recordLoss(opponent.id);
+          if (battleResult.goldReward > 0) addGold(battleResult.goldReward);
+          if (battleResult.diamondReward > 0) addDiamond(battleResult.diamondReward);
+          setResult({ won, pointsGained: battleResult.pointsGained, gold: battleResult.goldReward, diamond: battleResult.diamondReward });
+          setPhase('result');
+        }
+      }, 500);
+    } catch (err) {
+      console.error('Arena battle error:', err);
+      setPhase('list');
+      setIsBattling(false);
+    }
   };
 
   const rankTitle = getRankTitle(record.points);
