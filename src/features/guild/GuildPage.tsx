@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { GameButton } from '../../components/ui/game/GameButton';
 import { useGuildStore, PRESET_GUILDS } from '../../stores/guildStore';
 import { usePlayerStore } from '../../stores/playerStore';
 import { TopBar } from '../../components/layout/TopBar';
@@ -42,11 +43,10 @@ export const GuildPage = () => {
                       <p className="text-gray-500 text-xs">{pg.description}</p>
                       <p className="text-purple-400 text-xs mt-0.5">ギルドLv {pg.level}</p>
                     </div>
-                    <button
-                      onClick={() => createGuild(pg.name, pg.emblem, player.name)}
-                      className="btn-primary text-xs py-2 px-3 min-h-0">
+                    <GameButton variant="primary" size="sm"
+                      onClick={() => createGuild(pg.name, pg.emblem, player.name)}>
                       参加
-                    </button>
+                    </GameButton>
                   </div>
                 </div>
               ))}
@@ -75,12 +75,11 @@ export const GuildPage = () => {
                 ))}
               </div>
             </div>
-            <button
+            <GameButton variant="primary" fullWidth
               disabled={!newGuildName.trim()}
-              onClick={() => { if (newGuildName.trim()) createGuild(newGuildName.trim(), newGuildEmblem, player.name); }}
-              className="btn-primary w-full disabled:opacity-40">
+              onClick={() => { if (newGuildName.trim()) createGuild(newGuildName.trim(), newGuildEmblem, player.name); }}>
               ギルドを作成
-            </button>
+            </GameButton>
           </div>
         </div>
       </div>
@@ -146,8 +145,8 @@ export const GuildPage = () => {
                 </div>
                 <div className="text-xs text-gray-500">{m.reward}</div>
                 {m.progress >= m.target && !m.claimed && (
-                  <button className="btn-gold text-xs py-1.5 px-2.5 min-h-0 rounded-lg"
-                    onClick={() => claimGuildMission(m.id)}>受取</button>
+                  <GameButton variant="gold" size="sm"
+                    onClick={() => claimGuildMission(m.id)}>受取</GameButton>
                 )}
               </div>
             ))}
@@ -195,8 +194,8 @@ export const GuildPage = () => {
                 </div>
                 <span className="text-gray-500 text-xs">{m.progress}/{m.target}</span>
                 {m.progress >= m.target && !m.claimed && (
-                  <button className="btn-gold text-xs py-1.5 px-3 min-h-0 rounded-lg"
-                    onClick={() => claimGuildMission(m.id)}>受取</button>
+                  <GameButton variant="gold" size="sm"
+                    onClick={() => claimGuildMission(m.id)}>受取</GameButton>
                 )}
               </div>
             </div>
@@ -233,12 +232,11 @@ export const GuildPage = () => {
               placeholder="メッセージを入力..."
               className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm outline-none focus:border-purple-500"
             />
-            <button
+            <GameButton variant="primary" size="sm"
               disabled={!chatInput.trim()}
-              onClick={() => { if (chatInput.trim()) { sendChatMessage(player.name, chatInput.trim()); setChatInput(''); } }}
-              className="btn-primary px-4 py-2.5 min-h-0 disabled:opacity-40">
+              onClick={() => { if (chatInput.trim()) { sendChatMessage(player.name, chatInput.trim()); setChatInput(''); } }}>
               送信
-            </button>
+            </GameButton>
           </div>
         </div>
       )}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { GameButton } from '../../components/ui/game/GameButton';
 import { useArenaStore } from '../../stores/arenaStore';
 import { usePartyStore } from '../../stores/partyStore';
 import { useUnitStore } from '../../stores/unitStore';
@@ -197,10 +198,9 @@ export const PvPPage = () => {
                         </p>
                       )}
                     </div>
-                    <button onClick={() => handleChallenge(opp)}
-                      className="btn-primary text-xs py-2.5 px-4 min-h-0 flex-shrink-0">
+                    <GameButton variant="primary" size="sm" onClick={() => handleChallenge(opp)}>
                       挑戦
-                    </button>
+                    </GameButton>
                   </div>
                 );
               })}
@@ -273,13 +273,13 @@ export const PvPPage = () => {
             </div>
           </div>
           <div className="flex gap-3">
-            <button className="btn-secondary flex-1" onClick={() => { setPhase('list'); setOpponents(getMatchOpponents()); }}>
+            <GameButton variant="secondary" fullWidth onClick={() => { setPhase('list'); setOpponents(getMatchOpponents()); }}>
               戻る
-            </button>
+            </GameButton>
             {currentOpponent && (
-              <button className="btn-primary flex-1" onClick={() => handleChallenge(currentOpponent)}>
+              <GameButton variant="primary" fullWidth onClick={() => handleChallenge(currentOpponent)}>
                 再挑戦
-              </button>
+              </GameButton>
             )}
           </div>
         </div>

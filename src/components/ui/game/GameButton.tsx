@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react';
 import './GameUI.css';
 
-type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'gacha' | 'back';
+type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'gacha' | 'back' | 'gold';
+type ButtonSize = 'md' | 'sm';
 
 interface GameButtonProps {
   variant?: ButtonVariant;
+  size?: ButtonSize;
   children: ReactNode;
   onClick?: () => void;
   disabled?: boolean;
@@ -38,10 +40,12 @@ const bodyClass: Record<ButtonVariant, string> = {
   danger:    'gb-btn-danger-body',
   gacha:     'gb-btn-gacha-body',
   back:      'gb-btn-back-body',
+  gold:      'gb-btn-gold-body',
 };
 
 export const GameButton = ({
   variant = 'primary',
+  size = 'md',
   children,
   onClick,
   disabled,
@@ -52,7 +56,7 @@ export const GameButton = ({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`gb-btn gb-btn-${variant} ${bodyClass[variant]} ${className}`}
+      className={`gb-btn gb-btn-${variant} ${bodyClass[variant]} ${size === 'sm' ? 'gb-btn-sm' : ''} ${className}`}
       style={{
         width: fullWidth ? '100%' : undefined,
         opacity: disabled ? 0.5 : 1,

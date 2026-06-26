@@ -4,6 +4,7 @@ import { DAILY_MISSIONS } from '../../data/missions';
 import { TopBar } from '../../components/layout/TopBar';
 import type { MissionProgress } from '../../types';
 import { GaugeBar } from '../../components/ui/game/GaugeBar';
+import { GameButton } from '../../components/ui/game/GameButton';
 
 export const MissionsPage = () => {
   const { daily, checkDailyReset, claimDailyReward, getCompletedCount, getClaimedCount } = useMissionStore();
@@ -85,12 +86,10 @@ export const MissionsPage = () => {
                   {prog.claimed ? (
                     <span className="text-xs text-gray-600">受取済</span>
                   ) : prog.completed ? (
-                    <button
-                      onClick={() => claimDailyReward(mission.id)}
-                      className="btn-gold text-xs px-3 py-2 rounded-xl min-h-0 font-bold"
-                    >
+                    <GameButton variant="gold" size="sm"
+                      onClick={() => claimDailyReward(mission.id)}>
                       受取
-                    </button>
+                    </GameButton>
                   ) : (
                     <span className="text-xs text-gray-600">未達成</span>
                   )}
