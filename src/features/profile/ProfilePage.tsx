@@ -57,8 +57,8 @@ export const ProfilePage = () => {
       {/* 背景デコレーション */}
       <div className="relative overflow-hidden">
         {/* 上部オーラリング */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 opacity-20 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at 50% 0%, #8b5cf6, transparent 70%)' }} />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 h-48 opacity-20 pointer-events-none"
+          style={{ width: 'min(384px, 100vw)', background: 'radial-gradient(ellipse at 50% 0%, #8b5cf6, transparent 70%)' }} />
 
         {/* ===== プロフィールカード ===== */}
         <div className="px-4 pt-4 mb-4">
