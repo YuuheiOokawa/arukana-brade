@@ -7,6 +7,7 @@ import { usePlayerStore } from '../../stores/playerStore';
 import { useEquipmentStore } from '../../stores/equipmentStore';
 import { useMissionStore } from '../../stores/missionStore';
 import { getStage } from '../../data/quests';
+import { getEventStage } from '../../data/events';
 import { getEnemyMaster } from '../../data/enemies';
 import { UNIT_MASTER, calcUnitStats } from '../../data/units';
 import { FRIEND_CANDIDATES } from '../../data/friends';
@@ -82,7 +83,7 @@ export const BattlePage = () => {
   // バトル初期化
   useEffect(() => {
     if (!pendingStageId) { navigate('/quests'); return; }
-    const s = getStage(pendingStageId);
+    const s = getStage(pendingStageId) ?? getEventStage(pendingStageId);
     if (!s) { navigate('/quests'); return; }
 
     const ok = spendStamina(s.staminaCost);

@@ -57,19 +57,42 @@ export const AWAKENING_CONFIG = {
 
 // 進化素材定義（マナクリスタル + ゴールドで進化）
 export const EVOLUTION_MATERIALS: Record<string, { itemId: string; quantity: number; label: string }[]> = {
-  '1': [{ itemId: 'item_mana_crystal', quantity: 3,  label: 'マナクリスタル' }],
-  '2': [{ itemId: 'item_mana_crystal', quantity: 5,  label: 'マナクリスタル' }],
-  '3': [{ itemId: 'item_mana_crystal', quantity: 8,  label: 'マナクリスタル' }],
-  '4': [{ itemId: 'item_mana_crystal', quantity: 12, label: 'マナクリスタル' }],
-  '5': [{ itemId: 'item_mana_crystal', quantity: 18, label: 'マナクリスタル' }],
-  '6': [{ itemId: 'item_mana_crystal', quantity: 25, label: 'マナクリスタル' }],
-  '7': [{ itemId: 'item_mana_crystal', quantity: 35, label: 'マナクリスタル' }],
+  '1': [
+    { itemId: 'item_mana_crystal', quantity: 3,  label: 'マナクリスタル' },
+  ],
+  '2': [
+    { itemId: 'item_mana_crystal', quantity: 8,  label: 'マナクリスタル' },
+  ],
+  '3': [
+    { itemId: 'item_mana_crystal', quantity: 15, label: 'マナクリスタル' },
+    { itemId: 'item_magic_crystal', quantity: 3, label: '魔法結晶' },
+  ],
+  '4': [
+    { itemId: 'item_mana_crystal',  quantity: 25, label: 'マナクリスタル' },
+    { itemId: 'item_magic_crystal', quantity: 8,  label: '魔法結晶' },
+    { itemId: 'item_element_core',  quantity: 2,  label: '元素核' },
+  ],
+  '5': [
+    { itemId: 'item_mana_crystal',  quantity: 40, label: 'マナクリスタル' },
+    { itemId: 'item_element_core',  quantity: 5,  label: '元素核' },
+    { itemId: 'item_arcana_orb',    quantity: 1,  label: 'アルカナオーブ' },
+  ],
+  '6': [
+    { itemId: 'item_mana_crystal',  quantity: 60, label: 'マナクリスタル' },
+    { itemId: 'item_element_core',  quantity: 10, label: '元素核' },
+    { itemId: 'item_arcana_orb',    quantity: 3,  label: 'アルカナオーブ' },
+  ],
+  '7': [
+    { itemId: 'item_mana_crystal',  quantity: 100, label: 'マナクリスタル' },
+    { itemId: 'item_arcana_orb',    quantity: 5,   label: 'アルカナオーブ' },
+    { itemId: 'item_mystic_stone',  quantity: 1,   label: '神秘石' },
+  ],
 };
 
 // 進化に必要なゴールド
 export const EVOLUTION_GOLD_COST: Record<string, number> = {
-  '1': 5000, '2': 15000, '3': 40000,
-  '4': 100000, '5': 250000, '6': 600000, '7': 1500000,
+  '1': 5000, '2': 20000, '3': 60000,
+  '4': 150000, '5': 400000, '6': 1000000, '7': 3000000,
 };
 
 export const getLevelCap = (rarity: StarRarity): number =>

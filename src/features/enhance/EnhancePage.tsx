@@ -18,7 +18,7 @@ export const EnhancePage = () => {
   const initUnit = params.get('unit');
   const initTab = (params.get('tab') as 'level' | 'awaken') ?? 'level';
 
-  const { ownedUnits, levelUpUnit, awakenUnit, incrementAwakeningCount, rarityUp } = useUnitStore();
+  const { ownedUnits, levelUpUnit, awakenUnit, incrementAwakeningCount, getAwakeningCrystalCount, rarityUp } = useUnitStore();
   const { items, useItem, player, spendGold } = usePlayerStore();
   const { addDailyProgress } = useMissionStore();
   const [selectedId, setSelectedId] = useState<string | null>(initUnit);
@@ -83,11 +83,12 @@ export const EnhancePage = () => {
   };
 
   const handleCrystalAwaken = () => {
-    if (!unit) return;
+    if (!unit || !master) return;
     if ((unit.awakeningCount ?? 0) >= AWAKENING_CONFIG.maxAwakeningCount) { setMessage('覚醒結晶上限に達しています'); return; }
-    const ok = useItem(AWAKENING_CONFIG.crystalItemId, 1);
-    if (!ok) { setMessage('覚醒結晶が足りません'); return; }
-    incrementAwakeningCount(unit.instanceId);
+    const crystalCount = getAwakeningCrystalCount(unit.masterId);
+    if (crystalCount <= 0) { setMessage(`${master.name}の覚醒結晶が足りません`); return; }
+    const ok = incrementAwakeningCount(unit.instanceId);
+    if (!ok) { setMessage('覚醒できませんでした'); return; }
     addDailyProgress('enhance');
     setMessage('💠 覚醒結晶で覚醒！');
     setTimeout(() => setMessage(''), 2000);
@@ -342,14 +343,14 @@ export const EnhancePage = () => {
                     </div>
                   </div>
                   <span className="text-gray-400 text-sm">
-                    所持: {items.find(i => i.itemId === AWAKENING_CONFIG.crystalItemId)?.quantity ?? 0}個
+                    所持: {getAwakeningCrystalCount(unit.masterId)}個
                   </span>
                 </div>
                 {(unit.awakeningCount ?? 0) < AWAKENING_CONFIG.maxAwakeningCount ? (
                   <GameButton variant="gold" fullWidth
-                    disabled={(items.find(i => i.itemId === AWAKENING_CONFIG.crystalItemId)?.quantity ?? 0) === 0}
+                    disabled={getAwakeningCrystalCount(unit.masterId) === 0}
                     onClick={handleCrystalAwaken}>
-                    💠 覚醒結晶を使って覚醒する
+                    💠 {master?.name}の覚醒結晶で覚醒
                   </GameButton>
                 ) : (
                   <p className="text-cyan-400 font-bold text-center text-sm">覚醒結晶上限達成！</p>

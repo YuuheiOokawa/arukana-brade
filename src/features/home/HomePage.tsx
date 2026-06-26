@@ -55,7 +55,7 @@ export const HomePage = () => {
         style={{ opacity: 0.35 }}
       />
       {/* グラデーションオーバーレイ */}
-      <div className="fixed inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(26,10,56,0.70) 0%, rgba(8,8,26,0.78) 55%)' }} />
+      <div className="fixed inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(26,10,56,0.55) 0%, rgba(8,8,26,0.65) 55%)' }} />
 
       {/* 背景装飾：魔法陣リング */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -117,7 +117,7 @@ export const HomePage = () => {
               </div>
               <div className="text-center">
                 <div className="rounded-xl px-3 py-1.5" style={{ background: 'linear-gradient(135deg, rgba(240,192,64,0.15), rgba(217,119,6,0.1))', border: '1px solid rgba(240,192,64,0.3)' }}>
-                  <p className="text-[9px] font-bold tracking-widest" style={{ color: '#d97706' }}>RANK</p>
+                  <p className="text-[9px] font-bold tracking-widest" style={{ color: '#d97706' }}>Lv</p>
                   <p className="text-2xl font-black leading-none" style={{
                     background: 'linear-gradient(135deg, #fde68a, #f0c040, #d97706)',
                     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
@@ -192,7 +192,7 @@ export const HomePage = () => {
         {missionPending > 0 && (
           <button onClick={() => navigate('/missions')}
             className="w-full rounded-xl p-3 flex items-center gap-3 text-left transition-all active:scale-98"
-            style={{ background: 'linear-gradient(135deg, #3d2a00, #5c3d00)', border: '1px solid rgba(245,158,11,0.6)', boxShadow: '0 0 12px rgba(245,158,11,0.15)' }}>
+            style={{ background: 'linear-gradient(135deg, #7c4d00, #a36200)', border: '1px solid rgba(245,158,11,0.9)', boxShadow: '0 0 20px rgba(245,158,11,0.4)' }}>
             <IconScroll size={22} color="#f59e0b" />
             <div className="flex-1">
               <p className="text-sm font-bold" style={{ color: '#fbbf24' }}>デイリーミッション達成！</p>
@@ -218,7 +218,7 @@ export const HomePage = () => {
         {activeEvents.slice(0, 1).map(event => (
           <button key={event.id} onClick={() => navigate('/quests')}
             className="w-full rounded-xl p-3 flex items-center gap-3 text-left transition-all active:scale-98"
-            style={{ background: 'linear-gradient(135deg, #1e0a4a, #4c1080)', border: '1px solid rgba(167,139,250,0.7)', boxShadow: '0 0 16px rgba(139,92,246,0.35)' }}>
+            style={{ background: 'linear-gradient(135deg, #3b1060, #6d28a0)', border: '1px solid rgba(167,139,250,0.9)', boxShadow: '0 0 20px rgba(139,92,246,0.5)' }}>
             <IconSword size={22} color="#c4b5fd" />
             <div className="flex-1">
               <p className="text-sm font-bold text-white">{event.name}</p>

@@ -403,3 +403,11 @@ export const getActiveRaids = (): RaidBossMaster[] => {
   const now = Date.now();
   return RAID_BOSSES.filter(r => now <= r.endTimestamp);
 };
+
+export const getEventStage = (stageId: string) => {
+  for (const event of EVENT_QUESTS) {
+    const found = event.stages.find(s => s.id === stageId);
+    if (found) return found;
+  }
+  return undefined;
+};

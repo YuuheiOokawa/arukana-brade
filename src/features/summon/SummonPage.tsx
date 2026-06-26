@@ -265,7 +265,7 @@ type CrystalPhase = 'idle' | 'appear' | 'shatter';
 
 export const SummonPage = () => {
   const { player, spendDiamond, useItem, items, addItem } = usePlayerStore();
-  const { processSummonResults } = useUnitStore();
+  const { processSummonResults, addAwakeningCrystal } = useUnitStore();
   const { addDailyProgress } = useMissionStore();
   const { syncSummonResult } = useAuthStore();
 
@@ -381,8 +381,10 @@ export const SummonPage = () => {
     // [localStorage SAVE] processSummonResults を先に実行してから演出開始
     // → スキップ時も正しい結果を使えるようにする
     const gachaResults = processSummonResults(summonedMasters.map(m => m.id));
-    const crystalCount = gachaResults.filter(r => r.type === 'crystal').length;
-    if (crystalCount > 0) addItem(AWAKENING_CONFIG.crystalItemId, crystalCount);
+    // キャラ専用覚醒結晶を配布
+    for (const r of gachaResults) {
+      if (r.type === 'crystal') addAwakeningCrystal(r.masterId);
+    }
     setSummonResultTypes(gachaResults);
     addDailyProgress('summon');
 

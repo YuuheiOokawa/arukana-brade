@@ -182,7 +182,7 @@ export interface OwnedUnit {
 export type GachaApplyResult =
   | { type: 'new' }
   | { type: 'awakening'; awakeningCount: number }
-  | { type: 'crystal' };
+  | { type: 'crystal'; masterId: string };
 
 // ===== 敵 =====
 export interface EnemyMaster {
