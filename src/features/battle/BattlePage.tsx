@@ -10,24 +10,28 @@ import { getStage } from '../../data/quests';
 import { getEnemyMaster } from '../../data/enemies';
 import { UNIT_MASTER, calcUnitStats } from '../../data/units';
 import { FRIEND_CANDIDATES } from '../../data/friends';
-import { getSkill } from '../../data/skills';
 import { getItemMaster } from '../../data/items';
 import { calcEquipmentStats, getEquipmentMaster } from '../../data/equipments';
-import {
-  executeNormalAttack, executeSkillOnTargets, executeEnemyTurn, tickBuffs, applyLeaderSkills,
-} from '../../utils/battleEngine';
-import { elementGradient } from '../../utils/elementUtils';
-import { ElementBadge } from '../../components/ui/ElementBadge';
-import { GaugeBar } from '../../components/ui/game/GaugeBar';
-import { FrameDecoration, TitlePlate, DividerLine, GameBadge } from '../../components/ui/game/UIDecorations';
+import { applyLeaderSkills } from '../../utils/battleEngine';
 import { GameButton } from '../../components/ui/game/GameButton';
-import { CurrencyIcon } from '../../components/ui/game/GameIcons';
-import type { BattleUnit, BattleEnemy, BattleLog, QuestStage, LeaderSkillEffect } from '../../types';
+import type { BattleUnit, BattleEnemy, QuestStage, LeaderSkillEffect } from '../../types';
 
 let idCounter = 0;
 const uid = () => `bid_${Date.now()}_${idCounter++}`;
 
 type Phase = 'battle' | 'victory' | 'defeat';
+
+// ===== ログ着色 =====
+const logColor = (line: string) => {
+  if (line.startsWith('⚔️') || line.startsWith('✨')) return 'text-blue-300';
+  if (line.startsWith('🔴')) return 'text-red-400';
+  if (line.startsWith('💀') && line.includes('撃破')) return 'text-yellow-400';
+  if (line.startsWith('💀')) return 'text-red-500';
+  if (line.startsWith('😵')) return 'text-red-500';
+  if (line.startsWith('━━') || line.startsWith('──')) return 'text-purple-400 font-bold';
+  if (line.startsWith('💥')) return 'text-orange-400';
+  return 'text-gray-300';
+};
 
 export const BattlePage = () => {
   const navigate = useNavigate();
@@ -43,16 +47,13 @@ export const BattlePage = () => {
   const [stage, setStage] = useState<QuestStage | null>(null);
   const [waveIndex, setWaveIndex] = useState(0);
   const [round, setRound] = useState(1);
-  const [logs, setLogs] = useState<BattleLog[]>([]);
+  const [logs, setLogs] = useState<string[]>([]);
   const [phase, setPhase] = useState<Phase>('battle');
-  const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
-  const [actedUnitIds, setActedUnitIds] = useState<string[]>([]);
-  const [isEnemyPhase, setIsEnemyPhase] = useState(false);
+  const [leaderBbGauge, setLeaderBbGauge] = useState(0);
+  const [isAutoMode, setIsAutoMode] = useState(false);
   const [rewardGold, setRewardGold] = useState(0);
   const [rewardExp, setRewardExp] = useState(0);
   const [rewardItems, setRewardItems] = useState<string[]>([]);
-  const [damageFloats, setDamageFloats] = useState<{ id: string; text: string; x: number; y: number }[]>([]);
-  const [isAutoMode, setIsAutoMode] = useState(false);
 
   const buildWave = useCallback((s: QuestStage, wIdx: number): BattleEnemy[] => {
     const wave = s.waves[wIdx];
@@ -193,175 +194,275 @@ export const BattlePage = () => {
     setStage(s);
     setWaveIndex(0);
     setRound(1);
-    setLogs([]);
+    setLogs([`━━ Wave 1 開始！ ━━━━━━━━━━━━━━`]);
     setPhase('battle');
-    setActedUnitIds([]);
-    setSelectedUnit(allyList[0]?.instanceId ?? null);
+    setLeaderBbGauge(0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const addLog = useCallback((log: BattleLog) => {
-    setLogs(prev => [log, ...prev].slice(0, 20));
+  const addLogs = useCallback((newLines: string[]) => {
+    setLogs(prev => [...newLines, ...prev].slice(0, 60));
   }, []);
 
-  // ===== オートバトル =====
-  useEffect(() => {
-    if (!isAutoMode || phase !== 'battle' || isEnemyPhase) return;
-    if (!selectedUnit) return;
-    const actor = allies.find(a => a.instanceId === selectedUnit);
-    if (!actor || actor.currentHp <= 0) return;
-    if (actedUnitIds.includes(selectedUnit)) return;
+  // ===== 1ラウンド処理 =====
+  const processRound = useCallback((useSkill: boolean) => {
+    if (phase !== 'battle') return;
 
-    const timer = setTimeout(() => {
-      // AI判断: BB満タンなら必殺技、50%でスキル、残りは通常
-      if (actor.bbGauge >= 100) {
-        doAction('bb');
-      } else if (Math.random() < 0.5) {
-        doAction('skill');
-      } else {
-        doAction('normal');
-      }
-    }, 600);
-    return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAutoMode, phase, isEnemyPhase, selectedUnit, actedUnitIds, allies]);
+    setAllies(curAllies => {
+      setEnemies(curEnemies => {
+        setRound(curRound => {
+          setLeaderBbGauge(curBb => {
+            const newLines: string[] = [];
+            newLines.push(`── Round ${curRound} ──────────────────`);
 
-  const showFloat = useCallback((text: string) => {
-    const id = uid();
-    setDamageFloats(prev => [...prev, { id, text, x: 15 + Math.random() * 70, y: 10 + Math.random() * 50 }]);
-    setTimeout(() => setDamageFloats(prev => prev.filter(f => f.id !== id)), 1000);
-  }, []);
+            let updAllies = curAllies.map(a => ({ ...a }));
+            let updEnemies = curEnemies.map(e => ({ ...e }));
 
-  const doAction = useCallback((actionType: 'normal' | 'skill' | 'bb') => {
-    if (isEnemyPhase || phase !== 'battle' || !selectedUnit) return;
-    const actor = allies.find(a => a.instanceId === selectedUnit);
-    if (!actor || actor.currentHp <= 0) return;
-    if (actedUnitIds.includes(selectedUnit)) return;
-    if (actionType === 'bb' && actor.bbGauge < 100) return;
+            const liveAllies = updAllies.filter(a => a.currentHp > 0);
+            const liveEnemies = updEnemies.filter(e => e.currentHp > 0);
 
-    let result: { updatedAllies: BattleUnit[]; updatedEnemies: BattleEnemy[]; logs: BattleLog[] };
+            if (liveAllies.length === 0 || liveEnemies.length === 0) return curBb;
 
-    if (actionType === 'normal') {
-      result = executeNormalAttack(actor, enemies, allies, round);
-    } else {
-      const skillId = actionType === 'bb' ? actor.bbSkillId : actor.skillId;
-      const skill = getSkill(skillId);
-      if (!skill) return;
-      result = executeSkillOnTargets(actor, skill, allies, enemies, round);
-      if (actionType === 'bb') {
-        result.updatedAllies = result.updatedAllies.map(a =>
-          a.instanceId === selectedUnit ? { ...a, bbGauge: 0 } : a
-        );
-      } else {
-        result.updatedAllies = result.updatedAllies.map(a =>
-          a.instanceId === selectedUnit ? { ...a, bbGauge: Math.min(100, a.bbGauge + 15) } : a
-        );
-      }
-    }
+            const leader = liveAllies[0];
+            const isSkillTurn = useSkill && curBb >= 100;
 
-    result.logs.forEach(l => {
-      addLog(l);
-      if (l.damage) showFloat(`-${l.damage.toLocaleString()}`);
-      if (l.heal) showFloat(`+${l.heal.toLocaleString()} HP`);
-    });
+            // --- 味方フェーズ ---
+            if (isSkillTurn) {
+              // リーダースキル: 全敵に2-3倍ダメージ
+              const multiplier = 2 + Math.random();
+              const skillDmgPerEnemy = updEnemies.map(enemy => {
+                if (enemy.currentHp <= 0) return 0;
+                const base = Math.max(1, Math.floor(leader.atk * (0.8 + Math.random() * 0.4) - enemy.def * 0.3));
+                return Math.floor(base * multiplier);
+              });
+              let totalDmg = 0;
+              updEnemies = updEnemies.map((enemy, idx) => {
+                const dmg = skillDmgPerEnemy[idx];
+                if (dmg === 0) return enemy;
+                totalDmg += dmg;
+                const newHp = Math.max(0, enemy.currentHp - dmg);
+                return { ...enemy, currentHp: newHp };
+              });
+              newLines.push(`✨ ${leader.emoji} ${leader.name} のスキル発動！全体に ${totalDmg.toLocaleString()} ダメージ！`);
+              // 撃破チェック
+              updEnemies.forEach(e => {
+                if (e.currentHp <= 0 && curEnemies.find(ce => ce.instanceId === e.instanceId)!.currentHp > 0) {
+                  newLines.push(`💀 ${e.name} を撃破！`);
+                }
+              });
 
-    const newEnemies = result.updatedEnemies;
-    const newAllies = result.updatedAllies;
-    const allEnemiesDead = newEnemies.every(e => e.currentHp <= 0);
+              // 他の味方は通常攻撃
+              for (let i = 1; i < liveAllies.length; i++) {
+                const ally = liveAllies[i];
+                const targets = updEnemies.filter(e => e.currentHp > 0);
+                if (targets.length === 0) break;
+                const target = targets.reduce((a, b) => a.currentHp < b.currentHp ? a : b);
+                const dmg = Math.max(1, Math.floor(ally.atk * (0.8 + Math.random() * 0.4) - target.def * 0.3));
+                const isCrit = Math.random() < 0.1;
+                const finalDmg = isCrit ? Math.floor(dmg * 1.5) : dmg;
+                const tIdx = updEnemies.findIndex(e => e.instanceId === target.instanceId);
+                const prevHp = updEnemies[tIdx].currentHp;
+                updEnemies[tIdx] = { ...updEnemies[tIdx], currentHp: Math.max(0, prevHp - finalDmg) };
+                if (isCrit) {
+                  newLines.push(`💥 ${ally.emoji} ${ally.name} のクリティカル！ ${target.name} に ${finalDmg.toLocaleString()} の大ダメージ！`);
+                } else {
+                  newLines.push(`⚔️ ${ally.emoji} ${ally.name} → ${target.name} に ${finalDmg.toLocaleString()} ダメージ！`);
+                }
+                if (updEnemies[tIdx].currentHp <= 0 && prevHp > 0) {
+                  newLines.push(`💀 ${target.name} を撃破！`);
+                }
+              }
 
-    if (allEnemiesDead && stage) {
-      const nextWave = waveIndex + 1;
-      if (nextWave < stage.waves.length) {
-        setWaveIndex(nextWave);
-        setEnemies(buildWave(stage, nextWave));
-        setAllies(newAllies);
-        setActedUnitIds([]);
-        setSelectedUnit(newAllies.find(a => a.currentHp > 0)?.instanceId ?? null);
-      } else {
-        // 勝利処理
-        const gold = stage.rewardGold;
-        const exp = stage.rewardExp;
-        const items: string[] = [];
-        stage.rewardItems.forEach(ri => {
-          if (Math.random() < ri.chance) {
-            for (let i = 0; i < ri.quantity; i++) items.push(ri.itemId);
-          }
-        });
-        setRewardGold(gold);
-        setRewardExp(exp);
-        setRewardItems(items);
-        setPhase('victory');
-        markCleared(stage.id);
-        clearPending();
-        addGold(gold);
-        addExp(exp);
-        items.forEach(id => addItem(id, 1));
-        const nonFriendAlive = newAllies.filter(a => !a.isFriend && a.currentHp > 0);
-        const nonFriendCount = newAllies.filter(a => !a.isFriend).length || 1;
-        nonFriendAlive.forEach(a => levelUpUnit(a.instanceId, Math.floor(exp / nonFriendCount)));
-        // ミッション進捗
-        addDailyProgress('battle_win');
-        addDailyProgress('quest_clear');
-        if (newAllies.some(a => a.isFriend && a.currentHp > 0)) {
-          addDailyProgress('friend_battle');
-        }
-      }
-      return;
-    }
+              // BBゲージをリセット
+              const nextBb = 0;
 
-    // ユニットを行動済みに登録し、次の未行動ユニットを選択
-    const newActedIds = [...actedUnitIds, selectedUnit];
-    const nextUnit = newAllies.find(a => a.currentHp > 0 && !newActedIds.includes(a.instanceId));
-    setSelectedUnit(nextUnit?.instanceId ?? null);
-    setActedUnitIds(newActedIds);
-    setAllies(newAllies);
-    setEnemies(newEnemies);
+              // 敵フェーズ
+              const liveEnemiesAfterAlly = updEnemies.filter(e => e.currentHp > 0);
+              if (liveEnemiesAfterAlly.length > 0) {
+                liveEnemiesAfterAlly.forEach(enemy => {
+                  const aliveAlliesNow = updAllies.filter(a => a.currentHp > 0);
+                  if (aliveAlliesNow.length === 0) return;
+                  const randTarget = aliveAlliesNow[Math.floor(Math.random() * aliveAlliesNow.length)];
+                  const dmg = Math.max(1, Math.floor(enemy.atk * (0.8 + Math.random() * 0.4) - randTarget.def * 0.3));
+                  const aIdx = updAllies.findIndex(a => a.instanceId === randTarget.instanceId);
+                  const prevHp2 = updAllies[aIdx].currentHp;
+                  updAllies[aIdx] = { ...updAllies[aIdx], currentHp: Math.max(0, prevHp2 - dmg) };
+                  newLines.push(`🔴 ${enemy.emoji} ${enemy.name} → ${randTarget.name} に ${dmg.toLocaleString()} ダメージ！`);
+                  if (updAllies[aIdx].currentHp <= 0 && prevHp2 > 0) {
+                    newLines.push(`😵 ${randTarget.name} が倒れた...`);
+                  }
+                });
+              }
 
-    // 全員行動済みなら敵フェーズ開始
-    const aliveAllies = newAllies.filter(a => a.currentHp > 0);
-    const allActed = aliveAllies.every(a => newActedIds.includes(a.instanceId));
+              addLogs(newLines);
 
-    if (allActed) {
-      setIsEnemyPhase(true);
-      setTimeout(() => {
-        // 敵の全員が順番に行動する（newAllies / newEnemies はこのクロージャで新鮮）
-        let curAllies = [...newAllies];
-        const aliveEnemies = newEnemies.filter(e => e.currentHp > 0);
+              // 勝敗判定（setStage経由で参照）
+              const allDead = updEnemies.every(e => e.currentHp <= 0);
+              if (allDead) {
+                setStage(curStage => {
+                  if (!curStage) return curStage;
+                  const nextWave = waveIndex + 1;
+                  if (nextWave < curStage.waves.length) {
+                    const newWaveEnemies = buildWave(curStage, nextWave);
+                    setWaveIndex(nextWave);
+                    setEnemies(newWaveEnemies);
+                    setAllies(updAllies);
+                    addLogs([`━━ Wave ${nextWave + 1} 開始！ ━━━━━━━━━━━━━━`]);
+                  } else {
+                    const gold = curStage.rewardGold;
+                    const exp = curStage.rewardExp;
+                    const items: string[] = [];
+                    curStage.rewardItems.forEach(ri => {
+                      if (Math.random() < ri.chance) {
+                        for (let i = 0; i < ri.quantity; i++) items.push(ri.itemId);
+                      }
+                    });
+                    setRewardGold(gold);
+                    setRewardExp(exp);
+                    setRewardItems(items);
+                    markCleared(curStage.id);
+                    clearPending();
+                    addGold(gold);
+                    addExp(exp);
+                    items.forEach(id => addItem(id, 1));
+                    const nonFriendAlive = updAllies.filter(a => !a.isFriend && a.currentHp > 0);
+                    const nonFriendCount = updAllies.filter(a => !a.isFriend).length || 1;
+                    nonFriendAlive.forEach(a => levelUpUnit(a.instanceId, Math.floor(exp / nonFriendCount)));
+                    addDailyProgress('battle_win');
+                    addDailyProgress('quest_clear');
+                    if (updAllies.some(a => a.isFriend && a.currentHp > 0)) {
+                      addDailyProgress('friend_battle');
+                    }
+                    setPhase('victory');
+                  }
+                  return curStage;
+                });
+              } else if (updAllies.every(a => a.currentHp <= 0)) {
+                clearPending();
+                setPhase('defeat');
+                setAllies(updAllies);
+                setEnemies(updEnemies);
+              } else {
+                setAllies(updAllies);
+                setEnemies(updEnemies);
+                setRound(r => r + 1);
+              }
 
-        aliveEnemies.forEach(enemy => {
-          const res = executeEnemyTurn(enemy, curAllies, aliveEnemies, round + 1);
-          res.logs.forEach(l => {
-            addLog(l);
-            if (l.damage) showFloat(`-${l.damage.toLocaleString()}`);
+              return nextBb;
+            } else {
+              // --- 通常攻撃ラウンド ---
+              liveAllies.forEach(ally => {
+                const targets = updEnemies.filter(e => e.currentHp > 0);
+                if (targets.length === 0) return;
+                const target = targets.reduce((a, b) => a.currentHp < b.currentHp ? a : b);
+                const dmg = Math.max(1, Math.floor(ally.atk * (0.8 + Math.random() * 0.4) - target.def * 0.3));
+                const isCrit = Math.random() < 0.1;
+                const finalDmg = isCrit ? Math.floor(dmg * 1.5) : dmg;
+                const tIdx = updEnemies.findIndex(e => e.instanceId === target.instanceId);
+                const prevHp = updEnemies[tIdx].currentHp;
+                updEnemies[tIdx] = { ...updEnemies[tIdx], currentHp: Math.max(0, prevHp - finalDmg) };
+                if (isCrit) {
+                  newLines.push(`💥 ${ally.emoji} ${ally.name} のクリティカル！ ${target.name} に ${finalDmg.toLocaleString()} の大ダメージ！`);
+                } else {
+                  newLines.push(`⚔️ ${ally.emoji} ${ally.name} → ${target.name} に ${finalDmg.toLocaleString()} ダメージ！`);
+                }
+                if (updEnemies[tIdx].currentHp <= 0 && prevHp > 0) {
+                  newLines.push(`💀 ${target.name} を撃破！`);
+                }
+              });
+
+              // 敵フェーズ
+              const liveEnemiesAfterAlly = updEnemies.filter(e => e.currentHp > 0);
+              if (liveEnemiesAfterAlly.length > 0) {
+                liveEnemiesAfterAlly.forEach(enemy => {
+                  const aliveAlliesNow = updAllies.filter(a => a.currentHp > 0);
+                  if (aliveAlliesNow.length === 0) return;
+                  const randTarget = aliveAlliesNow[Math.floor(Math.random() * aliveAlliesNow.length)];
+                  const dmg = Math.max(1, Math.floor(enemy.atk * (0.8 + Math.random() * 0.4) - randTarget.def * 0.3));
+                  const aIdx = updAllies.findIndex(a => a.instanceId === randTarget.instanceId);
+                  const prevHp2 = updAllies[aIdx].currentHp;
+                  updAllies[aIdx] = { ...updAllies[aIdx], currentHp: Math.max(0, prevHp2 - dmg) };
+                  newLines.push(`🔴 ${enemy.emoji} ${enemy.name} → ${randTarget.name} に ${dmg.toLocaleString()} ダメージ！`);
+                  if (updAllies[aIdx].currentHp <= 0 && prevHp2 > 0) {
+                    newLines.push(`😵 ${randTarget.name} が倒れた...`);
+                  }
+                });
+              }
+
+              // BBゲージ増加
+              const nextBb = Math.min(100, curBb + 20);
+
+              addLogs(newLines);
+
+              const allDead = updEnemies.every(e => e.currentHp <= 0);
+              if (allDead) {
+                setStage(curStage => {
+                  if (!curStage) return curStage;
+                  const nextWave = waveIndex + 1;
+                  if (nextWave < curStage.waves.length) {
+                    const newWaveEnemies = buildWave(curStage, nextWave);
+                    setWaveIndex(nextWave);
+                    setEnemies(newWaveEnemies);
+                    setAllies(updAllies);
+                    addLogs([`━━ Wave ${nextWave + 1} 開始！ ━━━━━━━━━━━━━━`]);
+                  } else {
+                    const gold = curStage.rewardGold;
+                    const exp = curStage.rewardExp;
+                    const items: string[] = [];
+                    curStage.rewardItems.forEach(ri => {
+                      if (Math.random() < ri.chance) {
+                        for (let i = 0; i < ri.quantity; i++) items.push(ri.itemId);
+                      }
+                    });
+                    setRewardGold(gold);
+                    setRewardExp(exp);
+                    setRewardItems(items);
+                    markCleared(curStage.id);
+                    clearPending();
+                    addGold(gold);
+                    addExp(exp);
+                    items.forEach(id => addItem(id, 1));
+                    const nonFriendAlive = updAllies.filter(a => !a.isFriend && a.currentHp > 0);
+                    const nonFriendCount = updAllies.filter(a => !a.isFriend).length || 1;
+                    nonFriendAlive.forEach(a => levelUpUnit(a.instanceId, Math.floor(exp / nonFriendCount)));
+                    addDailyProgress('battle_win');
+                    addDailyProgress('quest_clear');
+                    if (updAllies.some(a => a.isFriend && a.currentHp > 0)) {
+                      addDailyProgress('friend_battle');
+                    }
+                    setPhase('victory');
+                  }
+                  return curStage;
+                });
+              } else if (updAllies.every(a => a.currentHp <= 0)) {
+                clearPending();
+                setPhase('defeat');
+                setAllies(updAllies);
+                setEnemies(updEnemies);
+              } else {
+                setAllies(updAllies);
+                setEnemies(updEnemies);
+                setRound(r => r + 1);
+              }
+
+              return nextBb;
+            }
           });
-          curAllies = res.updatedAllies;
+          return curRound;
         });
-
-        const allAlliesDead = curAllies.every(a => a.currentHp <= 0);
-        if (allAlliesDead) {
-          setPhase('defeat');
-          clearPending();
-          setIsEnemyPhase(false);
-          return;
-        }
-
-        const ticked = tickBuffs(curAllies, newEnemies);
-        setAllies(ticked.allies);
-        setEnemies(ticked.enemies);
-        setRound(r => r + 1);
-        setActedUnitIds([]);
-        setSelectedUnit(ticked.allies.find(a => a.currentHp > 0)?.instanceId ?? null);
-        setIsEnemyPhase(false);
-      }, 800);
-    }
+        return curEnemies;
+      });
+      return curAllies;
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allies, enemies, isEnemyPhase, phase, selectedUnit, actedUnitIds, round, stage, waveIndex, addLog, showFloat, buildWave]);
+  }, [phase, waveIndex, addLogs, buildWave]);
 
-  const selectedAlly = allies.find(a => a.instanceId === selectedUnit);
-  const aliveAllies = allies.filter(a => a.currentHp > 0);
-  const actedCount = aliveAllies.filter(a => actedUnitIds.includes(a.instanceId)).length;
-  const isActedSelected = actedUnitIds.includes(selectedUnit ?? '');
-  const isBBReady = (selectedAlly?.bbGauge ?? 0) >= 100;
+  // オートモード
+  useEffect(() => {
+    if (!isAutoMode || phase !== 'battle') return;
+    const timer = setTimeout(() => processRound(false), 1000);
+    return () => clearTimeout(timer);
+  }, [isAutoMode, phase, round, processRound]);
 
   if (!stage) return (
     <div className="min-h-screen flex items-center justify-center battle-bg">
@@ -370,342 +471,236 @@ export const BattlePage = () => {
   );
 
   if (phase === 'victory') {
-    return <VictoryScreen gold={rewardGold} exp={rewardExp} items={rewardItems}
-      onHome={() => navigate('/')} onRetry={() => navigate('/quests')} />;
+    return <VictoryScreen
+      stageName={stage.name}
+      round={round}
+      gold={rewardGold}
+      exp={rewardExp}
+      items={rewardItems}
+      onHome={() => navigate('/')}
+      onQuest={() => navigate('/quests')}
+    />;
   }
   if (phase === 'defeat') {
-    return <DefeatScreen onHome={() => navigate('/')} onRetry={() => navigate('/quests')} />;
+    return <DefeatScreen onHome={() => navigate('/')} onQuest={() => navigate('/quests')} />;
   }
 
+  const liveAllies = allies.filter(a => a.currentHp > 0);
+  const liveEnemies = enemies.filter(e => e.currentHp > 0);
+  const isSkillReady = leaderBbGauge >= 100;
+
   return (
-    <div className="min-h-screen flex flex-col battle-bg select-none">
+    <div className="min-h-screen flex flex-col battle-bg select-none text-sm">
       {/* ヘッダー */}
-      <div className="px-4 pt-3 pb-2 flex items-center justify-between border-b border-purple-900/30">
+      <div className="px-3 pt-3 pb-2 flex items-center justify-between border-b border-purple-900/30">
         <div>
           <p className="text-purple-400 text-xs font-medium tracking-wide">{stage.name}</p>
-          <p className="text-white text-sm font-bold">
-            Wave {waveIndex + 1}<span className="text-gray-500">/{stage.waves.length}</span>
-            <span className="text-gray-600 mx-1.5">·</span>
+          <p className="text-white text-xs font-bold">
             Round <span className="text-purple-300">{round}</span>
+            <span className="text-gray-600 mx-1">|</span>
+            Wave <span className="text-purple-300">{waveIndex + 1}</span>
+            <span className="text-gray-500">/{stage.waves.length}</span>
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {/* 行動インジケーター */}
-          <div className="flex items-center gap-1 bg-black/40 rounded-full px-2.5 py-1.5">
-            {aliveAllies.map(a => (
-              <div key={a.instanceId}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  actedUnitIds.includes(a.instanceId) ? 'bg-gray-600' : 'bg-emerald-400'
-                }`} />
-            ))}
-          </div>
-          {/* オートバトルボタン */}
-          <button onClick={() => setIsAutoMode(p => !p)}
+          <button
+            onClick={() => setIsAutoMode(p => !p)}
             className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${
               isAutoMode
-                ? 'bg-yellow-600/30 border-yellow-500/60 text-yellow-400 animate-glow'
+                ? 'bg-yellow-600/30 border-yellow-500/60 text-yellow-400'
                 : 'border-gray-700/50 text-gray-500'
-            }`}>
-            AUTO
+            }`}
+          >
+            🤖 オート {isAutoMode ? 'ON' : 'OFF'}
           </button>
-          <button onClick={() => { clearPending(); navigate('/quests'); }}
-            className="text-gray-500 text-xs border border-gray-700/50 px-3 py-1.5 rounded-lg hover:text-gray-300 transition-colors">
-            離脱
+          <button
+            onClick={() => { clearPending(); navigate('/quests'); }}
+            className="text-gray-500 text-xs border border-gray-700/50 px-2.5 py-1.5 rounded-lg hover:text-gray-300 transition-colors"
+          >
+            🏃 退却
           </button>
         </div>
       </div>
 
-      {/* 敵エリア */}
-      <div className="relative px-4 py-5 flex justify-center gap-5 min-h-[150px] enemy-area">
-        {damageFloats.map(f => (
-          <div key={f.id}
-            className="absolute font-black text-xl animate-float-up pointer-events-none z-20"
-            style={{ left: `${f.x}%`, top: `${f.y}%`, color: f.text.startsWith('+') ? '#34d399' : '#fbbf24', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
-            {f.text}
-          </div>
-        ))}
-        {enemies.map(enemy => (
-          <div key={enemy.instanceId}
-            className={`text-center transition-all duration-300 ${enemy.currentHp <= 0 ? 'opacity-20 scale-75' : ''}`}>
-            <div className="text-5xl mb-1.5"
-              style={{ filter: enemy.currentHp <= 0 ? 'grayscale(1)' : 'drop-shadow(0 0 14px rgba(239,68,68,0.7))' }}>
-              {enemy.emoji}
-            </div>
-            <p className="text-white text-xs font-bold truncate max-w-[80px]">{enemy.name}</p>
-            <div className="w-20 mt-1.5">
-              <GaugeBar type="hp" value={enemy.currentHp} max={enemy.maxHp} showLabel={false} showValue={false} animated={false} />
-              <p className="text-xs text-gray-500 mt-0.5">{enemy.currentHp.toLocaleString()}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* バトルログ */}
-      <div className="mx-4 mb-2">
-        <div className="bg-black/50 border border-purple-900/25 rounded-xl px-3 py-2 h-[52px] overflow-hidden">
-          {logs.slice(0, 2).map((log, i) => (
-            <p key={i} className={`text-xs truncate leading-relaxed ${i === 0 ? 'text-gray-200' : 'text-gray-600'}`}>
-              <span className={i === 0 ? 'text-purple-400' : 'text-gray-700'}>{log.actorName}</span>
-              {' '}
-              {log.action === 'normal_attack' ? '通常攻撃' : log.action === 'skill' ? 'スキル' : '必殺技'}
-              {log.damage ? ` → ${log.damage.toLocaleString()}${log.elementBonus ? '【有利】' : ''}` : ''}
-              {log.heal ? ` → +${log.heal.toLocaleString()} 回復` : ''}
-            </p>
-          ))}
-          {logs.length === 0 && <p className="text-gray-700 text-xs">バトル開始</p>}
-        </div>
-      </div>
-
-      {/* 行動進捗バー */}
-      <div className="mx-4 mb-2">
-        <div className="flex items-center justify-between text-xs mb-1">
-          <span className="text-gray-600">行動 {actedCount}/{aliveAllies.length}</span>
-          {actedCount > 0 && actedCount === aliveAllies.length && !isEnemyPhase && (
-            <span className="text-orange-400 font-bold text-xs">全員行動完了 → 敵ターン</span>
-          )}
-        </div>
-        <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-violet-600 to-blue-500 rounded-full transition-all duration-300"
-            style={{ width: `${aliveAllies.length > 0 ? (actedCount / aliveAllies.length) * 100 : 0}%` }} />
-        </div>
-      </div>
-
-      {/* 味方一覧 */}
-      <div className="px-4 overflow-x-auto scrollbar-hide">
-        <div className="flex gap-2 pb-1">
-          {allies.map(ally => {
-            const isActed = actedUnitIds.includes(ally.instanceId);
-            const isSelected = selectedUnit === ally.instanceId;
-            const isDead = ally.currentHp <= 0;
+      {/* 敵HP表示 */}
+      <div className="px-3 py-2 border-b border-gray-800/50">
+        <p className="text-gray-500 text-xs mb-1.5 font-bold tracking-wide">━━ 敵 ━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+        <div className="flex flex-col gap-1.5">
+          {enemies.map(e => {
+            const pct = Math.max(0, e.currentHp / e.maxHp);
+            const isDead = e.currentHp <= 0;
             return (
-              <button
-                key={ally.instanceId}
-                onClick={() => {
-                  if (!isDead && !isActed && !isEnemyPhase) setSelectedUnit(ally.instanceId);
-                }}
-                className={`flex-shrink-0 w-[68px] rounded-xl p-1.5 border-2 transition-all duration-200 unit-card-hover
-                  ${isSelected ? 'ally-card-selected' : ally.isFriend ? 'border-purple-500/50' : 'border-white/10'}
-                  ${isActed ? 'ally-card-acted' : ''}
-                  ${ally.bbGauge >= 100 && !isActed ? 'ally-card-bb-ready' : ''}`}
-                style={{ background: elementGradient(ally.element) }}
-              >
-                <div className="text-2xl text-center mb-0.5">{ally.emoji}</div>
-                {/* コンパクトHP/BBバー（ミニカード用） */}
-                <div className="w-full h-1 bg-gray-700 rounded-full overflow-hidden">
-                  <div className="h-full rounded-full" style={{
-                    width: `${Math.max(0, Math.min(100, (ally.currentHp / ally.maxHp) * 100))}%`,
-                    background: 'linear-gradient(90deg, #b91c1c, #ef4444)',
-                  }} />
+              <div key={e.instanceId} className={`flex items-center gap-2 ${isDead ? 'opacity-30' : ''}`}>
+                <span className="text-base w-6 text-center">{e.emoji}</span>
+                <span className="text-gray-200 text-xs w-28 truncate">{e.name}</span>
+                <div className="h-2 bg-gray-700 rounded-full overflow-hidden flex-1">
+                  <div
+                    className="h-full rounded-full transition-all duration-300"
+                    style={{
+                      width: `${pct * 100}%`,
+                      background: pct > 0.5 ? '#ef4444' : pct > 0.2 ? '#f97316' : '#dc2626',
+                    }}
+                  />
                 </div>
-                <div className="w-full h-1 bg-gray-700 rounded-full overflow-hidden mt-0.5">
-                  <div className="h-full rounded-full" style={{
-                    width: `${ally.bbGauge}%`,
-                    background: 'linear-gradient(90deg, #ea580c, #f97316)',
-                  }} />
-                </div>
-                <div className="flex items-center justify-center gap-0.5 mt-0.5">
-                  {ally.isFriend && <span className="text-purple-300 text-[9px] font-bold">F</span>}
-                  {isActed && !isDead && <span className="text-gray-500 text-[9px]">済</span>}
-                  {isDead && <span className="text-gray-600 text-[9px]">KO</span>}
-                </div>
-              </button>
+                <span className="text-xs text-gray-500 w-20 text-right">
+                  {e.currentHp.toLocaleString()}/{e.maxHp.toLocaleString()}
+                </span>
+              </div>
             );
           })}
         </div>
       </div>
 
-      {/* 選択中ユニット情報 */}
-      {selectedAlly ? (
-        <div className="mx-4 mt-2 card-glass p-3">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-              style={{ background: elementGradient(selectedAlly.element), boxShadow: '0 2px 12px rgba(0,0,0,0.4)' }}>
-              {selectedAlly.emoji}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <p className="text-white text-sm font-bold truncate">{selectedAlly.name}</p>
-                <ElementBadge element={selectedAlly.element} size="sm" />
-                {isActedSelected && <span className="text-gray-500 text-xs bg-gray-800/60 rounded px-1">行動済</span>}
+      {/* 味方HP表示 */}
+      <div className="px-3 py-2 border-b border-gray-800/50">
+        <p className="text-gray-500 text-xs mb-1.5 font-bold tracking-wide">━━ パーティ ━━━━━━━━━━━━━━━━━━━━</p>
+        <div className="flex flex-col gap-1.5">
+          {allies.map(a => {
+            const pct = Math.max(0, a.currentHp / a.maxHp);
+            const isDead = a.currentHp <= 0;
+            return (
+              <div key={a.instanceId} className={`flex items-center gap-2 ${isDead ? 'opacity-30' : ''}`}>
+                <span className="text-base w-6 text-center">{a.emoji}</span>
+                <span className={`text-xs w-28 truncate ${a.isFriend ? 'text-purple-300' : 'text-gray-200'}`}>
+                  {a.name}
+                </span>
+                <div className="h-2 bg-gray-700 rounded-full overflow-hidden flex-1">
+                  <div
+                    className="h-full rounded-full transition-all duration-300"
+                    style={{
+                      width: `${pct * 100}%`,
+                      background: pct > 0.5 ? '#22c55e' : pct > 0.2 ? '#f59e0b' : '#ef4444',
+                    }}
+                  />
+                </div>
+                <span className="text-xs text-gray-500 w-20 text-right">
+                  {a.currentHp.toLocaleString()}/{a.maxHp.toLocaleString()}
+                </span>
               </div>
-              <GaugeBar type="hp" value={selectedAlly.currentHp} max={selectedAlly.maxHp} showLabel={false} animated={false} />
-            </div>
-            <div className="flex-shrink-0 pl-1 w-20">
-              <GaugeBar type="bb" value={selectedAlly.bbGauge} max={100} showValue={false} />
-              <p className={`text-xs font-bold mt-0.5 text-right ${isBBReady ? 'text-gradient-gold animate-glow' : 'text-gray-600'}`}>
-                {selectedAlly.bbGauge}%
-              </p>
-            </div>
-          </div>
+            );
+          })}
         </div>
-      ) : (
-        <div className="mx-4 mt-2 h-[72px]" />
-      )}
-
-      {/* アクションボタン */}
-      <div className="px-4 mt-3 mb-safe mb-4 grid grid-cols-3 gap-2.5">
-        <ActionBtn
-          label="通常攻撃" icon="⚔️"
-          onClick={() => doAction('normal')}
-          disabled={isEnemyPhase || !selectedUnit || (selectedAlly?.currentHp ?? 0) <= 0 || isActedSelected}
-          variant="default"
-        />
-        <ActionBtn
-          label="スキル" icon="✨"
-          onClick={() => doAction('skill')}
-          disabled={isEnemyPhase || !selectedUnit || (selectedAlly?.currentHp ?? 0) <= 0 || isActedSelected}
-          variant="skill"
-        />
-        <ActionBtn
-          label="必殺技" icon="🔥"
-          onClick={() => doAction('bb')}
-          disabled={isEnemyPhase || !isBBReady || (selectedAlly?.currentHp ?? 0) <= 0 || isActedSelected}
-          variant={isBBReady ? 'bb-ready' : 'default'}
-          glowing={isBBReady}
-        />
       </div>
 
-      {/* 敵フェーズオーバーレイ */}
-      {isEnemyPhase && (
-        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40">
-          <div className="animate-fade-in">
-            <div className="px-10 py-5 rounded-2xl border border-red-900/50 bg-black/70 backdrop-blur-sm">
-              <p className="text-red-400 font-black text-2xl tracking-[0.2em]">ENEMY TURN</p>
+      {/* バトルログ */}
+      <div className="px-3 py-2 flex-1 overflow-hidden">
+        <p className="text-gray-500 text-xs mb-1.5 font-bold tracking-wide">━━ バトルログ ━━━━━━━━━━━━━━━━━━</p>
+        <div className="overflow-y-auto h-[160px] flex flex-col gap-0.5">
+          {logs.map((line, i) => (
+            <p key={i} className={`text-xs leading-relaxed ${logColor(line)}`}>{line}</p>
+          ))}
+          {logs.length === 0 && (
+            <p className="text-gray-700 text-xs">バトル開始</p>
+          )}
+        </div>
+      </div>
+
+      {/* コマンドボタン */}
+      <div className="px-3 pb-4 pt-2 border-t border-purple-900/30">
+        <div className="flex gap-2">
+          <button
+            onClick={() => processRound(false)}
+            disabled={phase !== 'battle' || liveAllies.length === 0 || liveEnemies.length === 0}
+            className="flex-1 py-3.5 rounded-xl font-bold text-sm text-white bg-gradient-to-b from-blue-700 to-blue-900 border border-blue-500/40 active:scale-95 transition-all disabled:opacity-40"
+          >
+            ⚔️ 全体攻撃
+          </button>
+
+          <div className="flex-1 flex flex-col gap-1">
+            <button
+              onClick={() => processRound(true)}
+              disabled={phase !== 'battle' || !isSkillReady || liveAllies.length === 0 || liveEnemies.length === 0}
+              className={`w-full py-2.5 rounded-xl font-bold text-xs text-white border active:scale-95 transition-all disabled:opacity-40 ${
+                isSkillReady
+                  ? 'bg-gradient-to-b from-orange-600 to-red-800 border-orange-400/60'
+                  : 'bg-gradient-to-b from-gray-700 to-gray-900 border-gray-600/40'
+              }`}
+            >
+              💥 スキル BB:{leaderBbGauge}%
+            </button>
+            {/* BBゲージバー */}
+            <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-300"
+                style={{
+                  width: `${leaderBbGauge}%`,
+                  background: isSkillReady
+                    ? 'linear-gradient(90deg, #f97316, #ef4444)'
+                    : 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+                }}
+              />
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
 
-// ===== アクションボタン =====
-const ActionBtn = ({
-  label, icon, onClick, disabled, variant, glowing,
-}: {
-  label: string; icon: string;
-  onClick: () => void; disabled: boolean;
-  variant: 'default' | 'skill' | 'bb-ready'; glowing?: boolean;
-}) => {
-  const styles: Record<string, { bg: string; border: string; shadow: string }> = {
-    default: {
-      bg: 'linear-gradient(160deg, #374151, #1f2937)',
-      border: 'rgba(107,114,128,0.35)',
-      shadow: '0 2px 10px rgba(0,0,0,0.3)',
-    },
-    skill: {
-      bg: 'linear-gradient(160deg, #1e3a8a, #3b82f6)',
-      border: 'rgba(59,130,246,0.4)',
-      shadow: '0 2px 16px rgba(59,130,246,0.25)',
-    },
-    'bb-ready': {
-      bg: 'linear-gradient(160deg, #92400e, #ef4444)',
-      border: 'rgba(245,158,11,0.6)',
-      shadow: '0 2px 20px rgba(245,158,11,0.4)',
-    },
-  };
-  const s = styles[variant];
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`py-4 rounded-2xl font-bold text-sm text-white transition-all active:scale-95 disabled:opacity-35 flex flex-col items-center gap-0.5 ${glowing ? 'animate-bb-ready' : ''}`}
-      style={{
-        background: s.bg,
-        border: `1px solid ${s.border}`,
-        boxShadow: s.shadow + ', inset 0 1px 0 rgba(255,255,255,0.06)',
-      }}
-    >
-      <span className="text-xl">{icon}</span>
-      <span className="text-xs font-medium">{label}</span>
-    </button>
-  );
-};
-
 // ===== 勝利画面 =====
-const VictoryScreen = ({ gold, exp, items, onHome, onRetry }: {
-  gold: number; exp: number; items: string[];
-  onHome: () => void; onRetry: () => void;
+const VictoryScreen = ({
+  stageName, round, gold, exp, items, onHome, onQuest,
+}: {
+  stageName: string; round: number; gold: number; exp: number; items: string[];
+  onHome: () => void; onQuest: () => void;
 }) => (
   <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center battle-bg">
     <div className="animate-slide-up w-full max-w-sm">
-      {/* トロフィー */}
       <div style={{ fontSize: 72, marginBottom: 12, filter: 'drop-shadow(0 0 24px rgba(240,192,64,0.7))' }}>🏆</div>
+      <p className="text-yellow-400 font-black text-3xl tracking-widest mb-1">VICTORY!</p>
+      <p className="text-gray-500 text-xs mb-1">{stageName}</p>
+      <p className="text-purple-400 text-xs mb-6">クリアラウンド: {round}</p>
 
-      <div style={{ marginBottom: 6 }}>
-        <TitlePlate color="gold">VICTORY!</TitlePlate>
-      </div>
-      <p style={{ color: '#6b7280', fontSize: 13, marginBottom: 20 }}>クエストクリア！</p>
-
-      {/* 報酬フレーム */}
-      <FrameDecoration color="gold" style={{ marginBottom: 20, textAlign: 'left' }}>
-        <DividerLine color="gold" label="獲得報酬" />
-        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <CurrencyIcon type="gold" size={36} />
-              <span style={{ color: '#d1d5db', fontSize: 14, fontFamily: "'Noto Sans JP', sans-serif" }}>ゴールド</span>
-            </div>
-            <span style={{ color: '#f0c040', fontWeight: 900, fontSize: 20 }}>{gold.toLocaleString()}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: '50%',
-                background: 'radial-gradient(ellipse at 35% 35%, #bfdbfe, #3b82f6 50%, #1e3a8a)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 18, boxShadow: '0 0 12px rgba(59,130,246,.5)',
-              }}>✨</div>
-              <span style={{ color: '#d1d5db', fontSize: 14, fontFamily: "'Noto Sans JP', sans-serif" }}>経験値</span>
-            </div>
-            <span style={{ color: '#60a5fa', fontWeight: 900, fontSize: 20 }}>{exp.toLocaleString()}</span>
-          </div>
-          {items.length > 0 && (
-            <>
-              <DividerLine color="gold" label="ドロップアイテム" />
-              {items.map((id, i) => {
-                const m = getItemMaster(id);
-                return m ? (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 22 }}>{m.emoji}</span>
-                    <span style={{ color: '#e5e7eb', fontSize: 13, fontFamily: "'Noto Sans JP', sans-serif" }}>{m.name}</span>
-                    <GameBadge color="green">GET</GameBadge>
-                  </div>
-                ) : null;
-              })}
-            </>
-          )}
+      <div className="bg-black/50 border border-yellow-900/30 rounded-2xl p-4 mb-6 text-left">
+        <p className="text-gray-400 text-xs font-bold mb-3 tracking-wide">━━ 獲得報酬 ━━━━━━━━━━━━━━━━</p>
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-gray-300 text-sm">💰 ゴールド</span>
+          <span className="text-yellow-400 font-black text-lg">{gold.toLocaleString()}</span>
         </div>
-      </FrameDecoration>
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-gray-300 text-sm">✨ 経験値</span>
+          <span className="text-blue-400 font-black text-lg">{exp.toLocaleString()}</span>
+        </div>
+        {items.length > 0 && (
+          <>
+            <p className="text-gray-500 text-xs font-bold mb-2 tracking-wide">━━ ドロップアイテム ━━━━━━━━</p>
+            {items.map((id, i) => {
+              const m = getItemMaster(id);
+              return m ? (
+                <div key={i} className="flex items-center gap-2 mb-1">
+                  <span className="text-lg">{m.emoji}</span>
+                  <span className="text-gray-200 text-sm">{m.name}</span>
+                  <span className="text-green-400 text-xs font-bold ml-auto">GET</span>
+                </div>
+              ) : null;
+            })}
+          </>
+        )}
+      </div>
 
-      <div style={{ display: 'flex', gap: 12 }}>
+      <div className="flex gap-3">
         <GameButton variant="secondary" onClick={onHome} fullWidth>ホームへ</GameButton>
-        <GameButton variant="primary" onClick={onRetry} fullWidth>クエストへ</GameButton>
+        <GameButton variant="primary" onClick={onQuest} fullWidth>クエストへ</GameButton>
       </div>
     </div>
   </div>
 );
 
 // ===== 敗北画面 =====
-const DefeatScreen = ({ onHome, onRetry }: { onHome: () => void; onRetry: () => void }) => (
+const DefeatScreen = ({ onHome, onQuest }: { onHome: () => void; onQuest: () => void }) => (
   <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center battle-bg">
     <div className="animate-slide-up w-full max-w-sm">
       <div style={{ fontSize: 72, marginBottom: 12, filter: 'drop-shadow(0 0 20px rgba(239,68,68,0.6))' }}>💀</div>
+      <p className="text-red-400 font-black text-3xl tracking-widest mb-1">DEFEAT</p>
+      <p className="text-gray-500 text-sm mb-8">全滅してしまいました…</p>
 
-      <div style={{ marginBottom: 6 }}>
-        <TitlePlate color="red">DEFEAT</TitlePlate>
+      <div className="bg-black/40 border border-red-900/30 rounded-2xl p-4 mb-6">
+        <p className="text-gray-400 text-sm">ユニットを強化して再挑戦しましょう</p>
       </div>
-      <p style={{ color: '#6b7280', fontSize: 13, marginBottom: 32 }}>全滅してしまいました…</p>
 
-      <FrameDecoration color="purple" style={{ marginBottom: 20 }}>
-        <p style={{ color: '#9ca3af', fontSize: 13, textAlign: 'center', fontFamily: "'Noto Sans JP', sans-serif" }}>
-          ユニットを強化して再挑戦しましょう
-        </p>
-      </FrameDecoration>
-
-      <div style={{ display: 'flex', gap: 12 }}>
+      <div className="flex gap-3">
         <GameButton variant="secondary" onClick={onHome} fullWidth>ホームへ</GameButton>
-        <GameButton variant="danger" onClick={onRetry} fullWidth>再挑戦</GameButton>
+        <GameButton variant="danger" onClick={onQuest} fullWidth>クエストへ</GameButton>
       </div>
     </div>
   </div>
