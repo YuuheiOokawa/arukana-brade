@@ -60,7 +60,7 @@ const INITIAL_PLAYER: PlayerData = {
   loginDays: 1,
 };
 
-const RANK_EXP_TABLE = Array.from({ length: 200 }, (_, i) => Math.floor(100 * Math.pow(i + 1, 1.5)));
+export const RANK_EXP_TABLE = Array.from({ length: 200 }, (_, i) => Math.floor(100 * Math.pow(i + 1, 1.5)));
 
 export const usePlayerStore = create<PlayerStore>()(
   persist(
@@ -174,13 +174,18 @@ export const usePlayerStore = create<PlayerStore>()(
 
       addExp: (amount) => {
         set(s => {
-          let { exp, rank } = s.player;
+          let { exp, rank, maxStamina, stamina } = s.player;
           exp += amount;
+          let ranked = false;
           while (rank < RANK_EXP_TABLE.length && exp >= RANK_EXP_TABLE[rank - 1]) {
             exp -= RANK_EXP_TABLE[rank - 1];
             rank++;
+            ranked = true;
           }
-          return { player: { ...s.player, exp, rank } };
+          // ランクアップごとにスタミナ上限+1（50を基本として最大200まで）
+          const newMaxStamina = ranked ? Math.min(200, 50 + Math.floor((rank - 1) / 5)) : maxStamina;
+          const newStamina = ranked ? newMaxStamina : stamina; // ランクアップ時にスタミナ全回復
+          return { player: { ...s.player, exp, rank, maxStamina: newMaxStamina, stamina: newStamina } };
         });
       },
 
