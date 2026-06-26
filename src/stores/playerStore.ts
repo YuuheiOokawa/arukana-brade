@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { PlayerData, OwnedItem } from '../types';
+import { ITEM_MASTER } from '../data/items';
 
 const STAMINA_RECOVERY_INTERVAL = 5 * 60 * 1000; // 5分で1回復
 
@@ -25,6 +26,7 @@ interface PlayerStore {
   initPlayer: () => void;
   setupFromTutorial: (name: string) => void;
   syncFromAuth: (p: AuthPlayerSnapshot) => void;
+  setAdminMode: () => void;
   addGold: (amount: number) => void;
   spendGold: (amount: number) => boolean;
   addDiamond: (amount: number) => void;
@@ -95,6 +97,19 @@ export const usePlayerStore = create<PlayerStore>()(
             bio: p.bio ?? s.player.bio,
             loginDays: p.loginDays,
           },
+        }));
+      },
+
+      setAdminMode: () => {
+        set(s => ({
+          player: {
+            ...s.player,
+            gold: 9_999_999,
+            diamond: 99_999,
+            stamina: s.player.maxStamina,
+            rank: Math.max(s.player.rank, 100),
+          },
+          items: ITEM_MASTER.map(item => ({ itemId: item.id, quantity: 999 })),
         }));
       },
 
