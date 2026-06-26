@@ -15,6 +15,7 @@ interface UnitStore {
   getUnit: (instanceId: string) => OwnedUnit | undefined;
   calcStats: (unit: OwnedUnit) => UnitStats;
   processSummonResults: (masterIds: string[]) => GachaApplyResult[];
+  syncUnitsToServer: () => Promise<void>;
 }
 
 let instanceCounter = Date.now();
@@ -182,6 +183,28 @@ export const useUnitStore = create<UnitStore>()(
       calcStats: (unit) => {
         const master = getUnitMaster(unit.masterId)!;
         return calcUnitStats(master, unit.level, unit.awakenRank, unit.awakeningCount ?? 0);
+      },
+
+      syncUnitsToServer: async () => {
+        const { ownedUnits } = get();
+        try {
+          await fetch('/api/units/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              units: ownedUnits.map(u => ({
+                masterId: u.masterId,
+                level: u.level,
+                exp: u.exp,
+                awakenRank: u.awakenRank,
+                awakeningCount: u.awakeningCount ?? 0,
+                currentRarity: String(u.currentRarity),
+                isLocked: u.isLocked,
+              })),
+            }),
+          });
+        } catch { /* silent */ }
       },
 
       // ガチャ被り処理: masterIds 配列を受け取り 新規/覚醒/覚醒結晶 を一括処理

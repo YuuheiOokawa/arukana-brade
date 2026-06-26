@@ -31,6 +31,7 @@ import { UIShowcasePage } from './features/debug/UIShowcasePage';
 import { useAuthStore } from './stores/authStore';
 import { useTutorialStore } from './stores/tutorialStore';
 import { usePlayerStore } from './stores/playerStore';
+import { useUnitStore } from './stores/unitStore';
 
 const ADMIN_EMAIL = 'yuuheiookawa@gmail.com';
 
@@ -78,9 +79,13 @@ const AppContent = () => {
   }, [user, setAdminMode]);
 
   const syncCurrencyToServer = usePlayerStore(s => s.syncCurrencyToServer);
+  const syncUnitsToServer = useUnitStore(s => s.syncUnitsToServer);
   useEffect(() => {
     if (!user) return;
-    const sync = () => { void syncCurrencyToServer(); };
+    const sync = () => {
+      void syncCurrencyToServer();
+      void syncUnitsToServer();
+    };
     window.addEventListener('blur', sync);
     window.addEventListener('beforeunload', sync);
     const interval = setInterval(sync, 3 * 60 * 1000);
@@ -89,7 +94,7 @@ const AppContent = () => {
       window.removeEventListener('beforeunload', sync);
       clearInterval(interval);
     };
-  }, [user, syncCurrencyToServer]);
+  }, [user, syncCurrencyToServer, syncUnitsToServer]);
 
   return (
     <div className="max-w-lg mx-auto relative min-h-screen">
