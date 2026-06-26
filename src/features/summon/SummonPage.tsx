@@ -264,7 +264,7 @@ type Phase = 'idle' | 'summon' | 'crystal' | 'shatter' | 'reveal' | 'results';
 type CrystalPhase = 'idle' | 'appear' | 'shatter';
 
 export const SummonPage = () => {
-  const { player, spendDiamond, useItem, items, addItem } = usePlayerStore();
+  const { player, spendDiamond, useItem, items } = usePlayerStore();
   const { processSummonResults, addAwakeningCrystal } = useUnitStore();
   const { addDailyProgress } = useMissionStore();
   const { syncSummonResult } = useAuthStore();

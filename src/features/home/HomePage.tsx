@@ -9,6 +9,7 @@ import { RANK_EXP_TABLE } from '../../stores/playerStore';
 import {
   IconSword, IconTeam, IconCrystal, IconArrowUp,
   IconGear, IconShield, IconDragon, IconScroll,
+  IconTrophy, IconCastle,
 } from '../../components/ui/FantasyIcon';
 import { LoginBonusModal } from '../login/LoginBonusModal';
 
