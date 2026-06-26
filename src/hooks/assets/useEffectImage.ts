@@ -1,7 +1,6 @@
 // ============================================================
 // useEffectImage — エフェクト画像フック
 // ============================================================
-import { useCallback } from 'react';
 import { useAsset } from './useAsset';
 import { AssetManager } from '../../lib/assets/AssetManager';
 import type { EffectAssetId } from '../../lib/assets/assetIds';
