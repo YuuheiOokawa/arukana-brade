@@ -82,6 +82,21 @@ export const QuestsPage = () => {
         </button>
       </div>
 
+      {/* パーティ未設定バナー */}
+      {!hasParty && (
+        <button
+          onClick={() => navigate('/party')}
+          className="mx-4 mb-3 w-[calc(100%-2rem)] rounded-xl p-3 flex items-center gap-3 text-left active:scale-98 transition-all"
+          style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.15), rgba(180,28,28,0.12))', border: '1px solid rgba(239,68,68,0.3)' }}>
+          <span className="text-xl">⚔️</span>
+          <div className="flex-1">
+            <p className="text-sm font-bold" style={{ color: '#f87171' }}>パーティが設定されていません</p>
+            <p className="text-xs" style={{ color: '#6b7280' }}>タップして編成画面へ</p>
+          </div>
+          <span style={{ color: '#4b5563' }}>›</span>
+        </button>
+      )}
+
       {/* ストーリー */}
       {mainTab === 'story' && (
         <>

@@ -180,6 +180,11 @@ export const BattlePage = () => {
       allyList = applyLeaderSkills(allyList, leaderEffects);
     }
 
+    if (allyList.length === 0) {
+      navigate('/party', { replace: true });
+      return;
+    }
+
     const enemyList = buildWave(s, 0);
     setAllies(allyList);
     setEnemies(enemyList);

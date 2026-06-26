@@ -4,46 +4,46 @@ import { useAuthStore } from '../../stores/authStore';
 import { useTutorialStore } from '../../stores/tutorialStore';
 import { usePlayerStore } from '../../stores/playerStore';
 
+const ADMIN_EMAIL = 'yuuheiookawa@gmail.com';
+
 type TitlePhase = 'loading' | 'tap' | 'menu';
 
 export const TitleScreen = () => {
   const navigate = useNavigate();
   const { user, isChecked, checkAuth, player: authPlayer } = useAuthStore();
   const { completed, completeTutorial } = useTutorialStore();
-  const { syncFromAuth } = usePlayerStore();
+  const { syncFromAuth, setAdminMode } = usePlayerStore();
   const [phase, setPhase] = useState<TitlePhase>('loading');
   const [menuVisible, setMenuVisible] = useState(false);
   const [newsOpen, setNewsOpen] = useState(false);
+  const [logoVisible, setLogoVisible] = useState(false);
 
   useEffect(() => {
     void checkAuth();
+    const t = setTimeout(() => setLogoVisible(true), 200);
+    return () => clearTimeout(t);
   }, [checkAuth]);
 
-  // 認証済みならゲームへ自動遷移
   useEffect(() => {
     if (!isChecked) return;
     if (user && authPlayer) {
-      // DBのプレイヤーデータをローカルストアに同期
       syncFromAuth(authPlayer);
-      // DBのチュートリアル完了フラグをローカルに同期
-      if (authPlayer.tutorialCompleted && !completed) {
-        completeTutorial();
-      }
-      const tutorialDone = completed || authPlayer.tutorialCompleted;
-      navigate(tutorialDone ? '/' : '/tutorial/intro', { replace: true });
+      if (authPlayer.tutorialCompleted && !completed) completeTutorial();
+      if (user.email === ADMIN_EMAIL) setAdminMode();
+      const done = completed || authPlayer.tutorialCompleted;
+      navigate(done ? '/' : '/tutorial/intro', { replace: true });
       return;
     }
     if (!user && isChecked) {
-      // 認証未済ならロゴ表示後にタップ待ち画面へ
-      const t = setTimeout(() => setPhase('tap'), 1200);
+      const t = setTimeout(() => setPhase('tap'), 1400);
       return () => clearTimeout(t);
     }
-  }, [isChecked, user, authPlayer, completed, navigate, syncFromAuth, completeTutorial]);
+  }, [isChecked, user, authPlayer, completed, navigate, syncFromAuth, completeTutorial, setAdminMode]);
 
   const handleTap = () => {
     if (phase !== 'tap') return;
     setPhase('menu');
-    setTimeout(() => setMenuVisible(true), 60);
+    setTimeout(() => setMenuVisible(true), 80);
   };
 
   return (
@@ -58,19 +58,25 @@ export const TitleScreen = () => {
         className="absolute inset-0 w-full h-full object-cover"
         style={{ zIndex: 0 }}
       />
-      {/* グラデーションオーバーレイ（半透明で背景を見せる） */}
-      <div className="absolute inset-0" style={{ zIndex: 1, background: 'radial-gradient(ellipse at 50% 30%, rgba(10,2,28,0.55) 0%, rgba(5,5,18,0.6) 60%, rgba(0,0,0,0.65) 100%)' }} />
+      {/* グラデーションオーバーレイ */}
+      <div
+        className="absolute inset-0"
+        style={{
+          zIndex: 1,
+          background: 'linear-gradient(to bottom, rgba(2,2,12,0.2) 0%, rgba(4,3,16,0.45) 40%, rgba(6,4,20,0.75) 70%, rgba(8,5,22,0.92) 100%)',
+        }}
+      />
 
       {/* 星エフェクト */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 2 }}>
-        {Array.from({ length: 60 }).map((_, i) => (
+        {Array.from({ length: 50 }).map((_, i) => (
           <div key={i} className="absolute rounded-full bg-white"
             style={{
-              width: `${Math.random() * 2.5 + 0.5}px`,
-              height: `${Math.random() * 2.5 + 0.5}px`,
-              top: `${Math.random() * 100}%`,
+              width: `${Math.random() * 2 + 0.5}px`,
+              height: `${Math.random() * 2 + 0.5}px`,
+              top: `${Math.random() * 70}%`,
               left: `${Math.random() * 100}%`,
-              opacity: Math.random() * 0.6 + 0.1,
+              opacity: Math.random() * 0.5 + 0.1,
               animation: `glow-pulse ${2 + Math.random() * 3}s ease-in-out infinite`,
               animationDelay: `${Math.random() * 4}s`,
             }}
@@ -78,147 +84,206 @@ export const TitleScreen = () => {
         ))}
       </div>
 
-      {/* 魔法陣リング */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 3 }}>
-        <div className="w-80 h-80 rounded-full"
+      {/* メインコンテンツ */}
+      <div
+        className="relative flex flex-col items-center w-full max-w-sm px-6"
+        style={{ zIndex: 10 }}
+      >
+        {/* ロゴカード */}
+        <div
+          className="w-full text-center mb-8"
           style={{
-            border: '1px solid rgba(139,92,246,0.25)',
-            boxShadow: '0 0 80px rgba(139,92,246,0.18), inset 0 0 80px rgba(139,92,246,0.06)',
-            animation: 'glow-pulse 4s ease-in-out infinite',
-          }} />
-        <div className="absolute w-56 h-56 rounded-full"
-          style={{ border: '1px solid rgba(240,192,64,0.2)', animation: 'glow-pulse 3s ease-in-out infinite reverse' }} />
-        <div className="absolute w-36 h-36 rounded-full"
-          style={{ border: '1px solid rgba(139,92,246,0.15)', animation: 'glow-pulse 2s ease-in-out infinite' }} />
-        {/* 六角形の魔法陣ライン */}
-        <svg viewBox="0 0 400 400" className="absolute w-80 h-80 opacity-10"
-          style={{ animation: 'spin 20s linear infinite' }}>
-          <polygon points="200,40 346,120 346,280 200,360 54,280 54,120" fill="none" stroke="rgba(240,192,64,0.8)" strokeWidth="1" />
-          <polygon points="200,80 316,140 316,260 200,320 84,260 84,140" fill="none" stroke="rgba(167,139,250,0.6)" strokeWidth="0.8" />
-        </svg>
-      </div>
-
-      {/* ロゴエリア */}
-      <div className={`relative z-10 flex flex-col items-center transition-all duration-1000 px-8 w-full max-w-sm
-        ${phase === 'loading' ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
-
-        <div className="text-xs tracking-[0.5em] text-yellow-400 mb-6 font-medium opacity-70">
-          ✦ ARCANA BRAVE ✦
-        </div>
-
-        <div className="text-center mb-6">
-          <div className="text-5xl font-black leading-tight mb-1"
-            style={{
-              fontFamily: "'Cinzel Decorative', 'Hiragino Kaku Gothic ProN', serif",
-              background: 'linear-gradient(160deg, #fde68a 0%, #f0c040 40%, #f59e0b 70%, #d97706 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              filter: 'drop-shadow(0 0 24px rgba(240,192,64,0.5))',
-            }}>
-            アルカナ
+            opacity: logoVisible ? 1 : 0,
+            transform: logoVisible ? 'translateY(0)' : 'translateY(20px)',
+            transition: 'opacity 1s ease, transform 1s ease',
+          }}
+        >
+          {/* 上部ラベル */}
+          <div className="flex items-center justify-center gap-3 mb-5">
+            <div className="h-px flex-1" style={{ background: 'linear-gradient(to right, transparent, rgba(240,192,64,0.6))' }} />
+            <span
+              className="text-[10px] font-bold tracking-[0.5em]"
+              style={{ color: '#c4a040', fontFamily: "'Noto Sans JP', sans-serif" }}
+            >
+              DARK FANTASY RPG
+            </span>
+            <div className="h-px flex-1" style={{ background: 'linear-gradient(to left, transparent, rgba(240,192,64,0.6))' }} />
           </div>
-          <div className="text-5xl font-black leading-tight"
-            style={{
-              fontFamily: "'Cinzel Decorative', 'Hiragino Kaku Gothic ProN', serif",
-              background: 'linear-gradient(160deg, #fde68a 0%, #f0c040 40%, #f59e0b 70%, #d97706 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              filter: 'drop-shadow(0 0 24px rgba(240,192,64,0.5))',
-            }}>
-            ブレイド
+
+          {/* タイトルロゴ */}
+          <div className="mb-2">
+            <h1
+              style={{
+                fontFamily: "'Noto Sans JP', 'Hiragino Kaku Gothic ProN', sans-serif",
+                fontWeight: 900,
+                fontSize: 'clamp(2.6rem, 10vw, 3.4rem)',
+                lineHeight: 1.1,
+                background: 'linear-gradient(160deg, #fff8e0 0%, #fde68a 25%, #f0c040 55%, #d97706 80%, #b45309 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                filter: 'drop-shadow(0 0 20px rgba(240,192,64,0.6)) drop-shadow(0 2px 8px rgba(0,0,0,0.8))',
+                letterSpacing: '0.08em',
+              }}
+            >
+              アルカナブレイド
+            </h1>
           </div>
-          <div className="mt-3 text-xs tracking-[0.35em] text-purple-300 opacity-60">
+
+          {/* サブタイトル */}
+          <p
+            className="text-sm mb-1"
+            style={{
+              fontFamily: "'Noto Sans JP', sans-serif",
+              fontWeight: 500,
+              color: 'rgba(200,185,255,0.75)',
+              letterSpacing: '0.3em',
+            }}
+          >
             ～ 剣と召喚の覇者 ～
+          </p>
+
+          {/* バージョンバッジ */}
+          <div className="flex justify-center mt-3">
+            <span
+              className="text-[9px] font-bold px-2 py-0.5 rounded-full"
+              style={{
+                background: 'rgba(139,92,246,0.2)',
+                border: '1px solid rgba(139,92,246,0.35)',
+                color: '#a78bfa',
+                letterSpacing: '0.15em',
+              }}
+            >
+              Ver 2.0.0
+            </span>
           </div>
         </div>
 
-        <div className="my-4 w-40 h-px"
-          style={{ background: 'linear-gradient(90deg, transparent, rgba(240,192,64,0.5), transparent)' }} />
-
-        {/* タップして開始 (menuフェーズ以外) */}
+        {/* TAP TO START */}
         {phase === 'tap' && (
-          <div className="mt-4 text-center animate-pulse">
-            <p className="text-sm tracking-[0.3em] text-yellow-300 opacity-80">
-              ─ TAP TO START ─
+          <div
+            className="mb-2 text-center"
+            style={{
+              animation: 'glow-pulse 1.8s ease-in-out infinite',
+            }}
+          >
+            <p
+              className="text-sm font-bold tracking-[0.4em]"
+              style={{
+                fontFamily: "'Noto Sans JP', sans-serif",
+                color: 'rgba(253,230,138,0.85)',
+              }}
+            >
+              タップして開始
             </p>
-            <p className="mt-1 text-xs text-purple-300 opacity-50 tracking-[0.2em]">
-              画面をタップして開始
+            <p className="text-xs mt-1 tracking-[0.25em]" style={{ color: 'rgba(167,139,250,0.55)' }}>
+              TAP TO START
             </p>
           </div>
         )}
 
         {/* メニューボタン */}
         {phase === 'menu' && (
-          <div className={`flex flex-col items-center gap-3 w-full transition-all duration-500
-            ${menuVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-            onClick={e => e.stopPropagation()}>
-
+          <div
+            className={`flex flex-col gap-3 w-full transition-all duration-500
+              ${menuVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
+            onClick={e => e.stopPropagation()}
+          >
             <button
               onClick={() => navigate('/login')}
-              className="w-full py-4 rounded-2xl font-bold text-white text-base cursor-pointer active:scale-95 transition-all duration-200"
+              className="w-full py-4 rounded-2xl font-black text-white text-base active:scale-95 transition-all duration-150"
               style={{
-                background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
-                boxShadow: '0 0 28px rgba(124,58,237,0.45), 0 4px 16px rgba(0,0,0,0.5)',
-                border: '1px solid rgba(167,139,250,0.35)',
-              }}>
-              ⚔️ ログイン
+                fontFamily: "'Noto Sans JP', sans-serif",
+                fontWeight: 900,
+                background: 'linear-gradient(135deg, #6d28d9 0%, #4f46e5 100%)',
+                boxShadow: '0 0 32px rgba(109,40,217,0.5), 0 4px 20px rgba(0,0,0,0.6)',
+                border: '1px solid rgba(167,139,250,0.4)',
+                letterSpacing: '0.1em',
+              }}
+            >
+              ログイン
             </button>
 
             <button
               onClick={() => navigate('/register')}
-              className="w-full py-3.5 rounded-2xl font-bold text-sm cursor-pointer active:scale-95 transition-all duration-200"
+              className="w-full py-3.5 rounded-2xl font-bold text-sm active:scale-95 transition-all duration-150"
               style={{
-                background: 'rgba(139,92,246,0.1)',
-                border: '1.5px solid rgba(139,92,246,0.4)',
+                fontFamily: "'Noto Sans JP', sans-serif",
+                fontWeight: 700,
+                background: 'rgba(79,70,229,0.12)',
+                border: '1.5px solid rgba(139,92,246,0.45)',
                 color: '#c4b5fd',
-              }}>
-              ✨ 新規登録
+                letterSpacing: '0.1em',
+              }}
+            >
+              新規登録
             </button>
 
             <button
               onClick={() => setNewsOpen(true)}
-              className="w-full py-2.5 rounded-xl text-xs cursor-pointer active:scale-95 transition-all"
+              className="w-full py-2.5 rounded-xl text-xs active:scale-95 transition-all"
               style={{
+                fontFamily: "'Noto Sans JP', sans-serif",
                 background: 'rgba(255,255,255,0.03)',
                 border: '1px solid rgba(255,255,255,0.08)',
-                color: '#9ca3af',
-              }}>
-              📢 お知らせ
+                color: '#6b7280',
+                letterSpacing: '0.1em',
+              }}
+            >
+              お知らせ
             </button>
           </div>
         )}
       </div>
 
-      {/* フッターリンク */}
+      {/* フッター */}
       {phase !== 'loading' && (
-        <div className="absolute bottom-safe bottom-6 flex gap-5 z-10" onClick={e => e.stopPropagation()}>
-          <a href="#" className="text-xs text-gray-600 hover:text-gray-400 transition-colors"
-            onClick={e => { e.preventDefault(); alert('利用規約（準備中）'); }}>
+        <div
+          className="absolute bottom-6 flex gap-5"
+          style={{ zIndex: 10 }}
+          onClick={e => e.stopPropagation()}
+        >
+          <button
+            className="text-xs transition-colors"
+            style={{ color: '#374151', fontFamily: "'Noto Sans JP', sans-serif" }}
+            onClick={() => alert('利用規約（準備中）')}
+          >
             利用規約
-          </a>
-          <span className="text-gray-700">|</span>
-          <a href="#" className="text-xs text-gray-600 hover:text-gray-400 transition-colors"
-            onClick={e => { e.preventDefault(); alert('プライバシーポリシー（準備中）'); }}>
+          </button>
+          <span style={{ color: '#1f2937' }}>|</span>
+          <button
+            className="text-xs transition-colors"
+            style={{ color: '#374151', fontFamily: "'Noto Sans JP', sans-serif" }}
+            onClick={() => alert('プライバシーポリシー（準備中）')}
+          >
             プライバシーポリシー
-          </a>
-          <span className="text-gray-700">|</span>
-          <span className="text-xs text-gray-700">Ver 2.0.0</span>
+          </button>
         </div>
       )}
 
       {/* お知らせモーダル */}
       {newsOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center pb-8 px-4"
-          onClick={() => setNewsOpen(false)}>
-          <div className="w-full max-w-sm rounded-2xl overflow-hidden"
-            style={{ background: 'rgba(12,8,30,0.97)', border: '1px solid rgba(139,92,246,0.3)' }}
-            onClick={e => e.stopPropagation()}>
-            <div className="px-5 pt-4 pb-3 flex items-center justify-between"
-              style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              <h3 className="font-bold text-white text-sm">📢 お知らせ</h3>
-              <button onClick={() => setNewsOpen(false)} className="text-gray-500 text-lg leading-none">×</button>
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center pb-8 px-4"
+          style={{ zIndex: 50 }}
+          onClick={() => setNewsOpen(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl overflow-hidden"
+            style={{ background: 'rgba(10,6,28,0.97)', border: '1px solid rgba(139,92,246,0.3)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div
+              className="px-5 pt-4 pb-3 flex items-center justify-between"
+              style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+            >
+              <h3
+                className="font-bold text-white text-sm"
+                style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
+              >
+                お知らせ
+              </h3>
+              <button onClick={() => setNewsOpen(false)} className="text-gray-500 text-xl leading-none">×</button>
             </div>
             <div className="divide-y divide-white/5">
               {[
@@ -228,21 +293,35 @@ export const TitleScreen = () => {
               ].map((n, i) => (
                 <div key={i} className="px-5 py-3">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-[9px] px-1.5 py-0.5 rounded font-bold"
+                    <span
+                      className="text-[9px] px-1.5 py-0.5 rounded font-bold"
                       style={{
                         background: n.tag === 'EVENT' ? 'rgba(240,192,64,0.2)' : 'rgba(100,100,200,0.2)',
                         color: n.tag === 'EVENT' ? '#fde68a' : '#a5b4fc',
-                      }}>{n.tag}</span>
+                      }}
+                    >
+                      {n.tag}
+                    </span>
                     <span className="text-xs text-gray-500">{n.date}</span>
                   </div>
-                  <p className="text-xs text-gray-300">{n.title}</p>
+                  <p
+                    className="text-xs text-gray-300"
+                    style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
+                  >
+                    {n.title}
+                  </p>
                 </div>
               ))}
             </div>
             <div className="p-4">
-              <button onClick={() => setNewsOpen(false)}
+              <button
+                onClick={() => setNewsOpen(false)}
                 className="w-full py-2.5 rounded-xl text-sm font-bold text-white"
-                style={{ background: 'rgba(124,58,237,0.4)' }}>
+                style={{
+                  background: 'rgba(124,58,237,0.4)',
+                  fontFamily: "'Noto Sans JP', sans-serif",
+                }}
+              >
                 閉じる
               </button>
             </div>
