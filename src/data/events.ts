@@ -108,6 +108,191 @@ export const EVENT_QUESTS: EventQuest[] = [
       },
     ],
   },
+  {
+    id: 'event_light_temple',
+    name: '聖光の神殿',
+    description: '古代の神殿に封じられた聖なる力を解放せよ！光の試練が待ち受ける。',
+    startTimestamp: NOW - 3 * DAY,
+    endTimestamp: NOW + 14 * DAY,
+    emoji: '✨',
+    bannerColor: 'linear-gradient(135deg, #2a2000, #aa8800)',
+    stages: [
+      {
+        id: 'event_light_1',
+        name: '神殿の前庭',
+        staminaCost: 5,
+        recommendedPower: 3500,
+        rewardGold: 1800,
+        rewardExp: 350,
+        rewardItems: [
+          { itemId: 'item_light_gem', quantity: 2, chance: 1.0 },
+          { itemId: 'item_holy_stone', quantity: 1, chance: 0.4 },
+        ],
+        waves: [
+          { enemies: [{ enemyId: 'enemy_dark_knight', level: 22 }, { enemyId: 'enemy_dark_mage', level: 20 }] },
+        ],
+      },
+      {
+        id: 'event_light_2',
+        name: '神殿の回廊',
+        staminaCost: 8,
+        recommendedPower: 7000,
+        rewardGold: 3500,
+        rewardExp: 700,
+        rewardItems: [
+          { itemId: 'item_light_gem', quantity: 3, chance: 1.0 },
+          { itemId: 'item_holy_stone', quantity: 2, chance: 0.5 },
+          { itemId: 'item_angel_feather', quantity: 1, chance: 0.3 },
+        ],
+        waves: [
+          { enemies: [{ enemyId: 'enemy_dark_knight', level: 35 }, { enemyId: 'enemy_dark_mage', level: 33 }] },
+          { enemies: [{ enemyId: 'enemy_lich', level: 40 }], isBoss: true },
+        ],
+      },
+      {
+        id: 'event_light_3',
+        name: '神殿の最深部',
+        staminaCost: 12,
+        recommendedPower: 14000,
+        rewardGold: 7000,
+        rewardExp: 1400,
+        rewardItems: [
+          { itemId: 'item_light_gem', quantity: 4, chance: 1.0 },
+          { itemId: 'item_arcana_shard', quantity: 1, chance: 0.45 },
+          { itemId: 'item_summon_ticket', quantity: 1, chance: 0.2 },
+        ],
+        waves: [
+          { enemies: [{ enemyId: 'enemy_dark_knight', level: 50 }, { enemyId: 'enemy_dark_mage', level: 50 }] },
+          { enemies: [{ enemyId: 'enemy_lich', level: 55 }] },
+          { enemies: [{ enemyId: 'enemy_dark_dragon', level: 60 }], isBoss: true },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'event_thunder_dungeon',
+    name: '雷鳴のダンジョン',
+    description: '稲妻が走る地下深くの迷宮。雷属性の強敵が待ち構える！',
+    startTimestamp: NOW - 1 * DAY,
+    endTimestamp: NOW + 14 * DAY,
+    emoji: '⚡',
+    bannerColor: 'linear-gradient(135deg, #1a1a00, #7a7a00)',
+    stages: [
+      {
+        id: 'event_thunder_1',
+        name: '雷鳴の入口',
+        staminaCost: 6,
+        recommendedPower: 4500,
+        rewardGold: 2200,
+        rewardExp: 450,
+        rewardItems: [
+          { itemId: 'item_thunder_gem', quantity: 2, chance: 1.0 },
+          { itemId: 'item_thunder_shard', quantity: 2, chance: 0.6 },
+        ],
+        waves: [
+          { enemies: [{ enemyId: 'enemy_lava_golem', level: 28 }, { enemyId: 'enemy_dark_mage', level: 25 }] },
+        ],
+      },
+      {
+        id: 'event_thunder_2',
+        name: '稲妻の回路',
+        staminaCost: 9,
+        recommendedPower: 9500,
+        rewardGold: 4500,
+        rewardExp: 900,
+        rewardItems: [
+          { itemId: 'item_thunder_gem', quantity: 3, chance: 1.0 },
+          { itemId: 'item_thunder_core', quantity: 1, chance: 0.4 },
+          { itemId: 'item_magic_crystal', quantity: 2, chance: 0.35 },
+        ],
+        waves: [
+          { enemies: [{ enemyId: 'enemy_lava_golem', level: 42 }, { enemyId: 'enemy_dark_knight', level: 40 }] },
+          { enemies: [{ enemyId: 'enemy_lich', level: 48 }], isBoss: true },
+        ],
+      },
+      {
+        id: 'event_thunder_3',
+        name: '雷神の間',
+        staminaCost: 14,
+        recommendedPower: 16000,
+        rewardGold: 8000,
+        rewardExp: 1600,
+        rewardItems: [
+          { itemId: 'item_thunder_gem', quantity: 4, chance: 1.0 },
+          { itemId: 'item_thunder_core', quantity: 2, chance: 0.5 },
+          { itemId: 'item_arcana_shard', quantity: 1, chance: 0.3 },
+          { itemId: 'item_summon_ticket', quantity: 1, chance: 0.15 },
+        ],
+        waves: [
+          { enemies: [{ enemyId: 'enemy_lava_golem', level: 58 }, { enemyId: 'enemy_dark_knight', level: 58 }] },
+          { enemies: [{ enemyId: 'enemy_fire_dragon', level: 65 }] },
+          { enemies: [{ enemyId: 'enemy_dark_dragon', level: 70 }], isBoss: true },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'event_earth_cave',
+    name: '大地の洞窟探索',
+    description: '古代の財宝が眠るという地下洞窟。土属性の強敵が立ちはだかる！',
+    startTimestamp: NOW - 4 * DAY,
+    endTimestamp: NOW + 14 * DAY,
+    emoji: '🪨',
+    bannerColor: 'linear-gradient(135deg, #1a0a00, #5a3300)',
+    stages: [
+      {
+        id: 'event_earth_1',
+        name: '洞窟の入口',
+        staminaCost: 5,
+        recommendedPower: 3000,
+        rewardGold: 1600,
+        rewardExp: 320,
+        rewardItems: [
+          { itemId: 'item_earth_gem', quantity: 2, chance: 0.9 },
+          { itemId: 'item_stone_core', quantity: 1, chance: 0.4 },
+        ],
+        waves: [
+          { enemies: [{ enemyId: 'enemy_lava_golem', level: 18 }, { enemyId: 'enemy_lava_golem', level: 16 }] },
+        ],
+      },
+      {
+        id: 'event_earth_2',
+        name: '洞窟の奥地',
+        staminaCost: 9,
+        recommendedPower: 8000,
+        rewardGold: 4000,
+        rewardExp: 800,
+        rewardItems: [
+          { itemId: 'item_earth_gem', quantity: 3, chance: 1.0 },
+          { itemId: 'item_stone_core', quantity: 2, chance: 0.5 },
+          { itemId: 'item_mana_stone', quantity: 1, chance: 0.25 },
+        ],
+        waves: [
+          { enemies: [{ enemyId: 'enemy_lava_golem', level: 38 }, { enemyId: 'enemy_dark_knight', level: 35 }] },
+          { enemies: [{ enemyId: 'enemy_lich', level: 42 }], isBoss: true },
+        ],
+      },
+      {
+        id: 'event_earth_3',
+        name: '古代の石室',
+        staminaCost: 12,
+        recommendedPower: 13000,
+        rewardGold: 6500,
+        rewardExp: 1300,
+        rewardItems: [
+          { itemId: 'item_earth_gem', quantity: 4, chance: 1.0 },
+          { itemId: 'item_arcana_shard', quantity: 1, chance: 0.4 },
+          { itemId: 'item_dragon_scale', quantity: 1, chance: 0.3 },
+          { itemId: 'item_summon_ticket', quantity: 1, chance: 0.15 },
+        ],
+        waves: [
+          { enemies: [{ enemyId: 'enemy_lava_golem', level: 52 }, { enemyId: 'enemy_lava_golem', level: 50 }] },
+          { enemies: [{ enemyId: 'enemy_lich', level: 58 }] },
+          { enemies: [{ enemyId: 'enemy_dark_dragon', level: 62 }], isBoss: true },
+        ],
+      },
+    ],
+  },
 ];
 
 export const RAID_BOSSES: RaidBossMaster[] = [
@@ -154,6 +339,54 @@ export const RAID_BOSSES: RaidBossMaster[] = [
       {
         enemies: [
           { enemyId: 'enemy_fire_dragon', level: 70 },
+        ],
+        isBoss: true,
+      },
+    ],
+  },
+  {
+    id: 'raid_thunder_wyrm',
+    name: '雷竜皇バルトルム',
+    element: 'thunder',
+    totalHp: 8500000,
+    emoji: '🌩️',
+    bannerColor: 'linear-gradient(135deg, #0a0a00, #555500)',
+    entryStaminaCost: 3,
+    endTimestamp: NOW + 12 * DAY,
+    rewards: [
+      { minDamage: 0,       items: ['item_thunder_gem'] },
+      { minDamage: 40000,   items: ['item_thunder_gem', 'item_thunder_core'] },
+      { minDamage: 180000,  items: ['item_arcana_shard', 'item_thunder_gem'] },
+      { minDamage: 900000,  items: ['item_summon_ticket', 'item_arcana_shard'] },
+    ],
+    waves: [
+      {
+        enemies: [
+          { enemyId: 'enemy_dark_dragon', level: 75 },
+        ],
+        isBoss: true,
+      },
+    ],
+  },
+  {
+    id: 'raid_water_leviathan',
+    name: '深海魔獣レヴィアタン',
+    element: 'water',
+    totalHp: 9000000,
+    emoji: '🐋',
+    bannerColor: 'linear-gradient(135deg, #001a3a, #004488)',
+    entryStaminaCost: 4,
+    endTimestamp: NOW + 9 * DAY,
+    rewards: [
+      { minDamage: 0,        items: ['item_water_gem'] },
+      { minDamage: 50000,    items: ['item_water_gem', 'item_water_pearl'] },
+      { minDamage: 220000,   items: ['item_arcana_shard', 'item_water_gem'] },
+      { minDamage: 1100000,  items: ['item_arcana_orb', 'item_summon_ticket'] },
+    ],
+    waves: [
+      {
+        enemies: [
+          { enemyId: 'enemy_dark_dragon', level: 85 },
         ],
         isBoss: true,
       },
