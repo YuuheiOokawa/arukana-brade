@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUnitStore } from '../../stores/unitStore';
 import { usePlayerStore } from '../../stores/playerStore';
-import { getUnitMaster, UNIT_MASTER } from '../../data/units';
+import { getUnitMaster } from '../../data/units';
 import { UnitCard } from '../../components/ui/UnitCard';
 import { TopBar } from '../../components/layout/TopBar';
-import { getStarRarityOrder, getStarDisplay } from '../../data/rarityConfig';
+import { getStarRarityOrder } from '../../data/rarityConfig';
 import type { ElementType, StarRarity, OwnedUnit } from '../../types';
 
 const ELEMENTS: (ElementType | 'all')[] = ['all', 'fire', 'water', 'wind', 'earth', 'light', 'dark'];
@@ -31,7 +31,7 @@ const releaseGold = (unit: OwnedUnit): number => {
 
 export const UnitsPage = () => {
   const navigate = useNavigate();
-  const { ownedUnits, toggleLock } = useUnitStore();
+  const { ownedUnits } = useUnitStore();
   const { addGold } = usePlayerStore();
   const [filterElement, setFilterElement] = useState<ElementType | 'all'>('all');
   const [filterStar, setFilterStar] = useState<StarFilter>('all');
@@ -156,7 +156,6 @@ export const UnitsPage = () => {
       {/* ユニット一覧 */}
       <div className="px-4 grid grid-cols-1 gap-2">
         {filtered.map(unit => {
-          const master = getUnitMaster(unit.masterId);
           const isSelected = selected.has(unit.instanceId);
           return (
             <div key={unit.instanceId} className="relative"
