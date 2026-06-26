@@ -2,13 +2,15 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { OwnedUnit, UnitStats, GachaApplyResult, StarRarity } from '../types';
 import { getUnitMaster, calcUnitStats } from '../data/units';
-import { RARITY_TYPE_TO_STAR, AWAKENING_CONFIG } from '../data/rarityConfig';
+import { RARITY_TYPE_TO_STAR, AWAKENING_CONFIG, getLevelCap, NEXT_RARITY } from '../data/rarityConfig';
 
 interface UnitStore {
   ownedUnits: OwnedUnit[];
   addUnit: (masterId: string) => OwnedUnit;
   levelUpUnit: (instanceId: string, expAmount: number) => void;
   awakenUnit: (instanceId: string) => boolean;
+  incrementAwakeningCount: (instanceId: string) => boolean;
+  rarityUp: (instanceId: string) => boolean;
   toggleLock: (instanceId: string) => void;
   getUnit: (instanceId: string) => OwnedUnit | undefined;
   calcStats: (unit: OwnedUnit) => UnitStats;
@@ -105,13 +107,14 @@ export const useUnitStore = create<UnitStore>()(
           ownedUnits: s.ownedUnits.map(unit => {
             if (unit.instanceId !== instanceId) return unit;
             const master = getUnitMaster(unit.masterId)!;
+            const lvCap = getLevelCap(unit.currentRarity);
             let { level, exp } = unit;
             exp += expAmount;
-            while (level < master.maxLevel && exp >= EXP_PER_LEVEL(level)) {
+            while (level < lvCap && exp >= EXP_PER_LEVEL(level)) {
               exp -= EXP_PER_LEVEL(level);
               level++;
             }
-            if (level >= master.maxLevel) exp = 0;
+            if (level >= lvCap) exp = 0;
             const currentStats = calcUnitStats(master, level, unit.awakenRank, unit.awakeningCount ?? 0);
             return { ...unit, level, exp, currentStats };
           }),
@@ -129,6 +132,38 @@ export const useUnitStore = create<UnitStore>()(
             const newAwaken = u.awakenRank + 1;
             const currentStats = calcUnitStats(master, u.level, newAwaken, u.awakeningCount ?? 0);
             return { ...u, awakenRank: newAwaken, currentStats };
+          }),
+        }));
+        return true;
+      },
+
+      incrementAwakeningCount: (instanceId) => {
+        const unit = get().ownedUnits.find(u => u.instanceId === instanceId);
+        if (!unit) return false;
+        if ((unit.awakeningCount ?? 0) >= AWAKENING_CONFIG.maxAwakeningCount) return false;
+        const master = getUnitMaster(unit.masterId)!;
+        set(s => ({
+          ownedUnits: s.ownedUnits.map(u => {
+            if (u.instanceId !== instanceId) return u;
+            const newCount = (u.awakeningCount ?? 0) + 1;
+            return { ...u, awakeningCount: newCount, currentStats: calcUnitStats(master, u.level, u.awakenRank, newCount) };
+          }),
+        }));
+        return true;
+      },
+
+      rarityUp: (instanceId) => {
+        const unit = get().ownedUnits.find(u => u.instanceId === instanceId);
+        if (!unit) return false;
+        const nextR = NEXT_RARITY[String(unit.currentRarity)];
+        if (!nextR) return false;
+        if (unit.level < getLevelCap(unit.currentRarity)) return false;
+        const master = getUnitMaster(unit.masterId)!;
+        set(s => ({
+          ownedUnits: s.ownedUnits.map(u => {
+            if (u.instanceId !== instanceId) return u;
+            const newStats = calcUnitStats(master, u.level, u.awakenRank, u.awakeningCount ?? 0);
+            return { ...u, currentRarity: nextR as StarRarity, currentStats: newStats };
           }),
         }));
         return true;
@@ -180,26 +215,9 @@ export const useUnitStore = create<UnitStore>()(
             newUnits.push(newUnit);
             results.push({ type: 'new' });
 
-          } else if (target.awakeningCount >= AWAKENING_CONFIG.maxAwakeningCount) {
-            // 覚醒上限 → 覚醒結晶
-            results.push({ type: 'crystal' });
-
           } else {
-            // 覚醒 +1
-            const newCount = target.awakeningCount + 1;
-            const newStats = calcUnitStats(master, target.level, target.awakenRank, newCount);
-            const existIdx = currentOwned.findIndex(u => u.instanceId === target.instanceId);
-            if (existIdx >= 0) {
-              currentOwned = currentOwned.map(u =>
-                u.instanceId === target.instanceId
-                  ? { ...u, awakeningCount: newCount, currentStats: newStats }
-                  : u
-              );
-            } else {
-              const newIdx = newUnits.findIndex(u => u.instanceId === target.instanceId);
-              if (newIdx >= 0) newUnits[newIdx] = { ...newUnits[newIdx], awakeningCount: newCount, currentStats: newStats };
-            }
-            results.push({ type: 'awakening', awakeningCount: newCount });
+            // 被り → 覚醒結晶を配布（手動覚醒のため自動で覚醒させない）
+            results.push({ type: 'crystal' });
           }
         }
 
