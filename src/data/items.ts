@@ -92,6 +92,12 @@ export const ITEM_MASTER: ItemMaster[] = [
   { id: 'item_raid_coin',        name: 'レイドコイン',       description: 'レイドボスへの挑戦で入手できる硬貨', category: 'material',      emoji: '🪙', sellPrice: 100 },
   { id: 'item_raid_relic',       name: '討伐の遺物',         description: 'レイドボス撃破で得られる希少な遺物', category: 'material',      emoji: '🏺', sellPrice: 5000 },
   { id: 'item_boss_essence',     name: 'ボス精髄',           description: '強大なボスの力が宿るエッセンス',   category: 'material',        emoji: '⚗️', sellPrice: 2000 },
+
+  // ===== 進化素材（高レアリティ）=====
+  { id: 'item_magic_crystal',    name: '魔法結晶',           description: '★3以上の進化に必要な魔力を秘めた結晶',    category: 'material', emoji: '🔮', sellPrice: 300 },
+  { id: 'item_element_core',     name: '元素核',             description: '★4以上の進化に必要な元素の核',             category: 'material', emoji: '⚡', sellPrice: 800 },
+  { id: 'item_arcana_orb',       name: 'アルカナオーブ',     description: '★5以上の進化にのみ使用できる神秘の宝珠',   category: 'material', emoji: '🌐', sellPrice: 2000 },
+  { id: 'item_mystic_stone',     name: '神秘石',             description: '★7・CROWN進化に必要な極めて希少な石',       category: 'material', emoji: '💎', sellPrice: 8000 },
 ];
 
 export const getItemMaster = (id: string): ItemMaster | undefined =>

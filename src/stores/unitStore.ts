@@ -6,10 +6,13 @@ import { RARITY_TYPE_TO_STAR, AWAKENING_CONFIG, getLevelCap, NEXT_RARITY } from 
 
 interface UnitStore {
   ownedUnits: OwnedUnit[];
+  awakeningCrystals: Record<string, number>;
   addUnit: (masterId: string) => OwnedUnit;
   levelUpUnit: (instanceId: string, expAmount: number) => void;
   awakenUnit: (instanceId: string) => boolean;
   incrementAwakeningCount: (instanceId: string) => boolean;
+  addAwakeningCrystal: (masterId: string) => void;
+  getAwakeningCrystalCount: (masterId: string) => number;
   rarityUp: (instanceId: string) => boolean;
   toggleLock: (instanceId: string) => void;
   getUnit: (instanceId: string) => OwnedUnit | undefined;
@@ -82,6 +85,18 @@ export const useUnitStore = create<UnitStore>()(
   persist(
     (set, get) => ({
       ownedUnits: createInitialUnits(),
+      awakeningCrystals: {},
+
+      addAwakeningCrystal: (masterId) => {
+        set(s => ({
+          awakeningCrystals: {
+            ...s.awakeningCrystals,
+            [masterId]: (s.awakeningCrystals[masterId] ?? 0) + 1,
+          },
+        }));
+      },
+
+      getAwakeningCrystalCount: (masterId) => get().awakeningCrystals[masterId] ?? 0,
 
       addUnit: (masterId) => {
         const master = getUnitMaster(masterId)!;
@@ -139,11 +154,18 @@ export const useUnitStore = create<UnitStore>()(
       },
 
       incrementAwakeningCount: (instanceId) => {
-        const unit = get().ownedUnits.find(u => u.instanceId === instanceId);
+        const { ownedUnits, awakeningCrystals } = get();
+        const unit = ownedUnits.find(u => u.instanceId === instanceId);
         if (!unit) return false;
         if ((unit.awakeningCount ?? 0) >= AWAKENING_CONFIG.maxAwakeningCount) return false;
+        const crystalCount = awakeningCrystals[unit.masterId] ?? 0;
+        if (crystalCount <= 0) return false;
         const master = getUnitMaster(unit.masterId)!;
         set(s => ({
+          awakeningCrystals: {
+            ...s.awakeningCrystals,
+            [unit.masterId]: Math.max(0, (s.awakeningCrystals[unit.masterId] ?? 0) - 1),
+          },
           ownedUnits: s.ownedUnits.map(u => {
             if (u.instanceId !== instanceId) return u;
             const newCount = (u.awakeningCount ?? 0) + 1;
@@ -239,8 +261,8 @@ export const useUnitStore = create<UnitStore>()(
             results.push({ type: 'new' });
 
           } else {
-            // 被り → 覚醒結晶を配布（手動覚醒のため自動で覚醒させない）
-            results.push({ type: 'crystal' });
+            // 被り → キャラ専用覚醒結晶を付与
+            results.push({ type: 'crystal', masterId });
           }
         }
 
@@ -256,6 +278,7 @@ export const useUnitStore = create<UnitStore>()(
         return {
           ...current,
           ownedUnits: (p.ownedUnits as Array<Parameters<typeof migrateUnit>[0]>).map(migrateUnit),
+          awakeningCrystals: (p.awakeningCrystals as Record<string, number>) ?? {},
         };
       },
     }
