@@ -7,8 +7,6 @@ interface Props {
   onBack?: () => void;
 }
 
-const STAMINA_RECOVERY_MS = 5 * 60 * 1000;
-
 const StaminaDisplay = () => {
   const { player } = usePlayerStore();
   const { stamina, maxStamina, staminaRecoveryTime } = player;
