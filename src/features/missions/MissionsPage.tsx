@@ -4,7 +4,6 @@ import { DAILY_MISSIONS } from '../../data/missions';
 import { TopBar } from '../../components/layout/TopBar';
 import type { MissionProgress } from '../../types';
 import { GaugeBar } from '../../components/ui/game/GaugeBar';
-import { GameBadge } from '../../components/ui/game/UIDecorations';
 
 export const MissionsPage = () => {
   const { daily, checkDailyReset, claimDailyReward, getCompletedCount, getClaimedCount } = useMissionStore();
@@ -41,8 +40,6 @@ export const MissionsPage = () => {
           const prog: MissionProgress = daily.progresses.find(p => p.missionId === mission.id) ?? {
             missionId: mission.id, progress: 0, completed: false, claimed: false,
           };
-          const pct = Math.min(1, prog.progress / mission.target);
-
           return (
             <div key={mission.id} className={`card-base p-4 transition-all ${
               prog.claimed ? 'opacity-50' : prog.completed ? 'border-yellow-600/40' : ''

@@ -19,7 +19,8 @@ import {
 import { elementGradient } from '../../utils/elementUtils';
 import { ElementBadge } from '../../components/ui/ElementBadge';
 import { GaugeBar } from '../../components/ui/game/GaugeBar';
-import { FrameDecoration, TitlePlate, DividerLine, GameButton, GameBadge } from '../../components/ui/game/UIDecorations';
+import { FrameDecoration, TitlePlate, DividerLine, GameBadge } from '../../components/ui/game/UIDecorations';
+import { GameButton } from '../../components/ui/game/GameButton';
 import { CurrencyIcon } from '../../components/ui/game/GameIcons';
 import type { BattleUnit, BattleEnemy, BattleLog, QuestStage, LeaderSkillEffect } from '../../types';
 

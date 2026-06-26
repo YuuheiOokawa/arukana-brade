@@ -33,7 +33,6 @@ export const HomePage = () => {
     return () => clearInterval(interval);
   }, [recoverStamina, checkDailyReset]);
 
-  const staminaPct = (player.stamina / player.maxStamina) * 100;
   const activeEvents = getActiveEvents();
   const activeRaids = getActiveRaids();
   const missionCompleted = getCompletedCount();

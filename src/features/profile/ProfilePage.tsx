@@ -7,7 +7,7 @@ import { RarityBadge } from '../../components/ui/RarityBadge';
 import { formatNumber, calcTotalPower } from '../../utils/format';
 import { getStarColor, getStarDisplay } from '../../data/rarityConfig';
 import type { StarRarity } from '../../types';
-import { TitlePlate, DividerLine, FrameDecoration } from '../../components/ui/game/UIDecorations';
+import { TitlePlate, FrameDecoration } from '../../components/ui/game/UIDecorations';
 
 const TITLES = [
   '駆け出しの勇者', '炎の剣士', '水の守護者', '風の疾走者',
