@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { GameButton } from '../../components/ui/game/GameButton';
 import { FRIEND_CANDIDATES } from '../../data/friends';
 import { UNIT_MASTER } from '../../data/units';
 import { useQuestStore } from '../../stores/questStore';
@@ -120,15 +121,9 @@ export const FriendSelectPage = () => {
       {/* 決定ボタン */}
       <div className="fixed bottom-0 left-0 right-0 p-4 space-y-2"
         style={{ background: 'linear-gradient(to top, #0a0a1a 60%, transparent)' }}>
-        <button
-          onClick={handleConfirm}
-          disabled={!selected}
-          className={`w-full py-4 rounded-xl font-black text-lg transition-all ${
-            selected ? 'btn-gold active:scale-98' : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-          }`}
-        >
+        <GameButton variant="gold" fullWidth onClick={handleConfirm} disabled={!selected}>
           ⚔️ バトル開始
-        </button>
+        </GameButton>
         <button onClick={handleSkip} className="w-full text-gray-500 text-sm py-2">
           フレンドなしで始める
         </button>

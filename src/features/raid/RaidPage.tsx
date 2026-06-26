@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { GameButton } from '../../components/ui/game/GameButton';
 import { useRaidStore } from '../../stores/raidStore';
 import { useQuestStore } from '../../stores/questStore';
 import { usePlayerStore } from '../../stores/playerStore';
@@ -188,13 +189,11 @@ const RaidBossDetail = ({ boss, navigate }: { boss: RaidBossMaster; navigate: Re
 
       {/* 挑戦ボタン */}
       <div className="pb-4">
-        <button onClick={handleChallenge}
+        <GameButton variant="primary" fullWidth
           disabled={state.currentHp <= 0}
-          className={`w-full py-5 rounded-2xl font-black text-lg transition-all active:scale-95 disabled:opacity-40 ${
-            state.currentHp <= 0 ? '' : 'btn-primary'
-          }`}>
+          onClick={handleChallenge}>
           {state.currentHp <= 0 ? '討伐済み' : `⚔️ 挑戦する (⚡${boss.entryStaminaCost})`}
-        </button>
+        </GameButton>
         {nextTierRewards && (
           <p className="text-center text-gray-600 text-xs mt-2">
             次の報酬まであと {formatHp(nextTierRewards.minDamage - state.totalDamageDealt)} ダメージ

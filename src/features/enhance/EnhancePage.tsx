@@ -7,6 +7,7 @@ import { UNIT_MASTER } from '../../data/units';
 import { getItemMaster } from '../../data/items';
 import { UnitCard } from '../../components/ui/UnitCard';
 import { GaugeBar } from '../../components/ui/game/GaugeBar';
+import { GameButton } from '../../components/ui/game/GameButton';
 import { TopBar } from '../../components/layout/TopBar';
 import { formatNumber, calcTotalPower, getExpForLevel } from '../../utils/format';
 
@@ -206,9 +207,9 @@ export const EnhancePage = () => {
                       );
                     })}
                   </div>
-                  <button onClick={handleAwaken} className="btn-gold w-full">
+                  <GameButton variant="gold" fullWidth onClick={handleAwaken}>
                     ★ 覚醒ランクアップ
-                  </button>
+                  </GameButton>
                 </div>
               )}
 

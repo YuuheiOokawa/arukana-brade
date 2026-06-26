@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { GameButton } from '../../components/ui/game/GameButton';
 import { useEquipmentStore } from '../../stores/equipmentStore';
 import { useUnitStore } from '../../stores/unitStore';
 import { UNIT_MASTER } from '../../data/units';
@@ -130,12 +131,12 @@ export const EquipmentPage = () => {
                   {/* 展開メニュー */}
                   {selectedEq?.instanceId === eq.instanceId && (
                     <div className="mt-3 pt-3 border-t border-gray-700/40 flex gap-2">
-                      <button className="btn-primary flex-1 text-xs py-2 min-h-0"
+                      <GameButton variant="primary" size="sm" fullWidth
                         onClick={(e) => { e.stopPropagation(); setTab('equip'); }}>
                         ユニットに装備
-                      </button>
+                      </GameButton>
                       {!eq.equippedTo && (
-                        <button className="btn-secondary text-xs py-2 px-3 min-h-0"
+                        <GameButton variant="secondary" size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
                             sellEquipment(eq.instanceId);
@@ -143,7 +144,7 @@ export const EquipmentPage = () => {
                             showToast('売却しました');
                           }}>
                           売却
-                        </button>
+                        </GameButton>
                       )}
                     </div>
                   )}
@@ -184,10 +185,10 @@ export const EquipmentPage = () => {
                     <p className="text-gray-500 text-xs">Lv {unit.level} · 覚醒{unit.awakenRank}</p>
                   </div>
                   {selectedEq && (
-                    <button className="ml-auto btn-primary text-xs py-2 px-3 min-h-0"
+                    <GameButton variant="primary" size="sm" className="ml-auto"
                       onClick={() => handleEquip(unit.instanceId)}>
                       装備する
-                    </button>
+                    </GameButton>
                   )}
                 </div>
                 <div className="grid grid-cols-3 gap-1.5">
