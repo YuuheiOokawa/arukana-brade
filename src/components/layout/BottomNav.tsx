@@ -2,31 +2,28 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useMissionStore } from '../../stores/missionStore';
 import {
-  IconMenu, IconGear, IconBag, IconArrowUp, IconShield,
+  IconHome, IconSword, IconCrystal, IconTeam,
+  IconMenu, IconScroll, IconGear, IconBag,
+  IconArrowUp, IconShield, IconDragon, IconTrophy, IconCastle, IconCrown,
 } from '../ui/FantasyIcon';
 
-const IMG = (src: string) => `/assets/images/ui/navigation/${src}`;
-
 const MAIN_NAV = [
-  { path: '/',       label: 'ホーム',   img: IMG('icon_nav_home.webp') },
-  { path: '/quests', label: 'クエスト', img: IMG('icon_nav_quest.webp') },
-  { path: '/units',  label: 'ユニット', img: IMG('icon_nav_unit.webp') },
-  { path: '/summon', label: '召喚',     img: IMG('icon_nav_summon.webp') },
+  { path: '/',       label: 'ホーム',   Icon: IconHome },
+  { path: '/quests', label: 'クエスト', Icon: IconSword },
+  { path: '/units',  label: 'ユニット', Icon: IconTeam },
+  { path: '/summon', label: '召喚',     Icon: IconCrystal },
 ];
 
-const MENU_ITEMS: Array<{
-  path: string; label: string; badge?: boolean;
-  img?: string; Icon?: React.FC<{ size: number; color: string }>;
-}> = [
-  { path: '/missions',  label: 'ミッション', img: IMG('icon_nav_quest.webp'),   badge: true },
+const MENU_ITEMS = [
+  { path: '/missions',  label: 'ミッション', Icon: IconScroll,   badge: true },
   { path: '/equipment', label: '装備',       Icon: IconGear },
   { path: '/items',     label: 'アイテム',   Icon: IconBag },
   { path: '/enhance',   label: '強化',       Icon: IconArrowUp },
   { path: '/party',     label: '編成',       Icon: IconShield },
-  { path: '/raid',      label: 'レイド',     img: IMG('icon_nav_battle.webp') },
-  { path: '/pvp',       label: 'アリーナ',   img: IMG('icon_nav_arena.webp') },
-  { path: '/guild',     label: 'ギルド',     img: IMG('icon_nav_guild.webp') },
-  { path: '/profile',   label: 'プロフィール', img: IMG('icon_nav_profile.webp') },
+  { path: '/raid',      label: 'レイド',     Icon: IconDragon },
+  { path: '/pvp',       label: 'アリーナ',   Icon: IconTrophy },
+  { path: '/guild',     label: 'ギルド',     Icon: IconCastle },
+  { path: '/profile',   label: 'プロフィール', Icon: IconCrown },
 ];
 
 export const BottomNav = () => {
@@ -63,6 +60,7 @@ export const BottomNav = () => {
               <div className="grid grid-cols-4 gap-3">
                 {MENU_ITEMS.map(item => {
                   const active = isActive(item.path);
+                  const IconComp = item.Icon;
                   return (
                     <button key={item.path} onClick={() => handleNav(item.path)}
                       className="flex flex-col items-center gap-1.5 py-3 rounded-2xl transition-all active:scale-95 relative"
@@ -73,12 +71,7 @@ export const BottomNav = () => {
                         border: `1px solid ${active ? 'rgba(167,139,250,0.5)' : 'rgba(255,255,255,0.07)'}`,
                         boxShadow: active ? '0 0 16px rgba(139,92,246,0.2)' : 'none',
                       }}>
-                      {item.img ? (
-                        <img src={item.img} alt={item.label} width={22} height={22}
-                          style={{ filter: active ? 'brightness(1.4) saturate(1.2)' : 'brightness(0.5) saturate(0)' }} />
-                      ) : item.Icon ? (
-                        <item.Icon size={22} color={active ? '#c4b5fd' : '#4b5563'} />
-                      ) : null}
+                      <IconComp size={22} color={active ? '#c4b5fd' : '#4b5563'} />
                       <span style={{ fontSize: 10, fontWeight: 700, color: active ? '#c4b5fd' : '#4b5563' }}>
                         {item.label}
                       </span>
@@ -105,12 +98,12 @@ export const BottomNav = () => {
         <div className="max-w-lg mx-auto flex pb-safe">
           {MAIN_NAV.map(item => {
             const active = isActive(item.path);
+            const IconComp = item.Icon;
             return (
               <button key={item.path} onClick={() => { setMenuOpen(false); navigate(item.path); }}
                 className="flex-1 flex flex-col items-center pt-2 pb-3 transition-all duration-200 active:scale-95">
                 <div className="relative">
-                  <img src={item.img} alt={item.label} width={24} height={24}
-                    style={{ filter: active ? 'brightness(1.2) sepia(1) hue-rotate(0deg) saturate(3)' : 'brightness(0.5) saturate(0)' }} />
+                  <IconComp size={22} color={active ? '#f0c040' : '#4b5563'} />
                   {active && (
                     <div className="absolute -inset-2 rounded-full pointer-events-none"
                       style={{ background: 'radial-gradient(circle, rgba(240,192,64,0.15), transparent 70%)' }} />
