@@ -27,6 +27,7 @@ import { ScenarioScreen } from './features/scenario/ScenarioScreen';
 import { ProfilePage } from './features/profile/ProfilePage';
 import { LoginPage } from './features/auth/LoginPage';
 import { RegisterPage } from './features/auth/RegisterPage';
+import { UIShowcasePage } from './features/debug/UIShowcasePage';
 import { useAuthStore } from './stores/authStore';
 import { useTutorialStore } from './stores/tutorialStore';
 
@@ -102,6 +103,7 @@ const AppContent = () => {
         <Route path="/pvp"      element={<AuthGuard><MainGuard><PvPPage /></MainGuard></AuthGuard>} />
         <Route path="/profile"  element={<AuthGuard><MainGuard><ProfilePage /></MainGuard></AuthGuard>} />
         <Route path="/scenario/:stageId" element={<AuthGuard><MainGuard><ScenarioScreen /></MainGuard></AuthGuard>} />
+        <Route path="/ui-showcase" element={<UIShowcasePage />} />
 
         <Route path="*" element={<Navigate to="/title" replace />} />
       </Routes>
