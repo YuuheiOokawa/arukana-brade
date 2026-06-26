@@ -3,6 +3,8 @@ import { useMissionStore } from '../../stores/missionStore';
 import { DAILY_MISSIONS } from '../../data/missions';
 import { TopBar } from '../../components/layout/TopBar';
 import type { MissionProgress } from '../../types';
+import { GaugeBar } from '../../components/ui/game/GaugeBar';
+import { GameBadge } from '../../components/ui/game/UIDecorations';
 
 export const MissionsPage = () => {
   const { daily, checkDailyReset, claimDailyReward, getCompletedCount, getClaimedCount } = useMissionStore();
@@ -23,11 +25,8 @@ export const MissionsPage = () => {
           <p className="text-gray-400 text-sm">本日の達成状況</p>
           <p className="text-white font-bold">{completed}/{total}</p>
         </div>
-        <div className="h-2 bg-gray-800 rounded-full overflow-hidden mb-2">
-          <div className="h-full bg-gradient-to-r from-purple-600 to-yellow-400 rounded-full transition-all"
-            style={{ width: `${(completed / total) * 100}%` }} />
-        </div>
-        <p className="text-gray-600 text-xs">受取済み {claimed}/{total}</p>
+        <GaugeBar type="exp" value={completed} max={total} showLabel={false} />
+        <p className="text-gray-600 text-xs mt-2">受取済み {claimed}/{total}</p>
         {completed === total && claimed < total && (
           <p className="text-yellow-400 text-xs font-bold mt-1 animate-glow">✓ 全ミッション達成！報酬を受け取ろう</p>
         )}
@@ -61,14 +60,14 @@ export const MissionsPage = () => {
                   <p className="text-gray-500 text-xs mb-2">{mission.description}</p>
 
                   {/* 進捗バー */}
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full transition-all ${prog.completed ? 'bg-yellow-400' : 'bg-purple-500'}`}
-                        style={{ width: `${pct * 100}%` }} />
-                    </div>
-                    <span className="text-gray-500 text-xs tabular-nums">
-                      {prog.progress}/{mission.target}
-                    </span>
+                  <div className="mb-2">
+                    <GaugeBar
+                      type={prog.completed ? 'exp' : 'mp'}
+                      value={prog.progress}
+                      max={mission.target}
+                      showLabel={false}
+                      animated={false}
+                    />
                   </div>
 
                   {/* 報酬表示 */}

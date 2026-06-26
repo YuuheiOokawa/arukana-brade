@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getScenario, BG_STYLES, BG_ACCENT } from '../../data/scenarios';
+import { StoryTextBox } from '../../components/ui/game/GamePanel';
 
 const AUTO_INTERVAL_MS = 3200;
 
@@ -182,53 +183,24 @@ export const ScenarioScreen = () => {
 
       {/* ダイアログボックス */}
       <div
-        className="absolute bottom-0 left-0 right-0 z-10"
+        className="absolute bottom-0 left-0 right-0 z-10 px-4 pb-4"
         style={{ transition: 'opacity 0.2s', opacity: visible ? 1 : 0 }}
         onClick={e => e.stopPropagation()}
       >
-        {/* セリフ本文 */}
-        <div
-          className="mx-4 mb-4 rounded-2xl p-5 cursor-pointer"
-          style={{
-            background: isNarration
-              ? 'rgba(8,8,26,0.82)'
-              : 'rgba(8,8,26,0.88)',
-            border: `1px solid ${isNarration ? 'rgba(255,255,255,0.12)' : accent + '55'}`,
-            backdropFilter: 'blur(16px)',
-            boxShadow: `0 -4px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)`,
-          }}
-          onClick={advance}
-        >
-          {/* 話者名 */}
-          {!isNarration && speakerName && (
-            <div className="mb-2 px-3 py-1 rounded-lg inline-block text-xs font-black tracking-widest"
-              style={{
-                background: `${accent}22`,
-                border: `1px solid ${accent}44`,
-                color: accent,
-              }}>
-              {speakerName}
-            </div>
-          )}
-          {/* テキスト */}
-          <p className="text-sm leading-7 min-h-[4rem]"
-            style={{
-              color: isNarration ? '#d1d5db' : '#f9fafb',
-              fontStyle: isNarration ? 'italic' : 'normal',
-            }}>
-            {isNarration && <span className="mr-2 text-gray-500">▍</span>}
-            {displayText}
-            {!textDone && <span className="animate-pulse" style={{ color: accent }}>▌</span>}
-          </p>
-          {/* 次へ矢印 */}
-          {textDone && (
-            <div className="flex justify-end mt-2">
-              <div className="text-xs font-bold animate-bounce" style={{ color: accent }}>
-                ▼ 次へ
-              </div>
-            </div>
-          )}
+        <div onClick={advance} className="cursor-pointer">
+          <StoryTextBox
+            speaker={!isNarration && speakerName ? speakerName : undefined}
+            text={isNarration ? `▍ ${displayText}` : displayText}
+            showCursor={!textDone}
+          />
         </div>
+        {textDone && (
+          <div className="flex justify-end mt-2 pr-1">
+            <span className="text-xs font-bold animate-bounce" style={{ color: accent }}>
+              ▼ 次へ
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
