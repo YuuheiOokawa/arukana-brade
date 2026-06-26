@@ -2,28 +2,34 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useMissionStore } from '../../stores/missionStore';
 import {
-  IconHome, IconSword, IconCrystal, IconTeam,
   IconMenu, IconScroll, IconGear, IconBag,
-  IconArrowUp, IconShield, IconDragon, IconTrophy, IconCastle, IconCrown,
+  IconArrowUp, IconShield, IconDragon,
 } from '../ui/FantasyIcon';
+import { GameNavIcon } from '../ui/game/GameIcons';
 
-const MAIN_NAV = [
-  { path: '/',       label: 'ホーム',   Icon: IconHome },
-  { path: '/quests', label: 'クエスト', Icon: IconSword },
-  { path: '/units',  label: 'ユニット', Icon: IconTeam },
-  { path: '/summon', label: '召喚',     Icon: IconCrystal },
+type NavIconKey = 'home' | 'quest' | 'unit' | 'summon' | 'profile' | 'guild' | 'arena';
+
+const MAIN_NAV: { path: string; navType: NavIconKey }[] = [
+  { path: '/',       navType: 'home'   },
+  { path: '/quests', navType: 'quest'  },
+  { path: '/units',  navType: 'unit'   },
+  { path: '/summon', navType: 'summon' },
 ];
 
-const MENU_ITEMS = [
-  { path: '/missions',  label: 'ミッション', Icon: IconScroll,   badge: true },
-  { path: '/equipment', label: '装備',       Icon: IconGear },
-  { path: '/items',     label: 'アイテム',   Icon: IconBag },
-  { path: '/enhance',   label: '強化',       Icon: IconArrowUp },
-  { path: '/party',     label: '編成',       Icon: IconShield },
-  { path: '/raid',      label: 'レイド',     Icon: IconDragon },
-  { path: '/pvp',       label: 'アリーナ',   Icon: IconTrophy },
-  { path: '/guild',     label: 'ギルド',     Icon: IconCastle },
-  { path: '/profile',   label: 'プロフィール', Icon: IconCrown },
+type MenuItem =
+  | { path: string; label: string; badge?: true; type: 'fantasy'; Icon: React.ComponentType<{ size: number; color: string }> }
+  | { path: string; label: string; badge?: true; type: 'game';    navType: NavIconKey };
+
+const MENU_ITEMS: MenuItem[] = [
+  { path: '/missions',  label: 'ミッション', type: 'fantasy', Icon: IconScroll,   badge: true },
+  { path: '/equipment', label: '装備',       type: 'fantasy', Icon: IconGear },
+  { path: '/items',     label: 'アイテム',   type: 'fantasy', Icon: IconBag },
+  { path: '/enhance',   label: '強化',       type: 'fantasy', Icon: IconArrowUp },
+  { path: '/party',     label: '編成',       type: 'fantasy', Icon: IconShield },
+  { path: '/raid',      label: 'レイド',     type: 'fantasy', Icon: IconDragon },
+  { path: '/pvp',       label: 'アリーナ',   type: 'game',    navType: 'arena' },
+  { path: '/guild',     label: 'ギルド',     type: 'game',    navType: 'guild' },
+  { path: '/profile',   label: 'プロフィール', type: 'game',  navType: 'profile' },
 ];
 
 export const BottomNav = () => {
@@ -60,25 +66,30 @@ export const BottomNav = () => {
               <div className="grid grid-cols-4 gap-3">
                 {MENU_ITEMS.map(item => {
                   const active = isActive(item.path);
-                  const IconComp = item.Icon;
                   return (
-                    <button key={item.path} onClick={() => handleNav(item.path)}
-                      className="flex flex-col items-center gap-1.5 py-3 rounded-2xl transition-all active:scale-95 relative"
-                      style={{
-                        background: active
-                          ? 'linear-gradient(180deg, rgba(139,92,246,0.25), rgba(79,70,229,0.2))'
-                          : 'rgba(255,255,255,0.04)',
-                        border: `1px solid ${active ? 'rgba(167,139,250,0.5)' : 'rgba(255,255,255,0.07)'}`,
-                        boxShadow: active ? '0 0 16px rgba(139,92,246,0.2)' : 'none',
-                      }}>
-                      <IconComp size={22} color={active ? '#c4b5fd' : '#4b5563'} />
-                      <span style={{ fontSize: 10, fontWeight: 700, color: active ? '#c4b5fd' : '#4b5563' }}>
-                        {item.label}
-                      </span>
-                      {item.badge && missionBadge && (
-                        <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full" />
+                    <div key={item.path} className="relative" onClick={() => handleNav(item.path)}>
+                      {item.type === 'game' ? (
+                        <GameNavIcon type={item.navType} active={active} showLabel size={44} />
+                      ) : (
+                        <button
+                          className="w-full flex flex-col items-center gap-1.5 py-3 rounded-2xl transition-all active:scale-95"
+                          style={{
+                            background: active
+                              ? 'linear-gradient(180deg, rgba(139,92,246,0.25), rgba(79,70,229,0.2))'
+                              : 'rgba(255,255,255,0.04)',
+                            border: `1px solid ${active ? 'rgba(167,139,250,0.5)' : 'rgba(255,255,255,0.07)'}`,
+                            boxShadow: active ? '0 0 16px rgba(139,92,246,0.2)' : 'none',
+                          }}>
+                          <item.Icon size={22} color={active ? '#c4b5fd' : '#4b5563'} />
+                          <span style={{ fontSize: 10, fontWeight: 700, color: active ? '#c4b5fd' : '#4b5563' }}>
+                            {item.label}
+                          </span>
+                        </button>
                       )}
-                    </button>
+                      {item.badge && missionBadge && (
+                        <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full pointer-events-none" />
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -98,26 +109,11 @@ export const BottomNav = () => {
         <div className="max-w-lg mx-auto flex pb-safe">
           {MAIN_NAV.map(item => {
             const active = isActive(item.path);
-            const IconComp = item.Icon;
             return (
-              <button key={item.path} onClick={() => { setMenuOpen(false); navigate(item.path); }}
-                className="flex-1 flex flex-col items-center pt-2 pb-3 transition-all duration-200 active:scale-95">
-                <div className="relative">
-                  <IconComp size={22} color={active ? '#f0c040' : '#4b5563'} />
-                  {active && (
-                    <div className="absolute -inset-2 rounded-full pointer-events-none"
-                      style={{ background: 'radial-gradient(circle, rgba(240,192,64,0.15), transparent 70%)' }} />
-                  )}
-                </div>
-                <span style={{ fontSize: 10, marginTop: 3, fontWeight: 700,
-                  color: active ? '#f0c040' : '#4b5563' }}>
-                  {item.label}
-                </span>
-                {active && (
-                  <div className="w-4 h-0.5 rounded-full mt-1"
-                    style={{ background: '#f0c040', boxShadow: '0 0 6px rgba(240,192,64,0.6)' }} />
-                )}
-              </button>
+              <div key={item.path} className="flex-1 flex justify-center pt-1 pb-1 active:scale-95 transition-all duration-200"
+                onClick={() => { setMenuOpen(false); navigate(item.path); }}>
+                <GameNavIcon type={item.navType} active={active} showLabel size={46} />
+              </div>
             );
           })}
 

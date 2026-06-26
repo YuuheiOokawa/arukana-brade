@@ -6,12 +6,17 @@ import { useUnitStore } from '../../stores/unitStore';
 import { useAuthStore } from '../../stores/authStore';
 import { HERO_MASTER } from '../../data/heroes';
 import { ELEMENT_NAMES } from '../../types';
+import { CurrencyIcon } from '../../components/ui/game/GameIcons';
 
-const TUTORIAL_REWARDS = [
-  { img: '/assets/images/icons/items/icon_currency_gold.webp', label: 'ゴールド', value: '+5,000G' },
-  { img: '/assets/images/icons/items/icon_currency_diamond.webp', label: 'ダイヤ', value: '+500個' },
-  { img: '/assets/images/items/currency/item_ticket_summon.webp', label: '召喚チケット', value: '+3枚' },
-  { img: '/assets/images/items/materials/item_exp_book_large.webp', label: '強化素材セット', value: '各種×3' },
+type TutorialReward =
+  | { type: 'currency'; currencyType: 'gold' | 'diamond'; label: string; value: string }
+  | { type: 'img'; img: string; label: string; value: string };
+
+const TUTORIAL_REWARDS: TutorialReward[] = [
+  { type: 'currency', currencyType: 'gold',    label: 'ゴールド',   value: '+5,000G' },
+  { type: 'currency', currencyType: 'diamond', label: 'ダイヤ',     value: '+500個' },
+  { type: 'img', img: '/assets/images/items/currency/item_ticket_summon.webp', label: '召喚チケット', value: '+3枚' },
+  { type: 'img', img: '/assets/images/items/materials/item_exp_book_large.webp', label: '強化素材セット', value: '各種×3' },
 ];
 
 export const TutorialCompleteScreen = () => {
@@ -123,8 +128,12 @@ export const TutorialCompleteScreen = () => {
                   transform: i < rewardIndex ? 'scale(1)' : 'scale(0.95)',
                 }}
               >
-                <img src={r.img} alt={r.label} width={28} height={28}
-                  className="flex-shrink-0" style={{ objectFit: 'contain' }} />
+                {r.type === 'currency' ? (
+                  <CurrencyIcon type={r.currencyType} size={32} />
+                ) : (
+                  <img src={r.img} alt={r.label} width={28} height={28}
+                    className="flex-shrink-0" style={{ objectFit: 'contain' }} />
+                )}
                 <div>
                   <div className="text-xs text-gray-400">{r.label}</div>
                   <div className="text-xs font-bold text-yellow-300">{r.value}</div>

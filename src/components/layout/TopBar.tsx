@@ -1,5 +1,6 @@
 import { usePlayerStore } from '../../stores/playerStore';
 import { formatNumber } from '../../utils/format';
+import { CurrencyIcon } from '../ui/game/GameIcons';
 
 interface Props {
   title?: string;
@@ -21,12 +22,12 @@ export const TopBar = ({ title, onBack }: Props) => {
         {title && <h1 className="text-white font-bold text-base">{title}</h1>}
       </div>
       <div className="flex items-center gap-3 text-sm">
-        <div className="flex items-center gap-1">
-          <span>💎</span>
+        <div className="flex items-center gap-1.5">
+          <CurrencyIcon type="diamond" size={22} />
           <span className="text-blue-300 font-bold">{formatNumber(player.diamond)}</span>
         </div>
-        <div className="flex items-center gap-1">
-          <span>🪙</span>
+        <div className="flex items-center gap-1.5">
+          <CurrencyIcon type="gold" size={22} />
           <span className="text-yellow-400 font-bold">{formatNumber(player.gold)}</span>
         </div>
       </div>
