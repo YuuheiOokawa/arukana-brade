@@ -10,6 +10,7 @@ import type { SummonPool, RarityType, UnitMaster, GachaApplyResult } from '../..
 import type { GachaStar } from '../../types';
 import { RARITY_TO_STAR, STAR_COLORS, STAR_LABELS } from '../../types';
 import { AWAKENING_CONFIG } from '../../data/rarityConfig';
+import { CurrencyIcon } from '../../components/ui/game/GameIcons';
 
 /* ============================================================
    パーティクル
@@ -612,7 +613,10 @@ export const SummonPage = () => {
               <span className="btn-sub-text">残り {ticketCount} 枚</span>
             </button>
           )}
-          <p className="summon-diamond-count">所持ダイヤ：{player.diamond}</p>
+          <div className="summon-diamond-count" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <CurrencyIcon type="diamond" size={20} />
+            <span>所持ダイヤ：{player.diamond.toLocaleString()}</span>
+          </div>
         </div>
       )}
 
