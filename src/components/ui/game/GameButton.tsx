@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, MouseEvent } from 'react';
 import './GameUI.css';
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'gacha' | 'back' | 'gold';
@@ -8,7 +8,7 @@ interface GameButtonProps {
   variant?: ButtonVariant;
   size?: ButtonSize;
   children: ReactNode;
-  onClick?: () => void;
+  onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
   disabled?: boolean;
   className?: string;
   fullWidth?: boolean;
