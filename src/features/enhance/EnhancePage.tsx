@@ -10,7 +10,7 @@ import { GaugeBar } from '../../components/ui/game/GaugeBar';
 import { GameButton } from '../../components/ui/game/GameButton';
 import { TopBar } from '../../components/layout/TopBar';
 import { formatNumber, calcTotalPower, getExpForLevel } from '../../utils/format';
-import { getLevelCap, getStarDisplay, NEXT_RARITY, AWAKENING_CONFIG } from '../../data/rarityConfig';
+import { getLevelCap, getStarDisplay, NEXT_RARITY, AWAKENING_CONFIG, EVOLUTION_MATERIALS } from '../../data/rarityConfig';
 
 export const EnhancePage = () => {
   const navigate = useNavigate();
@@ -97,6 +97,16 @@ export const EnhancePage = () => {
     if (!unit) return;
     const lvCap = getLevelCap(unit.currentRarity);
     if (unit.level < lvCap) { setMessage(`Lv${lvCap}に達してから進化できます`); return; }
+    const mats = EVOLUTION_MATERIALS[String(unit.currentRarity)] ?? [];
+    for (const mat of mats) {
+      const owned = items.find(i => i.itemId === mat.itemId);
+      if (!owned || owned.quantity < mat.quantity) {
+        setMessage(`素材不足: ${mat.label} ×${mat.quantity}`);
+        setTimeout(() => setMessage(''), 2500);
+        return;
+      }
+    }
+    for (const mat of mats) useItem(mat.itemId, mat.quantity);
     const nextR = NEXT_RARITY[String(unit.currentRarity)];
     const ok = rarityUp(unit.instanceId);
     if (!ok) { setMessage('進化できません'); return; }
@@ -175,9 +185,23 @@ export const EnhancePage = () => {
                       {getStarDisplay(NEXT_RARITY[String(unit.currentRarity)]!)}
                     </span>
                   </div>
-                  <p className="text-gray-400 text-xs text-center mb-3">
-                    進化すると新しいレベル上限が解放されます
-                  </p>
+                  {/* 必要素材 */}
+                  <div className="space-y-1.5 mb-3">
+                    {(EVOLUTION_MATERIALS[String(unit.currentRarity)] ?? []).map(mat => {
+                      const owned = items.find(i => i.itemId === mat.itemId)?.quantity ?? 0;
+                      const enough = owned >= mat.quantity;
+                      const itemMaster = getItemMaster(mat.itemId);
+                      return (
+                        <div key={mat.itemId} className="flex items-center gap-2 text-sm">
+                          <span className="text-base">{itemMaster?.emoji ?? '📦'}</span>
+                          <span className="flex-1 text-gray-300 text-xs">{mat.label}</span>
+                          <span className={`text-xs font-bold ${enough ? 'text-green-400' : 'text-red-400'}`}>
+                            {owned}/{mat.quantity} {enough ? '✓' : '✗'}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                   <GameButton variant="gold" fullWidth onClick={handleRarityUp}>
                     進化する
                   </GameButton>
@@ -284,7 +308,7 @@ export const EnhancePage = () => {
 
               {/* 覚醒結晶セクション */}
               <div className="card-base p-4">
-                <h3 className="text-gray-400 text-xs font-bold mb-3 uppercase tracking-wider">覚醒結晶（ガチャ被り）</h3>
+                <h3 className="text-gray-400 text-xs font-bold mb-3 uppercase tracking-wider">覚醒結晶</h3>
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-2xl">💠</span>
                   <div className="flex-1">
@@ -309,7 +333,6 @@ export const EnhancePage = () => {
                 ) : (
                   <p className="text-cyan-400 font-bold text-center text-sm">覚醒結晶上限達成！</p>
                 )}
-                <p className="text-gray-600 text-xs mt-2 text-center">覚醒結晶はガチャで同じキャラが出た時に獲得</p>
               </div>
 
               {/* 覚醒ボーナス */}

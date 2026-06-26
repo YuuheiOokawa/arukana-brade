@@ -49,7 +49,7 @@ export const HomePage = () => {
         style={{ opacity: 0.35 }}
       />
       {/* グラデーションオーバーレイ */}
-      <div className="fixed inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(26,10,56,0.82) 0%, rgba(8,8,26,0.88) 55%)' }} />
+      <div className="fixed inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(26,10,56,0.70) 0%, rgba(8,8,26,0.78) 55%)' }} />
 
       {/* 背景装飾：魔法陣リング */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -83,17 +83,12 @@ export const HomePage = () => {
         ))}
       </div>
 
-      {/* ヒーローバナー */}
-      <div className="relative px-4 pt-12 pb-8 text-center overflow-hidden">
-        <div className="relative">
-          <p className="text-xs font-bold tracking-[0.4em] mb-2" style={{ color: '#8b5cf6' }}>DARK FANTASY RPG</p>
-          <h1 className="text-4xl font-black mb-1" style={{
-            background: 'linear-gradient(160deg, #fde68a 0%, #f0c040 40%, #f59e0b 70%, #d97706 100%)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            filter: 'drop-shadow(0 0 16px rgba(240,192,64,0.35))',
-          }}>アルカナブレイド</h1>
-          <p className="text-xs" style={{ color: 'rgba(139,92,246,0.7)' }}>～ 剣と召喚の覇者 ～</p>
-        </div>
+      {/* ヒーローバナー (コンパクト) */}
+      <div className="relative px-4 pt-4 pb-3 text-center">
+        <h1 className="text-2xl font-black" style={{
+          background: 'linear-gradient(160deg, #fde68a 0%, #f0c040 50%, #d97706 100%)',
+          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+        }}>ARCANA BLADE</h1>
       </div>
 
       {/* プレイヤー情報パネル */}
@@ -168,25 +163,25 @@ export const HomePage = () => {
         {activeRaids.slice(0, 1).map(raid => (
           <button key={raid.id} onClick={() => navigate('/raid')}
             className="w-full rounded-xl p-3 flex items-center gap-3 text-left transition-all active:scale-98"
-            style={{ background: raid.bannerColor, border: '1px solid rgba(139,92,246,0.6)', boxShadow: '0 0 12px rgba(139,92,246,0.2)' }}>
+            style={{ background: 'linear-gradient(135deg, #3b1060, #6d28a0)', border: '1px solid rgba(167,139,250,0.7)', boxShadow: '0 0 16px rgba(139,92,246,0.35)' }}>
             <IconDragon size={22} color="#c4b5fd" />
             <div className="flex-1">
               <p className="text-sm font-bold text-white">{raid.name}</p>
-              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>レイドボス開催中！</p>
+              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.75)' }}>レイドボス開催中！</p>
             </div>
-            <span style={{ color: 'rgba(255,255,255,0.5)' }}>›</span>
+            <span style={{ color: 'rgba(255,255,255,0.6)' }}>›</span>
           </button>
         ))}
         {activeEvents.slice(0, 1).map(event => (
           <button key={event.id} onClick={() => navigate('/quests')}
             className="w-full rounded-xl p-3 flex items-center gap-3 text-left transition-all active:scale-98"
-            style={{ background: event.bannerColor, border: '1px solid rgba(139,92,246,0.6)', boxShadow: '0 0 12px rgba(139,92,246,0.2)' }}>
-            <IconSword size={22} color="#a78bfa" />
+            style={{ background: 'linear-gradient(135deg, #1e0a4a, #4c1080)', border: '1px solid rgba(167,139,250,0.7)', boxShadow: '0 0 16px rgba(139,92,246,0.35)' }}>
+            <IconSword size={22} color="#c4b5fd" />
             <div className="flex-1">
               <p className="text-sm font-bold text-white">{event.name}</p>
-              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>期間限定イベント開催中！</p>
+              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.75)' }}>期間限定イベント開催中！</p>
             </div>
-            <span style={{ color: 'rgba(255,255,255,0.5)' }}>›</span>
+            <span style={{ color: 'rgba(255,255,255,0.6)' }}>›</span>
           </button>
         ))}
       </div>
@@ -199,18 +194,17 @@ export const HomePage = () => {
             const IconComp = btn.Icon;
             return (
               <button key={btn.path} onClick={() => navigate(btn.path)}
-                className="rounded-2xl p-3 text-left transition-all active:scale-95 relative overflow-hidden"
+                className="rounded-2xl p-3 flex flex-col items-center text-center transition-all active:scale-95 relative overflow-hidden"
                 style={{
                   background: `linear-gradient(145deg, ${btn.color.split(' ').join(', ')})`,
-                  border: `1px solid ${btn.accent}28`,
-                  boxShadow: `0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)`,
+                  border: `1px solid ${btn.accent}55`,
+                  boxShadow: `0 4px 16px rgba(0,0,0,0.4), 0 0 8px ${btn.accent}22`,
                 }}>
                 <div className="absolute top-0 left-0 right-0 h-px" style={{
-                  background: `linear-gradient(90deg, transparent, ${btn.accent}30, transparent)`,
+                  background: `linear-gradient(90deg, transparent, ${btn.accent}50, transparent)`,
                 }} />
-                <IconComp size={22} color={btn.accent} />
+                <IconComp size={24} color={btn.accent} />
                 <p className="text-white font-black text-sm mt-2">{btn.label}</p>
-                <p className="text-[10px] leading-tight mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{btn.desc}</p>
               </button>
             );
           })}
@@ -230,9 +224,9 @@ export const HomePage = () => {
             <button key={item.path} onClick={() => navigate(item.path)}
               className="rounded-2xl p-4 text-left transition-all active:scale-95 relative"
               style={{
-                background: 'linear-gradient(145deg, rgba(35,24,70,0.95), rgba(20,14,42,0.98))',
-                border: `1px solid ${item.accent}55`,
-                boxShadow: `0 4px 16px rgba(0,0,0,0.5), 0 0 8px ${item.accent}18`,
+                background: 'linear-gradient(145deg, rgba(50,32,100,0.95), rgba(30,20,65,0.98))',
+                border: `1px solid ${item.accent}70`,
+                boxShadow: `0 4px 16px rgba(0,0,0,0.4), 0 0 10px ${item.accent}30`,
               }}>
               <IconComp size={26} color={item.accent} />
               <p className="text-white font-black text-sm mt-2">{item.label}</p>

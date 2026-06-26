@@ -1,5 +1,5 @@
 import { usePlayerStore } from '../../stores/playerStore';
-import { formatNumber } from '../../utils/format';
+import { formatCompact } from '../../utils/format';
 import { CurrencyIcon } from '../ui/game/GameIcons';
 
 interface Props {
@@ -49,13 +49,13 @@ export const TopBar = ({ title, onBack }: Props) => {
     <header className="sticky top-0 z-40 px-3 py-2 flex items-center gap-2"
       style={{ background: 'linear-gradient(180deg, #0a0a1a 0%, transparent 100%)', backdropFilter: 'blur(8px)' }}>
       {/* 左: 戻るボタン or ブランド名 */}
-      <div className="flex items-center gap-1.5 flex-shrink-0">
+      <div className="flex items-center gap-1 flex-shrink-0" style={{ maxWidth: '45%' }}>
         {onBack ? (
-          <button onClick={onBack} className="text-gray-400 hover:text-white text-xl">←</button>
+          <button onClick={onBack} className="text-gray-400 hover:text-white text-xl flex-shrink-0">←</button>
         ) : (
-          <span className="text-yellow-400 font-black text-sm tracking-wider">ARCANA</span>
+          <span className="text-yellow-400 font-black text-sm tracking-wider flex-shrink-0">ARCANA</span>
         )}
-        {title && <h1 className="text-white font-bold" style={{ fontSize: 14 }}>{title}</h1>}
+        {title && <h1 className="text-white font-bold truncate" style={{ fontSize: 13 }}>{title}</h1>}
       </div>
 
       {/* 中央: スタミナ */}
@@ -64,14 +64,14 @@ export const TopBar = ({ title, onBack }: Props) => {
       </div>
 
       {/* 右: 通貨 */}
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <div className="flex items-center gap-1">
-          <CurrencyIcon type="diamond" size={18} />
-          <span className="text-blue-300 font-bold" style={{ fontSize: 12 }}>{formatNumber(player.diamond)}</span>
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="flex items-center gap-0.5">
+          <CurrencyIcon type="diamond" size={15} />
+          <span className="text-blue-300 font-bold" style={{ fontSize: 11 }}>{formatCompact(player.diamond)}</span>
         </div>
-        <div className="flex items-center gap-1">
-          <CurrencyIcon type="gold" size={18} />
-          <span className="text-yellow-400 font-bold" style={{ fontSize: 12 }}>{formatNumber(player.gold)}</span>
+        <div className="flex items-center gap-0.5">
+          <CurrencyIcon type="gold" size={15} />
+          <span className="text-yellow-400 font-bold" style={{ fontSize: 11 }}>{formatCompact(player.gold)}</span>
         </div>
       </div>
     </header>
