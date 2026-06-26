@@ -8,7 +8,7 @@ interface Props {
 
 export const LoginBonusModal = ({ onClose }: Props) => {
   const { canClaim, claimToday, currentDay, claimedDays } = useLoginBonusStore();
-  const { addGold, addDiamond, addItem, spendStamina } = usePlayerStore();
+  const { addGold, addDiamond, addItem } = usePlayerStore();
   const [claimed, setClaimed] = useState(false);
   const [claimedRewards, setClaimedRewards] = useState<typeof LOGIN_BONUS_SCHEDULE[0]['rewards']>([]);
 
