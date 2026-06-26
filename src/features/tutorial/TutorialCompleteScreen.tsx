@@ -18,7 +18,7 @@ export const TutorialCompleteScreen = () => {
   const navigate = useNavigate();
   const { playerName, selectedHeroId, selectedGender, selectedRace, setPhase: setTutorialPhase } = useTutorialStore();
   const { setupFromTutorial, player } = usePlayerStore();
-  const { addUnit, ownedUnits } = useUnitStore();
+  const { addUnit } = useUnitStore();
   const { syncPlayerName, syncCurrency, syncTutorialComplete } = useAuthStore();
 
   const [screenPhase, setScreenPhase] = useState<'rewards' | 'hero' | 'ready'>('rewards');

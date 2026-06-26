@@ -20,7 +20,7 @@ import type {
   AssetPriority,
   AssetStatus,
 } from './assetTypes';
-import type { AssetId, ElementType } from '../../types';
+import type { ElementType } from '../../types';
 import { ELEMENT_TO_ATTR_ICON } from './assetIds';
 
 // ──────────────────────────────────────────
