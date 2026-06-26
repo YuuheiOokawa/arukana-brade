@@ -8,10 +8,10 @@ import { HERO_MASTER } from '../../data/heroes';
 import { ELEMENT_NAMES } from '../../types';
 
 const TUTORIAL_REWARDS = [
-  { emoji: '💰', label: 'ゴールド', value: '+5,000G' },
-  { emoji: '💎', label: 'ダイヤ', value: '+500個' },
-  { emoji: '🎫', label: '召喚チケット', value: '+3枚' },
-  { emoji: '⭐', label: '強化素材セット', value: '各種×3' },
+  { img: '/assets/images/icons/items/icon_currency_gold.webp', label: 'ゴールド', value: '+5,000G' },
+  { img: '/assets/images/icons/items/icon_currency_diamond.webp', label: 'ダイヤ', value: '+500個' },
+  { img: '/assets/images/items/currency/item_ticket_summon.webp', label: '召喚チケット', value: '+3枚' },
+  { img: '/assets/images/items/materials/item_exp_book_large.webp', label: '強化素材セット', value: '各種×3' },
 ];
 
 export const TutorialCompleteScreen = () => {
@@ -100,7 +100,8 @@ export const TutorialCompleteScreen = () => {
 
         {/* タイトル */}
         <div className="text-center mb-8 animate-fade-in">
-          <div className="text-4xl mb-3">🎉</div>
+          <img src="/assets/images/effects/magic/effect_ui_levelup.webp" alt=""
+            width={56} height={56} className="mx-auto mb-3" style={{ objectFit: 'contain' }} />
           <h1 className="text-2xl font-black text-white mb-1">チュートリアル完了！</h1>
           <p className="text-sm text-purple-300">{playerName || '勇者'} さん、ようこそ！</p>
         </div>
@@ -122,7 +123,8 @@ export const TutorialCompleteScreen = () => {
                   transform: i < rewardIndex ? 'scale(1)' : 'scale(0.95)',
                 }}
               >
-                <span className="text-xl">{r.emoji}</span>
+                <img src={r.img} alt={r.label} width={28} height={28}
+                  className="flex-shrink-0" style={{ objectFit: 'contain' }} />
                 <div>
                   <div className="text-xs text-gray-400">{r.label}</div>
                   <div className="text-xs font-bold text-yellow-300">{r.value}</div>
@@ -171,7 +173,7 @@ export const TutorialCompleteScreen = () => {
               border: '1px solid rgba(167,139,250,0.5)',
             }}
           >
-            ⚔️ 冒険を始める！
+            冒険を始める！
           </button>
         )}
       </div>

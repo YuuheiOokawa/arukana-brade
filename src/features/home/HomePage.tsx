@@ -4,19 +4,27 @@ import { usePlayerStore } from '../../stores/playerStore';
 import { useMissionStore } from '../../stores/missionStore';
 import { getActiveEvents, getActiveRaids } from '../../data/events';
 import { formatNumber } from '../../utils/format';
-import {
-  IconSword, IconTeam, IconCrystal, IconArrowUp,
-  IconGear, IconShield, IconTrophy, IconCastle,
-  IconDragon, IconScroll,
-} from '../../components/ui/FantasyIcon';
+import { IconArrowUp, IconGear, IconShield } from '../../components/ui/FantasyIcon';
 
-const QUICK_ACTIONS = [
-  { label: 'クエスト',  Icon: IconSword,   path: '/quests',   desc: 'ストーリー・イベント',  color: 'from-red-950/70 to-red-800/40',   accent: '#ef4444' },
-  { label: 'ユニット',  Icon: IconTeam,    path: '/units',    desc: '所持ユニット管理',       color: 'from-blue-950/70 to-blue-800/40', accent: '#3b82f6' },
-  { label: '召喚',     Icon: IconCrystal, path: '/summon',   desc: '新ユニット獲得',          color: 'from-purple-950/70 to-purple-800/40', accent: '#8b5cf6' },
-  { label: '強化',     Icon: IconArrowUp, path: '/enhance',  desc: 'ユニット育成',            color: 'from-yellow-950/70 to-yellow-800/40', accent: '#f59e0b' },
-  { label: '装備',     Icon: IconGear,    path: '/equipment',desc: '装備管理・強化',          color: 'from-slate-900/70 to-slate-700/40', accent: '#94a3b8' },
-  { label: '編成',     Icon: IconShield,  path: '/party',    desc: 'パーティ設定',            color: 'from-emerald-950/70 to-emerald-800/40', accent: '#10b981' },
+const NAV = (f: string) => `/assets/images/ui/navigation/${f}`;
+
+type QuickAction = {
+  label: string;
+  path: string;
+  desc: string;
+  color: string;
+  accent: string;
+  img?: string;
+  Icon?: React.FC<{ size: number; color: string }>;
+};
+
+const QUICK_ACTIONS: QuickAction[] = [
+  { label: 'クエスト',  img: NAV('icon_nav_quest.webp'),  path: '/quests',   desc: 'ストーリー・イベント',  color: 'from-red-950/70 to-red-800/40',   accent: '#ef4444' },
+  { label: 'ユニット',  img: NAV('icon_nav_unit.webp'),   path: '/units',    desc: '所持ユニット管理',       color: 'from-blue-950/70 to-blue-800/40', accent: '#3b82f6' },
+  { label: '召喚',     img: NAV('icon_nav_summon.webp'), path: '/summon',   desc: '新ユニット獲得',          color: 'from-purple-950/70 to-purple-800/40', accent: '#8b5cf6' },
+  { label: '強化',     Icon: IconArrowUp,                path: '/enhance',  desc: 'ユニット育成',            color: 'from-yellow-950/70 to-yellow-800/40', accent: '#f59e0b' },
+  { label: '装備',     Icon: IconGear,                   path: '/equipment',desc: '装備管理・強化',          color: 'from-slate-900/70 to-slate-700/40', accent: '#94a3b8' },
+  { label: '編成',     Icon: IconShield,                 path: '/party',    desc: 'パーティ設定',            color: 'from-emerald-950/70 to-emerald-800/40', accent: '#10b981' },
 ];
 
 export const HomePage = () => {
@@ -126,10 +134,8 @@ export const HomePage = () => {
             <div className="grid grid-cols-2 gap-2 mb-4">
               <div className="rounded-xl px-3 py-2.5 flex items-center gap-2.5"
                 style={{ background: 'rgba(240,192,64,0.08)', border: '1px solid rgba(240,192,64,0.18)' }}>
-                <div className="w-6 h-6 rounded-full flex-shrink-0" style={{
-                  background: 'radial-gradient(circle, #fff6bc 5%, #e6b941 55%, #7f4d00 100%)',
-                  boxShadow: '0 0 8px rgba(230,185,65,0.4)',
-                }} />
+                <img src="/assets/images/icons/items/icon_currency_gold.webp"
+                  alt="ゴールド" width={24} height={24} className="flex-shrink-0" style={{ objectFit: 'contain' }} />
                 <div>
                   <p className="text-xs" style={{ color: '#9ca3af' }}>ゴールド</p>
                   <p className="text-sm font-black" style={{ color: '#f0c040' }}>{formatNumber(player.gold)}</p>
@@ -137,11 +143,8 @@ export const HomePage = () => {
               </div>
               <div className="rounded-xl px-3 py-2.5 flex items-center gap-2.5"
                 style={{ background: 'rgba(99,202,255,0.08)', border: '1px solid rgba(99,202,255,0.18)' }}>
-                <div className="w-6 h-6 rounded-lg flex-shrink-0" style={{
-                  background: 'linear-gradient(135deg, #fff, #6df2ff 45%, #8d58ff)',
-                  clipPath: 'polygon(50% 0, 90% 30%, 72% 100%, 28% 100%, 10% 30%)',
-                  boxShadow: '0 0 8px rgba(99,202,255,0.5)',
-                }} />
+                <img src="/assets/images/icons/items/icon_currency_diamond.webp"
+                  alt="ダイヤ" width={24} height={24} className="flex-shrink-0" style={{ objectFit: 'contain' }} />
                 <div>
                   <p className="text-xs" style={{ color: '#9ca3af' }}>ダイヤ</p>
                   <p className="text-sm font-black" style={{ color: '#7bc8ff' }}>{formatNumber(player.diamond)}</p>
@@ -179,7 +182,8 @@ export const HomePage = () => {
           <button onClick={() => navigate('/missions')}
             className="w-full rounded-xl p-3 flex items-center gap-3 text-left transition-all active:scale-98"
             style={{ background: 'linear-gradient(135deg, #1a1500, #3d2800)', border: '1px solid rgba(245,158,11,0.3)' }}>
-            <IconScroll size={22} color="#f59e0b" />
+            <img src={NAV('icon_nav_quest.webp')} alt="" width={22} height={22}
+              style={{ filter: 'drop-shadow(0 0 4px rgba(245,158,11,0.8))', flexShrink: 0 }} />
             <div className="flex-1">
               <p className="text-sm font-bold" style={{ color: '#f59e0b' }}>デイリーミッション達成！</p>
               <p className="text-xs" style={{ color: '#6b7280' }}>{missionPending} 件の報酬が受け取れます</p>
@@ -193,7 +197,8 @@ export const HomePage = () => {
           <button key={raid.id} onClick={() => navigate('/raid')}
             className="w-full rounded-xl p-3 flex items-center gap-3 text-left transition-all active:scale-98"
             style={{ background: raid.bannerColor, border: '1px solid rgba(139,92,246,0.3)' }}>
-            <IconDragon size={22} color="#c4b5fd" />
+            <img src={NAV('icon_nav_battle.webp')} alt="" width={22} height={22}
+              style={{ filter: 'drop-shadow(0 0 4px rgba(196,181,253,0.8))', flexShrink: 0 }} />
             <div className="flex-1">
               <p className="text-sm font-bold text-white">{raid.name}</p>
               <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>レイドボス開催中！</p>
@@ -205,7 +210,8 @@ export const HomePage = () => {
           <button key={event.id} onClick={() => navigate('/quests')}
             className="w-full rounded-xl p-3 flex items-center gap-3 text-left transition-all active:scale-98"
             style={{ background: event.bannerColor, border: '1px solid rgba(139,92,246,0.25)' }}>
-            <IconSword size={22} color="#a78bfa" />
+            <img src={NAV('icon_nav_quest.webp')} alt="" width={22} height={22}
+              style={{ filter: 'drop-shadow(0 0 4px rgba(167,139,250,0.8))', flexShrink: 0 }} />
             <div className="flex-1">
               <p className="text-sm font-bold text-white">{event.name}</p>
               <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>期間限定イベント開催中！</p>
@@ -219,57 +225,56 @@ export const HomePage = () => {
       <div className="px-4 mb-4">
         <p className="text-xs font-bold tracking-widest mb-3" style={{ color: '#4b5563' }}>— メニュー —</p>
         <div className="grid grid-cols-3 gap-2.5">
-          {QUICK_ACTIONS.map(btn => {
-            const IconComp = btn.Icon;
-            return (
-              <button key={btn.path} onClick={() => navigate(btn.path)}
-                className="rounded-2xl p-3 text-left transition-all active:scale-95 relative overflow-hidden"
-                style={{
-                  background: `linear-gradient(145deg, ${btn.color.split(' ').join(', ')})`,
-                  border: `1px solid ${btn.accent}28`,
-                  boxShadow: `0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)`,
-                }}>
-                {/* 光沢 */}
-                <div className="absolute top-0 left-0 right-0 h-px" style={{
-                  background: `linear-gradient(90deg, transparent, ${btn.accent}30, transparent)`,
-                }} />
-                <IconComp size={22} color={btn.accent} />
-                <p className="text-white font-black text-sm mt-2">{btn.label}</p>
-                <p className="text-[10px] leading-tight mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{btn.desc}</p>
-              </button>
-            );
-          })}
+          {QUICK_ACTIONS.map(btn => (
+            <button key={btn.path} onClick={() => navigate(btn.path)}
+              className="rounded-2xl p-3 text-left transition-all active:scale-95 relative overflow-hidden"
+              style={{
+                background: `linear-gradient(145deg, ${btn.color.split(' ').join(', ')})`,
+                border: `1px solid ${btn.accent}28`,
+                boxShadow: `0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)`,
+              }}>
+              <div className="absolute top-0 left-0 right-0 h-px" style={{
+                background: `linear-gradient(90deg, transparent, ${btn.accent}30, transparent)`,
+              }} />
+              {btn.img ? (
+                <img src={btn.img} alt={btn.label} width={24} height={24}
+                  style={{ filter: `drop-shadow(0 0 6px ${btn.accent}88)` }} />
+              ) : btn.Icon ? (
+                <btn.Icon size={24} color={btn.accent} />
+              ) : null}
+              <p className="text-white font-black text-sm mt-2">{btn.label}</p>
+              <p className="text-[10px] leading-tight mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{btn.desc}</p>
+            </button>
+          ))}
         </div>
       </div>
 
       {/* コンテンツ一覧 */}
       <div className="px-4 grid grid-cols-2 gap-2.5 mb-4">
         {[
-          { path: '/pvp',      label: 'アリーナ',   sub: 'PvP対戦',  Icon: IconTrophy,  accent: '#f59e0b' },
-          { path: '/guild',    label: 'ギルド',     sub: '仲間と協力', Icon: IconCastle, accent: '#8b5cf6' },
-          { path: '/missions', label: 'ミッション', sub: 'デイリー報酬', Icon: IconScroll, accent: '#10b981', badge: missionPending > 0 },
-          { path: '/raid',     label: 'レイドボス', sub: '協力討伐',   Icon: IconDragon,  accent: '#ef4444' },
-        ].map(item => {
-          const IconComp = item.Icon;
-          return (
-            <button key={item.path} onClick={() => navigate(item.path)}
-              className="rounded-2xl p-4 text-left transition-all active:scale-95 relative"
-              style={{
-                background: 'linear-gradient(145deg, rgba(26,18,58,0.9), rgba(14,10,30,0.95))',
-                border: `1px solid ${item.accent}22`,
-                boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
-              }}>
-              <IconComp size={26} color={item.accent} />
-              <p className="text-white font-black text-sm mt-2">{item.label}</p>
-              <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{item.sub}</p>
-              {item.badge && (
-                <span className="absolute top-2 right-2 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">
-                  {missionPending}
-                </span>
-              )}
-            </button>
-          );
-        })}
+          { path: '/pvp',      label: 'アリーナ',   sub: 'PvP対戦',     img: NAV('icon_nav_arena.webp'),   accent: '#f59e0b' },
+          { path: '/guild',    label: 'ギルド',     sub: '仲間と協力',   img: NAV('icon_nav_guild.webp'),   accent: '#8b5cf6' },
+          { path: '/missions', label: 'ミッション', sub: 'デイリー報酬', img: NAV('icon_nav_quest.webp'),   accent: '#10b981', badge: missionPending > 0 },
+          { path: '/raid',     label: 'レイドボス', sub: '協力討伐',     img: NAV('icon_nav_battle.webp'),  accent: '#ef4444' },
+        ].map(item => (
+          <button key={item.path} onClick={() => navigate(item.path)}
+            className="rounded-2xl p-4 text-left transition-all active:scale-95 relative"
+            style={{
+              background: 'linear-gradient(145deg, rgba(26,18,58,0.9), rgba(14,10,30,0.95))',
+              border: `1px solid ${item.accent}22`,
+              boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+            }}>
+            <img src={item.img} alt={item.label} width={26} height={26}
+              style={{ filter: `drop-shadow(0 0 6px ${item.accent}88)` }} />
+            <p className="text-white font-black text-sm mt-2">{item.label}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{item.sub}</p>
+            {item.badge && (
+              <span className="absolute top-2 right-2 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">
+                {missionPending}
+              </span>
+            )}
+          </button>
+        ))}
       </div>
     </div>
   );
