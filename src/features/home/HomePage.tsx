@@ -9,6 +9,8 @@ import {
   IconGear, IconShield, IconTrophy, IconCastle,
   IconDragon, IconScroll,
 } from '../../components/ui/FantasyIcon';
+import { GaugeBar } from '../../components/ui/game/GaugeBar';
+import { CurrencyIcon } from '../../components/ui/game/GameIcons';
 
 const QUICK_ACTIONS = [
   { label: 'クエスト',  Icon: IconSword,   path: '/quests',   desc: 'ストーリー・イベント',  color: 'from-red-950/70 to-red-800/40',   accent: '#ef4444' },
@@ -126,8 +128,7 @@ export const HomePage = () => {
             <div className="grid grid-cols-2 gap-2 mb-4">
               <div className="rounded-xl px-3 py-2.5 flex items-center gap-2.5"
                 style={{ background: 'rgba(240,192,64,0.08)', border: '1px solid rgba(240,192,64,0.18)' }}>
-                <img src="/assets/images/icons/items/icon_currency_gold.webp"
-                  alt="ゴールド" width={24} height={24} className="flex-shrink-0" style={{ objectFit: 'contain' }} />
+                <CurrencyIcon type="gold" size={32} />
                 <div>
                   <p className="text-xs" style={{ color: '#9ca3af' }}>ゴールド</p>
                   <p className="text-sm font-black" style={{ color: '#f0c040' }}>{formatNumber(player.gold)}</p>
@@ -135,8 +136,7 @@ export const HomePage = () => {
               </div>
               <div className="rounded-xl px-3 py-2.5 flex items-center gap-2.5"
                 style={{ background: 'rgba(99,202,255,0.08)', border: '1px solid rgba(99,202,255,0.18)' }}>
-                <img src="/assets/images/icons/items/icon_currency_diamond.webp"
-                  alt="ダイヤ" width={24} height={24} className="flex-shrink-0" style={{ objectFit: 'contain' }} />
+                <CurrencyIcon type="diamond" size={32} />
                 <div>
                   <p className="text-xs" style={{ color: '#9ca3af' }}>ダイヤ</p>
                   <p className="text-sm font-black" style={{ color: '#7bc8ff' }}>{formatNumber(player.diamond)}</p>
@@ -145,25 +145,7 @@ export const HomePage = () => {
             </div>
 
             {/* スタミナ */}
-            <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <span className="text-xs font-bold" style={{ color: '#6b7280' }}>スタミナ</span>
-                <span className="text-xs font-black" style={{ color: '#f0c040' }}>{player.stamina} / {player.maxStamina}</span>
-              </div>
-              <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                <div className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${staminaPct}%`,
-                    background: staminaPct > 50
-                      ? 'linear-gradient(90deg, #059669, #34d399)'
-                      : staminaPct > 20
-                      ? 'linear-gradient(90deg, #d97706, #f59e0b)'
-                      : 'linear-gradient(90deg, #b91c1c, #ef4444)',
-                    boxShadow: `0 0 8px ${staminaPct > 50 ? 'rgba(16,185,129,0.5)' : staminaPct > 20 ? 'rgba(245,158,11,0.5)' : 'rgba(239,68,68,0.5)'}`,
-                  }}
-                />
-              </div>
-            </div>
+            <GaugeBar type="stamina" value={player.stamina} max={player.maxStamina} />
           </div>
         </div>
       </div>

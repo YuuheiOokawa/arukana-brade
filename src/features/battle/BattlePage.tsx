@@ -17,9 +17,10 @@ import {
   executeNormalAttack, executeSkillOnTargets, executeEnemyTurn, tickBuffs, applyLeaderSkills,
 } from '../../utils/battleEngine';
 import { elementGradient } from '../../utils/elementUtils';
-import { HpBar } from '../../components/ui/HpBar';
-import { BBGauge } from '../../components/ui/BBGauge';
 import { ElementBadge } from '../../components/ui/ElementBadge';
+import { GaugeBar } from '../../components/ui/game/GaugeBar';
+import { FrameDecoration, TitlePlate, DividerLine, GameButton, GameBadge } from '../../components/ui/game/UIDecorations';
+import { CurrencyIcon } from '../../components/ui/game/GameIcons';
 import type { BattleUnit, BattleEnemy, BattleLog, QuestStage, LeaderSkillEffect } from '../../types';
 
 let idCounter = 0;
@@ -431,7 +432,7 @@ export const BattlePage = () => {
             </div>
             <p className="text-white text-xs font-bold truncate max-w-[80px]">{enemy.name}</p>
             <div className="w-20 mt-1.5">
-              <HpBar current={enemy.currentHp} max={enemy.maxHp} height="h-1.5" />
+              <GaugeBar type="hp" value={enemy.currentHp} max={enemy.maxHp} showLabel={false} showValue={false} animated={false} />
               <p className="text-xs text-gray-500 mt-0.5">{enemy.currentHp.toLocaleString()}</p>
             </div>
           </div>
@@ -488,8 +489,19 @@ export const BattlePage = () => {
                 style={{ background: elementGradient(ally.element) }}
               >
                 <div className="text-2xl text-center mb-0.5">{ally.emoji}</div>
-                <HpBar current={ally.currentHp} max={ally.maxHp} height="h-1" />
-                <BBGauge value={ally.bbGauge} size="sm" />
+                {/* コンパクトHP/BBバー（ミニカード用） */}
+                <div className="w-full h-1 bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full" style={{
+                    width: `${Math.max(0, Math.min(100, (ally.currentHp / ally.maxHp) * 100))}%`,
+                    background: 'linear-gradient(90deg, #b91c1c, #ef4444)',
+                  }} />
+                </div>
+                <div className="w-full h-1 bg-gray-700 rounded-full overflow-hidden mt-0.5">
+                  <div className="h-full rounded-full" style={{
+                    width: `${ally.bbGauge}%`,
+                    background: 'linear-gradient(90deg, #ea580c, #f97316)',
+                  }} />
+                </div>
                 <div className="flex items-center justify-center gap-0.5 mt-0.5">
                   {ally.isFriend && <span className="text-purple-300 text-[9px] font-bold">F</span>}
                   {isActed && !isDead && <span className="text-gray-500 text-[9px]">済</span>}
@@ -515,15 +527,11 @@ export const BattlePage = () => {
                 <ElementBadge element={selectedAlly.element} size="sm" />
                 {isActedSelected && <span className="text-gray-500 text-xs bg-gray-800/60 rounded px-1">行動済</span>}
               </div>
-              <HpBar current={selectedAlly.currentHp} max={selectedAlly.maxHp} height="h-1.5" />
-              <p className="text-gray-500 text-xs mt-0.5">
-                {selectedAlly.currentHp.toLocaleString()} / {selectedAlly.maxHp.toLocaleString()}
-              </p>
+              <GaugeBar type="hp" value={selectedAlly.currentHp} max={selectedAlly.maxHp} showLabel={false} animated={false} />
             </div>
-            <div className="text-right flex-shrink-0 pl-1">
-              <p className="text-gray-600 text-[10px] mb-0.5">BB</p>
-              <BBGauge value={selectedAlly.bbGauge} size="md" />
-              <p className={`text-xs font-bold mt-0.5 ${isBBReady ? 'text-gradient-gold animate-glow' : 'text-gray-600'}`}>
+            <div className="flex-shrink-0 pl-1 w-20">
+              <GaugeBar type="bb" value={selectedAlly.bbGauge} max={100} showValue={false} />
+              <p className={`text-xs font-bold mt-0.5 text-right ${isBBReady ? 'text-gradient-gold animate-glow' : 'text-gray-600'}`}>
                 {selectedAlly.bbGauge}%
               </p>
             </div>
@@ -620,39 +628,58 @@ const VictoryScreen = ({ gold, exp, items, onHome, onRetry }: {
 }) => (
   <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center battle-bg">
     <div className="animate-slide-up w-full max-w-sm">
-      <p className="text-7xl mb-3 drop-shadow-2xl">🏆</p>
-      <h2 className="text-4xl font-black text-gradient-gold mb-1">VICTORY!</h2>
-      <p className="text-gray-500 text-sm mb-6">クエストクリア！</p>
-      <div className="card-base p-5 mb-6 text-left">
-        <h3 className="text-gray-600 text-[10px] font-bold mb-4 uppercase tracking-widest">獲得報酬</h3>
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-300 text-sm">🪙 ゴールド</span>
-            <span className="text-yellow-400 font-bold text-lg">{gold.toLocaleString()}</span>
+      {/* トロフィー */}
+      <div style={{ fontSize: 72, marginBottom: 12, filter: 'drop-shadow(0 0 24px rgba(240,192,64,0.7))' }}>🏆</div>
+
+      <div style={{ marginBottom: 6 }}>
+        <TitlePlate color="gold">VICTORY!</TitlePlate>
+      </div>
+      <p style={{ color: '#6b7280', fontSize: 13, marginBottom: 20 }}>クエストクリア！</p>
+
+      {/* 報酬フレーム */}
+      <FrameDecoration color="gold" style={{ marginBottom: 20, textAlign: 'left' }}>
+        <DividerLine color="gold" label="獲得報酬" />
+        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <CurrencyIcon type="gold" size={36} />
+              <span style={{ color: '#d1d5db', fontSize: 14, fontFamily: "'Noto Sans JP', sans-serif" }}>ゴールド</span>
+            </div>
+            <span style={{ color: '#f0c040', fontWeight: 900, fontSize: 20 }}>{gold.toLocaleString()}</span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-300 text-sm">✨ 経験値</span>
-            <span className="text-blue-400 font-bold text-lg">{exp}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: '50%',
+                background: 'radial-gradient(ellipse at 35% 35%, #bfdbfe, #3b82f6 50%, #1e3a8a)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 18, boxShadow: '0 0 12px rgba(59,130,246,.5)',
+              }}>✨</div>
+              <span style={{ color: '#d1d5db', fontSize: 14, fontFamily: "'Noto Sans JP', sans-serif" }}>経験値</span>
+            </div>
+            <span style={{ color: '#60a5fa', fontWeight: 900, fontSize: 20 }}>{exp.toLocaleString()}</span>
           </div>
           {items.length > 0 && (
-            <div className="pt-3 border-t border-gray-700/40">
-              <p className="text-gray-600 text-xs mb-2">アイテム</p>
+            <>
+              <DividerLine color="gold" label="ドロップアイテム" />
               {items.map((id, i) => {
                 const m = getItemMaster(id);
                 return m ? (
-                  <div key={i} className="flex items-center gap-2 py-1">
-                    <span className="text-lg">{m.emoji}</span>
-                    <span className="text-gray-200 text-sm">{m.name}</span>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 22 }}>{m.emoji}</span>
+                    <span style={{ color: '#e5e7eb', fontSize: 13, fontFamily: "'Noto Sans JP', sans-serif" }}>{m.name}</span>
+                    <GameBadge color="green">GET</GameBadge>
                   </div>
                 ) : null;
               })}
-            </div>
+            </>
           )}
         </div>
-      </div>
-      <div className="flex gap-3">
-        <button onClick={onHome} className="btn-secondary flex-1">ホームへ</button>
-        <button onClick={onRetry} className="btn-primary flex-1">クエストへ</button>
+      </FrameDecoration>
+
+      <div style={{ display: 'flex', gap: 12 }}>
+        <GameButton variant="secondary" onClick={onHome} fullWidth>ホームへ</GameButton>
+        <GameButton variant="primary" onClick={onRetry} fullWidth>クエストへ</GameButton>
       </div>
     </div>
   </div>
@@ -662,12 +689,22 @@ const VictoryScreen = ({ gold, exp, items, onHome, onRetry }: {
 const DefeatScreen = ({ onHome, onRetry }: { onHome: () => void; onRetry: () => void }) => (
   <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center battle-bg">
     <div className="animate-slide-up w-full max-w-sm">
-      <p className="text-7xl mb-3 drop-shadow-2xl">💀</p>
-      <h2 className="text-4xl font-black text-red-500 mb-1">DEFEAT</h2>
-      <p className="text-gray-600 text-sm mb-10">全滅してしまいました…</p>
-      <div className="flex gap-3">
-        <button onClick={onHome} className="btn-secondary flex-1">ホームへ</button>
-        <button onClick={onRetry} className="btn-danger flex-1">再挑戦</button>
+      <div style={{ fontSize: 72, marginBottom: 12, filter: 'drop-shadow(0 0 20px rgba(239,68,68,0.6))' }}>💀</div>
+
+      <div style={{ marginBottom: 6 }}>
+        <TitlePlate color="red">DEFEAT</TitlePlate>
+      </div>
+      <p style={{ color: '#6b7280', fontSize: 13, marginBottom: 32 }}>全滅してしまいました…</p>
+
+      <FrameDecoration color="purple" style={{ marginBottom: 20 }}>
+        <p style={{ color: '#9ca3af', fontSize: 13, textAlign: 'center', fontFamily: "'Noto Sans JP', sans-serif" }}>
+          ユニットを強化して再挑戦しましょう
+        </p>
+      </FrameDecoration>
+
+      <div style={{ display: 'flex', gap: 12 }}>
+        <GameButton variant="secondary" onClick={onHome} fullWidth>ホームへ</GameButton>
+        <GameButton variant="danger" onClick={onRetry} fullWidth>再挑戦</GameButton>
       </div>
     </div>
   </div>

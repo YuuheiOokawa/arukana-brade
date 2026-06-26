@@ -8,6 +8,7 @@ import { usePlayerStore } from '../../stores/playerStore';
 import { usePartyStore } from '../../stores/partyStore';
 import { TopBar } from '../../components/layout/TopBar';
 import { StaminaModal } from '../../components/ui/StaminaModal';
+import { GameBadge } from '../../components/ui/game/UIDecorations';
 import type { QuestArea, QuestStage } from '../../types';
 
 type MainTab = 'story' | 'event';
@@ -244,16 +245,7 @@ const StageList = ({
           {/* CLEARバッジ */}
           {cleared && (
             <div className="absolute top-2 right-2 z-10">
-              <span
-                className="text-[9px] font-black tracking-wider px-2 py-0.5 rounded"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(16,185,129,0.3), rgba(5,150,105,0.2))',
-                  color: '#34d399',
-                  border: '1px solid rgba(52,211,153,0.45)',
-                  letterSpacing: '0.1em',
-                }}>
-                CLEAR
-              </span>
+              <GameBadge color="teal">CLEAR</GameBadge>
             </div>
           )}
           <div className="flex items-start gap-3">

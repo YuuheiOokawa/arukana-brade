@@ -7,6 +7,7 @@ import { RarityBadge } from '../../components/ui/RarityBadge';
 import { formatNumber, calcTotalPower } from '../../utils/format';
 import { getStarColor, getStarDisplay } from '../../data/rarityConfig';
 import type { StarRarity } from '../../types';
+import { TitlePlate, DividerLine, FrameDecoration } from '../../components/ui/game/UIDecorations';
 
 const TITLES = [
   '駆け出しの勇者', '炎の剣士', '水の守護者', '風の疾走者',
@@ -146,10 +147,8 @@ export const ProfilePage = () => {
 
         {/* ===== 推しユニット ===== */}
         <div className="px-4 mb-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-purple-400 mb-2 px-1">推しユニット</h3>
-          <div className="rounded-xl p-4" style={{
-            background: 'rgba(12,8,28,0.9)', border: '1px solid rgba(139,92,246,0.2)',
-          }}>
+          <div className="mb-2"><TitlePlate color="purple">推しユニット</TitlePlate></div>
+          <FrameDecoration color="purple">
             {favMaster && favUnit ? (
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl flex-shrink-0"
@@ -183,12 +182,12 @@ export const ProfilePage = () => {
                 </div>
               </div>
             )}
-          </div>
+          </FrameDecoration>
         </div>
 
         {/* ===== 統計グリッド ===== */}
         <div className="px-4 mb-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-purple-400 mb-2 px-1">統計情報</h3>
+          <div className="mb-2"><TitlePlate color="gold">統計情報</TitlePlate></div>
           <div className="grid grid-cols-3 gap-3">
             <StatCard label="総戦力" value={formatNumber(totalPower)} accent="#f0c040" />
             <StatCard label="ユニット数" value={`${ownedUnits.length}体`} accent="#a78bfa" />
@@ -202,10 +201,8 @@ export const ProfilePage = () => {
 
         {/* ===== 所持★分布 ===== */}
         <div className="px-4 mb-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-purple-400 mb-2 px-1">レアリティ分布</h3>
-          <div className="rounded-xl p-4" style={{
-            background: 'rgba(12,8,28,0.9)', border: '1px solid rgba(139,92,246,0.2)',
-          }}>
+          <div className="mb-2"><TitlePlate color="purple">レアリティ分布</TitlePlate></div>
+          <FrameDecoration color="purple">
             {([1, 2, 3, 4, 5, 6, 7, 'CROWN'] as StarRarity[]).map(r => {
               const cnt = ownedUnits.filter(u => (u.currentRarity ?? 1) === r).length;
               if (cnt === 0) return null;
@@ -221,7 +218,7 @@ export const ProfilePage = () => {
                 </div>
               );
             })}
-          </div>
+          </FrameDecoration>
         </div>
       </div>
 

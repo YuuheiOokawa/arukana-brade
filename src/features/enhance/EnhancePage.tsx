@@ -6,7 +6,7 @@ import { useMissionStore } from '../../stores/missionStore';
 import { UNIT_MASTER } from '../../data/units';
 import { getItemMaster } from '../../data/items';
 import { UnitCard } from '../../components/ui/UnitCard';
-import { HpBar } from '../../components/ui/HpBar';
+import { GaugeBar } from '../../components/ui/game/GaugeBar';
 import { TopBar } from '../../components/layout/TopBar';
 import { formatNumber, calcTotalPower, getExpForLevel } from '../../utils/format';
 
@@ -110,10 +110,7 @@ export const EnhancePage = () => {
                   <span className="text-white font-black text-xl">{unit.level} <span className="text-gray-400 text-sm font-normal">/ {master.maxLevel}</span></span>
                 </div>
                 {unit.level < master.maxLevel && (
-                  <>
-                    <HpBar current={unit.exp} max={getExpForLevel(unit.level)} height="h-2" />
-                    <p className="text-xs text-gray-400 mt-1 text-right">EXP {unit.exp} / {getExpForLevel(unit.level)}</p>
-                  </>
+                  <GaugeBar type="exp" value={unit.exp} max={getExpForLevel(unit.level)} />
                 )}
                 {unit.level >= master.maxLevel && (
                   <p className="text-yellow-400 text-sm mt-1">MAX LEVEL!</p>
