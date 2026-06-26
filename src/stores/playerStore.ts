@@ -4,6 +4,19 @@ import type { PlayerData, OwnedItem } from '../types';
 
 const STAMINA_RECOVERY_INTERVAL = 5 * 60 * 1000; // 5分で1回復
 
+interface AuthPlayerSnapshot {
+  playerName: string;
+  gold: number;
+  diamond: number;
+  stamina: number;
+  maxStamina: number;
+  exp: number;
+  playerRank: number;
+  title: string | null;
+  bio: string | null;
+  loginDays: number;
+}
+
 interface PlayerStore {
   player: PlayerData;
   items: OwnedItem[];
@@ -11,6 +24,7 @@ interface PlayerStore {
 
   initPlayer: () => void;
   setupFromTutorial: (name: string) => void;
+  syncFromAuth: (p: AuthPlayerSnapshot) => void;
   addGold: (amount: number) => void;
   spendGold: (amount: number) => boolean;
   addDiamond: (amount: number) => void;
@@ -64,6 +78,24 @@ export const usePlayerStore = create<PlayerStore>()(
         if (!player.createdAt) {
           set({ player: INITIAL_PLAYER });
         }
+      },
+
+      syncFromAuth: (p) => {
+        set(s => ({
+          player: {
+            ...s.player,
+            name: p.playerName,
+            gold: p.gold,
+            diamond: p.diamond,
+            stamina: p.stamina,
+            maxStamina: p.maxStamina,
+            exp: p.exp,
+            rank: p.playerRank,
+            title: p.title ?? s.player.title,
+            bio: p.bio ?? s.player.bio,
+            loginDays: p.loginDays,
+          },
+        }));
       },
 
       setupFromTutorial: (name) => {

@@ -307,13 +307,15 @@ export const TutorialGachaScreen = () => {
             {/* 中央コンテンツ */}
             {phase === 'pre' && (
               <div className="text-center z-10">
-                <div className="text-5xl mb-3">💎</div>
+                <img src="/assets/images/effects/summon/effect_summon_crown.webp"
+                  alt="" width={64} height={64} className="mx-auto mb-3" style={{ objectFit: 'contain' }} />
                 <p className="text-sm text-purple-200">タップして召喚！</p>
               </div>
             )}
             {phase === 'summon' && (
               <div className="text-center z-10 animate-pulse">
-                <div className="text-5xl">✨</div>
+                <img src="/assets/images/effects/magic/effect_magic_circle_001.webp"
+                  alt="" width={64} height={64} className="mx-auto" style={{ objectFit: 'contain' }} />
               </div>
             )}
             {phase === 'reveal' && results[revealIndex] && (
@@ -354,7 +356,8 @@ export const TutorialGachaScreen = () => {
                     </>
                   ) : (
                     <>
-                      <div className="text-4xl mb-2">🔮</div>
+                      <img src="/assets/images/effects/summon/effect_summon_star3.webp"
+                        alt="" width={52} height={52} className="mx-auto mb-2" style={{ objectFit: 'contain' }} />
                       <div className="text-xs text-purple-300">タップして開く</div>
                       <div className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
                         {revealIndex + 1} / {results.length}
@@ -384,13 +387,15 @@ export const TutorialGachaScreen = () => {
             <div className="mt-8 px-8 w-full max-w-sm animate-fade-in">
               <button
                 onClick={startGacha}
-                className="w-full py-5 rounded-2xl font-black text-white text-lg active:scale-95 transition-all duration-200"
+                className="w-full py-5 rounded-2xl font-black text-white text-lg active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
                 style={{
                   background: 'linear-gradient(135deg, #f0c040, #d97706)',
                   boxShadow: '0 0 32px rgba(240,192,64,0.5), 0 4px 20px rgba(0,0,0,0.5)',
                   border: '1px solid rgba(255,220,80,0.5)',
                 }}>
-                🎰 10連召喚（無料）
+                <img src="/assets/images/items/currency/item_ticket_summon.webp"
+                  alt="" width={24} height={24} style={{ objectFit: 'contain' }} />
+                10連召喚（無料）
               </button>
               <p className="text-center text-xs mt-3" style={{ color: '#6b7280' }}>
                 ★2（RARE）以上 1体確定　★3（ARCANA）排出あり

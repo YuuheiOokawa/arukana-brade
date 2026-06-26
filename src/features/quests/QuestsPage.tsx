@@ -225,7 +225,22 @@ const StageList = ({
       const noStamina = playerStamina < stage.staminaCost;
       return (
         <button key={stage.id} onClick={() => onSelect(stage)}
-          className={`w-full card-base p-4 text-left transition-all unit-card-hover ${cleared ? 'border-emerald-700/30' : ''}`}>
+          className={`relative w-full card-base p-4 text-left transition-all unit-card-hover ${cleared ? 'border-emerald-700/30' : ''}`}>
+          {/* CLEARバッジ */}
+          {cleared && (
+            <div className="absolute top-2 right-2 z-10">
+              <span
+                className="text-[9px] font-black tracking-wider px-2 py-0.5 rounded"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(16,185,129,0.3), rgba(5,150,105,0.2))',
+                  color: '#34d399',
+                  border: '1px solid rgba(52,211,153,0.45)',
+                  letterSpacing: '0.1em',
+                }}>
+                CLEAR
+              </span>
+            </div>
+          )}
           <div className="flex items-start gap-3">
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5 ${
               cleared ? 'bg-emerald-700/40 text-emerald-400' : 'bg-gray-800 text-gray-500'
@@ -235,18 +250,18 @@ const StageList = ({
             <div className="flex-1 min-w-0">
               <p className="text-white font-bold text-sm mb-1">{stage.name}</p>
               <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-500 mb-2">
-                <span className={noStamina ? 'text-red-400 font-bold' : ''}>⚡ {stage.staminaCost}</span>
-                <span>⚔️ {stage.recommendedPower.toLocaleString()}</span>
-                <span>🪙 {stage.rewardGold.toLocaleString()}</span>
-                <span>✨ {stage.rewardExp}</span>
+                <span className={noStamina ? 'text-red-400 font-bold' : ''}>スタミナ {stage.staminaCost}</span>
+                <span>推奨 {stage.recommendedPower.toLocaleString()}</span>
+                <span className="text-yellow-600">{stage.rewardGold.toLocaleString()}G</span>
+                <span className="text-blue-400">EXP {stage.rewardExp}</span>
               </div>
               <div className="flex flex-wrap gap-1">
                 {stage.waves.map((wave, i) => (
                   <div key={i} className="flex gap-1">
                     {wave.isBoss && <span className="text-red-400 text-xs font-bold">BOSS</span>}
                     {wave.enemies.map((e, j) => (
-                      <span key={j} className="text-xs bg-gray-800/60 border border-gray-700/40 rounded px-1.5 py-0.5">
-                        {e.enemyId.includes('dragon') ? '🐉' : e.enemyId.includes('boss') || e.enemyId.includes('lich') ? '💀' : '👺'} {e.level}
+                      <span key={j} className="text-xs bg-gray-800/60 border border-gray-700/40 rounded px-1.5 py-0.5 text-gray-400">
+                        {e.enemyId.includes('dragon') ? 'Dragon' : e.enemyId.includes('boss') || e.enemyId.includes('lich') ? 'Boss' : 'Enemy'} Lv{e.level}
                       </span>
                     ))}
                   </div>
@@ -255,7 +270,7 @@ const StageList = ({
             </div>
             {noStamina && (
               <div className="flex-shrink-0">
-                <span className="text-xs bg-red-900/50 text-red-400 rounded-lg px-2 py-1 border border-red-900/40">⚡ 不足</span>
+                <span className="text-xs bg-red-900/50 text-red-400 rounded-lg px-2 py-1 border border-red-900/40">スタミナ不足</span>
               </div>
             )}
           </div>

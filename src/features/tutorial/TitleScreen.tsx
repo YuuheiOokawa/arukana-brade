@@ -2,13 +2,15 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { useTutorialStore } from '../../stores/tutorialStore';
+import { usePlayerStore } from '../../stores/playerStore';
 
 type TitlePhase = 'loading' | 'tap' | 'menu';
 
 export const TitleScreen = () => {
   const navigate = useNavigate();
-  const { user, isChecked, checkAuth } = useAuthStore();
-  const { completed } = useTutorialStore();
+  const { user, isChecked, checkAuth, player: authPlayer } = useAuthStore();
+  const { completed, completeTutorial } = useTutorialStore();
+  const { syncFromAuth } = usePlayerStore();
   const [phase, setPhase] = useState<TitlePhase>('loading');
   const [menuVisible, setMenuVisible] = useState(false);
   const [newsOpen, setNewsOpen] = useState(false);
@@ -20,14 +22,23 @@ export const TitleScreen = () => {
   // 認証済みならゲームへ自動遷移
   useEffect(() => {
     if (!isChecked) return;
-    if (user) {
-      navigate(completed ? '/' : '/tutorial/intro', { replace: true });
+    if (user && authPlayer) {
+      // DBのプレイヤーデータをローカルストアに同期
+      syncFromAuth(authPlayer);
+      // DBのチュートリアル完了フラグをローカルに同期
+      if (authPlayer.tutorialCompleted && !completed) {
+        completeTutorial();
+      }
+      const tutorialDone = completed || authPlayer.tutorialCompleted;
+      navigate(tutorialDone ? '/' : '/tutorial/intro', { replace: true });
       return;
     }
-    // 認証未済ならロゴ表示後にタップ待ち画面へ
-    const t = setTimeout(() => setPhase('tap'), 1200);
-    return () => clearTimeout(t);
-  }, [isChecked, user, completed, navigate]);
+    if (!user && isChecked) {
+      // 認証未済ならロゴ表示後にタップ待ち画面へ
+      const t = setTimeout(() => setPhase('tap'), 1200);
+      return () => clearTimeout(t);
+    }
+  }, [isChecked, user, authPlayer, completed, navigate, syncFromAuth, completeTutorial]);
 
   const handleTap = () => {
     if (phase !== 'tap') return;
@@ -45,13 +56,13 @@ export const TitleScreen = () => {
         src="/assets/images/backgrounds/title/bg_ui_title.webp"
         alt=""
         className="absolute inset-0 w-full h-full object-cover"
-        style={{ opacity: 0.75 }}
+        style={{ zIndex: 0 }}
       />
-      {/* グラデーションオーバーレイ */}
-      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 30%, rgba(26,5,53,0.5) 0%, rgba(8,8,26,0.55) 60%, rgba(0,0,0,0.6) 100%)' }} />
+      {/* グラデーションオーバーレイ（半透明で背景を見せる） */}
+      <div className="absolute inset-0" style={{ zIndex: 1, background: 'radial-gradient(ellipse at 50% 30%, rgba(10,2,28,0.55) 0%, rgba(5,5,18,0.6) 60%, rgba(0,0,0,0.65) 100%)' }} />
 
       {/* 星エフェクト */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 2 }}>
         {Array.from({ length: 60 }).map((_, i) => (
           <div key={i} className="absolute rounded-full bg-white"
             style={{
@@ -68,7 +79,7 @@ export const TitleScreen = () => {
       </div>
 
       {/* 魔法陣リング */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 3 }}>
         <div className="w-80 h-80 rounded-full"
           style={{
             border: '1px solid rgba(139,92,246,0.25)',
