@@ -10,6 +10,7 @@ import { GaugeBar } from '../../components/ui/game/GaugeBar';
 import { GameButton } from '../../components/ui/game/GameButton';
 import { TopBar } from '../../components/layout/TopBar';
 import { formatNumber, calcTotalPower, getExpForLevel } from '../../utils/format';
+import { getLevelCap, getStarDisplay, NEXT_RARITY, AWAKENING_CONFIG } from '../../data/rarityConfig';
 
 export const EnhancePage = () => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ export const EnhancePage = () => {
   const initUnit = params.get('unit');
   const initTab = (params.get('tab') as 'level' | 'awaken') ?? 'level';
 
-  const { ownedUnits, levelUpUnit, awakenUnit } = useUnitStore();
+  const { ownedUnits, levelUpUnit, awakenUnit, incrementAwakeningCount, rarityUp } = useUnitStore();
   const { items, useItem } = usePlayerStore();
   const { addDailyProgress } = useMissionStore();
   const [selectedId, setSelectedId] = useState<string | null>(initUnit);
@@ -61,6 +62,29 @@ export const EnhancePage = () => {
     addDailyProgress('enhance');
     setMessage('覚醒成功！');
     setTimeout(() => setMessage(''), 2000);
+  };
+
+  const handleCrystalAwaken = () => {
+    if (!unit) return;
+    if ((unit.awakeningCount ?? 0) >= AWAKENING_CONFIG.maxAwakeningCount) { setMessage('覚醒結晶上限に達しています'); return; }
+    const ok = useItem(AWAKENING_CONFIG.crystalItemId, 1);
+    if (!ok) { setMessage('覚醒結晶が足りません'); return; }
+    incrementAwakeningCount(unit.instanceId);
+    addDailyProgress('enhance');
+    setMessage('💠 覚醒結晶で覚醒！');
+    setTimeout(() => setMessage(''), 2000);
+  };
+
+  const handleRarityUp = () => {
+    if (!unit) return;
+    const lvCap = getLevelCap(unit.currentRarity);
+    if (unit.level < lvCap) { setMessage(`Lv${lvCap}に達してから進化できます`); return; }
+    const nextR = NEXT_RARITY[String(unit.currentRarity)];
+    const ok = rarityUp(unit.instanceId);
+    if (!ok) { setMessage('進化できません'); return; }
+    addDailyProgress('enhance');
+    setMessage(`✨ ${getStarDisplay(nextR!)} に進化！`);
+    setTimeout(() => setMessage(''), 2500);
   };
 
   return (
@@ -108,15 +132,39 @@ export const EnhancePage = () => {
               <div className="card-base p-4">
                 <div className="flex justify-between mb-2">
                   <span className="text-gray-300 font-bold">現在のレベル</span>
-                  <span className="text-white font-black text-xl">{unit.level} <span className="text-gray-400 text-sm font-normal">/ {master.maxLevel}</span></span>
+                  <span className="text-white font-black text-xl">{unit.level} <span className="text-gray-400 text-sm font-normal">/ {getLevelCap(unit.currentRarity)}</span></span>
                 </div>
-                {unit.level < master.maxLevel && (
+                <p className="text-xs text-gray-500 mb-2">{getStarDisplay(unit.currentRarity)} レアリティ</p>
+                {unit.level < getLevelCap(unit.currentRarity) && (
                   <GaugeBar type="exp" value={unit.exp} max={getExpForLevel(unit.level)} />
                 )}
-                {unit.level >= master.maxLevel && (
-                  <p className="text-yellow-400 text-sm mt-1">MAX LEVEL!</p>
+                {unit.level >= getLevelCap(unit.currentRarity) && unit.currentRarity !== 'CROWN' && (
+                  <p className="text-yellow-400 text-sm mt-1 font-bold">MAX LEVEL！進化可能 ▼</p>
+                )}
+                {unit.currentRarity === 'CROWN' && unit.level >= getLevelCap(unit.currentRarity) && (
+                  <p className="text-yellow-400 text-sm mt-1">★👑 MAX LEVEL！</p>
                 )}
               </div>
+
+              {/* 進化セクション */}
+              {unit.level >= getLevelCap(unit.currentRarity) && unit.currentRarity !== 'CROWN' && (
+                <div className="card-base p-4 border border-yellow-700/40" style={{ background: 'linear-gradient(135deg, rgba(120,80,0,0.3), rgba(40,20,0,0.4))' }}>
+                  <h3 className="text-yellow-400 font-bold text-sm mb-3">✨ 進化</h3>
+                  <div className="flex items-center justify-center gap-3 mb-3">
+                    <span className="text-lg font-black" style={{ color: '#ffe48d' }}>{getStarDisplay(unit.currentRarity)}</span>
+                    <span className="text-gray-400">→</span>
+                    <span className="text-lg font-black text-yellow-400">
+                      {getStarDisplay(NEXT_RARITY[String(unit.currentRarity)]!)}
+                    </span>
+                  </div>
+                  <p className="text-gray-400 text-xs text-center mb-3">
+                    進化すると新しいレベル上限が解放されます
+                  </p>
+                  <GameButton variant="gold" fullWidth onClick={handleRarityUp}>
+                    進化する
+                  </GameButton>
+                </div>
+              )}
 
               {/* 現在のステータス */}
               <div className="card-base p-4">
@@ -156,7 +204,7 @@ export const EnhancePage = () => {
                         <span className="text-gray-400 text-sm">×{owned}</span>
                         <button
                           onClick={() => handleUseExpItem(itemId, exp)}
-                          disabled={owned === 0 || unit.level >= master.maxLevel}
+                          disabled={owned === 0 || unit.level >= getLevelCap(unit.currentRarity)}
                           className="px-3 py-1.5 rounded-lg text-xs font-bold disabled:opacity-40"
                           style={{ background: owned > 0 ? 'linear-gradient(135deg, #7c3aed, #4f46e5)' : '#374151', color: 'white' }}
                         >
@@ -212,6 +260,36 @@ export const EnhancePage = () => {
                   </GameButton>
                 </div>
               )}
+
+              {/* 覚醒結晶セクション */}
+              <div className="card-base p-4">
+                <h3 className="text-gray-400 text-xs font-bold mb-3 uppercase tracking-wider">覚醒結晶（ガチャ被り）</h3>
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl">💠</span>
+                  <div className="flex-1">
+                    <p className="text-white text-sm mb-1">覚醒数</p>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: AWAKENING_CONFIG.maxAwakeningCount }).map((_, i) => (
+                        <span key={i} className={`text-lg ${i < (unit.awakeningCount ?? 0) ? 'text-cyan-400' : 'text-gray-600'}`}>◆</span>
+                      ))}
+                      <span className="text-xs text-gray-400 ml-2">{unit.awakeningCount ?? 0}/{AWAKENING_CONFIG.maxAwakeningCount}</span>
+                    </div>
+                  </div>
+                  <span className="text-gray-400 text-sm">
+                    所持: {items.find(i => i.itemId === AWAKENING_CONFIG.crystalItemId)?.quantity ?? 0}個
+                  </span>
+                </div>
+                {(unit.awakeningCount ?? 0) < AWAKENING_CONFIG.maxAwakeningCount ? (
+                  <GameButton variant="gold" fullWidth
+                    disabled={(items.find(i => i.itemId === AWAKENING_CONFIG.crystalItemId)?.quantity ?? 0) === 0}
+                    onClick={handleCrystalAwaken}>
+                    💠 覚醒結晶を使って覚醒する
+                  </GameButton>
+                ) : (
+                  <p className="text-cyan-400 font-bold text-center text-sm">覚醒結晶上限達成！</p>
+                )}
+                <p className="text-gray-600 text-xs mt-2 text-center">覚醒結晶はガチャで同じキャラが出た時に獲得</p>
+              </div>
 
               {/* 覚醒ボーナス */}
               {master.awakenBonus && (

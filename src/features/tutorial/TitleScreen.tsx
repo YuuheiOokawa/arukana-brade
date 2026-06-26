@@ -116,14 +116,15 @@ export const TitleScreen = () => {
               style={{
                 fontFamily: "'Noto Sans JP', 'Hiragino Kaku Gothic ProN', sans-serif",
                 fontWeight: 900,
-                fontSize: 'clamp(2.6rem, 10vw, 3.4rem)',
+                fontSize: 'clamp(2.0rem, 8.5vw, 3.4rem)',
                 lineHeight: 1.1,
                 background: 'linear-gradient(160deg, #fff8e0 0%, #fde68a 25%, #f0c040 55%, #d97706 80%, #b45309 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
                 filter: 'drop-shadow(0 0 20px rgba(240,192,64,0.6)) drop-shadow(0 2px 8px rgba(0,0,0,0.8))',
-                letterSpacing: '0.08em',
+                letterSpacing: '0.05em',
+                whiteSpace: 'nowrap',
               }}
             >
               アルカナブレイド

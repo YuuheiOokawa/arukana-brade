@@ -30,6 +30,9 @@ import { RegisterPage } from './features/auth/RegisterPage';
 import { UIShowcasePage } from './features/debug/UIShowcasePage';
 import { useAuthStore } from './stores/authStore';
 import { useTutorialStore } from './stores/tutorialStore';
+import { usePlayerStore } from './stores/playerStore';
+
+const ADMIN_EMAIL = 'yuuheiookawa@gmail.com';
 
 // 認証済みでないと通過できないガード
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
@@ -62,12 +65,17 @@ const HIDE_NAV_PATHS = ['/battle', '/friends', '/title', '/login', '/register', 
 
 const AppContent = () => {
   const { pathname } = useLocation();
-  const { checkAuth } = useAuthStore();
+  const { checkAuth, user } = useAuthStore();
+  const setAdminMode = usePlayerStore(s => s.setAdminMode);
   const showNav = !HIDE_NAV_PATHS.some(p => pathname.startsWith(p));
 
   useEffect(() => {
     void checkAuth();
   }, [checkAuth]);
+
+  useEffect(() => {
+    if (user?.email === ADMIN_EMAIL) setAdminMode();
+  }, [user, setAdminMode]);
 
   return (
     <div className="max-w-lg mx-auto relative min-h-screen">
