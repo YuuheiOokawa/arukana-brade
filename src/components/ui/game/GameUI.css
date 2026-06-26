@@ -57,9 +57,9 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 52px;
-  min-width: 160px;
-  padding: 0 24px;
+  height: 48px;
+  min-width: 120px;
+  padding: 0 16px;
   border: none;
   border-radius: 8px;
   font-family: 'Noto Sans JP', sans-serif;

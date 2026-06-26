@@ -84,21 +84,29 @@ export const usePlayerStore = create<PlayerStore>()(
       },
 
       syncFromAuth: (p) => {
-        set(s => ({
-          player: {
-            ...s.player,
-            name: p.playerName,
-            gold: p.gold,
-            diamond: p.diamond,
-            stamina: p.stamina,
-            maxStamina: p.maxStamina,
-            exp: p.exp,
-            rank: p.playerRank,
-            title: p.title ?? s.player.title,
-            bio: p.bio ?? s.player.bio,
-            loginDays: p.loginDays,
-          },
-        }));
+        const now = Date.now();
+        set(s => {
+          const needsRecovery = p.stamina < p.maxStamina;
+          const localTimerValid = s.player.staminaRecoveryTime > now;
+          return {
+            player: {
+              ...s.player,
+              name: p.playerName,
+              gold: p.gold,
+              diamond: p.diamond,
+              stamina: p.stamina,
+              maxStamina: p.maxStamina,
+              exp: p.exp,
+              rank: p.playerRank,
+              title: p.title ?? s.player.title,
+              bio: p.bio ?? s.player.bio,
+              loginDays: p.loginDays,
+              staminaRecoveryTime: needsRecovery && !localTimerValid
+                ? now + STAMINA_RECOVERY_INTERVAL
+                : s.player.staminaRecoveryTime,
+            },
+          };
+        });
       },
 
       setAdminMode: () => {
@@ -197,7 +205,15 @@ export const usePlayerStore = create<PlayerStore>()(
       spendStamina: (amount) => {
         const { player } = get();
         if (player.stamina < amount) return false;
-        set(s => ({ player: { ...s.player, stamina: s.player.stamina - amount } }));
+        const wasMaxed = player.stamina >= player.maxStamina;
+        const now = Date.now();
+        set(s => ({
+          player: {
+            ...s.player,
+            stamina: s.player.stamina - amount,
+            staminaRecoveryTime: wasMaxed ? now + STAMINA_RECOVERY_INTERVAL : s.player.staminaRecoveryTime,
+          },
+        }));
         return true;
       },
 

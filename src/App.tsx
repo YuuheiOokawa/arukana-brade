@@ -25,6 +25,7 @@ import { TutorialCompleteScreen } from './features/tutorial/TutorialCompleteScre
 import { TutorialGachaScreen } from './features/tutorial/TutorialGachaScreen';
 import { ScenarioScreen } from './features/scenario/ScenarioScreen';
 import { ProfilePage } from './features/profile/ProfilePage';
+import { ShopPage } from './features/shop/ShopPage';
 import { LoginPage } from './features/auth/LoginPage';
 import { RegisterPage } from './features/auth/RegisterPage';
 import { UIShowcasePage } from './features/debug/UIShowcasePage';
@@ -80,6 +81,7 @@ const AppContent = () => {
 
   const syncCurrencyToServer = usePlayerStore(s => s.syncCurrencyToServer);
   const syncUnitsToServer = useUnitStore(s => s.syncUnitsToServer);
+  const recoverStamina = usePlayerStore(s => s.recoverStamina);
   useEffect(() => {
     if (!user) return;
     const sync = () => {
@@ -88,13 +90,16 @@ const AppContent = () => {
     };
     window.addEventListener('blur', sync);
     window.addEventListener('beforeunload', sync);
-    const interval = setInterval(sync, 3 * 60 * 1000);
+    const syncInterval = setInterval(sync, 3 * 60 * 1000);
+    recoverStamina();
+    const staminaInterval = setInterval(recoverStamina, 30 * 1000);
     return () => {
       window.removeEventListener('blur', sync);
       window.removeEventListener('beforeunload', sync);
-      clearInterval(interval);
+      clearInterval(syncInterval);
+      clearInterval(staminaInterval);
     };
-  }, [user, syncCurrencyToServer, syncUnitsToServer]);
+  }, [user, syncCurrencyToServer, syncUnitsToServer, recoverStamina]);
 
   return (
     <div className="max-w-lg mx-auto relative min-h-screen">
@@ -129,6 +134,7 @@ const AppContent = () => {
         <Route path="/guild"    element={<AuthGuard><MainGuard><GuildPage /></MainGuard></AuthGuard>} />
         <Route path="/pvp"      element={<AuthGuard><MainGuard><PvPPage /></MainGuard></AuthGuard>} />
         <Route path="/profile"  element={<AuthGuard><MainGuard><ProfilePage /></MainGuard></AuthGuard>} />
+        <Route path="/shop"     element={<AuthGuard><MainGuard><ShopPage /></MainGuard></AuthGuard>} />
         <Route path="/scenario/:stageId" element={<AuthGuard><MainGuard><ScenarioScreen /></MainGuard></AuthGuard>} />
         <Route path="/ui-showcase" element={<UIShowcasePage />} />
 

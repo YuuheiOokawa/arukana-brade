@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useMissionStore } from '../../stores/missionStore';
 import {
   IconMenu, IconScroll, IconGear, IconBag,
-  IconArrowUp, IconShield, IconDragon,
+  IconArrowUp, IconShield, IconDragon, IconCastle,
 } from '../ui/FantasyIcon';
 import { GameNavIcon } from '../ui/game/GameIcons';
 
@@ -22,6 +22,7 @@ type MenuItem =
 
 const MENU_ITEMS: MenuItem[] = [
   { path: '/missions',  label: 'ミッション', type: 'fantasy', Icon: IconScroll,   badge: true },
+  { path: '/shop',      label: 'ショップ',   type: 'fantasy', Icon: IconCastle },
   { path: '/equipment', label: '装備',       type: 'fantasy', Icon: IconGear },
   { path: '/items',     label: 'アイテム',   type: 'fantasy', Icon: IconBag },
   { path: '/enhance',   label: '強化',       type: 'fantasy', Icon: IconArrowUp },
