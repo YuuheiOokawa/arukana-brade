@@ -55,6 +55,43 @@ export const ITEM_MASTER: ItemMaster[] = [
   { id: 'item_summon_ticket',    name: '召喚チケット',       description: '召喚に使用できるチケット',         category: 'summon_ticket',   emoji: '🎫', sellPrice: 0 },
   { id: 'item_summon_ticket_sr', name: 'SR確定チケット',     description: 'SR以上確定の召喚チケット',         category: 'summon_ticket',   emoji: '🌠', sellPrice: 0 },
   { id: 'item_summon_ticket_ssr',name: 'SSR確定チケット',    description: 'SSR確定の最高級召喚チケット',      category: 'summon_ticket',   emoji: '🌟', sellPrice: 0 },
+
+  // ===== 進化素材 =====
+  { id: 'item_mana_crystal',     name: 'マナクリスタル',     description: '進化に必要な結晶',                 category: 'material',        emoji: '🔷', sellPrice: 500 },
+
+  // ===== 追加バトル素材 =====
+  { id: 'item_goblin_ear',       name: 'ゴブリンの耳',       description: '雑魚敵からドロップする素材',       category: 'material',        emoji: '👂', sellPrice: 40 },
+  { id: 'item_slime_core',       name: 'スライムコア',       description: 'スライムの核。強化に使用',         category: 'material',        emoji: '🟢', sellPrice: 70 },
+  { id: 'item_troll_hide',       name: 'トロルの皮',         description: '硬い素材として使用できる',         category: 'material',        emoji: '🟫', sellPrice: 160 },
+  { id: 'item_harpy_feather',    name: 'ハーピーの羽',       description: '軽くて丈夫な翼の羽根',             category: 'material',        emoji: '🪶', sellPrice: 130 },
+  { id: 'item_ice_shard',        name: '氷の欠片',           description: '水属性の素材。氷の魔法から採取',   category: 'material',        emoji: '❄️', sellPrice: 160 },
+  { id: 'item_wind_crystal',     name: '風の結晶',           description: '風属性の強化素材',                 category: 'material',        emoji: '🟢', sellPrice: 200 },
+  { id: 'item_earth_crystal',    name: '土の結晶',           description: '土属性の強化素材',                 category: 'material',        emoji: '🟤', sellPrice: 200 },
+  { id: 'item_ancient_rune',     name: '古代のルーン',       description: '失われた文明の遺物。高価な素材',   category: 'material',        emoji: '🔣', sellPrice: 1200 },
+  { id: 'item_phoenix_ash',      name: 'フェニックスの灰',   description: '不死鳥の灰。最高級の炎素材',       category: 'material',        emoji: '🔴', sellPrice: 1500 },
+  { id: 'item_sea_jewel',        name: '海の宝石',           description: '深海で採れる希少な宝石',           category: 'material',        emoji: '💎', sellPrice: 900 },
+  { id: 'item_forest_bark',      name: '霊樹の樹皮',         description: '古木から採れる神秘の樹皮',         category: 'material',        emoji: '🪵', sellPrice: 350 },
+  { id: 'item_celestial_dust',   name: '天空の塵',           description: '光属性の高級素材。星から降り注ぐ', category: 'material',        emoji: '✨', sellPrice: 750 },
+
+  // ===== 装備製造素材 =====
+  { id: 'item_mithril_ore',      name: 'ミスリル鉱石',       description: '伝説の金属の原料。武器製造に使用', category: 'material',        emoji: '⚪', sellPrice: 800 },
+  { id: 'item_adamant_chunk',    name: 'アダマンの塊',       description: '最硬の金属。最高位装備の素材',     category: 'material',        emoji: '🩶', sellPrice: 2500 },
+  { id: 'item_magic_thread',     name: '魔力の糸',           description: '魔法の鎧製造に使用する特殊な糸',   category: 'material',        emoji: '🧵', sellPrice: 350 },
+  { id: 'item_spirit_gem',       name: '精霊の宝石',         description: 'アクセサリー製造に必要な宝石',     category: 'material',        emoji: '💠', sellPrice: 600 },
+  { id: 'item_dragon_heart',     name: 'ドラゴンハート',     description: '龍の心臓。最強の装備素材',         category: 'material',        emoji: '🫀', sellPrice: 3000 },
+
+  // ===== ログインボーナス =====
+  { id: 'item_login_day1',       name: 'ログインギフト(初日)', description: '初回ログインのプレゼント',       category: 'stamina',         emoji: '🎁', sellPrice: 0 },
+  { id: 'item_login_weekly',     name: '週間ログインボーナス', description: '7日間ログインした報酬',          category: 'stamina',         emoji: '🎁', sellPrice: 0 },
+
+  // ===== 追加経験値ポーション =====
+  { id: 'item_exp_xxl',          name: '経験値の雫(超特大)', description: '経験値100000を獲得する最高位のポーション', category: 'exp_potion', emoji: '🌟', sellPrice: 5000 },
+  { id: 'item_exp_tome',         name: '英雄の書',           description: '経験値20000を獲得する魔法書',      category: 'exp_potion',      emoji: '📚', sellPrice: 1200 },
+
+  // ===== レイド素材 =====
+  { id: 'item_raid_coin',        name: 'レイドコイン',       description: 'レイドボスへの挑戦で入手できる硬貨', category: 'material',      emoji: '🪙', sellPrice: 100 },
+  { id: 'item_raid_relic',       name: '討伐の遺物',         description: 'レイドボス撃破で得られる希少な遺物', category: 'material',      emoji: '🏺', sellPrice: 5000 },
+  { id: 'item_boss_essence',     name: 'ボス精髄',           description: '強大なボスの力が宿るエッセンス',   category: 'material',        emoji: '⚗️', sellPrice: 2000 },
 ];
 
 export const getItemMaster = (id: string): ItemMaster | undefined =>
