@@ -3,7 +3,7 @@ import { UNIT_MASTER } from '../../data/units';
 import { getUnitMaster } from '../../data/units';
 import { ElementBadge } from './ElementBadge';
 import { RarityBadge } from './RarityBadge';
-import { getStarColor } from '../../data/rarityConfig';
+import { getStarColor, getLevelCap, AWAKENING_CONFIG } from '../../data/rarityConfig';
 
 interface Props {
   unit: OwnedUnit;
@@ -20,13 +20,18 @@ export const UnitCard = ({ unit, selected, onClick, compact = false }: Props) =>
   const starColor = getStarColor(rarity);
   const awakeningCount = unit.awakeningCount ?? 0;
 
-  return (
+  const isMaxed =
+    unit.level >= getLevelCap(rarity) &&
+    awakeningCount >= AWAKENING_CONFIG.maxAwakeningCount &&
+    unit.awakenRank >= (master.maxAwaken ?? 5);
+
+  const cardInner = (
     <div
       onClick={onClick}
       className={`unit-card card-base cursor-pointer relative ${
         selected ? 'ring-2 ring-yellow-400 animate-pulse-gold' : 'hover:border-purple-500'
-      } ${compact ? 'p-2' : 'p-3'}`}
-      style={selected ? {} : { borderColor: `${starColor}44` }}
+      } ${compact ? 'p-2' : 'p-3'} ${isMaxed ? '!border-transparent' : ''}`}
+      style={selected || isMaxed ? {} : { borderColor: `${starColor}44` }}
     >
       {unit.isLocked && (
         <div className="absolute top-1 right-1 text-yellow-400 text-xs">🔒</div>
@@ -37,6 +42,12 @@ export const UnitCard = ({ unit, selected, onClick, compact = false }: Props) =>
           style={{ color: starColor, background: `${starColor}22`, fontSize: '10px' }}
         >
           覚{awakeningCount}
+        </div>
+      )}
+      {isMaxed && (
+        <div className="absolute top-1 right-6 text-xs font-bold px-1 rounded"
+          style={{ fontSize: '9px', background: 'rgba(0,0,0,0.4)', color: '#fff', letterSpacing: '0.05em' }}>
+          MAX
         </div>
       )}
       <div className="flex items-center gap-2">
@@ -63,6 +74,18 @@ export const UnitCard = ({ unit, selected, onClick, compact = false }: Props) =>
       </div>
     </div>
   );
+
+  if (isMaxed) {
+    return (
+      <div className="p-0.5 rounded-xl" style={{
+        background: 'linear-gradient(90deg, #ff4444, #ff9900, #ffee00, #44ff88, #00ccff, #8844ff, #ff44cc, #ff4444)',
+        backgroundSize: '200% 100%',
+      }}>
+        {cardInner}
+      </div>
+    );
+  }
+  return cardInner;
 };
 
 const elementGradient = (element: string): string => {

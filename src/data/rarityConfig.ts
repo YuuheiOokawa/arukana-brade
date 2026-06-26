@@ -55,6 +55,17 @@ export const AWAKENING_CONFIG = {
   crystalItemId: 'item_awakening_crystal',
 } as const;
 
+// 進化素材定義
+export const EVOLUTION_MATERIALS: Record<string, { itemId: string; quantity: number; label: string }[]> = {
+  '1': [{ itemId: 'item_stone_core',     quantity: 5,  label: '強化の石' }],
+  '2': [{ itemId: 'item_stone_core',     quantity: 10, label: '強化の石' }, { itemId: 'item_magic_crystal', quantity: 3, label: '魔法結晶' }],
+  '3': [{ itemId: 'item_magic_crystal',  quantity: 5,  label: '魔法結晶' }, { itemId: 'item_elemental_core', quantity: 2, label: '属性核' }],
+  '4': [{ itemId: 'item_elemental_core', quantity: 5,  label: '属性核' },  { itemId: 'item_arcana_orb',     quantity: 1, label: 'アルカナ珠' }],
+  '5': [{ itemId: 'item_elemental_core', quantity: 10, label: '属性核' },  { itemId: 'item_arcana_orb',     quantity: 3, label: 'アルカナ珠' }],
+  '6': [{ itemId: 'item_arcana_orb',     quantity: 5,  label: 'アルカナ珠' }, { itemId: 'item_awakening_crystal', quantity: 2, label: '覚醒結晶' }],
+  '7': [{ itemId: 'item_arcana_orb',     quantity: 10, label: 'アルカナ珠' }, { itemId: 'item_awakening_crystal', quantity: 5, label: '覚醒結晶' }],
+};
+
 export const getLevelCap = (rarity: StarRarity): number =>
   RARITY_LEVEL_CAPS[String(rarity)] ?? 60;
 

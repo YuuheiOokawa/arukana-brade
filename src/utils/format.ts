@@ -1,5 +1,11 @@
 export const formatNumber = (n: number): string => n.toLocaleString('ja-JP');
 
+export const formatCompact = (n: number): string => {
+  if (n >= 100000000) return `${Math.floor(n / 100000000)}億`;
+  if (n >= 10000) return `${Math.floor(n / 10000)}万`;
+  return n.toLocaleString('ja-JP');
+};
+
 export const formatPercent = (rate: number): string => `${(rate * 100).toFixed(1)}%`;
 
 export const getRarityLabel = (rarity: string): string => rarity;
