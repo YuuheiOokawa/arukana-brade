@@ -109,7 +109,7 @@ const NavSvg = ({ type, color }: { type: NavIconType; color: string }) => {
           <rect x="18" y="5" width="1.5" height="3" fill={color}/>
           <rect x="20.5" y="5" width="1.5" height="3" fill={color}/>
           {/* 門 */}
-          <path d="M10 24V18C10 15.8 11.8 14 14 14C16.2 14 18 15.8 18 18V24" stroke={color} strokeWidth="1.5"}/>
+          <path d="M10 24V18C10 15.8 11.8 14 14 14C16.2 14 18 15.8 18 18V24" stroke={color} strokeWidth="1.5"/>
           <circle cx="11.5" cy="17.5" r="1" fill={color}/>
           <circle cx="16.5" cy="17.5" r="1" fill={color}/>
           {/* 旗 */}
