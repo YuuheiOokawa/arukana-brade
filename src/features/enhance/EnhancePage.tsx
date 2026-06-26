@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useUnitStore } from '../../stores/unitStore';
 import { usePlayerStore } from '../../stores/playerStore';
@@ -30,20 +30,38 @@ export const EnhancePage = () => {
   const master = unit ? UNIT_MASTER.find(m => m.id === unit.masterId) : null;
 
   const EXP_ITEMS = [
-    { itemId: 'item_exp_s', exp: 500, label: '経験値の雫(小)' },
-    { itemId: 'item_exp_m', exp: 2000, label: '経験値の雫(中)' },
-    { itemId: 'item_exp_l', exp: 8000, label: '経験値の雫(大)' },
+    { itemId: 'item_exp_s',  exp: 500,   label: '経験値の雫(小)' },
+    { itemId: 'item_exp_m',  exp: 2000,  label: '経験値の雫(中)' },
+    { itemId: 'item_exp_l',  exp: 8000,  label: '経験値の雫(大)' },
+    { itemId: 'item_exp_xl', exp: 30000, label: '経験値の雫(特大)' },
   ];
 
-  const handleUseExpItem = (itemId: string, exp: number) => {
-    if (!unit) return;
-    const ok = useItem(itemId, 1);
-    if (!ok) { setMessage('アイテムが足りません'); return; }
-    levelUpUnit(unit.instanceId, exp);
+  const pressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stopLongPress = useCallback(() => {
+    if (pressIntervalRef.current) { clearInterval(pressIntervalRef.current); pressIntervalRef.current = null; }
+  }, []);
+
+  const handleUseExpItem = useCallback((itemId: string, exp: number, silent = false) => {
+    if (!selectedId) return;
+    const freshUnit = useUnitStore.getState().ownedUnits.find(u => u.instanceId === selectedId);
+    if (!freshUnit) return;
+    if (freshUnit.level >= getLevelCap(freshUnit.currentRarity)) {
+      stopLongPress();
+      if (!silent) setMessage('MAX LEVEL！進化しましょう');
+      return;
+    }
+    const ok = usePlayerStore.getState().useItem(itemId, 1);
+    if (!ok) { stopLongPress(); if (!silent) setMessage('アイテムが足りません'); return; }
+    levelUpUnit(freshUnit.instanceId, exp);
     addDailyProgress('enhance');
-    setMessage(`EXP +${exp.toLocaleString()} 獲得！`);
-    setTimeout(() => setMessage(''), 2000);
-  };
+    if (!silent) { setMessage(`EXP +${exp.toLocaleString()} 獲得！`); setTimeout(() => setMessage(''), 2000); }
+  }, [selectedId, levelUpUnit, addDailyProgress, stopLongPress]);
+
+  const startLongPress = useCallback((itemId: string, exp: number) => {
+    handleUseExpItem(itemId, exp, false);
+    pressIntervalRef.current = setInterval(() => handleUseExpItem(itemId, exp, true), 150);
+  }, [handleUseExpItem]);
 
   const handleAwaken = () => {
     if (!unit || !master) return;
@@ -203,9 +221,12 @@ export const EnhancePage = () => {
                         </div>
                         <span className="text-gray-400 text-sm">×{owned}</span>
                         <button
-                          onClick={() => handleUseExpItem(itemId, exp)}
+                          onPointerDown={() => startLongPress(itemId, exp)}
+                          onPointerUp={stopLongPress}
+                          onPointerLeave={stopLongPress}
+                          onPointerCancel={stopLongPress}
                           disabled={owned === 0 || unit.level >= getLevelCap(unit.currentRarity)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-bold disabled:opacity-40"
+                          className="px-3 py-1.5 rounded-lg text-xs font-bold disabled:opacity-40 select-none touch-none"
                           style={{ background: owned > 0 ? 'linear-gradient(135deg, #7c3aed, #4f46e5)' : '#374151', color: 'white' }}
                         >
                           使用

@@ -37,6 +37,7 @@ interface PlayerStore {
   addItem: (itemId: string, quantity: number) => void;
   useItem: (itemId: string, quantity: number) => boolean;
   setLastUsedFriend: (friendId: string) => void;
+  syncCurrencyToServer: () => Promise<void>;
   updateProfile: (patch: { name?: string; title?: string; bio?: string; favoriteUnitInstanceId?: string | null }) => void;
   recordLogin: () => void;
 }
@@ -220,6 +221,25 @@ export const usePlayerStore = create<PlayerStore>()(
             .filter(i => i.quantity > 0),
         }));
         return true;
+      },
+
+      syncCurrencyToServer: async () => {
+        const { player } = get();
+        try {
+          await fetch('/api/player/currency', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              gold: player.gold,
+              diamond: player.diamond,
+              exp: player.exp,
+              playerRank: player.rank,
+              stamina: player.stamina,
+              maxStamina: player.maxStamina,
+            }),
+          });
+        } catch { /* silent */ }
       },
 
       setLastUsedFriend: (friendId) => set({ lastUsedFriendId: friendId }),

@@ -38,7 +38,7 @@ export const BattlePage = () => {
   const { pendingStageId, pendingFriendId, clearPending, markCleared } = useQuestStore();
   const { getActiveParty } = usePartyStore();
   const { ownedUnits, levelUpUnit } = useUnitStore();
-  const { spendStamina, addGold, addExp, addItem } = usePlayerStore();
+  const { spendStamina, addGold, addExp, addItem, syncCurrencyToServer } = usePlayerStore();
   const { getEquippedByUnit } = useEquipmentStore();
   const { addDailyProgress } = useMissionStore();
 
@@ -333,6 +333,7 @@ export const BattlePage = () => {
                     if (updAllies.some(a => a.isFriend && a.currentHp > 0)) {
                       addDailyProgress('friend_battle');
                     }
+                    setTimeout(() => void syncCurrencyToServer(), 500);
                     setPhase('victory');
                   }
                   return curStage;
@@ -430,6 +431,7 @@ export const BattlePage = () => {
                     if (updAllies.some(a => a.isFriend && a.currentHp > 0)) {
                       addDailyProgress('friend_battle');
                     }
+                    setTimeout(() => void syncCurrencyToServer(), 500);
                     setPhase('victory');
                   }
                   return curStage;

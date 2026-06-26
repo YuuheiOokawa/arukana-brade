@@ -12,15 +12,32 @@ import type { ArenaOpponent } from '../../types';
 
 type Phase = 'list' | 'battle' | 'result';
 
-const RANK_TITLES: { min: number; label: string; color: string }[] = [
-  { min: 3000, label: '覇者',       color: '#f0c040' },
-  { min: 2500, label: 'グランドマスター', color: '#c4b5fd' },
-  { min: 2000, label: 'マスター',   color: '#60a5fa' },
-  { min: 1700, label: 'ダイヤ',     color: '#34d399' },
-  { min: 1400, label: 'プラチナ',   color: '#94a3b8' },
-  { min: 1100, label: 'ゴールド',   color: '#f59e0b' },
-  { min: 0,    label: 'シルバー',   color: '#6b7280' },
+const NUM = ['Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ⅵ','Ⅶ','Ⅷ','Ⅸ','Ⅹ'];
+const RANK_TIERS: { name: string; color: string; step: number; count: number }[] = [
+  { name: 'ルーキー',         color: '#9ca3af', step: 100,  count: 1  },
+  { name: 'ブロンズ',         color: '#b45309', step: 200,  count: 10 },
+  { name: 'シルバー',         color: '#94a3b8', step: 300,  count: 10 },
+  { name: 'ゴールド',         color: '#f59e0b', step: 400,  count: 10 },
+  { name: 'プラチナ',         color: '#e2e8f0', step: 500,  count: 10 },
+  { name: 'ダイヤ',           color: '#60a5fa', step: 600,  count: 10 },
+  { name: 'マスター',         color: '#a855f7', step: 700,  count: 10 },
+  { name: 'グランドマスター', color: '#c4b5fd', step: 1000, count: 10 },
+  { name: '覇王',             color: '#f97316', step: 1500, count: 10 },
+  { name: '伝説',             color: '#ef4444', step: 2000, count: 10 },
+  { name: '神話',             color: '#ec4899', step: 3000, count: 8  },
+  { name: '至高の覇者',       color: '#fff8e0', step: 0,    count: 1  },
 ];
+const RANK_TITLES: { min: number; label: string; color: string }[] = (() => {
+  const result: { min: number; label: string; color: string }[] = [];
+  let cur = 0;
+  for (const t of RANK_TIERS) {
+    for (let i = 0; i < t.count; i++) {
+      result.push({ min: cur, label: t.count === 1 ? t.name : `${t.name} ${NUM[i] ?? i+1}`, color: t.color });
+      cur += t.step;
+    }
+  }
+  return result.sort((a, b) => b.min - a.min);
+})();
 
 const getRankTitle = (pts: number) => RANK_TITLES.find(r => pts >= r.min) ?? RANK_TITLES[RANK_TITLES.length - 1];
 
