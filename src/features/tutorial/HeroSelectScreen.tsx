@@ -106,7 +106,7 @@ export const HeroSelectScreen = () => {
                   <div className="flex items-center gap-2 mb-2">
                     <span className="px-2 py-0.5 rounded text-xs font-bold"
                       style={{ background: 'rgba(240,192,64,0.2)', color: '#f0c040', border: '1px solid rgba(240,192,64,0.3)' }}>
-                      SSR
+                      ★3
                     </span>
                     <span className="text-xs font-medium" style={{ color: ELEMENT_COLOR[selectedHero.element] }}>
                       {ELEMENT_NAMES[selectedHero.element]}属性

@@ -89,6 +89,50 @@ export const SCENARIOS: ScenarioMaster[] = [
       { lineId: '8', type: 'narration', text: '第一章「アルカナ覚醒編」——始まりの戦いへ。', effect: 'flash' },
     ],
   },
+
+  // ===== エリアクリアシナリオ =====
+  {
+    scenarioId: 'area_clear_1_1',
+    questId: 'area_1_1',
+    stageId: 'area_clear_1_1',
+    backgroundKey: 'ruins',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '「始まりの遺跡」エリアを制覇——。主人公は初めての大きな勝利を掴んだ。' },
+      { lineId: '2', type: 'dialogue', speakerName: '老賢者クロン', text: 'やった……遺跡の封印が安定した！君の力は本物だ。', position: 'left' },
+      { lineId: '3', type: 'dialogue', speakerName: '謎の少女', text: 'すごい……あなた、本当に召喚士なんだ。あの番人を倒せたなんて。', position: 'right' },
+      { lineId: '4', type: 'dialogue', speakerName: '???', text: '仲間がいたから戦えた。一人では無理だった。', position: 'center' },
+      { lineId: '5', type: 'dialogue', speakerName: '老賢者クロン', text: 'これが召喚士の真髄。さあ——次なる地、「月影の高原」が待っている。', position: 'left', effect: 'flash' },
+    ],
+  },
+  {
+    scenarioId: 'area_clear_1_2',
+    questId: 'area_1_2',
+    stageId: 'area_clear_1_2',
+    backgroundKey: 'sky',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '「月影の高原」——月の光が降り注ぐ草原を、主人公たちは制覇した。' },
+      { lineId: '2', type: 'dialogue', speakerName: '謎の少女', text: '高原に宿る精霊の封印も守れた。ありがとう……。', position: 'left' },
+      { lineId: '3', type: 'narration', text: '彼女が「ルナ」という名であることを、主人公はこの地で初めて知った。' },
+      { lineId: '4', type: 'dialogue', speakerName: 'ルナ', text: '私の名前はルナ。月の精霊に仕える者。あなたのことを、ずっと待っていたの。', position: 'left' },
+      { lineId: '5', type: 'dialogue', speakerName: '???', text: '……そうか。ルナ。次は——あの山の向こうに何があるか、一緒に確かめよう。', position: 'center', effect: 'flash' },
+    ],
+  },
+  {
+    scenarioId: 'area_clear_1_3',
+    questId: 'area_1_3',
+    stageId: 'area_clear_1_3',
+    backgroundKey: 'temple',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '「封印の神殿」——古代の力が眠る聖域。その最後の試練も乗り越えた。' },
+      { lineId: '2', type: 'dialogue', speakerName: '老賢者クロン', text: 'ついに第一世界の全てのエリアを制覇した……！これほどの召喚士は、百年ぶりか。', position: 'left' },
+      { lineId: '3', type: 'dialogue', speakerName: 'ルナ', text: '「奈落の扉」の封印が強化された。でも——これは始まりに過ぎない。', position: 'right' },
+      { lineId: '4', type: 'narration', text: '主人公の手の紋章が、かつてなく強く輝き始めた。第一世界の力が、体に宿った証だった。' },
+      { lineId: '5', type: 'dialogue', speakerName: '???', text: '次の世界が待っている。行こう——アルカナブレイドを完全に取り戻すまで。', position: 'center', effect: 'flash' },
+    ],
+  },
 ];
 
 export const getScenario = (stageId: string): ScenarioMaster | undefined =>

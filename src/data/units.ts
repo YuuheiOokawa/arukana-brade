@@ -1517,8 +1517,13 @@ export const UNIT_MASTER: UnitMaster[] = [
   },
 ];
 
-export const getUnitMaster = (id: string): UnitMaster | undefined =>
-  UNIT_MASTER.find(u => u.id === id) ?? HERO_UNIT_MASTERS.find(u => u.id === id);
+import { getMasterUnits } from '../lib/masterDataCache';
+
+export const getUnitMaster = (id: string): UnitMaster | undefined => {
+  const cached = getMasterUnits();
+  if (cached) return cached.find(u => u.id === id);
+  return UNIT_MASTER.find(u => u.id === id) ?? HERO_UNIT_MASTERS.find(u => u.id === id);
+};
 
 // awakeningCount: ガチャ被り覚醒 (0〜4)。1回ごとに +5% 全ステータス上昇
 export const calcUnitStats = (master: UnitMaster, level: number, awakenRank: number, awakeningCount = 0) => {

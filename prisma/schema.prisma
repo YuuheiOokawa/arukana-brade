@@ -89,3 +89,11 @@ model SummonHistory {
 
   @@index([playerId])
 }
+
+// マスタデータをDB管理するためのテーブル。idはデータ種別('units','enemies','items','equipment','quests')
+model MasterData {
+  id        String   @id  // 'units' | 'enemies' | 'items' | 'equipment' | 'quests'
+  payload   Json
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt
+}

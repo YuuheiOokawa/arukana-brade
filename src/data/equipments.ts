@@ -1,4 +1,5 @@
 import type { EquipmentMaster } from '../types';
+import { getMasterEquipment } from '../lib/masterDataCache';
 
 export const EQUIPMENT_MASTER: EquipmentMaster[] = [
   // ===== 武器 =====
@@ -302,8 +303,11 @@ export const EQUIPMENT_MASTER: EquipmentMaster[] = [
   },
 ];
 
-export const getEquipmentMaster = (id: string): EquipmentMaster | undefined =>
-  EQUIPMENT_MASTER.find(e => e.id === id);
+export const getEquipmentMaster = (id: string): EquipmentMaster | undefined => {
+  const cached = getMasterEquipment();
+  if (cached) return cached.find(e => e.id === id);
+  return EQUIPMENT_MASTER.find(e => e.id === id);
+};
 
 export const calcEquipmentStats = (master: EquipmentMaster, level: number): { atk: number; def: number; hp: number; rec: number } => {
   const ratio = (level - 1) / (master.maxLevel - 1);

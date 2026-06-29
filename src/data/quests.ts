@@ -1,4 +1,5 @@
 import type { QuestWorld } from '../types';
+import { getMasterQuests } from '../lib/masterDataCache';
 
 export const QUEST_WORLDS: QuestWorld[] = [
   // ========================================
@@ -3293,8 +3294,11 @@ export const QUEST_WORLDS: QuestWorld[] = [
   },
 ];
 
+/** DBキャッシュ優先でクエストワールド一覧を返す（未取得時はTypeScriptデータにフォールバック）*/
+export const getQuestWorlds = (): QuestWorld[] => getMasterQuests() ?? QUEST_WORLDS;
+
 export const getAllStages = () =>
-  QUEST_WORLDS.flatMap(w => w.areas.flatMap(a => a.stages));
+  getQuestWorlds().flatMap(w => w.areas.flatMap(a => a.stages));
 
 export const getStage = (stageId: string) =>
   getAllStages().find(s => s.id === stageId);
