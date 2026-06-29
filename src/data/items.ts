@@ -1,4 +1,5 @@
 import type { ItemMaster } from '../types';
+import { getMasterItems } from '../lib/masterDataCache';
 
 export const ITEM_MASTER: ItemMaster[] = [
   // ===== 敵ドロップ素材 =====
@@ -100,5 +101,8 @@ export const ITEM_MASTER: ItemMaster[] = [
   { id: 'item_mystic_stone',     name: '神秘石',             description: '★7・CROWN進化に必要な極めて希少な石',       category: 'material', emoji: '💎', sellPrice: 8000 },
 ];
 
-export const getItemMaster = (id: string): ItemMaster | undefined =>
-  ITEM_MASTER.find(i => i.id === id);
+export const getItemMaster = (id: string): ItemMaster | undefined => {
+  const cached = getMasterItems();
+  if (cached) return cached.find(i => i.id === id);
+  return ITEM_MASTER.find(i => i.id === id);
+};

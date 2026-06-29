@@ -8,6 +8,7 @@ import { useEquipmentStore } from '../../stores/equipmentStore';
 import { useMissionStore } from '../../stores/missionStore';
 import { getStage } from '../../data/quests';
 import { getEventStage } from '../../data/events';
+import { getScenario } from '../../data/scenarios';
 import { getEnemyMaster } from '../../data/enemies';
 import { UNIT_MASTER, calcUnitStats } from '../../data/units';
 import { FRIEND_CANDIDATES } from '../../data/friends';
@@ -57,6 +58,7 @@ export const BattlePage = () => {
   const [rewardGold, setRewardGold] = useState(0);
   const [rewardExp, setRewardExp] = useState(0);
   const [rewardItems, setRewardItems] = useState<string[]>([]);
+  const [areaClearedKey, setAreaClearedKey] = useState<string | null>(null);
 
   const buildWave = useCallback((s: QuestStage, wIdx: number): BattleEnemy[] => {
     const wave = s.waves[wIdx];
@@ -350,7 +352,11 @@ export const BattlePage = () => {
                     items.forEach(id => addItem(id, 1));
                     if (isAreaClear) {
                       const parts = curStage.id.split('_');
-                      if (parts.length >= 3) claimAreaReward(`${parts[1]}_${parts[2]}`);
+                      if (parts.length >= 3) {
+                        const areaKey = `${parts[1]}_${parts[2]}`;
+                        claimAreaReward(areaKey);
+                        setAreaClearedKey(areaKey);
+                      }
                       addItem('item_summon_ticket', 5);
                     }
                     const nonFriendAlive = updAllies.filter(a => !a.isFriend && a.currentHp > 0);
@@ -454,7 +460,11 @@ export const BattlePage = () => {
                     items.forEach(id => addItem(id, 1));
                     if (isAreaClear) {
                       const parts = curStage.id.split('_');
-                      if (parts.length >= 3) claimAreaReward(`${parts[1]}_${parts[2]}`);
+                      if (parts.length >= 3) {
+                        const areaKey = `${parts[1]}_${parts[2]}`;
+                        claimAreaReward(areaKey);
+                        setAreaClearedKey(areaKey);
+                      }
                       addItem('item_summon_ticket', 5);
                     }
                     const nonFriendAlive = updAllies.filter(a => !a.isFriend && a.currentHp > 0);
@@ -507,6 +517,8 @@ export const BattlePage = () => {
   );
 
   if (phase === 'victory') {
+    const areaClearScenarioId = areaClearedKey ? `area_clear_${areaClearedKey}` : null;
+    const hasAreaScenario = areaClearScenarioId ? !!getScenario(areaClearScenarioId) : false;
     return <VictoryScreen
       stageName={stage.name}
       round={round}
@@ -515,6 +527,10 @@ export const BattlePage = () => {
       items={rewardItems}
       onHome={() => navigate('/')}
       onQuest={() => navigate('/quests')}
+      areaClearedKey={areaClearedKey ?? undefined}
+      onAreaScenario={hasAreaScenario && areaClearScenarioId
+        ? () => navigate(`/scenario/${areaClearScenarioId}`)
+        : undefined}
     />;
   }
   if (phase === 'defeat') {
@@ -675,10 +691,11 @@ export const BattlePage = () => {
 
 // ===== 勝利画面 =====
 const VictoryScreen = ({
-  stageName, round, gold, exp, items, onHome, onQuest,
+  stageName, round, gold, exp, items, onHome, onQuest, areaClearedKey, onAreaScenario,
 }: {
   stageName: string; round: number; gold: number; exp: number; items: string[];
   onHome: () => void; onQuest: () => void;
+  areaClearedKey?: string; onAreaScenario?: () => void;
 }) => (
   <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center battle-bg">
     <div className="animate-slide-up w-full max-w-sm">
@@ -686,6 +703,15 @@ const VictoryScreen = ({
       <p className="text-yellow-400 font-black text-3xl tracking-widest mb-1">VICTORY!</p>
       <p className="text-gray-500 text-xs mb-1">{stageName}</p>
       <p className="text-purple-400 text-xs mb-6">クリアラウンド: {round}</p>
+
+      {/* エリアクリアバナー */}
+      {areaClearedKey && (
+        <div className="mb-4 rounded-2xl p-4 border border-yellow-500/40"
+          style={{ background: 'linear-gradient(135deg, rgba(234,179,8,0.15), rgba(168,85,247,0.12))' }}>
+          <p className="text-yellow-300 font-black text-lg tracking-widest mb-1">AREA CLEAR!</p>
+          <p className="text-gray-400 text-xs">召喚チケット ×5 獲得！</p>
+        </div>
+      )}
 
       <div className="bg-black/50 border border-yellow-900/30 rounded-2xl p-4 mb-6 text-left">
         <p className="text-gray-400 text-xs font-bold mb-3 tracking-wide">━━ 獲得報酬 ━━━━━━━━━━━━━━━━</p>
@@ -713,6 +739,19 @@ const VictoryScreen = ({
           </>
         )}
       </div>
+
+      {onAreaScenario && (
+        <button onClick={onAreaScenario}
+          className="w-full mb-3 py-3 rounded-2xl font-black text-sm tracking-wider transition-all active:scale-95"
+          style={{
+            background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+            border: '1px solid rgba(167,139,250,0.4)',
+            color: '#e9d5ff',
+            boxShadow: '0 0 20px rgba(124,58,237,0.4)',
+          }}>
+          エリアクリアシナリオを見る ▶
+        </button>
+      )}
 
       <div className="flex gap-3">
         <GameButton variant="secondary" onClick={onHome} fullWidth>ホームへ</GameButton>

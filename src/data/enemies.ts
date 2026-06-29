@@ -1,4 +1,5 @@
 import type { EnemyMaster } from '../types';
+import { getMasterEnemies } from '../lib/masterDataCache';
 
 export const ENEMY_MASTER: EnemyMaster[] = [
   // ========================================
@@ -392,5 +393,8 @@ export const ENEMY_MASTER: EnemyMaster[] = [
   },
 ];
 
-export const getEnemyMaster = (id: string): EnemyMaster | undefined =>
-  ENEMY_MASTER.find(e => e.id === id);
+export const getEnemyMaster = (id: string): EnemyMaster | undefined => {
+  const cached = getMasterEnemies();
+  if (cached) return cached.find(e => e.id === id);
+  return ENEMY_MASTER.find(e => e.id === id);
+};

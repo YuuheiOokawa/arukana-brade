@@ -130,7 +130,11 @@ export const ScenarioScreen = () => {
   const accent = BG_ACCENT[bgKey] ?? '#8b5cf6';
 
   const onFinish = useCallback(() => {
-    navigate('/friends', { state: { fromScenario: true, stageId } });
+    if (stageId?.startsWith('area_clear_')) {
+      navigate('/quests');
+    } else {
+      navigate('/friends', { state: { fromScenario: true, stageId } });
+    }
   }, [navigate, stageId]);
 
   // テキストタイプライター

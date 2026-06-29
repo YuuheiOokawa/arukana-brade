@@ -33,6 +33,7 @@ import { useAuthStore } from './stores/authStore';
 import { useTutorialStore } from './stores/tutorialStore';
 import { usePlayerStore } from './stores/playerStore';
 import { hydrateFromGameState, resetAllStores, initAutoSave, saveImmediately, saveBeforeUnload, setSaveErrorHandler, setSaveSuccessHandler } from './lib/syncService';
+import { fetchAndPopulateMasterData } from './lib/masterDataCache';
 
 const ADMIN_EMAIL = 'yuuheiookawa@gmail.com';
 const LAST_USER_KEY = 'arcana-last-user-id';
@@ -96,6 +97,9 @@ const AppContent = () => {
     if (gameStateJson) {
       hydrateFromGameState(gameStateJson);
     }
+
+    // マスタデータをDBから取得してキャッシュに投入（失敗時はTypeScriptデータにフォールバック）
+    void fetchAndPopulateMasterData();
 
     if (user.email === ADMIN_EMAIL) setAdminMode();
 

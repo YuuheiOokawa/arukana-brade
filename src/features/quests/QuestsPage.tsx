@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { QUEST_WORLDS } from '../../data/quests';
+import { getQuestWorlds } from '../../data/quests';
 import { getActiveEvents } from '../../data/events';
 import { getScenario } from '../../data/scenarios';
 import { useQuestStore } from '../../stores/questStore';
@@ -24,7 +24,8 @@ export const QuestsPage = () => {
   const [selectedArea, setSelectedArea] = useState<QuestArea | null>(null);
   const [staminaModal, setStaminaModal] = useState<{ stageId: string; cost: number } | null>(null);
 
-  const selectedWorld = QUEST_WORLDS.find(w => w.id === selectedWorldId)!;
+  const questWorlds = getQuestWorlds();
+  const selectedWorld = questWorlds.find(w => w.id === selectedWorldId)!;
   const party = getActiveParty();
   const hasParty = party.slots.some(Boolean);
   const activeEvents = getActiveEvents();
@@ -104,7 +105,7 @@ export const QuestsPage = () => {
           {/* ワールドタブ */}
           <div className="px-4 mb-4">
             <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-              {QUEST_WORLDS.map(w => (
+              {questWorlds.map(w => (
                 <button key={w.id} onClick={() => { setSelectedWorldId(w.id); setSelectedArea(null); }}
                   className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
                     selectedWorldId === w.id ? 'tab-active' : 'tab-inactive'
@@ -118,7 +119,13 @@ export const QuestsPage = () => {
           {!selectedArea ? (
             <div className="px-4 space-y-3">
               <p className="text-gray-600 text-xs font-bold uppercase tracking-widest mb-3">エリア選択</p>
-              {selectedWorld.areas.map(area => {
+              {selectedWorld.areas.map((area, areaIdx) => {
+                // 前エリアの最終ステージをクリアしないと次エリアは表示されない
+                if (areaIdx > 0) {
+                  const prevArea = selectedWorld.areas[areaIdx - 1];
+                  const prevLastStage = prevArea.stages[prevArea.stages.length - 1];
+                  if (!isCleared(prevLastStage.id)) return null;
+                }
                 const totalStages = area.stages.length;
                 const cleared = area.stages.filter(s => isCleared(s.id)).length;
                 const isComplete = cleared === totalStages;
@@ -236,7 +243,8 @@ const StageList = ({
         <p className="text-white font-bold">{title}</p>
       </div>
     )}
-    {stages.map((stage, idx) => {
+    {/* 前ステージクリアで次ステージが解放される（idx=0は常に表示）*/}
+    {stages.filter((_, idx) => idx === 0 || isCleared(stages[idx - 1].id)).map((stage, idx) => {
       const cleared = isCleared(stage.id);
       const noStamina = playerStamina < stage.staminaCost;
       return (
