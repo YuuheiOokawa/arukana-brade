@@ -16,6 +16,8 @@ interface QuestStore extends QuestProgress {
   checkAreaComplete: (stageId: string) => boolean;
   claimedAreaRewards: string[];
   claimAreaReward: (areaKey: string) => void;
+  lastSelectedWorldId: string | null;
+  setLastSelectedWorldId: (id: string) => void;
 }
 
 // stageId フォーマット: stage_{world}_{area}_{stage}
@@ -31,6 +33,8 @@ export const useQuestStore = create<QuestStore>()(
       pendingStageId: null,
       pendingFriendId: null,
       claimedAreaRewards: [],
+      lastSelectedWorldId: null,
+      setLastSelectedWorldId: (id) => set({ lastSelectedWorldId: id }),
 
       markCleared: (stageId) => {
         const { clearedStageIds } = get();

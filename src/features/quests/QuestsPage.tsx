@@ -15,12 +15,14 @@ type MainTab = 'story' | 'event';
 
 export const QuestsPage = () => {
   const navigate = useNavigate();
-  const { isCleared, setPendingStage } = useQuestStore();
+  const { isCleared, setPendingStage, lastSelectedWorldId, setLastSelectedWorldId } = useQuestStore();
   const { player } = usePlayerStore();
   const { getActiveParty } = usePartyStore();
 
   const [mainTab, setMainTab] = useState<MainTab>('story');
-  const [selectedWorldId, setSelectedWorldId] = useState(() => getQuestWorlds()[0].id);
+  const [selectedWorldId, setSelectedWorldId] = useState(() =>
+    lastSelectedWorldId ?? getQuestWorlds()[0].id
+  );
   const [selectedArea, setSelectedArea] = useState<QuestArea | null>(null);
   const [staminaModal, setStaminaModal] = useState<{ stageId: string; cost: number } | null>(null);
 
@@ -106,7 +108,7 @@ export const QuestsPage = () => {
           <div className="px-4 mb-4">
             <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
               {questWorlds.map(w => (
-                <button key={w.id} onClick={() => { setSelectedWorldId(w.id); setSelectedArea(null); }}
+                <button key={w.id} onClick={() => { setSelectedWorldId(w.id); setLastSelectedWorldId(w.id); setSelectedArea(null); }}
                   className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
                     selectedWorldId === w.id ? 'tab-active' : 'tab-inactive'
                   }`}>

@@ -26,17 +26,18 @@ export const HomePage = () => {
   const navigate = useNavigate();
   const { player, recoverStamina } = usePlayerStore();
   const { checkDailyReset, getCompletedCount, getClaimedCount } = useMissionStore();
-  const { canClaim } = useLoginBonusStore();
+  const { canClaim, markLoggedInToday } = useLoginBonusStore();
   const [showLoginBonus, setShowLoginBonus] = useState(false);
 
   useEffect(() => {
     recoverStamina();
     checkDailyReset();
     const interval = setInterval(recoverStamina, 60000);
-    // ログインボーナスを自動表示
-    if (canClaim()) setTimeout(() => setShowLoginBonus(true), 800);
+    // ログインボーナスを自動表示（当日初回ログイン時のみ）
+    if (markLoggedInToday() && canClaim()) setTimeout(() => setShowLoginBonus(true), 800);
     return () => clearInterval(interval);
-  }, [recoverStamina, checkDailyReset, canClaim]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recoverStamina, checkDailyReset]);
 
   const activeEvents = getActiveEvents();
   const activeRaids = getActiveRaids();
