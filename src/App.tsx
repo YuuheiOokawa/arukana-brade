@@ -33,6 +33,7 @@ import { useAuthStore } from './stores/authStore';
 import { useTutorialStore } from './stores/tutorialStore';
 import { usePlayerStore } from './stores/playerStore';
 import { useUnitStore } from './stores/unitStore';
+import { hydrateFromGameState, initAutoSave, saveImmediately } from './lib/syncService';
 
 const ADMIN_EMAIL = 'yuuheiookawa@gmail.com';
 
@@ -67,39 +68,47 @@ const HIDE_NAV_PATHS = ['/battle', '/friends', '/title', '/login', '/register', 
 
 const AppContent = () => {
   const { pathname } = useLocation();
-  const { checkAuth, user } = useAuthStore();
+  const { checkAuth, user, gameStateJson } = useAuthStore();
   const setAdminMode = usePlayerStore(s => s.setAdminMode);
+  const recoverStamina = usePlayerStore(s => s.recoverStamina);
   const showNav = !HIDE_NAV_PATHS.some(p => pathname.startsWith(p));
 
+  // 認証チェック
   useEffect(() => {
     void checkAuth();
   }, [checkAuth]);
 
-  useEffect(() => {
-    if (user?.email === ADMIN_EMAIL) setAdminMode();
-  }, [user, setAdminMode]);
-
-  const syncCurrencyToServer = usePlayerStore(s => s.syncCurrencyToServer);
-  const syncUnitsToServer = useUnitStore(s => s.syncUnitsToServer);
-  const recoverStamina = usePlayerStore(s => s.recoverStamina);
+  // 認証後: DBからゲーム状態を全復元 → 自動保存開始
   useEffect(() => {
     if (!user) return;
-    const sync = () => {
-      void syncCurrencyToServer();
-      void syncUnitsToServer();
-    };
-    window.addEventListener('blur', sync);
-    window.addEventListener('beforeunload', sync);
-    const syncInterval = setInterval(sync, 3 * 60 * 1000);
+
+    // DBに保存済みのゲーム状態があればストアを上書き復元
+    if (gameStateJson) {
+      hydrateFromGameState(gameStateJson);
+    }
+
+    if (user.email === ADMIN_EMAIL) setAdminMode();
+
+    // ストア変更を監視して自動デバウンス保存
+    const stopAutoSave = initAutoSave();
+
+    // ページ離脱・フォーカスロス時に即時保存
+    const handleSave = () => saveImmediately();
+    window.addEventListener('blur', handleSave);
+    window.addEventListener('beforeunload', handleSave);
+
+    // スタミナ回復タイマー
     recoverStamina();
     const staminaInterval = setInterval(recoverStamina, 30 * 1000);
+
     return () => {
-      window.removeEventListener('blur', sync);
-      window.removeEventListener('beforeunload', sync);
-      clearInterval(syncInterval);
+      stopAutoSave();
+      window.removeEventListener('blur', handleSave);
+      window.removeEventListener('beforeunload', handleSave);
       clearInterval(staminaInterval);
     };
-  }, [user, syncCurrencyToServer, syncUnitsToServer, recoverStamina]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   return (
     <div className="max-w-lg mx-auto relative min-h-screen">

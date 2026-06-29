@@ -31,6 +31,7 @@ interface SummonUnitForSync {
 interface AuthStore {
   user: AuthUser | null;
   player: AuthPlayer | null;
+  gameStateJson: Record<string, unknown> | null;
   isLoading: boolean;
   isChecked: boolean;
 
@@ -52,6 +53,7 @@ interface AuthStore {
 export const useAuthStore = create<AuthStore>((set, get) => ({
   user: null,
   player: null,
+  gameStateJson: null,
   isLoading: false,
   isChecked: false,
 
@@ -60,13 +62,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     try {
       const res = await fetch('/api/auth/me', { credentials: 'include' });
       if (res.ok) {
-        const data = await res.json() as { user: AuthUser; player: AuthPlayer };
-        set({ user: data.user, player: data.player });
+        const data = await res.json() as { user: AuthUser; player: AuthPlayer; gameStateJson: Record<string, unknown> | null };
+        set({ user: data.user, player: data.player, gameStateJson: data.gameStateJson ?? null });
       } else {
-        set({ user: null, player: null });
+        set({ user: null, player: null, gameStateJson: null });
       }
     } catch {
-      set({ user: null, player: null });
+      set({ user: null, player: null, gameStateJson: null });
     } finally {
       set({ isLoading: false, isChecked: true });
     }
@@ -74,7 +76,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   setAuth: (user, player) => set({ user, player, isChecked: true }),
 
-  clearAuth: () => set({ user: null, player: null }),
+  clearAuth: () => set({ user: null, player: null, gameStateJson: null }),
 
   logout: async () => {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
