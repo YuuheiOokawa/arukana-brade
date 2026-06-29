@@ -20,7 +20,7 @@ export const QuestsPage = () => {
   const { getActiveParty } = usePartyStore();
 
   const [mainTab, setMainTab] = useState<MainTab>('story');
-  const [selectedWorldId, setSelectedWorldId] = useState(QUEST_WORLDS[0].id);
+  const [selectedWorldId, setSelectedWorldId] = useState(() => getQuestWorlds()[0].id);
   const [selectedArea, setSelectedArea] = useState<QuestArea | null>(null);
   const [staminaModal, setStaminaModal] = useState<{ stageId: string; cost: number } | null>(null);
 
