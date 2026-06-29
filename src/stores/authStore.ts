@@ -20,6 +20,81 @@ export interface AuthPlayer {
   favoriteUnitId: string | null;
   loginDays: number;
   lastLoginAt: string;
+  staminaRecoveryTime: number;
+  arcanaPlayerId: string;
+  miscData: Record<string, unknown>;
+}
+
+// /api/auth/me が返す gameData の型
+export interface GameDataResponse {
+  ownedUnits: Array<{
+    instanceId: string;
+    playerId: string;
+    masterId: string;
+    level: number;
+    exp: number;
+    awakenRank: number;
+    awakeningCount: number;
+    currentRarity: string;
+    isLocked: boolean;
+    acquiredAt: number;
+  }>;
+  items: Array<{
+    id: string;
+    playerId: string;
+    itemId: string;
+    quantity: number;
+  }>;
+  ownedEquipments: Array<{
+    instanceId: string;
+    playerId: string;
+    masterId: string;
+    level: number;
+    exp: number;
+    equippedTo: string | null;
+  }>;
+  questProgress: {
+    playerId: string;
+    clearedStageIds: string[];
+    claimedAreaRewards: string[];
+    lastSelectedWorldId: string | null;
+    updatedAt: string;
+  } | null;
+  parties: Array<{
+    id: string;
+    playerId: string;
+    partyId: string;
+    name: string;
+    slots: (string | null)[];
+    leaderId: string | null;
+    isActive: boolean;
+  }>;
+  missionProgress: {
+    playerId: string;
+    dailyDate: string;
+    dailyData: unknown[];
+    weeklyData: unknown[];
+    weekStr: string;
+    updatedAt: string;
+  } | null;
+  loginBonus: {
+    playerId: string;
+    lastClaimedDate: string | null;
+    lastLoginDate: string | null;
+    claimedDays: number[];
+    currentDay: number;
+    updatedAt: string;
+  } | null;
+  arenaRecord: {
+    playerId: string;
+    wins: number;
+    losses: number;
+    rank: number;
+    points: number;
+    season: number;
+    battleHistory: unknown[];
+    updatedAt: string;
+  } | null;
 }
 
 interface SummonUnitForSync {
@@ -31,7 +106,7 @@ interface SummonUnitForSync {
 interface AuthStore {
   user: AuthUser | null;
   player: AuthPlayer | null;
-  gameStateJson: Record<string, unknown> | null;
+  gameData: GameDataResponse | null;  // gameStateJson の代替
   isLoading: boolean;
   isChecked: boolean;
 
@@ -53,7 +128,7 @@ interface AuthStore {
 export const useAuthStore = create<AuthStore>((set, get) => ({
   user: null,
   player: null,
-  gameStateJson: null,
+  gameData: null,
   isLoading: false,
   isChecked: false,
 
@@ -62,13 +137,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     try {
       const res = await fetch('/api/auth/me', { credentials: 'include' });
       if (res.ok) {
-        const data = await res.json() as { user: AuthUser; player: AuthPlayer; gameStateJson: Record<string, unknown> | null };
-        set({ user: data.user, player: data.player, gameStateJson: data.gameStateJson ?? null });
+        const data = await res.json() as { user: AuthUser; player: AuthPlayer; gameData: GameDataResponse | null };
+        set({ user: data.user, player: data.player, gameData: data.gameData ?? null });
       } else {
-        set({ user: null, player: null, gameStateJson: null });
+        set({ user: null, player: null, gameData: null });
       }
     } catch {
-      set({ user: null, player: null, gameStateJson: null });
+      set({ user: null, player: null, gameData: null });
     } finally {
       set({ isLoading: false, isChecked: true });
     }
@@ -76,11 +151,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   setAuth: (user, player) => set({ user, player, isChecked: true }),
 
-  clearAuth: () => set({ user: null, player: null, gameStateJson: null }),
+  clearAuth: () => set({ user: null, player: null, gameData: null }),
 
   logout: async () => {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-    set({ user: null, player: null });
+    set({ user: null, player: null, gameData: null });
   },
 
   syncPlayerName: async (name: string) => {

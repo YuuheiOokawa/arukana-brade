@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アルカナブレイド ソース解析・学習資料</title>
+<style>
+  /* ==============================
+     印刷・PDF用スタイル
+  ============================== */
+  @page {
+    size: A4 portrait;
+    margin: 20mm 15mm 20mm 20mm;
+    @top-center {
+      content: "アルカナブレイド ソース解析・学習資料";
+      font-size: 9pt;
+      color: #666;
+    }
+    @bottom-right {
+      content: counter(page);
+      font-size: 9pt;
+      color: #666;
+    }
+  }
+
+  @media print {
+    .no-print { display: none !important; }
+    .page-break { page-break-before: always; }
+    body { font-size: 10pt; }
+    h1 { page-break-before: always; }
+    h1.cover-title { page-break-before: auto; }
+    pre, table { page-break-inside: avoid; }
+  }
+
+  /* ==============================
+     基本スタイル
+  ============================== */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Hiragino Kaku Gothic Pro', 'Meiryo', 'Yu Gothic', sans-serif;
+    font-size: 11pt;
+    line-height: 1.7;
+    color: #222;
+    background: #fff;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* ==============================
+     表紙
+  ============================== */
+  .cover {
+    min-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: linear-gradient(135deg, #1a0a2e 0%, #2d1b54 40%, #16213e 100%);
+    color: white;
+    border-radius: 8px;
+    padding: 60px 40px;
+    margin-bottom: 40px;
+  }
+
+  .cover .game-subtitle {
+    font-size: 14pt;
+    color: #c9a84c;
+    letter-spacing: 4px;
+    margin-bottom: 20px;
+    font-weight: 300;
+  }
+
+  .cover h1.cover-title {
+    font-size: 32pt;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.3;
+    margin-bottom: 10px;
+    text-shadow: 0 0 30px rgba(201, 168, 76, 0.5);
+    border: none;
+    background: none;
+    padding: 0;
+    page-break-before: auto;
+  }
+
+  .cover .cover-en {
+    font-size: 13pt;
+    color: #9b8cc9;
+    margin-bottom: 40px;
+  }
+
+  .cover-divider {
+    width: 200px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #c9a84c, transparent);
+    margin: 20px auto;
+  }
+
+  .cover-meta {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .cover-meta-item {
+    text-align: center;
+  }
+
+  .cover-meta-item .label {
+    font-size: 8pt;
+    color: #9b8cc9;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+
+  .cover-meta-item .value {
+    font-size: 11pt;
+    color: #e0d0f0;
+    font-weight: 600;
+  }
+
+  .cover-badge {
+    display: inline-flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 30px;
+  }
+
+  .badge {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(201, 168, 76, 0.4);
+    color: #c9a84c;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 9pt;
+  }
+
+  /* ==============================
+     目次
+  ============================== */
+  .toc {
+    background: #f8f5ff;
+    border-left: 4px solid #7c4dff;
+    border-radius: 0 8px 8px 0;
+    padding: 30px;
+    margin-bottom: 40px;
+  }
+
+  .toc h2 {
+    color: #4a148c;
+    font-size: 16pt;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #7c4dff;
+  }
+
+  .toc ol {
+    padding-left: 20px;
+  }
+
+  .toc li {
+    padding: 4px 0;
+    color: #333;
+  }
+
+  .toc a {
+    color: #4a148c;
+    text-decoration: none;
+  }
+
+  .toc a:hover {
+    text-decoration: underline;
+  }
+
+  .toc .toc-sub {
+    margin-left: 20px;
+    font-size: 10pt;
+    color: #555;
+  }
+
+  /* ==============================
+     見出し
+  ============================== */
+  h1 {
+    font-size: 22pt;
+    color: white;
+    background: linear-gradient(135deg, #4a148c, #7c4dff);
+    padding: 16px 24px;
+    border-radius: 8px;
+    margin: 40px 0 24px 0;
+    letter-spacing: 1px;
+  }
+
+  h2 {
+    font-size: 16pt;
+    color: #4a148c;
+    border-left: 6px solid #7c4dff;
+    padding: 8px 16px;
+    margin: 30px 0 16px 0;
+    background: #f8f5ff;
+    border-radius: 0 6px 6px 0;
+  }
+
+  h3 {
+    font-size: 13pt;
+    color: #311b92;
+    padding: 6px 0;
+    border-bottom: 2px solid #e8e0ff;
+    margin: 24px 0 12px 0;
+  }
+
+  h4 {
+    font-size: 11pt;
+    color: #4a148c;
+    margin: 18px 0 8px 0;
+    padding-left: 12px;
+    border-left: 3px solid #7c4dff;
+  }
+
+  /* ==============================
+     本文要素
+  ============================== */
+  p {
+    margin-bottom: 12px;
+    line-height: 1.8;
+  }
+
+  ul, ol {
+    margin: 10px 0 10px 24px;
+  }
+
+  li {
+    margin-bottom: 4px;
+    line-height: 1.7;
+  }
+
+  /* ==============================
+     テーブル
+  ============================== */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 24px 0;
+    font-size: 10pt;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  thead tr {
+    background: linear-gradient(135deg, #4a148c, #7c4dff);
+    color: white;
+  }
+
+  th {
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid #e8e0ff;
+    vertical-align: top;
+  }
+
+  tr:nth-child(even) {
+    background: #faf8ff;
+  }
+
+  tr:hover {
+    background: #f0eaff;
+  }
+
+  /* ==============================
+     コードブロック
+  ============================== */
+  pre {
+    background: #1a1a2e;
+    color: #e0e0ff;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 14px 0;
+    overflow-x: auto;
+    font-family: 'Consolas', 'Fira Code', 'Courier New', monospace;
+    font-size: 9pt;
+    line-height: 1.6;
+    border: 1px solid #312a5e;
+  }
+
+  code {
+    font-family: 'Consolas', 'Fira Code', 'Courier New', monospace;
+    background: #f0eaff;
+    color: #5c0099;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 9pt;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  /* ==============================
+     カラーボックス（注記・ポイント）
+  ============================== */
+  .info-box {
+    background: #e8f4fd;
+    border-left: 4px solid #2196f3;
+    padding: 14px 18px;
+    margin: 16px 0;
+    border-radius: 0 6px 6px 0;
+  }
+
+  .warning-box {
+    background: #fff3e0;
+    border-left: 4px solid #ff9800;
+    padding: 14px 18px;
+    margin: 16px 0;
+    border-radius: 0 6px 6px 0;
+  }
+
+  .success-box {
+    background: #e8f5e9;
+    border-left: 4px solid #4caf50;
+    padding: 14px 18px;
+    margin: 16px 0;
+    border-radius: 0 6px 6px 0;
+  }
+
+  .error-box {
+    background: #ffebee;
+    border-left: 4px solid #f44336;
+    padding: 14px 18px;
+    margin: 16px 0;
+    border-radius: 0 6px 6px 0;
+  }
+
+  /* ==============================
+     フローチャート（テキスト）
+  ============================== */
+  .flow-chart {
+    background: #1e1b3a;
+    color: #c9a84c;
+    border-radius: 8px;
+    padding: 20px 30px;
+    margin: 16px 0;
+    font-family: 'Consolas', monospace;
+    font-size: 10pt;
+    line-height: 2;
+    border: 1px solid #3d3a6e;
+  }
+
+  .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 6px 0;
+  }
+
+  .flow-arrow {
+    color: #9b8cc9;
+    font-size: 16pt;
+    line-height: 1;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ==============================
+     アーキテクチャ図
+  ============================== */
+  .arch-diagram {
+    background: linear-gradient(180deg, #0d0d2b 0%, #1a0a2e 100%);
+    color: #e0d0f0;
+    border-radius: 10px;
+    padding: 24px;
+    margin: 16px 0;
+    font-family: 'Consolas', monospace;
+    font-size: 9pt;
+    line-height: 1.8;
+    border: 1px solid #312a5e;
+  }
+
+  /* ==============================
+     ER図のMermaid代替テーブル
+  ============================== */
+  .er-table-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin: 20px 0;
+  }
+
+  .er-table-box {
+    border: 2px solid #7c4dff;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .er-table-header {
+    background: #4a148c;
+    color: white;
+    padding: 8px 14px;
+    font-weight: bold;
+    font-size: 11pt;
+    text-align: center;
+  }
+
+  .er-table-body {
+    padding: 0;
+  }
+
+  .er-field {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 14px;
+    border-bottom: 1px solid #e8e0ff;
+    font-size: 9pt;
+  }
+
+  .er-field:last-child { border-bottom: none; }
+
+  .er-field-pk {
+    background: #fff8e1;
+    font-weight: bold;
+    color: #e65100;
+  }
+
+  .er-field-fk {
+    background: #e8f5e9;
+    font-weight: bold;
+    color: #2e7d32;
+  }
+
+  .er-field-name { color: #222; }
+  .er-field-type { color: #7c4dff; font-family: monospace; }
+
+  .er-relations {
+    background: #1a0a2e;
+    color: #c9a84c;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-family: monospace;
+    font-size: 10pt;
+    line-height: 2;
+  }
+
+  /* ==============================
+     ステータスバッジ
+  ============================== */
+  .status-done { color: #2e7d32; font-weight: bold; }
+  .status-wip { color: #e65100; font-weight: bold; }
+  .status-todo { color: #999; }
+  .priority-high { color: #c62828; font-weight: bold; }
+  .priority-mid { color: #e65100; }
+  .priority-low { color: #2e7d32; }
+
+  /* ==============================
+     技術タグ
+  ============================== */
+  .tech-tag {
+    display: inline-block;
+    background: #7c4dff;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 9pt;
+    margin: 3px;
+  }
+
+  /* ==============================
+     セクション区切り
+  ============================== */
+  hr {
+    border: none;
+    height: 2px;
+    background: linear-gradient(90deg, #7c4dff, transparent);
+    margin: 30px 0;
+  }
+
+  /* ==============================
+     印刷ボタン
+  ============================== */
+  .print-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #4a148c, #7c4dff);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 13pt;
+    box-shadow: 0 4px 20px rgba(124, 77, 255, 0.4);
+    z-index: 1000;
+    transition: transform 0.2s;
+  }
+  .print-btn:hover { transform: scale(1.05); }
+</style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">📄 PDFとして保存</button>
+
+<!-- ==============================
+     表紙
+============================== -->
+<div class="cover">
+  <div class="game-subtitle">～剣と召喚の覇者～</div>
+  <h1 class="cover-title">アルカナブレイド</h1>
+  <div class="cover-en">Arcana Blade — Complete Source Analysis</div>
+  <div class="cover-divider"></div>
+  <p style="color:#c9b8e8;font-size:12pt;margin-bottom:24px;">ソース解析・学習用完全技術解説書</p>
+  <div class="cover-badge">
+    <span class="badge">React 19</span>
+    <span class="badge">TypeScript</span>
+    <span class="badge">Zustand</span>
+    <span class="badge">Prisma ORM</span>
+    <span class="badge">PostgreSQL</span>
+    <span class="badge">Vercel Serverless</span>
+    <span class="badge">JWT認証</span>
+    <span class="badge">PWA対応</span>
+  </div>
+  <div class="cover-divider"></div>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <div class="label">作成日</div>
+      <div class="value">2026年6月29日</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">バージョン</div>
+      <div class="value">v0.0.0</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">解析対象</div>
+      <div class="value">フルスタック RPGゲーム</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==============================
+     目次
+============================== -->
+<div class="toc">
+  <h2>📋 目次</h2>
+  <ol>
+    <li><a href="#ch1">アプリ概要</a></li>
+    <li><a href="#ch2">技術スタック</a></li>
+    <li><a href="#ch3">全体アーキテクチャ</a></li>
+    <li><a href="#ch4">ディレクトリ構成</a></li>
+    <li><a href="#ch5">DB設計</a></li>
+    <li><a href="#ch6">ER図</a></li>
+    <li><a href="#ch7">API一覧</a></li>
+    <li><a href="#ch8">画面・API・DB連携図</a></li>
+    <li><a href="#ch9">主要機能別処理フロー</a></li>
+    <li><a href="#ch10">ソースファイル別解説</a></li>
+    <li><a href="#ch11">TypeScript学習</a></li>
+    <li><a href="#ch12">React / Next.js学習</a></li>
+    <li><a href="#ch13">Prisma / PostgreSQL学習</a></li>
+    <li><a href="#ch14">認証処理学習</a></li>
+    <li><a href="#ch15">エラー・改善点</a></li>
+    <li><a href="#ch16">学習ロードマップ</a></li>
+    <li><a href="#ch17">今後の開発方針</a></li>
+    <li><a href="#ch18">まとめ</a></li>
+  </ol>
+</div>
+
+<!-- ==============================
+     Ch1: アプリ概要
+============================== -->
+<h1 id="ch1">第1章　アプリ概要</h1>
+
+<h2>1.1 このアプリは何か</h2>
+<p><strong>アルカナブレイド ～剣と召喚の覇者～</strong> は、ブラウザで遊べるスマートフォン向け <strong>ダークファンタジー ターン制RPG</strong> です。
+React + TypeScript で構築され、Vercel + Railway（PostgreSQL）でホスティングされます。
+PWA対応のため、スマートフォンにインストールして使うことも可能です。</p>
+
+<h2>1.2 ゲームとしての主要機能</h2>
+<table>
+  <thead><tr><th>機能カテゴリ</th><th>内容</th><th>実装状態</th></tr></thead>
+  <tbody>
+    <tr><td>チュートリアル</td><td>タイトル→キャラ作成→バトル体験→初回ガチャまで7段階フロー</td><td><span class="status-done">✅ 完成</span></td></tr>
+    <tr><td>バトル</td><td>ターン制・属性相性・スキル・必殺技</td><td><span class="status-done">✅ 完成</span></td></tr>
+    <tr><td>召喚（ガチャ）</td><td>5種プール・N/R/SR/SSR排出・10連</td><td><span class="status-done">✅ 完成</span></td></tr>
+    <tr><td>ユニット育成</td><td>レベルアップ・進化（★1〜★7→★👑）・覚醒</td><td><span class="status-done">✅ 完成</span></td></tr>
+    <tr><td>クエスト</td><td>ワールド→エリア→ステージの階層構造</td><td><span class="status-done">✅ 完成</span></td></tr>
+    <tr><td>パーティ編成</td><td>最大5体、複数パーティ作成可能</td><td><span class="status-done">✅ 完成</span></td></tr>
+    <tr><td>ギルド</td><td>作成・参加・チャット・ミッション</td><td><span class="status-done">✅ 実装済（フロントのみ）</span></td></tr>
+    <tr><td>アリーナ(PvP)</td><td>ポイント制ランキング対戦</td><td><span class="status-done">✅ 実装済（フロントのみ）</span></td></tr>
+    <tr><td>レイド</td><td>複数プレイヤーでボスを倒す</td><td><span class="status-done">✅ 実装済（フロントのみ）</span></td></tr>
+    <tr><td>ショップ</td><td>Gold/Diamond での購入</td><td><span class="status-done">✅ 実装済</span></td></tr>
+    <tr><td>デイリーミッション</td><td>毎日リセット・報酬獲得</td><td><span class="status-done">✅ 完成</span></td></tr>
+    <tr><td>ログインボーナス</td><td>30日サイクル、Day30はSSR確定チケット</td><td><span class="status-done">✅ 完成</span></td></tr>
+    <tr><td>スタミナシステム</td><td>5分で1回復、ランクアップで上限増加</td><td><span class="status-done">✅ 完成</span></td></tr>
+    <tr><td>メール認証</td><td>emailVerifiedフィールドあり</td><td><span class="status-todo">❌ 未実装</span></td></tr>
+    <tr><td>パスワードリセット</td><td>—</td><td><span class="status-todo">❌ 未実装</span></td></tr>
+  </tbody>
+</table>
+
+<!-- ==============================
+     Ch2: 技術スタック
+============================== -->
+<h1 id="ch2">第2章　技術スタック</h1>
+
+<h2>2.1 フロントエンド</h2>
+<table>
+  <thead><tr><th>技術</th><th>バージョン</th><th>役割</th><th>学習優先度</th></tr></thead>
+  <tbody>
+    <tr><td><strong>React</strong></td><td>19.2.7</td><td>UIフレームワーク</td><td><span class="priority-high">★★★ 必須</span></td></tr>
+    <tr><td><strong>TypeScript</strong></td><td>6.0.2</td><td>型安全な開発言語</td><td><span class="priority-high">★★★ 必須</span></td></tr>
+    <tr><td><strong>Vite</strong></td><td>8.1.0</td><td>ビルドツール・開発サーバー</td><td><span class="priority-mid">★★☆ 重要</span></td></tr>
+    <tr><td><strong>React Router</strong></td><td>7.18.0</td><td>SPAルーティング</td><td><span class="priority-high">★★★ 必須</span></td></tr>
+    <tr><td><strong>Zustand</strong></td><td>5.0.14</td><td>グローバル状態管理</td><td><span class="priority-high">★★★ 必須</span></td></tr>
+    <tr><td><strong>Tailwind CSS</strong></td><td>4.3.1</td><td>ユーティリティファーストCSS</td><td><span class="priority-mid">★★☆ 重要</span></td></tr>
+    <tr><td>lucide-react</td><td>1.21.0</td><td>アイコンライブラリ</td><td><span class="priority-low">★☆☆ 参考</span></td></tr>
+    <tr><td>vite-plugin-pwa</td><td>1.3.0</td><td>PWA対応</td><td><span class="priority-low">★☆☆ 参考</span></td></tr>
+  </tbody>
+</table>
+
+<h2>2.2 バックエンド</h2>
+<table>
+  <thead><tr><th>技術</th><th>バージョン</th><th>役割</th><th>学習優先度</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Vercel Serverless</strong></td><td>@vercel/node 5.8.21</td><td>APIホスティング</td><td><span class="priority-mid">★★☆ 重要</span></td></tr>
+    <tr><td><strong>Prisma ORM</strong></td><td>5.22.0</td><td>TypeScriptからDBを操作</td><td><span class="priority-high">★★★ 必須</span></td></tr>
+    <tr><td><strong>PostgreSQL</strong></td><td>（Railway想定）</td><td>リレーショナルDB</td><td><span class="priority-high">★★★ 必須</span></td></tr>
+    <tr><td><strong>jsonwebtoken</strong></td><td>9.0.3</td><td>JWT認証</td><td><span class="priority-mid">★★☆ 重要</span></td></tr>
+    <tr><td><strong>bcryptjs</strong></td><td>3.0.3</td><td>パスワードハッシュ化</td><td><span class="priority-mid">★★☆ 重要</span></td></tr>
+  </tbody>
+</table>
+
+<!-- ==============================
+     Ch3: アーキテクチャ
+============================== -->
+<h1 id="ch3">第3章　全体アーキテクチャ</h1>
+
+<h2>3.1 システム構成図</h2>
+<div class="arch-diagram">
+<pre>
+┌─────────────────────────────────────────────────────────────┐
+│                   ユーザー（ブラウザ・PWA）                    │
+└─────────────────────┬───────────────────────────────────────┘
+                       │ HTTPS
+┌──────────────────────▼──────────────────────────────────────┐
+│                    Vercel Edge Network                        │
+│                                                               │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │              フロントエンド (SPA)                       │   │
+│  │         React 19 + TypeScript + Vite                  │   │
+│  │                                                        │   │
+│  │  ┌────────────────────────────────────────────────┐  │   │
+│  │  │       Zustand 状態管理ストア（12個）             │  │   │
+│  │  │  authStore / playerStore / unitStore           │  │   │
+│  │  │  partyStore / questStore / tutorialStore ...   │  │   │
+│  │  └────────────────────────────────────────────────┘  │   │
+│  │                                                        │   │
+│  │  ┌────────────────────────────────────────────────┐  │   │
+│  │  │      localStorage（自動永続化）                  │  │   │
+│  │  │  arcana-player / arcana-units / ...            │  │   │
+│  │  └────────────────────────────────────────────────┘  │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                                                               │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │          Vercel Serverless Functions (API)             │   │
+│  │  POST /api/auth/*    GET /api/auth/me                 │   │
+│  │  POST /api/player/*  POST /api/summon/*               │   │
+│  │  POST /api/units/sync                                 │   │
+│  └──────────────────────┬───────────────────────────────┘   │
+└─────────────────────────┼───────────────────────────────────┘
+                           │ Prisma ORM (DATABASE_URL)
+┌──────────────────────────▼──────────────────────────────────┐
+│                  Railway PostgreSQL                           │
+│  User / Player / OwnedUnit / PlayerItem / SummonHistory     │
+└─────────────────────────────────────────────────────────────┘
+</pre>
+</div>
+
+<h2>3.2 データ二重保存の仕組み</h2>
+<div class="info-box">
+<strong>重要：</strong> このプロジェクトはゲームデータを2ヶ所に保存しています。<br>
+<strong>① localStorage</strong>（即時・オフラインでも動作）と <strong>② PostgreSQL</strong>（1.5秒デバウンス自動保存）の二重保存です。
+</div>
+
+<div class="flow-chart">
+<pre>
+ゲームプレイ（操作）
+        ↓
+Zustandストア（メモリ上の状態変更）
+        ↓
+        ├──→ [即時] localStorage に自動保存
+        │          Zustand の persist 機能で自動管理
+        │
+        └──→ [1.5秒デバウンス] syncService.ts
+                    ↓
+             collectGameState() → 全ストアをJSONに
+                    ↓
+             POST /api/player/saveAll
+                    ↓
+             Player.gameStateJson = 全状態JSON
+             + 正規化カラム（gold, diamond, etc.）同期
+
+ページ再読み込み時:
+  GET /api/auth/me → gameStateJson取得
+  → hydrateFromGameState() → 全ストア復元
+</pre>
+</div>
+
+<!-- ==============================
+     Ch4: ディレクトリ構成
+============================== -->
+<h1 id="ch4">第4章　ディレクトリ構成</h1>
+
+<h2>4.1 全体ディレクトリマップ</h2>
+<pre>
+arukanabrade/
+├── api/                    ← バックエンドAPI（Vercel Serverless）
+│   ├── auth/               ← 認証関連（register, login, me, logout）
+│   ├── player/             ← プレイヤーデータ（save, currency, saveAll）
+│   ├── summon/             ← ガチャ結果保存（save）
+│   └── units/              ← ユニット同期（sync）
+│
+├── lib/                    ← バックエンド共通ライブラリ
+│   ├── auth.ts             ← JWT・Cookie管理
+│   ├── prisma.ts           ← Prisma Clientシングルトン
+│   └── syncService.ts      ← DB同期サービス
+│
+├── prisma/                 ← データベース設定
+│   ├── schema.prisma       ← スキーマ定義（テーブル設計）
+│   └── migrations/         ← DBマイグレーション履歴
+│
+├── src/                    ← フロントエンドソース
+│   ├── main.tsx            ← Reactのエントリーポイント
+│   ├── App.tsx             ← ルートコンポーネント・ルーティング
+│   ├── features/           ← 機能別画面（20以上）
+│   ├── stores/             ← Zustand状態管理（12ストア）
+│   ├── data/               ← マスターデータ（静的TS定数）
+│   ├── types/              ← TypeScript型定義
+│   ├── utils/              ← ユーティリティ関数
+│   ├── hooks/              ← カスタムReactフック
+│   ├── lib/                ← フロントエンド共通ライブラリ
+│   └── components/         ← 共通UIコンポーネント
+│
+├── package.json            ← 依存ライブラリ・スクリプト
+├── vite.config.ts          ← Viteビルド設定
+├── vercel.json             ← Vercelデプロイ設定
+└── tsconfig*.json          ← TypeScript設定（4種類）
+</pre>
+
+<h2>4.2 各フォルダの役割</h2>
+<table>
+  <thead><tr><th>フォルダ</th><th>役割</th><th>どこから呼ばれるか</th></tr></thead>
+  <tbody>
+    <tr><td><code>api/</code></td><td>サーバー側で動くAPI。DBにアクセスして結果を返す</td><td>フロントエンドの fetch() から</td></tr>
+    <tr><td><code>lib/</code></td><td>複数のAPIで使いまわされる共通処理</td><td>api/ 配下の各ファイルから</td></tr>
+    <tr><td><code>prisma/</code></td><td>DBのテーブル構造定義・マイグレーション管理</td><td>開発時コマンドで使用</td></tr>
+    <tr><td><code>src/features/</code></td><td>各ゲーム機能のReactコンポーネント群（各ページの中身）</td><td>App.tsx のルート定義から</td></tr>
+    <tr><td><code>src/stores/</code></td><td>アプリ全体で共有する「現在の状態」を保持</td><td>全コンポーネントから参照可能</td></tr>
+    <tr><td><code>src/data/</code></td><td>ユニット・スキル等のゲーム設定値（静的データ）</td><td>features/ のコンポーネントから</td></tr>
+    <tr><td><code>src/types/</code></td><td>TypeScriptの型定義（全体で共有）</td><td>全ソースファイルから</td></tr>
+    <tr><td><code>src/utils/</code></td><td>汎用関数（バトルエンジン・数値フォーマット等）</td><td>features/ ・stores/ から</td></tr>
+    <tr><td><code>src/components/</code></td><td>BottomNav・TopBar等の共通UIコンポーネント</td><td>App.tsx・features/ から</td></tr>
+  </tbody>
+</table>
+
+<h2>4.3 features/ の画面一覧</h2>
+<table>
+  <thead><tr><th>フォルダ</th><th>URL</th><th>主な画面</th></tr></thead>
+  <tbody>
+    <tr><td>auth/</td><td>/register</td><td>新規ユーザー登録</td></tr>
+    <tr><td>login/</td><td>/login</td><td>ログイン</td></tr>
+    <tr><td>tutorial/</td><td>/tutorial/*</td><td>チュートリアル7段階（タイトル〜初回ガチャ）</td></tr>
+    <tr><td>home/</td><td>/</td><td>メインホーム画面</td></tr>
+    <tr><td>units/</td><td>/units, /units/:id</td><td>ユニット一覧・詳細</td></tr>
+    <tr><td>party/</td><td>/party</td><td>パーティ編成</td></tr>
+    <tr><td>quests/</td><td>/quests</td><td>クエストマップ</td></tr>
+    <tr><td>battle/</td><td>/battle</td><td>ターン制バトル</td></tr>
+    <tr><td>summon/</td><td>/summon</td><td>ガチャ（召喚）</td></tr>
+    <tr><td>enhance/</td><td>/enhance</td><td>ユニット強化・覚醒</td></tr>
+    <tr><td>items/</td><td>/items</td><td>アイテム管理</td></tr>
+    <tr><td>equipment/</td><td>/equipment</td><td>装備管理</td></tr>
+    <tr><td>missions/</td><td>/missions</td><td>デイリー/ウィークリーミッション</td></tr>
+    <tr><td>raid/</td><td>/raid</td><td>レイドボス</td></tr>
+    <tr><td>guild/</td><td>/guild</td><td>ギルド管理</td></tr>
+    <tr><td>pvp/</td><td>/pvp</td><td>アリーナ（PvP）</td></tr>
+    <tr><td>profile/</td><td>/profile</td><td>プロフィール・称号設定</td></tr>
+    <tr><td>shop/</td><td>/shop</td><td>ショップ</td></tr>
+    <tr><td>scenario/</td><td>/scenario/:id</td><td>シナリオ（ストーリー）</td></tr>
+    <tr><td>debug/</td><td>/debug</td><td>開発者ツール（管理用）</td></tr>
+  </tbody>
+</table>
+
+<!-- ==============================
+     Ch5: DB設計
+============================== -->
+<h1 id="ch5">第5章　DB設計</h1>
+
+<h2>5.1 テーブル一覧</h2>
+<table>
+  <thead><tr><th>テーブル名</th><th>役割</th><th>主キー</th><th>関連</th></tr></thead>
+  <tbody>
+    <tr><td><strong>User</strong></td><td>ログインアカウント情報</td><td>id (CUID)</td><td>Player(1対1)</td></tr>
+    <tr><td><strong>Player</strong></td><td>ゲーム内プレイヤーデータ全体</td><td>playerId (CUID)</td><td>User, OwnedUnit, PlayerItem, SummonHistory</td></tr>
+    <tr><td><strong>OwnedUnit</strong></td><td>プレイヤーが所持するユニット</td><td>id (CUID)</td><td>Player（多対1）</td></tr>
+    <tr><td><strong>PlayerItem</strong></td><td>プレイヤーが所持するアイテム</td><td>id (CUID)</td><td>Player（多対1）</td></tr>
+    <tr><td><strong>SummonHistory</strong></td><td>ガチャ排出履歴</td><td>id (CUID)</td><td>Player（多対1）</td></tr>
+  </tbody>
+</table>
+
+<h2>5.2 User テーブル</h2>
+<table>
+  <thead><tr><th>カラム名</th><th>型</th><th>制約</th><th>説明</th></tr></thead>
+  <tbody>
+    <tr style="background:#fff8e1"><td><strong>id</strong></td><td>String</td><td>PK, CUID自動生成</td><td>ユーザーID</td></tr>
+    <tr><td>email</td><td>String</td><td>UNIQUE, NOT NULL</td><td>メールアドレス（ログインキー）</td></tr>
+    <tr><td>passwordHash</td><td>String</td><td>NOT NULL</td><td>bcryptハッシュ化されたパスワード</td></tr>
+    <tr><td>emailVerified</td><td>Boolean</td><td>Default: false</td><td>メール確認フラグ（現在未使用）</td></tr>
+    <tr><td>createdAt</td><td>DateTime</td><td>@default(now())</td><td>作成日時（自動）</td></tr>
+    <tr><td>updatedAt</td><td>DateTime</td><td>@updatedAt</td><td>更新日時（自動）</td></tr>
+  </tbody>
+</table>
+
+<h2>5.3 Player テーブル</h2>
+<table>
+  <thead><tr><th>カラム名</th><th>型</th><th>制約</th><th>説明</th></tr></thead>
+  <tbody>
+    <tr style="background:#fff8e1"><td><strong>playerId</strong></td><td>String</td><td>PK, CUID</td><td>プレイヤーID</td></tr>
+    <tr style="background:#e8f5e9"><td>userId</td><td>String</td><td>FK(User.id), UNIQUE</td><td>紐付くユーザーID</td></tr>
+    <tr><td>playerName</td><td>String</td><td>Default: '勇者'</td><td>プレイヤー表示名（最大12文字）</td></tr>
+    <tr><td>tutorialCompleted</td><td>Boolean</td><td>Default: false</td><td>チュートリアル完了フラグ</td></tr>
+    <tr><td>playerRank</td><td>Int</td><td>Default: 1</td><td>プレイヤーランク</td></tr>
+    <tr><td>stamina</td><td>Int</td><td>Default: 50</td><td>現在スタミナ</td></tr>
+    <tr><td>maxStamina</td><td>Int</td><td>Default: 50</td><td>スタミナ上限（最大200）</td></tr>
+    <tr><td>gold</td><td>Int</td><td>Default: 0</td><td>ゴールド（無料通貨）</td></tr>
+    <tr><td>diamond</td><td>Int</td><td>Default: 0</td><td>ダイヤ（有料通貨相当）</td></tr>
+    <tr><td>exp</td><td>Int</td><td>Default: 0</td><td>プレイヤー経験値</td></tr>
+    <tr><td>title</td><td>String?</td><td>NULL可</td><td>称号</td></tr>
+    <tr><td>bio</td><td>String?</td><td>NULL可（最大100文字）</td><td>自己紹介文</td></tr>
+    <tr><td>favoriteUnitId</td><td>String?</td><td>NULL可</td><td>お気に入りユニット</td></tr>
+    <tr><td>loginDays</td><td>Int</td><td>Default: 1</td><td>累計ログイン日数</td></tr>
+    <tr><td>lastLoginAt</td><td>DateTime</td><td>Default: now()</td><td>最終ログイン日時</td></tr>
+    <tr style="background:#fff3e0"><td><strong>gameStateJson</strong></td><td>Json</td><td>NULL可</td><td><strong>全ゲーム状態スナップショット（重要）</strong></td></tr>
+    <tr><td>createdAt</td><td>DateTime</td><td>自動</td><td>作成日時</td></tr>
+    <tr><td>updatedAt</td><td>DateTime</td><td>自動</td><td>更新日時</td></tr>
+  </tbody>
+</table>
+
+<div class="warning-box">
+<strong>gameStateJson とは：</strong><br>
+全ゲーム状態（所持ユニット・クエスト進捗・パーティ構成・ミッション等）をJSON形式で1つのカラムに保存します。
+ページ再読み込み時にこのJSONから全ストアを復元することで、データが失われません。
+</div>
+
+<h2>5.4 OwnedUnit テーブル</h2>
+<table>
+  <thead><tr><th>カラム名</th><th>型</th><th>説明</th></tr></thead>
+  <tbody>
+    <tr style="background:#fff8e1"><td><strong>id</strong></td><td>String(CUID)</td><td>インスタンスID（この1体を一意に識別）</td></tr>
+    <tr style="background:#e8f5e9"><td>playerId</td><td>String FK</td><td>所有プレイヤーのID</td></tr>
+    <tr><td>masterId</td><td>String</td><td>ユニットの「種類」ID（units.tsのIDと対応）</td></tr>
+    <tr><td>level</td><td>Int</td><td>現在レベル（Default: 1）</td></tr>
+    <tr><td>exp</td><td>Int</td><td>現在経験値（Default: 0）</td></tr>
+    <tr><td>awakenRank</td><td>Int</td><td>素材覚醒段階 0〜maxAwaken</td></tr>
+    <tr><td>awakeningCount</td><td>Int</td><td>ガチャ被り覚醒 0〜4</td></tr>
+    <tr><td>currentRarity</td><td>String</td><td>現在レアリティ（★1〜★7, ★👑）</td></tr>
+    <tr><td>isLocked</td><td>Boolean</td><td>ロック（売却・強化対象外）</td></tr>
+    <tr><td>acquiredAt</td><td>DateTime</td><td>入手日時</td></tr>
+  </tbody>
+</table>
+
+<!-- ==============================
+     Ch6: ER図
+============================== -->
+<h1 id="ch6">第6章　ER図</h1>
+
+<h2>6.1 テーブル関係図</h2>
+
+<div class="er-table-container">
+  <div class="er-table-box">
+    <div class="er-table-header">🔑 User</div>
+    <div class="er-table-body">
+      <div class="er-field er-field-pk"><span class="er-field-name">id</span><span class="er-field-type">PK String</span></div>
+      <div class="er-field"><span class="er-field-name">email</span><span class="er-field-type">UNIQUE String</span></div>
+      <div class="er-field"><span class="er-field-name">passwordHash</span><span class="er-field-type">String</span></div>
+      <div class="er-field"><span class="er-field-name">emailVerified</span><span class="er-field-type">Boolean</span></div>
+      <div class="er-field"><span class="er-field-name">createdAt</span><span class="er-field-type">DateTime</span></div>
+    </div>
+  </div>
+
+  <div class="er-table-box">
+    <div class="er-table-header">🎮 Player</div>
+    <div class="er-table-body">
+      <div class="er-field er-field-pk"><span class="er-field-name">playerId</span><span class="er-field-type">PK String</span></div>
+      <div class="er-field er-field-fk"><span class="er-field-name">userId</span><span class="er-field-type">FK User.id</span></div>
+      <div class="er-field"><span class="er-field-name">playerName</span><span class="er-field-type">String</span></div>
+      <div class="er-field"><span class="er-field-name">gold, diamond, exp</span><span class="er-field-type">Int</span></div>
+      <div class="er-field"><span class="er-field-name">stamina, maxStamina</span><span class="er-field-type">Int</span></div>
+      <div class="er-field"><span class="er-field-name">tutorialCompleted</span><span class="er-field-type">Boolean</span></div>
+      <div class="er-field" style="background:#fff3e0"><span class="er-field-name">gameStateJson</span><span class="er-field-type">Json</span></div>
+    </div>
+  </div>
+
+  <div class="er-table-box">
+    <div class="er-table-header">⚔️ OwnedUnit</div>
+    <div class="er-table-body">
+      <div class="er-field er-field-pk"><span class="er-field-name">id</span><span class="er-field-type">PK String</span></div>
+      <div class="er-field er-field-fk"><span class="er-field-name">playerId</span><span class="er-field-type">FK Player</span></div>
+      <div class="er-field"><span class="er-field-name">masterId</span><span class="er-field-type">String</span></div>
+      <div class="er-field"><span class="er-field-name">level, exp</span><span class="er-field-type">Int</span></div>
+      <div class="er-field"><span class="er-field-name">awakenRank</span><span class="er-field-type">Int</span></div>
+      <div class="er-field"><span class="er-field-name">awakeningCount</span><span class="er-field-type">Int</span></div>
+      <div class="er-field"><span class="er-field-name">currentRarity</span><span class="er-field-type">String</span></div>
+      <div class="er-field"><span class="er-field-name">isLocked</span><span class="er-field-type">Boolean</span></div>
+    </div>
+  </div>
+
+  <div class="er-table-box">
+    <div class="er-table-header">🎰 SummonHistory</div>
+    <div class="er-table-body">
+      <div class="er-field er-field-pk"><span class="er-field-name">id</span><span class="er-field-type">PK String</span></div>
+      <div class="er-field er-field-fk"><span class="er-field-name">playerId</span><span class="er-field-type">FK Player</span></div>
+      <div class="er-field"><span class="er-field-name">poolId</span><span class="er-field-type">String</span></div>
+      <div class="er-field"><span class="er-field-name">masterId</span><span class="er-field-type">String</span></div>
+      <div class="er-field"><span class="er-field-name">rarity</span><span class="er-field-type">N/R/SR/SSR</span></div>
+      <div class="er-field"><span class="er-field-name">resultType</span><span class="er-field-type">new/crystal</span></div>
+      <div class="er-field"><span class="er-field-name">pulledAt</span><span class="er-field-type">DateTime</span></div>
+    </div>
+  </div>
+</div>
+
+<h2>6.2 テーブル間のリレーション</h2>
+<div class="er-relations">
+<pre>
+User (1) ─────────────────────────────── (1) Player
+            1アカウント = 1プレイヤー
+            onDelete: CASCADE（Userを削除するとPlayerも削除）
+
+Player (1) ────────────────────────── (多) OwnedUnit
+            1プレイヤーは複数のユニットを所持
+            onDelete: CASCADE
+
+Player (1) ────────────────────────── (多) PlayerItem
+            1プレイヤーは複数のアイテムを所持
+            UNIQUE(playerId, itemId) で重複防止
+
+Player (1) ────────────────────────── (多) SummonHistory
+            1プレイヤーは複数の召喚履歴を持つ
+</pre>
+</div>
+
+<!-- ==============================
+     Ch7: API一覧
+============================== -->
+<h1 id="ch7">第7章　API一覧</h1>
+
+<h2>7.1 認証API</h2>
+
+<h3>POST /api/auth/register — 新規ユーザー登録</h3>
+<table>
+  <thead><tr><th>項目</th><th>内容</th></tr></thead>
+  <tbody>
+    <tr><td>認証必要</td><td>不要</td></tr>
+    <tr><td>リクエスト</td><td><code>{ email: string, password: string }</code></td></tr>
+    <tr><td>バリデーション</td><td>email: 正規表現形式チェック / password: 最低8文字</td></tr>
+    <tr><td>処理</td><td>bcrypt.hash(pw,12) → User作成 → Player作成 → JWT → Cookie</td></tr>
+    <tr><td>成功レスポンス</td><td><code>{ user, player }</code></td></tr>
+    <tr><td>エラー</td><td>400: バリデーション失敗 / 409: メール重複 / 500: サーバーエラー</td></tr>
+    <tr><td>呼び出し元</td><td>src/features/auth/RegisterPage.tsx</td></tr>
+  </tbody>
+</table>
+
+<h3>POST /api/auth/login — ログイン</h3>
+<table>
+  <thead><tr><th>項目</th><th>内容</th></tr></thead>
+  <tbody>
+    <tr><td>リクエスト</td><td><code>{ email: string, password: string }</code></td></tr>
+    <tr><td>処理</td><td>DB検索 → bcrypt.compare → ログイン日数更新 → JWT → Cookie</td></tr>
+    <tr><td>成功</td><td>200: <code>{ user, player }</code></td></tr>
+    <tr><td>エラー</td><td>401: 認証失敗</td></tr>
+    <tr><td>呼び出し元</td><td>src/features/login/LoginPage.tsx</td></tr>
+  </tbody>
+</table>
+
+<h3>GET /api/auth/me — 認証確認・ゲームデータ取得</h3>
+<table>
+  <thead><tr><th>項目</th><th>内容</th></tr></thead>
+  <tbody>
+    <tr><td>認証必要</td><td><strong>必要</strong>（Cookie: arcana_session）</td></tr>
+    <tr><td>処理</td><td>JWT検証 → Player取得（gameStateJson含む）</td></tr>
+    <tr><td>成功</td><td>200: <code>{ user, player }</code>（player.gameStateJson = 全ゲーム状態）</td></tr>
+    <tr><td>呼び出し元</td><td>authStore.checkAuth()（App.tsx起動時）</td></tr>
+  </tbody>
+</table>
+
+<h3>POST /api/auth/logout — ログアウト</h3>
+<table>
+  <thead><tr><th>項目</th><th>内容</th></tr></thead>
+  <tbody>
+    <tr><td>処理</td><td>arcana_session Cookieを無効化（expiredに設定）</td></tr>
+    <tr><td>成功</td><td>200: <code>{ ok: true }</code></td></tr>
+    <tr><td>呼び出し元</td><td>authStore.logout()</td></tr>
+  </tbody>
+</table>
+
+<h2>7.2 プレイヤーAPI</h2>
+
+<h3>POST /api/player/save — プロフィール保存</h3>
+<table>
+  <thead><tr><th>項目</th><th>内容</th></tr></thead>
+  <tbody>
+    <tr><td>認証必要</td><td>必要</td></tr>
+    <tr><td>リクエスト</td><td><code>{ playerName?, tutorialCompleted?, title?, bio?, favoriteUnitId? }</code></td></tr>
+    <tr><td>バリデーション</td><td>playerName: 最大12文字 / bio: 最大100文字</td></tr>
+    <tr><td>処理</td><td>Player.update()（指定フィールドのみ更新）</td></tr>
+  </tbody>
+</table>
+
+<h3>POST /api/player/currency — 通貨・スタミナ保存</h3>
+<table>
+  <thead><tr><th>項目</th><th>内容</th></tr></thead>
+  <tbody>
+    <tr><td>認証必要</td><td>必要</td></tr>
+    <tr><td>リクエスト</td><td><code>{ gold?, diamond?, exp?, playerRank?, stamina?, maxStamina? }</code></td></tr>
+    <tr><td>バリデーション</td><td>各値 ≥ 0</td></tr>
+    <tr><td>呼び出し元</td><td>バトル勝利後、チュートリアル完了後</td></tr>
+  </tbody>
+</table>
+
+<h3>POST /api/player/saveAll — 全ゲーム状態一括保存</h3>
+<table>
+  <thead><tr><th>項目</th><th>内容</th></tr></thead>
+  <tbody>
+    <tr><td>認証必要</td><td>必要</td></tr>
+    <tr><td>リクエスト</td><td><code>{ state: { ...全ゲーム状態 } }</code></td></tr>
+    <tr><td>処理</td><td>gameStateJson = state（全体） + 正規化カラム同期</td></tr>
+    <tr><td>呼び出し元</td><td>syncService.ts の自動保存（1.5秒デバウンス）</td></tr>
+  </tbody>
+</table>
+
+<h2>7.3 ゲームAPI</h2>
+
+<h3>POST /api/summon/save — ガチャ結果保存</h3>
+<table>
+  <thead><tr><th>項目</th><th>内容</th></tr></thead>
+  <tbody>
+    <tr><td>認証必要</td><td>必要</td></tr>
+    <tr><td>リクエスト</td><td><code>{ poolId, units: [{masterId, rarity, resultType}], diamondSpent }</code></td></tr>
+    <tr><td>resultType</td><td><code>new</code>=新規追加 / <code>crystal</code>=被り（覚醒結晶）</td></tr>
+    <tr><td>処理（トランザクション）</td><td>OwnedUnit.createMany(new only) → SummonHistory.createMany → diamond減算</td></tr>
+    <tr><td>呼び出し元</td><td>SummonPage.tsx, TutorialGachaScreen.tsx</td></tr>
+  </tbody>
+</table>
+
+<h3>POST /api/units/sync — ユニット全件同期</h3>
+<table>
+  <thead><tr><th>項目</th><th>内容</th></tr></thead>
+  <tbody>
+    <tr><td>認証必要</td><td>必要</td></tr>
+    <tr><td>リクエスト</td><td><code>{ units: [{masterId, level, exp, awakenRank, awakeningCount, currentRarity, isLocked}] }</code></td></tr>
+    <tr><td>処理（トランザクション）</td><td>OwnedUnit.deleteMany（全削除）→ OwnedUnit.createMany（全再作成）</td></tr>
+    <tr><td>呼び出し元</td><td>TutorialGachaScreen.tsx（チュートリアル完了後）</td></tr>
+  </tbody>
+</table>
+
+<!-- ==============================
+     Ch8: 連携図
+============================== -->
+<h1 id="ch8">第8章　画面・API・DB連携図</h1>
+
+<h2>8.1 画面遷移の全体像</h2>
+<div class="flow-chart">
+<pre>
+/title（タイトル画面）
+    ├──→ /login（ログイン）
+    └──→ /register（新規登録）
+               ↓ 認証成功
+    /tutorial/title → /tutorial/intro → /tutorial/name_input
+    → /tutorial/hero_select → /tutorial/battle
+    → /tutorial/complete → /tutorial/gacha（初回ガチャ）
+               ↓ チュートリアル完了
+    /（ホーム画面）
+    ├── /units         ユニット一覧
+    │     └── /units/:instanceId   ユニット詳細
+    ├── /party         パーティ編成
+    ├── /quests        クエストマップ
+    │     └── /battle     バトル
+    ├── /summon        ガチャ
+    ├── /enhance       強化・覚醒
+    ├── /missions      ミッション
+    ├── /raid          レイド
+    ├── /guild         ギルド
+    ├── /pvp           アリーナ
+    ├── /profile       プロフィール
+    ├── /shop          ショップ
+    └── /scenario/:id  シナリオ
+</pre>
+</div>
+
+<h2>8.2 認証ガードの動作</h2>
+<div class="flow-chart">
+<pre>
+ブラウザでURLにアクセス
+        ↓
+App.tsx が起動 → checkAuth() 実行
+        ↓
+GET /api/auth/me
+        ↓
+    [JWT有効か？]
+    ├── 無効 → /title へリダイレクト  ←── AuthGuard
+    └── 有効 → user, player, gameStateJson 取得
+                    ↓
+            hydrateFromGameState(gameStateJson)
+            全ストアにデータ復元
+                    ↓
+            [tutorialCompleted?]
+            ├── false → /tutorial/intro  ←── MainGuard
+            └── true  → 目的のページへ
+                    ↓
+            initAutoSave() → 自動保存開始
+</pre>
+</div>
+
+<!-- ==============================
+     Ch9: 主要機能フロー
+============================== -->
+<h1 id="ch9">第9章　主要機能別処理フロー</h1>
+
+<h2>9.1 ユーザー登録フロー</h2>
+<div class="flow-chart">
+<pre>
+画面:  RegisterPage にメール・パスワード入力
+          ↓
+フロント: fetch('POST /api/auth/register', {email, password})
+          ↓
+API:     バリデーション（形式・8文字以上）
+          ↓
+         bcrypt.hash(password, 12)
+          ↓
+         prisma.user.create({email, passwordHash})
+         prisma.player.create({userId, playerName:'勇者'})
+          ↓
+         JWT生成 → Set-Cookie: arcana_session
+          ↓
+フロント: authStore.setAuth(user, player)
+          ↓
+         → /tutorial/intro へリダイレクト
+</pre>
+</div>
+
+<h2>9.2 ガチャ（召喚）フロー</h2>
+<div class="flow-chart">
+<pre>
+画面:  SummonPage で「10連」ボタン押下
+          ↓
+フロント: playerStore.spendDiamond(150) ← ダイヤ消費
+          ↓
+         ガチャ計算（クライアント側）:
+         ・レアリティ抽選（SSR 4%, SR 15%, R 40%, N 41%）
+         ・排出ユニットを決定
+          ↓
+         unitStore.processSummonResults(masterIds)
+         ├── 新規ユニット → OwnedUnit追加（type:'new'）
+         └── 被りユニット → 覚醒結晶付与（type:'crystal'）
+          ↓
+API:     POST /api/summon/save
+         { poolId, units:[{masterId, rarity, resultType}], diamondSpent:150 }
+          ↓
+DB:      トランザクション:
+         OwnedUnit.createMany（new のみ）
+         SummonHistory.createMany（全件記録）
+         Player.diamond -= 150
+          ↓
+画面:    ガチャ演出 → 結果表示
+</pre>
+</div>
+
+<h2>9.3 バトルフロー</h2>
+<div class="flow-chart">
+<pre>
+クエストマップでステージ選択
+          ↓
+スタミナ消費（playerStore.spendStamina）
+          ↓
+BattlePage初期化:
+  自軍: partyStore.getActiveParty() のユニット（最大5体）+ フレンド
+  敵軍: enemies.ts のマスターデータ
+          ↓
+【プレイヤーターン】
+  スキル/通常攻撃選択
+  battleEngine.calcDamage(atk, def, power, element, element, buffs)
+    ├── バフ適用 → 属性相性（最大1.5倍）→ 乱数（±10%）→ ダメージ確定
+  敵HPを減算
+          ↓
+【敵ターン】
+  AIが攻撃対象選択 → calcDamage → 自軍HPを減算
+          ↓
+【バトル終了判定】
+  勝利:
+    EXP・Gold報酬付与
+    questStore.markCleared(stageId)
+    playerStore.addExp() → ランクアップ判定
+    POST /api/player/currency {exp, gold, ...}
+  敗北:
+    バトル結果画面
+</pre>
+</div>
+
+<h2>9.4 自動データ保存フロー</h2>
+<div class="flow-chart">
+<pre>
+【任意のゲーム操作（gold増加・クエストクリア等）】
+          ↓
+Zustandストア更新
+          ↓
+syncService.ts の subscribe トリガー
+          ↓
+scheduleSave() ← 1.5秒デバウンス
+（1.5秒以内に再操作があればタイマーリセット）
+          ↓
+collectGameState() → 全12ストアの状態をまとめてJSON化
+          ↓
+POST /api/player/saveAll { state: { player, units, quests, ... } }
+          ↓
+DB: Player.gameStateJson = state
+    Player.gold = state.player.gold
+    Player.diamond = state.player.diamond
+    （正規化カラムも同期）
+</pre>
+</div>
+
+<!-- ==============================
+     Ch10: ソースファイル解説
+============================== -->
+<h1 id="ch10">第10章　ソースファイル別解説</h1>
+
+<h2>10.1 バックエンド主要ファイル</h2>
+
+<h3>lib/auth.ts — JWT・Cookie管理</h3>
+<p>JWTの生成・検証・Cookieのセット・取り出しを担当するユーティリティファイル。複数のAPIから呼ばれる。</p>
+
+<pre>
+// JWTの生成（30日有効）
+export function generateToken(userId: string): string {
+  return jwt.sign({ userId }, process.env.JWT_SECRET!, { expiresIn: '30d' });
+}
+
+// セキュリティ設定込みのCookie設定
+export function setAuthCookie(res: VercelResponse, token: string): void {
+  res.setHeader('Set-Cookie',
+    `arcana_session=${token}; HttpOnly; SameSite=Lax; Max-Age=2592000`
+    + (isProd ? '; Secure' : '')
+  );
+}</pre>
+
+<div class="info-box">
+<strong>学習ポイント：</strong> <code>HttpOnly</code> はJavaScriptからCookieが読めない設定（XSS対策）。<code>Secure</code> はHTTPS通信のみCookieを送信（盗聴対策）。
+</div>
+
+<h3>lib/prisma.ts — Prisma Clientシングルトン</h3>
+<p>Prisma Clientのインスタンスを1つだけ生成して使い回す実装。開発時のホットリロードで複数インスタンスが生成されるのを防ぐ。</p>
+
+<pre>
+const globalForPrisma = global as unknown as { prisma: PrismaClient };
+export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma;  // 開発時はグローバルに保持
+}</pre>
+
+<h3>src/utils/battleEngine.ts — バトルエンジン</h3>
+<p>ゲームのダメージ計算・スキル効果処理を担う。純粋関数（引数だけで結果が決まる関数）で実装されている。</p>
+
+<pre>
+// 属性相性テーブル（火→風は1.5倍など）
+const ELEMENT_ADVANTAGE: Record<string, Record<string, number>> = {
+  fire:  { wind: 1.5, water: 0.75 },
+  water: { fire: 1.5, wind: 0.75 },
+  wind:  { earth: 1.5, fire: 0.75 },
+  earth: { water: 1.5, wind: 0.75 },
+  light: { dark: 1.5 },
+  dark:  { light: 1.5 },
+};
+
+// ダメージ計算
+export function calcDamage(atk, def, power, atkElem, defElem, atkBuffs, defBuffs) {
+  // 1. バフ/デバフを乗算
+  const buffedAtk = atk * (1 + atkBuffs.reduce((a, b) => a + b, 0));
+  // 2. 属性倍率
+  const elementMult = ELEMENT_ADVANTAGE[atkElem]?.[defElem] ?? 1.0;
+  // 3. 基本ダメージ（攻撃力×スキル倍率 - 防御力×0.5）
+  const baseDmg = buffedAtk * power - def * 0.5;
+  // 4. 乱数（±10%のブレ）
+  return Math.floor(baseDmg * elementMult * (0.9 + Math.random() * 0.2));
+}</pre>
+
+<h2>10.2 Zustandストア一覧</h2>
+<table>
+  <thead><tr><th>ストア</th><th>persist key</th><th>主な状態</th><th>重要メソッド</th></tr></thead>
+  <tbody>
+    <tr><td>authStore</td><td>—</td><td>user, player, isLoading</td><td>checkAuth, logout, syncCurrency</td></tr>
+    <tr><td>playerStore</td><td>arcana-player</td><td>player(gold/diamond/stamina), items</td><td>addGold, addExp（ランクアップ含）, recoverStamina</td></tr>
+    <tr><td>unitStore</td><td>arcana-units</td><td>ownedUnits, awakeningCrystals</td><td>addUnit, levelUpUnit, awakenUnit, rarityUp, processSummonResults</td></tr>
+    <tr><td>partyStore</td><td>arcana-party</td><td>parties（最大5枠）, activePartyId</td><td>setSlot, setLeader, getActiveParty</td></tr>
+    <tr><td>questStore</td><td>arcana-quests</td><td>clearedStageIds, claimedAreaRewards</td><td>markCleared, isCleared</td></tr>
+    <tr><td>tutorialStore</td><td>arcana-tutorial</td><td>completed, phase, selectedHeroId</td><td>setPhase, completeTutorial</td></tr>
+    <tr><td>equipmentStore</td><td>arcana-equipment</td><td>ownedEquipments</td><td>—</td></tr>
+    <tr><td>guildStore</td><td>arcana-guild</td><td>guild情報</td><td>—</td></tr>
+    <tr><td>raidStore</td><td>arcana-raid</td><td>raid状態</td><td>—</td></tr>
+    <tr><td>arenaStore</td><td>arcana-arena</td><td>record, battleHistory</td><td>—</td></tr>
+    <tr><td>missionStore</td><td>arcana-mission</td><td>daily/weekly進捗</td><td>—</td></tr>
+    <tr><td>loginBonusStore</td><td>arcana-loginbonus</td><td>lastClaimedDate, claimedDays</td><td>—</td></tr>
+  </tbody>
+</table>
+
+<!-- ==============================
+     Ch11: TypeScript学習
+============================== -->
+<h1 id="ch11">第11章　TypeScript学習</h1>
+
+<h2>11.1 TypeScriptとは</h2>
+<p>JavaScriptに「型」を追加した言語。コードを書いた時点でエラーを発見でき、大規模なプロジェクトの保守性が向上する。</p>
+
+<h2>11.2 プロジェクトでの型定義（src/types/index.ts）</h2>
+
+<pre>
+// インターフェース（オブジェクトの型定義）
+interface OwnedUnit {
+  id: string;           // 必須プロパティ
+  masterId: string;
+  level: number;
+  currentRarity: string;
+  isLocked: boolean;
+}
+
+// Union型（いずれかの文字列）
+type TutorialPhase =
+  | 'title' | 'intro' | 'name_input'
+  | 'hero_select' | 'tutorial_battle'
+  | 'initial_gacha' | 'complete';
+
+// オプショナルプロパティ
+interface PlayerData {
+  name: string;
+  gold: number;
+  title?: string;      // ? = あってもなくてもいい
+  bio?: string;
+}</pre>
+
+<h2>11.3 TypeScriptの重要な書き方</h2>
+<table>
+  <thead><tr><th>書き方</th><th>意味</th><th>使用例</th></tr></thead>
+  <tbody>
+    <tr><td><code>string | null</code></td><td>文字列またはnull</td><td><code>title: string | null</code></td></tr>
+    <tr><td><code>prop?</code></td><td>省略可能なプロパティ</td><td><code>bio?: string</code></td></tr>
+    <tr><td><code>value as T</code></td><td>型アサーション（型の強制指定）</td><td><code>data as PlayerData</code></td></tr>
+    <tr><td><code>value ?? default</code></td><td>nullのときdefaultを返す</td><td><code>name ?? '勇者'</code></td></tr>
+    <tr><td><code>obj?.prop</code></td><td>nullなら undefined を返す</td><td><code>player?.gold ?? 0</code></td></tr>
+    <tr><td><code>value!</code></td><td>nullではないと断言</td><td><code>process.env.JWT_SECRET!</code></td></tr>
+  </tbody>
+</table>
+
+<h2>11.4 よくあるエラーと解決策</h2>
+<table>
+  <thead><tr><th>エラー</th><th>原因</th><th>解決策</th></tr></thead>
+  <tbody>
+    <tr><td><code>Object is possibly 'null'</code></td><td>null の可能性がある</td><td><code>?.` や `??</code> を使う</td></tr>
+    <tr><td><code>Type 'X' is not assignable to 'Y'</code></td><td>型の不一致</td><td>型を合わせるか as で変換</td></tr>
+    <tr><td><code>Property does not exist on type</code></td><td>型定義にないプロパティ</td><td>型定義に追加する</td></tr>
+    <tr><td><code>Cannot find module</code></td><td>インポートパスが間違い</td><td>パスを確認・tsconfig確認</td></tr>
+  </tbody>
+</table>
+
+<!-- ==============================
+     Ch12: React学習
+============================== -->
+<h1 id="ch12">第12章　React / Vite 学習</h1>
+
+<h2>12.1 Reactコンポーネントの基本</h2>
+
+<pre>
+// 型付き関数コンポーネント
+interface Props {
+  unit: OwnedUnit;
+  onClick: () => void;
+}
+
+const UnitCard: React.FC&lt;Props&gt; = ({ unit, onClick }) =&gt; {
+  return (
+    &lt;div onClick={onClick} className="card bg-purple-900"&gt;
+      &lt;h2 className="text-white"&gt;{unit.masterId}&lt;/h2&gt;
+      &lt;p className="text-gray-300"&gt;Lv.{unit.level} / {unit.currentRarity}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default UnitCard;</pre>
+
+<h2>12.2 よく使うReactフック</h2>
+<table>
+  <thead><tr><th>フック</th><th>用途</th><th>このプロジェクトでの使用例</th></tr></thead>
+  <tbody>
+    <tr><td><code>useState</code></td><td>コンポーネント内のローカル状態</td><td>バトル画面のターン数管理</td></tr>
+    <tr><td><code>useEffect</code></td><td>マウント時・データ変更時の処理</td><td>App.tsx の checkAuth()</td></tr>
+    <tr><td><code>useCallback</code></td><td>関数のメモ化（再生成防止）</td><td>ハンドラ関数の最適化</td></tr>
+    <tr><td><code>useMemo</code></td><td>計算結果のメモ化</td><td>ユニットリストのフィルタリング</td></tr>
+    <tr><td><code>useNavigate</code></td><td>プログラム的な画面遷移</td><td>バトル終了後にホームへ</td></tr>
+    <tr><td><code>useParams</code></td><td>URLパラメータの取得</td><td>/units/:instanceId の取得</td></tr>
+  </tbody>
+</table>
+
+<h2>12.3 Zustandとの連携パターン</h2>
+<pre>
+// コンポーネント内でZustandストアを使う
+const SummonPage: React.FC = () =&gt; {
+  // ストアから状態とメソッドを取得
+  const { player, spendDiamond } = usePlayerStore();
+  const { processSummonResults } = useUnitStore();
+  const navigate = useNavigate();
+
+  const handleSummon10 = async () =&gt; {
+    if (player.diamond &lt; 150) {
+      alert('ダイヤが足りません');
+      return;
+    }
+
+    // 1. ダイヤ消費（ストア更新）
+    spendDiamond(150);
+
+    // 2. ガチャ計算（クライアント側）
+    const masterIds = rollGacha(10);
+
+    // 3. ユニット処理（ストア更新）
+    const results = processSummonResults(masterIds);
+
+    // 4. DB保存（API呼び出し）
+    await fetch('/api/summon/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ poolId: 'standard', units: results, diamondSpent: 150 })
+    });
+  };
+
+  return (
+    &lt;div&gt;
+      &lt;p&gt;ダイヤ: {player.diamond}&lt;/p&gt;
+      &lt;button onClick={handleSummon10}&gt;10連召喚（150ダイヤ）&lt;/button&gt;
+    &lt;/div&gt;
+  );
+};</pre>
+
+<!-- ==============================
+     Ch13: Prisma学習
+============================== -->
+<h1 id="ch13">第13章　Prisma / PostgreSQL 学習</h1>
+
+<h2>13.1 Prismaスキーマの書き方</h2>
+
+<pre>
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")  // 環境変数からDB接続URLを取得
+}
+
+model User {
+  id           String   @id @default(cuid())  // 主キー（CUID自動生成）
+  email        String   @unique               // 一意制約
+  passwordHash String
+  player       Player?  // 1対1リレーション（0or1）
+  createdAt    DateTime @default(now())       // 現在時刻がデフォルト
+  updatedAt    DateTime @updatedAt            // 更新時に自動設定
+}
+
+model Player {
+  playerId String @id @default(cuid())
+  userId   String @unique
+
+  // リレーション定義
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ownedUnits OwnedUnit[]   // 1対多（配列）
+
+  @@index([userId])        // インデックス（検索高速化）
+}</pre>
+
+<h2>13.2 PrismaのCRUD操作（実際のコードより）</h2>
+
+<table>
+  <thead><tr><th>操作</th><th>Prismaコード</th><th>使用箇所</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>1件取得<br>findUnique</td>
+      <td><code>prisma.player.findUnique({ where: { userId } })</code></td>
+      <td>api/auth/me.ts</td>
+    </tr>
+    <tr>
+      <td>作成<br>create</td>
+      <td><code>prisma.user.create({ data: { email, passwordHash, player: { create: {...} } } })</code></td>
+      <td>api/auth/register.ts</td>
+    </tr>
+    <tr>
+      <td>更新<br>update</td>
+      <td><code>prisma.player.update({ where: { playerId }, data: { gold: { increment: 100 } } })</code></td>
+      <td>api/player/currency.ts</td>
+    </tr>
+    <tr>
+      <td>一括作成<br>createMany</td>
+      <td><code>prisma.ownedUnit.createMany({ data: units })</code></td>
+      <td>api/summon/save.ts</td>
+    </tr>
+    <tr>
+      <td>全件削除<br>deleteMany</td>
+      <td><code>prisma.ownedUnit.deleteMany({ where: { playerId } })</code></td>
+      <td>api/units/sync.ts</td>
+    </tr>
+    <tr>
+      <td>トランザクション</td>
+      <td><code>prisma.$transaction([op1, op2, op3])</code></td>
+      <td>api/summon/save.ts, api/units/sync.ts</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>13.3 マイグレーションの使い方</h2>
+<pre>
+# スキーマを変更した後に実行するコマンド
+
+# 開発環境: マイグレーション作成+適用
+npx prisma migrate dev --name "add_playerRank_column"
+
+# 本番環境: マイグレーション適用のみ
+npx prisma migrate deploy
+
+# DBのデータをGUIで確認
+npx prisma studio
+
+# 型定義を再生成
+npx prisma generate</pre>
+
+<!-- ==============================
+     Ch14: 認証学習
+============================== -->
+<h1 id="ch14">第14章　認証処理学習</h1>
+
+<h2>14.1 認証の全体像</h2>
+<p>このプロジェクトは <strong>JWT（JSON Web Token）+ HTTP Only Cookie</strong> による認証を採用しています。</p>
+
+<h2>14.2 パスワードの安全な保管（bcrypt）</h2>
+<pre>
+// ❌ 絶対にやってはいけない（平文保存）
+DB: { passwordHash: "password123" }
+
+// ✅ このプロジェクトの実装（bcryptハッシュ）
+const hash = await bcrypt.hash("password123", 12);
+DB: { passwordHash: "$2b$12$xxxxxxxxxxxxxxxxxxxxxxxx..." }
+
+// ログイン時の照合（元のパスワードには戻せない）
+const isValid = await bcrypt.compare("password123", storedHash);
+// → true（一致） or false（不一致）</pre>
+
+<div class="info-box">
+<strong>なぜbcryptを使うのか：</strong><br>
+通常のハッシュ（MD5・SHA1等）は計算が速いため、大量のパスワードを総当たりで試される危険があります。
+bcryptは意図的に遅い計算をするため、不正アクセスのコストが高くなります。
+<code>cost: 12</code> は計算の重さ（2^12回の反復）を表します。
+</div>
+
+<h2>14.3 JWTの仕組み</h2>
+<pre>
+// 1. ログイン成功時にJWTを生成
+const token = jwt.sign(
+  { userId: "clxxx123" },    // ペイロード（中身）
+  process.env.JWT_SECRET,    // 署名用シークレットキー
+  { expiresIn: '30d' }       // 有効期限: 30日
+);
+// → "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiJjbHh4eDEyMyJ9.xxxx"
+
+// 2. 次のリクエスト時に検証
+const { userId } = jwt.verify(token, process.env.JWT_SECRET);
+// → { userId: "clxxx123" }
+// 改ざんされていたらエラーになる</pre>
+
+<h2>14.4 セキュリティ設定の意味</h2>
+<table>
+  <thead><tr><th>設定</th><th>意味</th><th>防ぐ攻撃</th></tr></thead>
+  <tbody>
+    <tr><td><code>HttpOnly</code></td><td>JavaScriptからCookieを読めない</td><td>XSS（スクリプト注入）攻撃</td></tr>
+    <tr><td><code>Secure</code></td><td>HTTPS通信のみCookieを送信</td><td>通信傍受（中間者攻撃）</td></tr>
+    <tr><td><code>SameSite=Lax</code></td><td>同一サイトからのみ送信</td><td>CSRF（クロスサイトリクエスト偽造）</td></tr>
+    <tr><td>有効期限30日</td><td>古いトークンを無効化</td><td>盗まれたトークンの長期悪用</td></tr>
+  </tbody>
+</table>
+
+<!-- ==============================
+     Ch15: 改善点
+============================== -->
+<h1 id="ch15">第15章　エラー・改善点</h1>
+
+<div class="warning-box">
+⚠️ このドキュメントは現状の整理です。勝手な修正は行っていません。
+</div>
+
+<h2>15.1 セキュリティ（重要度：高）</h2>
+<table>
+  <thead><tr><th>#</th><th>問題</th><th>ファイル</th><th>改善案</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>S1</td>
+      <td><span class="priority-high">ガチャ計算がクライアント側のみ</span></td>
+      <td>SummonPage.tsx</td>
+      <td>サーバーAPIでガチャ計算（チート防止）</td>
+    </tr>
+    <tr>
+      <td>S2</td>
+      <td><span class="priority-high">Gold/Diamondをクライアントから直接送信</span></td>
+      <td>api/player/currency.ts</td>
+      <td>サーバー側で上限・整合性チェック追加</td>
+    </tr>
+    <tr>
+      <td>S3</td>
+      <td><span class="priority-high">saveAllのstateバリデーションなし</span></td>
+      <td>api/player/saveAll.ts</td>
+      <td>zodでサーバー側バリデーション追加</td>
+    </tr>
+    <tr>
+      <td>S4</td>
+      <td>JWT_SECRETがundefinedでも動作する可能性</td>
+      <td>lib/auth.ts</td>
+      <td>起動時にJWT_SECRETの存在を検証</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>15.2 エラーハンドリング不足</h2>
+<table>
+  <thead><tr><th>#</th><th>問題</th><th>改善案</th></tr></thead>
+  <tbody>
+    <tr><td>E1</td><td>自動保存失敗時のユーザー通知なし</td><td>トースト通知で「保存失敗」を表示</td></tr>
+    <tr><td>E2</td><td>オフライン時のAPI呼び出し処理が不明</td><td>オフライン検知とリトライ機構</td></tr>
+    <tr><td>E3</td><td>ErrorBoundaryがない可能性</td><td>React ErrorBoundaryで予期しないエラーをキャッチ</td></tr>
+  </tbody>
+</table>
+
+<h2>15.3 DB設計改善</h2>
+<table>
+  <thead><tr><th>#</th><th>問題</th><th>改善案</th></tr></thead>
+  <tbody>
+    <tr><td>D1</td><td>OwnedUnitが全削除→再作成（非効率）</td><td>upsertパターンに変更</td></tr>
+    <tr><td>D2</td><td>gameStateJsonが肥大化する可能性</td><td>重要データ（クエスト進捗等）は正規テーブル化</td></tr>
+    <tr><td>D3</td><td>quantity &lt; 0 のチェックなし</td><td>DB Check制約の追加</td></tr>
+  </tbody>
+</table>
+
+<h2>15.4 未実装機能</h2>
+<table>
+  <thead><tr><th>機能</th><th>現状</th><th>優先度</th></tr></thead>
+  <tbody>
+    <tr><td>メール認証</td><td>emailVerifiedフィールドあり・ロジック未実装</td><td><span class="priority-mid">中</span></td></tr>
+    <tr><td>パスワードリセット</td><td>未実装</td><td><span class="priority-mid">中</span></td></tr>
+    <tr><td>バトルのサーバー検証</td><td>クライアントのみ（チート可能）</td><td><span class="priority-mid">中</span></td></tr>
+    <tr><td>レイドのリアルタイム</td><td>静的データのみ</td><td><span class="priority-low">低</span></td></tr>
+    <tr><td>ギルドチャットのリアルタイム</td><td>静的データのみ</td><td><span class="priority-low">低</span></td></tr>
+  </tbody>
+</table>
+
+<!-- ==============================
+     Ch16: 学習ロードマップ
+============================== -->
+<h1 id="ch16">第16章　学習ロードマップ</h1>
+
+<h2>16.1 推奨学習順序</h2>
+
+<table>
+  <thead><tr><th>Step</th><th>技術</th><th>学習理由</th><th>見るべきファイル</th><th>練習課題</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>1</strong></td>
+      <td>HTML / CSS</td>
+      <td>全Webの土台</td>
+      <td>src/index.css, App.css</td>
+      <td>ユニットカードをHTMLとCSSだけで作る</td>
+    </tr>
+    <tr>
+      <td><strong>2</strong></td>
+      <td>JavaScript</td>
+      <td>TypeScript・Reactの前提</td>
+      <td>src/utils/format.ts, src/data/units.ts</td>
+      <td>ユニット配列をレアリティ順にソートする</td>
+    </tr>
+    <tr>
+      <td><strong>3</strong></td>
+      <td>TypeScript</td>
+      <td>全体がTSで実装</td>
+      <td>src/types/index.ts</td>
+      <td>OwnedUnit型を見て同じ構造を型付きで作る</td>
+    </tr>
+    <tr>
+      <td><strong>4</strong></td>
+      <td>React 基礎</td>
+      <td>フロントエンド全体がReact</td>
+      <td>src/components/layout/BottomNav.tsx</td>
+      <td>ユニットカードコンポーネントを作る</td>
+    </tr>
+    <tr>
+      <td><strong>5</strong></td>
+      <td>React Router</td>
+      <td>SPA遷移の管理</td>
+      <td>src/App.tsx</td>
+      <td>App.tsxのルートを全部読んで遷移図を書く</td>
+    </tr>
+    <tr>
+      <td><strong>6</strong></td>
+      <td>Zustand</td>
+      <td>全ゲームデータを管理</td>
+      <td>src/stores/playerStore.ts</td>
+      <td>addExpのランクアップ処理を図解する</td>
+    </tr>
+    <tr>
+      <td><strong>7</strong></td>
+      <td>Serverless API</td>
+      <td>バックエンドAPIの実装</td>
+      <td>api/auth/register.ts</td>
+      <td>認証フローを図で書く</td>
+    </tr>
+    <tr>
+      <td><strong>8</strong></td>
+      <td>Prisma ORM</td>
+      <td>全DBアクセスに使用</td>
+      <td>prisma/schema.prisma, api/summon/save.ts</td>
+      <td>schema.prismaを読んでER図を手書きする</td>
+    </tr>
+    <tr>
+      <td><strong>9</strong></td>
+      <td>PostgreSQL</td>
+      <td>DBの仕組みを理解</td>
+      <td>prisma/migrations/</td>
+      <td>テーブルをSQL CREATE TABLE文に変換する</td>
+    </tr>
+    <tr>
+      <td><strong>10</strong></td>
+      <td>JWT認証</td>
+      <td>ログイン・認証の実装</td>
+      <td>lib/auth.ts</td>
+      <td>JWTをjwt.ioで分解してみる</td>
+    </tr>
+    <tr>
+      <td><strong>11</strong></td>
+      <td>Vercelデプロイ</td>
+      <td>本番環境への公開</td>
+      <td>vercel.json, .env</td>
+      <td>Hello WorldアプリをVercelにデプロイする</td>
+    </tr>
+    <tr>
+      <td><strong>12</strong></td>
+      <td>設計書作成</td>
+      <td>ドキュメント化能力</td>
+      <td>このドキュメント全体</td>
+      <td>改善点を3つGitHub Issuesに書く</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>16.2 優先度チャート</h2>
+<table>
+  <thead><tr><th>優先度</th><th>技術</th></tr></thead>
+  <tbody>
+    <tr><td><span class="priority-high">🔴 必須（最初に）</span></td><td>JavaScript / TypeScript / React 基礎 / Zustand</td></tr>
+    <tr><td><span class="priority-mid">🟡 重要（次に）</span></td><td>Prisma ORM / Serverless API / JWT認証</td></tr>
+    <tr><td><span class="priority-low">🟢 発展（余裕があれば）</span></td><td>PostgreSQL SQL直書き / Vercelデプロイ / PWA</td></tr>
+  </tbody>
+</table>
+
+<!-- ==============================
+     Ch17: 開発方針
+============================== -->
+<h1 id="ch17">第17章　今後の開発方針</h1>
+
+<h2>17.1 短期（優先度：高）</h2>
+
+<h3>① ガチャロジックのサーバー移行（セキュリティ）</h3>
+<p>現在はクライアント（ブラウザ）でガチャ計算をしているため、不正操作が可能な状態です。</p>
+<pre>
+// 現在（クライアント）
+const masterIds = rollGacha(10);  // ブラウザで計算
+
+// 改善案
+// サーバー側で計算するAPIを作成
+POST /api/summon/roll { poolId, count: 10 }
+→ サーバーが抽選して結果を返す</pre>
+
+<h3>② APIバリデーション強化</h3>
+<p><code>zod</code> ライブラリを導入して、APIに送られてくるデータの型・値を検証する。</p>
+
+<h3>③ エラー通知の実装</h3>
+<p>自動保存失敗時などにユーザーにトースト通知を表示する。</p>
+
+<h2>17.2 中期（優先度：中）</h2>
+<ul>
+  <li>メール認証の実装（<code>emailVerified</code> フィールドを活用）</li>
+  <li>パスワードリセット機能</li>
+  <li>テストコードの追加（バトルエンジンのユニットテストから着手）</li>
+  <li>OwnedUnit同期をupsert方式に変更（パフォーマンス改善）</li>
+</ul>
+
+<h2>17.3 長期（優先度：低）</h2>
+<ul>
+  <li>マスターデータのDB化・管理画面</li>
+  <li>WebSocketによるリアルタイム機能（ギルドチャット・レイド）</li>
+  <li>モニタリング・ログ収集の実装</li>
+</ul>
+
+<!-- ==============================
+     Ch18: まとめ
+============================== -->
+<h1 id="ch18">第18章　まとめ</h1>
+
+<h2>18.1 アルカナブレイドから学べる技術マップ</h2>
+<table>
+  <thead><tr><th>学習テーマ</th><th>このプロジェクトでの実例</th><th>学習難易度</th></tr></thead>
+  <tbody>
+    <tr><td>TypeScript型設計</td><td>src/types/index.ts の包括的な型定義</td><td>⭐⭐</td></tr>
+    <tr><td>Reactコンポーネント設計</td><td>features/ の機能ごとの分離設計</td><td>⭐⭐</td></tr>
+    <tr><td>グローバル状態管理</td><td>Zustand 12ストアの設計と自動保存</td><td>⭐⭐⭐</td></tr>
+    <tr><td>SPA認証</td><td>JWT + HTTP Only Cookie のセキュアな実装</td><td>⭐⭐⭐</td></tr>
+    <tr><td>サーバーレスAPI</td><td>Vercel Serverless Functions 9本</td><td>⭐⭐</td></tr>
+    <tr><td>ORM活用</td><td>Prisma による型安全なDB操作</td><td>⭐⭐⭐</td></tr>
+    <tr><td>ゲームロジック実装</td><td>battleEngine.ts の属性相性・ダメージ計算</td><td>⭐⭐</td></tr>
+    <tr><td>データ永続化戦略</td><td>localStorage ↔ PostgreSQL ハイブリッド保存</td><td>⭐⭐⭐⭐</td></tr>
+    <tr><td>デバウンス最適化</td><td>1.5秒デバウンス自動保存</td><td>⭐⭐</td></tr>
+    <tr><td>Prismaトランザクション</td><td>ガチャ・ユニット同期での整合性保証</td><td>⭐⭐⭐</td></tr>
+  </tbody>
+</table>
+
+<h2>18.2 総合評価</h2>
+<table>
+  <thead><tr><th>カテゴリ</th><th>評価</th><th>コメント</th></tr></thead>
+  <tbody>
+    <tr><td>機能完成度</td><td>★★★★☆</td><td>主要ゲーム機能はほぼ実装済み</td></tr>
+    <tr><td>セキュリティ</td><td>★★☆☆☆</td><td>ガチャ・バトルのサーバー検証が必要</td></tr>
+    <tr><td>型安全性</td><td>★★★☆☆</td><td>フロント側は良いがAPIの型が甘い</td></tr>
+    <tr><td>パフォーマンス</td><td>★★★☆☆</td><td>自動保存の最適化余地あり</td></tr>
+    <tr><td>保守性</td><td>★★★☆☆</td><td>テストなし・マスターデータが肥大化傾向</td></tr>
+    <tr><td><strong>学習価値</strong></td><td><strong>★★★★★</strong></td><td>モダンWebゲームの全スタックを学べる最高の教材</td></tr>
+  </tbody>
+</table>
+
+<h2>18.3 このプロジェクトの特徴まとめ</h2>
+
+<div class="success-box">
+<strong>アルカナブレイドは「モダンなWebゲームの全スタック」を学習できる優れたプロジェクトです。</strong><br><br>
+フロントエンド（React + TypeScript + Zustand）から バックエンド（Vercel Serverless）、 DB設計（Prisma + PostgreSQL）、 認証（JWT + bcrypt）、 デプロイ（Vercel + Railway）まで、実際のプロダクションレベルの技術が一貫して使われています。<br><br>
+段階的に読み解くことで、現代のWebアプリ開発の全体像を把握できます。
+</div>
+
+<hr>
+
+<p style="text-align:center;color:#999;font-size:9pt;margin-top:40px;">
+  解析日: 2026年6月29日 ／ 解析対象: C:\Users\y-okawa\Desktop\appsetting\arukanabrade<br>
+  アルカナブレイド ソース解析・学習資料 — 完全技術解説書
+</p>
+
+</body>
+</html>

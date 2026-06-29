@@ -20,13 +20,7 @@ const EXP_PER_LEVEL = (level: number) => Math.floor(80 * Math.pow(level, 1.2));
 export const useEquipmentStore = create<EquipmentStore>()(
   persist(
     (set, get) => ({
-      ownedEquipments: [
-        { instanceId: 'eq_init_1', masterId: 'equip_sword_silver',   level: 1, exp: 0 },
-        { instanceId: 'eq_init_2', masterId: 'equip_chain_mail',     level: 1, exp: 0 },
-        { instanceId: 'eq_init_3', masterId: 'equip_ring_iron',      level: 1, exp: 0 },
-        { instanceId: 'eq_init_4', masterId: 'equip_leather_armor',  level: 1, exp: 0 },
-        { instanceId: 'eq_init_5', masterId: 'equip_amulet_guardian',level: 1, exp: 0 },
-      ],
+      ownedEquipments: [],
 
       addEquipment: (masterId) => {
         const id = newInstId();

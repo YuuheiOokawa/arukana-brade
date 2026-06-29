@@ -1,0 +1,67 @@
+erDiagram
+    User {
+        String id PK "CUID"
+        String email UK "メールアドレス"
+        String passwordHash "bcryptハッシュ"
+        Boolean emailVerified "メール確認フラグ"
+        DateTime createdAt "作成日時"
+        DateTime updatedAt "更新日時"
+    }
+
+    Player {
+        String playerId PK "CUID"
+        String userId FK "User.id (UNIQUE)"
+        String playerName "プレイヤー名(default:勇者)"
+        Boolean tutorialCompleted "チュートリアル完了"
+        Int playerRank "プレイヤーランク(default:1)"
+        Int stamina "現在スタミナ(default:50)"
+        Int maxStamina "スタミナ上限(default:50)"
+        Int gold "ゴールド(default:0)"
+        Int diamond "ダイヤ(default:0)"
+        Int exp "経験値(default:0)"
+        String title "称号(nullable)"
+        String bio "自己紹介(nullable)"
+        String favoriteUnitId "お気に入りユニット(nullable)"
+        Int loginDays "ログイン日数(default:1)"
+        DateTime lastLoginAt "最終ログイン"
+        Json gameStateJson "全ゲーム状態スナップショット"
+        DateTime createdAt "作成日時"
+        DateTime updatedAt "更新日時"
+    }
+
+    OwnedUnit {
+        String id PK "CUID"
+        String playerId FK "Player.playerId"
+        String masterId "マスターデータID"
+        Int level "ユニットレベル(default:1)"
+        Int exp "ユニット経験値(default:0)"
+        Int awakenRank "素材覚醒段階(default:0)"
+        Int awakeningCount "ガチャ被り覚醒数(default:0)"
+        String currentRarity "現在レアリティ"
+        Boolean isLocked "ロックフラグ(default:false)"
+        DateTime acquiredAt "入手日時"
+        DateTime createdAt "作成日時"
+        DateTime updatedAt "更新日時"
+    }
+
+    PlayerItem {
+        String id PK "CUID"
+        String playerId FK "Player.playerId"
+        String itemId "アイテムマスターID"
+        Int quantity "所持数"
+    }
+
+    SummonHistory {
+        String id PK "CUID"
+        String playerId FK "Player.playerId"
+        String poolId "召喚プールID"
+        String masterId "排出ユニットID"
+        String rarity "レアリティ(N/R/SR/SSR)"
+        String resultType "結果種別(new/awakening/crystal)"
+        DateTime pulledAt "召喚日時"
+    }
+
+    User ||--|| Player : "1対1"
+    Player ||--o{ OwnedUnit : "1対多"
+    Player ||--o{ PlayerItem : "1対多"
+    Player ||--o{ SummonHistory : "1対多"

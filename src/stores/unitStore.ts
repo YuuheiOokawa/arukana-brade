@@ -21,8 +21,6 @@ interface UnitStore {
   syncUnitsToServer: () => Promise<void>;
 }
 
-let instanceCounter = Date.now();
-
 // 旧データの安全なマイグレーション
 function migrateUnit(raw: Partial<OwnedUnit> & { instanceId: string; masterId: string }): OwnedUnit {
   const master = getUnitMaster(raw.masterId);
@@ -50,41 +48,12 @@ function migrateUnit(raw: Partial<OwnedUnit> & { instanceId: string; masterId: s
   };
 }
 
-const createInitialUnits = (): OwnedUnit[] => {
-  const now = Date.now();
-  return [
-    makeUnit('unit_001', 1, 0, now - 3000),
-    makeUnit('unit_007', 1, 0, now - 2000),
-    makeUnit('unit_009', 1, 0, now - 1000),
-    makeUnit('unit_013', 1, 0, now),
-    makeUnit('unit_015', 1, 0, now + 1),
-  ];
-};
-
-function makeUnit(masterId: string, level: number, awakenRank: number, acquiredAt: number): OwnedUnit {
-  const master = getUnitMaster(masterId)!;
-  const awakeningCount = 0;
-  const currentRarity: StarRarity = RARITY_TYPE_TO_STAR[master.rarity] ?? 1;
-  return {
-    instanceId: `unit_${instanceCounter++}_${masterId}`,
-    masterId,
-    level,
-    exp: 0,
-    awakenRank,
-    awakeningCount,
-    currentRarity,
-    currentStats: calcUnitStats(master, level, awakenRank, awakeningCount),
-    isLocked: false,
-    acquiredAt,
-  };
-}
-
 const EXP_PER_LEVEL = (level: number) => Math.floor(100 * Math.pow(level, 1.3));
 
 export const useUnitStore = create<UnitStore>()(
   persist(
     (set, get) => ({
-      ownedUnits: createInitialUnits(),
+      ownedUnits: [],
       awakeningCrystals: {},
 
       addAwakeningCrystal: (masterId) => {

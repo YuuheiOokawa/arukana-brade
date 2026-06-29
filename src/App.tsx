@@ -69,7 +69,7 @@ const HIDE_NAV_PATHS = ['/battle', '/friends', '/title', '/login', '/register', 
 
 const AppContent = () => {
   const { pathname } = useLocation();
-  const { checkAuth, user, gameStateJson } = useAuthStore();
+  const { checkAuth, user, gameData } = useAuthStore();
   const setAdminMode = usePlayerStore(s => s.setAdminMode);
   const recoverStamina = usePlayerStore(s => s.recoverStamina);
   const showNav = !HIDE_NAV_PATHS.some(p => pathname.startsWith(p));
@@ -94,8 +94,8 @@ const AppContent = () => {
     localStorage.setItem(LAST_USER_KEY, user.id);
 
     // DBに保存済みのゲーム状態があればストアを上書き復元
-    if (gameStateJson) {
-      hydrateFromGameState(gameStateJson);
+    if (gameData) {
+      hydrateFromGameState(gameData);
     }
 
     // マスタデータをDBから取得してキャッシュに投入（失敗時はTypeScriptデータにフォールバック）
