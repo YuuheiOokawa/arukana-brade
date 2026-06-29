@@ -39,6 +39,8 @@ model Player {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
+  gameStateJson     Json?
+
   ownedUnits    OwnedUnit[]
   playerItems   PlayerItem[]
   summonHistory SummonHistory[]
