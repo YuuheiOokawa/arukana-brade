@@ -49,6 +49,8 @@ export const BattlePage = () => {
   const [waveIndex, setWaveIndex] = useState(0);
   const [round, setRound] = useState(1);
   const [logs, setLogs] = useState<string[]>([]);
+  const [logQueue, setLogQueue] = useState<string[]>([]);
+  const [isLogAnimating, setIsLogAnimating] = useState(false);
   const [phase, setPhase] = useState<Phase>('battle');
   const [leaderBbGauge, setLeaderBbGauge] = useState(0);
   const [isAutoMode, setIsAutoMode] = useState(false);
@@ -201,9 +203,23 @@ export const BattlePage = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ログをキューに積んで順次表示
   const addLogs = useCallback((newLines: string[]) => {
-    setLogs(prev => [...newLines, ...prev].slice(0, 60));
+    setLogQueue(prev => [...prev, ...newLines]);
   }, []);
+
+  // 80ms ごとに1行ずつ表示
+  useEffect(() => {
+    if (logQueue.length === 0 || isLogAnimating) return;
+    setIsLogAnimating(true);
+    const timer = setTimeout(() => {
+      const [first, ...rest] = logQueue;
+      setLogQueue(rest);
+      setLogs(prev => [first, ...prev].slice(0, 60));
+      setIsLogAnimating(false);
+    }, 80);
+    return () => clearTimeout(timer);
+  }, [logQueue, isLogAnimating]);
 
   // ===== 1ラウンド処理 =====
   const processRound = useCallback((useSkill: boolean) => {
@@ -615,16 +631,16 @@ export const BattlePage = () => {
         <div className="flex gap-2">
           <button
             onClick={() => processRound(false)}
-            disabled={phase !== 'battle' || liveAllies.length === 0 || liveEnemies.length === 0}
+            disabled={phase !== 'battle' || liveAllies.length === 0 || liveEnemies.length === 0 || logQueue.length > 0}
             className="flex-1 py-3.5 rounded-xl font-bold text-sm text-white bg-gradient-to-b from-blue-700 to-blue-900 border border-blue-500/40 active:scale-95 transition-all disabled:opacity-40"
           >
-            ⚔️ 全体攻撃
+            ⚔️ 攻撃
           </button>
 
           <div className="flex-1 flex flex-col gap-1">
             <button
               onClick={() => processRound(true)}
-              disabled={phase !== 'battle' || !isSkillReady || liveAllies.length === 0 || liveEnemies.length === 0}
+              disabled={phase !== 'battle' || !isSkillReady || liveAllies.length === 0 || liveEnemies.length === 0 || logQueue.length > 0}
               className={`w-full py-2.5 rounded-xl font-bold text-xs text-white border active:scale-95 transition-all disabled:opacity-40 ${
                 isSkillReady
                   ? 'bg-gradient-to-b from-orange-600 to-red-800 border-orange-400/60'

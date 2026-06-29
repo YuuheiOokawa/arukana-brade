@@ -14,12 +14,12 @@ import {
 import { LoginBonusModal } from '../login/LoginBonusModal';
 
 const QUICK_ACTIONS = [
-  { label: 'クエスト',  Icon: IconSword,   path: '/quests',   desc: 'ストーリー・イベント',  color: 'from-red-950/70 to-red-800/40',   accent: '#ef4444' },
-  { label: 'ユニット',  Icon: IconTeam,    path: '/units',    desc: '所持ユニット管理',       color: 'from-blue-950/70 to-blue-800/40', accent: '#3b82f6' },
-  { label: '召喚',     Icon: IconCrystal, path: '/summon',   desc: '新ユニット獲得',          color: 'from-purple-950/70 to-purple-800/40', accent: '#8b5cf6' },
-  { label: '強化',     Icon: IconArrowUp, path: '/enhance',  desc: 'ユニット育成',            color: 'from-yellow-950/70 to-yellow-800/40', accent: '#f59e0b' },
-  { label: '装備',     Icon: IconGear,    path: '/equipment',desc: '装備管理・強化',          color: 'from-slate-900/70 to-slate-700/40', accent: '#94a3b8' },
-  { label: '編成',     Icon: IconShield,  path: '/party',    desc: 'パーティ設定',            color: 'from-emerald-950/70 to-emerald-800/40', accent: '#10b981' },
+  { label: 'クエスト',  Icon: IconSword,   path: '/quests',   bg: 'linear-gradient(145deg,#6b0e0e,#3d0808)', accent: '#ef4444' },
+  { label: 'ユニット',  Icon: IconTeam,    path: '/units',    bg: 'linear-gradient(145deg,#0e3a6b,#081e3d)', accent: '#3b82f6' },
+  { label: '召喚',     Icon: IconCrystal, path: '/summon',   bg: 'linear-gradient(145deg,#4a1080,#260850)', accent: '#8b5cf6' },
+  { label: '強化',     Icon: IconArrowUp, path: '/enhance',  bg: 'linear-gradient(145deg,#7a5200,#3d2900)', accent: '#f59e0b' },
+  { label: '装備',     Icon: IconGear,    path: '/equipment',bg: 'linear-gradient(145deg,#334155,#1e2a3a)', accent: '#94a3b8' },
+  { label: '編成',     Icon: IconShield,  path: '/party',    bg: 'linear-gradient(145deg,#064030,#021e17)', accent: '#10b981' },
 ];
 
 export const HomePage = () => {
@@ -240,9 +240,9 @@ export const HomePage = () => {
               <button key={btn.path} onClick={() => navigate(btn.path)}
                 className="rounded-2xl p-3 flex flex-col items-center text-center transition-all active:scale-95 relative overflow-hidden"
                 style={{
-                  background: `linear-gradient(145deg, ${btn.color.split(' ').join(', ')})`,
-                  border: `1px solid ${btn.accent}55`,
-                  boxShadow: `0 4px 16px rgba(0,0,0,0.4), 0 0 8px ${btn.accent}22`,
+                  background: btn.bg,
+                  border: `1px solid ${btn.accent}aa`,
+                  boxShadow: `0 4px 16px rgba(0,0,0,0.5), 0 0 14px ${btn.accent}44`,
                 }}>
                 <div className="absolute top-0 left-0 right-0 h-px" style={{
                   background: `linear-gradient(90deg, transparent, ${btn.accent}50, transparent)`,
@@ -258,19 +258,19 @@ export const HomePage = () => {
       {/* コンテンツ一覧 */}
       <div className="px-4 grid grid-cols-2 gap-2.5 mb-4">
         {[
-          { path: '/pvp',      label: 'アリーナ',   sub: 'PvP対戦',     Icon: IconTrophy,  accent: '#f59e0b' },
-          { path: '/guild',    label: 'ギルド',     sub: '仲間と協力',   Icon: IconCastle,  accent: '#8b5cf6' },
-          { path: '/missions', label: 'ミッション', sub: 'デイリー報酬', Icon: IconScroll,  accent: '#10b981', badge: missionPending > 0 },
-          { path: '/raid',     label: 'レイドボス', sub: '協力討伐',     Icon: IconDragon,  accent: '#ef4444' },
+          { path: '/pvp',      label: 'アリーナ',   sub: 'PvP対戦',     Icon: IconTrophy,  accent: '#f59e0b', bg: 'linear-gradient(145deg,#3d2800,#1e1000)' },
+          { path: '/guild',    label: 'ギルド',     sub: '仲間と協力',   Icon: IconCastle,  accent: '#8b5cf6', bg: 'linear-gradient(145deg,#2d1460,#120a30)' },
+          { path: '/missions', label: 'ミッション', sub: 'デイリー報酬', Icon: IconScroll,  accent: '#10b981', bg: 'linear-gradient(145deg,#053828,#021c15)', badge: missionPending > 0 },
+          { path: '/raid',     label: 'レイドボス', sub: '協力討伐',     Icon: IconDragon,  accent: '#ef4444', bg: 'linear-gradient(145deg,#3d0a0a,#1e0505)' },
         ].map(item => {
           const IconComp = item.Icon;
           return (
             <button key={item.path} onClick={() => navigate(item.path)}
               className="rounded-2xl p-4 text-left transition-all active:scale-95 relative"
               style={{
-                background: 'linear-gradient(145deg, rgba(50,32,100,0.95), rgba(30,20,65,0.98))',
-                border: `1px solid ${item.accent}70`,
-                boxShadow: `0 4px 16px rgba(0,0,0,0.4), 0 0 10px ${item.accent}30`,
+                background: item.bg,
+                border: `1px solid ${item.accent}99`,
+                boxShadow: `0 4px 16px rgba(0,0,0,0.5), 0 0 16px ${item.accent}55`,
               }}>
               <IconComp size={26} color={item.accent} />
               <p className="text-white font-black text-sm mt-2">{item.label}</p>
