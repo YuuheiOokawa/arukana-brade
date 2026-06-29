@@ -203,6 +203,43 @@ export const hydrateFromGameState = (gameState: Record<string, unknown>) => {
   }
 };
 
+// 全ストアをリセット（別ユーザーへの切り替え時に呼ぶ）
+export const resetAllStores = () => {
+  const now = Date.now();
+  usePlayerStore.setState({
+    player: {
+      name: '勇者',
+      rank: 1,
+      exp: 0,
+      gold: 5000,
+      diamond: 500,
+      stamina: 50,
+      maxStamina: 50,
+      staminaRecoveryTime: now + 5 * 60 * 1000,
+      lastLoginAt: now,
+      createdAt: now,
+      playerId: `ARC-${now.toString(36).toUpperCase()}`,
+      title: '駆け出しの勇者',
+      bio: '',
+      favoriteUnitInstanceId: null,
+      loginDays: 1,
+    },
+    items: [],
+    lastUsedFriendId: null,
+  });
+  useUnitStore.setState({ ownedUnits: [], awakeningCrystals: {} });
+  useQuestStore.setState({ clearedStageIds: [], claimedAreaRewards: [], pendingStageId: null, pendingFriendId: null });
+  usePartyStore.setState({
+    parties: [{ id: 'party_default', name: 'パーティ1', slots: [null, null, null, null, null], leaderId: null }],
+    activePartyId: 'party_default',
+  });
+  useEquipmentStore.setState({ ownedEquipments: [] });
+  useMissionStore.setState({ daily: { date: '', progresses: [] }, weeklyProgresses: [], weekStr: '' });
+  useLoginBonusStore.setState({ lastClaimedDate: null, claimedDays: [], currentDay: 1 });
+  useArenaStore.setState({ record: { wins: 0, losses: 0, rank: 999, points: 1000, season: 1 }, battleHistory: [] });
+  useTutorialStore.setState({ completed: false, phase: 'title', playerName: '', selectedHeroId: null, selectedGender: null, selectedRace: null });
+};
+
 // ストア変更を監視して自動デバウンス保存を設定
 // - 通貨・ユニット変化（バトル後など）: 1秒デバウンス（取りこぼしを防ぐ重要データ）
 // - その他（編成・クエスト進捗など）: 3秒デバウンス

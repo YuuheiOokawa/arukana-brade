@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useUnitStore } from '../../stores/unitStore';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useMissionStore } from '../../stores/missionStore';
-import { UNIT_MASTER } from '../../data/units';
+import { getUnitMaster } from '../../data/units';
 import { getItemMaster } from '../../data/items';
 import { UnitCard } from '../../components/ui/UnitCard';
 import { GaugeBar } from '../../components/ui/game/GaugeBar';
@@ -27,7 +27,7 @@ export const EnhancePage = () => {
   const [message, setMessage] = useState('');
 
   const unit = selectedId ? ownedUnits.find(u => u.instanceId === selectedId) : null;
-  const master = unit ? UNIT_MASTER.find(m => m.id === unit.masterId) : null;
+  const master = unit ? (getUnitMaster(unit.masterId) ?? null) : null;
 
   const EXP_ITEMS = [
     { itemId: 'item_exp_s',  exp: 500,   label: '経験値の雫(小)' },

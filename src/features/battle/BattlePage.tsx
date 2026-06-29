@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuestStore } from '../../stores/questStore';
 import { usePartyStore } from '../../stores/partyStore';
@@ -50,7 +50,7 @@ export const BattlePage = () => {
   const [round, setRound] = useState(1);
   const [logs, setLogs] = useState<string[]>([]);
   const [logQueue, setLogQueue] = useState<string[]>([]);
-  const [isLogAnimating, setIsLogAnimating] = useState(false);
+  const isLogAnimatingRef = useRef(false);
   const [phase, setPhase] = useState<Phase>('battle');
   const [leaderBbGauge, setLeaderBbGauge] = useState(0);
   const [isAutoMode, setIsAutoMode] = useState(false);
@@ -208,18 +208,23 @@ export const BattlePage = () => {
     setLogQueue(prev => [...prev, ...newLines]);
   }, []);
 
-  // 80ms ごとに1行ずつ表示
+  // 80ms ごとに1行ずつ表示（refで排他制御: wave遷移の再レンダリングでフラグが詰まらないように）
   useEffect(() => {
-    if (logQueue.length === 0 || isLogAnimating) return;
-    setIsLogAnimating(true);
+    if (logQueue.length === 0 || isLogAnimatingRef.current) return;
+    isLogAnimatingRef.current = true;
     const timer = setTimeout(() => {
-      const [first, ...rest] = logQueue;
-      setLogQueue(rest);
-      setLogs(prev => [first, ...prev].slice(0, 60));
-      setIsLogAnimating(false);
+      setLogQueue(prev => {
+        const [first, ...rest] = prev;
+        if (first !== undefined) setLogs(prev2 => [first, ...prev2].slice(0, 60));
+        return rest;
+      });
+      isLogAnimatingRef.current = false;
     }, 80);
-    return () => clearTimeout(timer);
-  }, [logQueue, isLogAnimating]);
+    return () => {
+      clearTimeout(timer);
+      isLogAnimatingRef.current = false; // タイマーキャンセル時もフラグをリセット
+    };
+  }, [logQueue]);
 
   // ===== 1ラウンド処理 =====
   const processRound = useCallback((useSkill: boolean) => {

@@ -100,6 +100,7 @@ export interface ScenarioMaster {
   stageId: string;
   backgroundKey: 'forest' | 'ruins' | 'temple' | 'cave' | 'castle' | 'sky' | 'darkness';
   bgmKey?: string;
+  displayMode?: 'dialogue' | 'credits'; // 'credits' = エンドクレジット風スクロール
   lines: ScenarioLine[];
 }
 

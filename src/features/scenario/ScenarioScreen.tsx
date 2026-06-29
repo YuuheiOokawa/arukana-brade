@@ -5,6 +5,111 @@ import { StoryTextBox } from '../../components/ui/game/GamePanel';
 
 const AUTO_INTERVAL_MS = 3200;
 
+// ===== クレジットスクロールモード（映画エンディングロール風）=====
+export const CreditsScrollScreen = ({
+  stageId,
+  onFinish,
+}: {
+  stageId: string;
+  onFinish: () => void;
+}) => {
+  const scenario = getScenario(stageId);
+  const lines = scenario?.lines ?? [];
+  const bgKey = scenario?.backgroundKey ?? 'forest';
+  const accent = BG_ACCENT[bgKey] ?? '#8b5cf6';
+  const durationSec = Math.max(12, lines.length * 2.4 + 6);
+
+  return (
+    <div
+      className="fixed inset-0 overflow-hidden select-none"
+      style={{ background: BG_STYLES[bgKey] }}
+      onClick={onFinish}
+    >
+      {/* 背景装飾 */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0" style={{
+          background: `radial-gradient(ellipse at 50% 20%, ${accent}22 0%, transparent 60%)`,
+        }} />
+        {Array.from({ length: 20 }).map((_, i) => (
+          <div key={i} className="absolute rounded-full bg-white"
+            style={{
+              width: `${(i % 3) * 0.7 + 0.4}px`,
+              height: `${(i % 3) * 0.7 + 0.4}px`,
+              top: `${(i * 13 + 7) % 100}%`,
+              left: `${(i * 17 + 11) % 100}%`,
+              opacity: (i % 5) * 0.07 + 0.04,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* スキップボタン */}
+      <div className="absolute top-4 right-4 z-20">
+        <button
+          onClick={e => { e.stopPropagation(); onFinish(); }}
+          className="px-3 py-1.5 rounded-lg text-xs font-bold"
+          style={{
+            background: 'rgba(0,0,0,0.6)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            color: '#9ca3af',
+          }}>
+          SKIP ▶▶
+        </button>
+      </div>
+
+      {/* タップ誘導 */}
+      <div className="absolute bottom-6 left-0 right-0 text-center z-20 pointer-events-none">
+        <p className="text-xs font-bold animate-pulse" style={{ color: accent }}>
+          タップしてバトルへ ▼
+        </p>
+      </div>
+
+      {/* スクロール本体 */}
+      <div className="absolute inset-0 overflow-hidden z-10">
+        <div
+          style={{
+            animation: `creditsScrollUp ${durationSec}s linear forwards`,
+          }}
+          onAnimationEnd={onFinish}
+        >
+          <div style={{ height: '100vh' }} />
+          <div className="px-8 max-w-sm mx-auto space-y-7 text-center">
+            {lines.map((line, i) => (
+              <div key={i}>
+                {line.type === 'narration' ? (
+                  <p className="text-sm leading-7 text-gray-300 italic">
+                    {line.text}
+                  </p>
+                ) : (
+                  <div>
+                    {line.speakerName && (
+                      <p className="text-xs font-bold mb-1" style={{ color: accent }}>
+                        — {line.speakerName} —
+                      </p>
+                    )}
+                    <p className="text-sm leading-7 text-white font-medium">
+                      「{line.text}」
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div style={{ height: '50vh' }} />
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes creditsScrollUp {
+          from { transform: translateY(0); }
+          to   { transform: translateY(-100%); }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+// ===== 通常対話モード + ルーティング =====
 export const ScenarioScreen = () => {
   const { stageId } = useParams<{ stageId: string }>();
   const navigate = useNavigate();
@@ -24,20 +129,18 @@ export const ScenarioScreen = () => {
   const bgKey = scenario?.backgroundKey ?? 'forest';
   const accent = BG_ACCENT[bgKey] ?? '#8b5cf6';
 
-  /* ---- 完了時の遷移先 ---- */
   const onFinish = useCallback(() => {
-    navigate(`/friends`, { state: { fromScenario: true, stageId } });
+    navigate('/friends', { state: { fromScenario: true, stageId } });
   }, [navigate, stageId]);
 
-  /* ---- テキストタイプライター ---- */
+  // テキストタイプライター
   useEffect(() => {
-    if (!currentLine) return;
+    if (!currentLine || scenario?.displayMode === 'credits') return;
     setVisible(false);
     setTextDone(false);
     setDisplayText('');
     const full = currentLine.text;
     let i = 0;
-    // フェードイン後にタイプ開始
     const fadeIn = setTimeout(() => {
       setVisible(true);
       const type = () => {
@@ -55,20 +158,19 @@ export const ScenarioScreen = () => {
       clearTimeout(fadeIn);
       if (typeTimer.current) clearTimeout(typeTimer.current);
     };
-  }, [lineIndex, currentLine]);
+  }, [lineIndex, currentLine, scenario?.displayMode]);
 
-  /* ---- オート再生 ---- */
+  // オート再生
   useEffect(() => {
-    if (!autoPlay || !textDone) return;
+    if (!autoPlay || !textDone || scenario?.displayMode === 'credits') return;
     autoTimer.current = setTimeout(() => advance(), AUTO_INTERVAL_MS);
     return () => { if (autoTimer.current) clearTimeout(autoTimer.current); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoPlay, textDone, lineIndex]);
 
   const advance = useCallback(() => {
-    if (typeTimer.current) { clearTimeout(typeTimer.current); }
+    if (typeTimer.current) clearTimeout(typeTimer.current);
     if (!textDone) {
-      // タイプ途中なら全表示
       setDisplayText(lines[lineIndex]?.text ?? '');
       setTextDone(true);
       return;
@@ -80,13 +182,15 @@ export const ScenarioScreen = () => {
     }
   }, [textDone, lineIndex, lines, onFinish]);
 
-  const skip = useCallback(() => {
-    onFinish();
-  }, [onFinish]);
+  const skip = useCallback(() => onFinish(), [onFinish]);
+
+  // creditsモード → CreditsScrollScreen に委譲
+  if (scenario?.displayMode === 'credits' && stageId) {
+    return <CreditsScrollScreen stageId={stageId} onFinish={onFinish} />;
+  }
 
   if (!scenario) {
-    // シナリオが存在しないステージはフレンド選択へスキップ
-    navigate(`/friends`, { replace: true });
+    navigate('/friends', { replace: true });
     return null;
   }
 
@@ -101,25 +205,22 @@ export const ScenarioScreen = () => {
     >
       {/* 背景装飾 */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* 奥の光源 */}
         <div className="absolute inset-0" style={{
           background: `radial-gradient(ellipse at 50% 20%, ${accent}22 0%, transparent 60%)`,
         }} />
-        {/* 星粒 */}
         {Array.from({ length: 30 }).map((_, i) => (
           <div key={i} className="absolute rounded-full bg-white"
             style={{
-              width: `${Math.random() * 1.5 + 0.5}px`,
-              height: `${Math.random() * 1.5 + 0.5}px`,
-              top: `${Math.random() * 70}%`,
-              left: `${Math.random() * 100}%`,
-              opacity: Math.random() * 0.4 + 0.05,
-              animation: `glow-pulse ${2 + Math.random() * 3}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 4}s`,
+              width: `${(i % 3) * 0.6 + 0.5}px`,
+              height: `${(i % 3) * 0.6 + 0.5}px`,
+              top: `${(i * 13 + 7) % 70}%`,
+              left: `${(i * 17 + 11) % 100}%`,
+              opacity: (i % 5) * 0.08 + 0.04,
+              animation: `glow-pulse ${2 + (i % 4)}s ease-in-out infinite`,
+              animationDelay: `${(i % 5) * 0.8}s`,
             }}
           />
         ))}
-        {/* 床の反射光 */}
         <div className="absolute bottom-0 left-0 right-0 h-48" style={{
           background: `linear-gradient(to top, ${accent}18, transparent)`,
         }} />
@@ -161,7 +262,7 @@ export const ScenarioScreen = () => {
         ))}
       </div>
 
-      {/* キャラクター立ち絵エリア（疑似シルエット） */}
+      {/* キャラクター立ち絵エリア */}
       {!isNarration && currentLine?.position === 'left' && (
         <div className="absolute left-4 bottom-44 w-24 h-48 pointer-events-none">
           <div className="w-full h-full rounded-2xl" style={{
