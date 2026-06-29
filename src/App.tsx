@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { BottomNav } from './components/layout/BottomNav';
 import { HomePage } from './features/home/HomePage';
@@ -32,7 +32,7 @@ import { UIShowcasePage } from './features/debug/UIShowcasePage';
 import { useAuthStore } from './stores/authStore';
 import { useTutorialStore } from './stores/tutorialStore';
 import { usePlayerStore } from './stores/playerStore';
-import { hydrateFromGameState, initAutoSave, saveImmediately, setSaveErrorHandler } from './lib/syncService';
+import { hydrateFromGameState, resetAllStores, initAutoSave, saveImmediately, setSaveErrorHandler } from './lib/syncService';
 
 const ADMIN_EMAIL = 'yuuheiookawa@gmail.com';
 
@@ -72,6 +72,7 @@ const AppContent = () => {
   const recoverStamina = usePlayerStore(s => s.recoverStamina);
   const showNav = !HIDE_NAV_PATHS.some(p => pathname.startsWith(p));
   const [saveError, setSaveError] = useState<string | null>(null);
+  const prevUserIdRef = useRef<string | null>(null);
 
   // 認証チェック
   useEffect(() => {
@@ -81,6 +82,12 @@ const AppContent = () => {
   // 認証後: DBからゲーム状態を全復元 → 自動保存開始
   useEffect(() => {
     if (!user) return;
+
+    // 別ユーザーへ切り替わった場合は全ストアをリセット（前ユーザーのデータが混入しないように）
+    if (prevUserIdRef.current !== null && prevUserIdRef.current !== user.id) {
+      resetAllStores();
+    }
+    prevUserIdRef.current = user.id;
 
     // DBに保存済みのゲーム状態があればストアを上書き復元
     if (gameStateJson) {

@@ -337,28 +337,38 @@ export const TutorialGachaScreen = () => {
                   }}>
                   {opened.has(revealIndex) ? (
                     <>
-                      <div className="text-4xl mb-2">{results[revealIndex].emoji}</div>
-                      <div className="font-black text-white text-sm mb-1">{results[revealIndex].name}</div>
-                      <div className="text-xs mb-1"
+                      <div className="text-5xl mb-2">{results[revealIndex].emoji}</div>
+                      <div className="font-black text-white text-base mb-1">{results[revealIndex].name}</div>
+                      <div className="text-sm mb-1 font-bold"
                         style={{ color: STAR_COLORS[RARITY_TO_STAR[results[revealIndex].rarity]] }}>
                         {'★'.repeat(RARITY_TO_STAR[results[revealIndex].rarity])}
                         {' '}{STAR_LABELS[RARITY_TO_STAR[results[revealIndex].rarity]]}
                       </div>
-                      <div className="text-xs"
+                      <div className="text-xs font-bold"
                         style={{ color: ELEMENT_COLOR[results[revealIndex].element] }}>
                         {ELEMENT_NAMES[results[revealIndex].element]}属性
                       </div>
                       {resultTypes[revealIndex]?.type === 'awakening' && (
                         <div className="mt-2 text-xs font-bold" style={{ color: '#ffe48d' }}>
-                          覚醒 +1
+                          💠 覚醒 +1
                         </div>
                       )}
                     </>
                   ) : (
                     <>
-                      <img src="/assets/images/effects/summon/effect_summon_star3.webp"
-                        alt="" width={52} height={52} className="mx-auto mb-2" style={{ objectFit: 'contain' }} />
-                      <div className="text-xs text-purple-300">タップして開く</div>
+                      {/* 魔法陣デザイン（画像不依存のCSSカード裏面）*/}
+                      <div className="relative w-14 h-14 mx-auto mb-3 flex items-center justify-center">
+                        <div className="absolute inset-0 rounded-full animate-spin"
+                          style={{
+                            background: 'conic-gradient(from 0deg, rgba(124,58,237,0.8), rgba(79,70,229,0.4), rgba(124,58,237,0.8))',
+                            animationDuration: '3s',
+                          }} />
+                        <div className="absolute inset-2 rounded-full flex items-center justify-center"
+                          style={{ background: 'rgba(8,8,26,0.9)' }}>
+                          <span className="text-2xl">✨</span>
+                        </div>
+                      </div>
+                      <div className="text-xs text-purple-300 font-bold">タップして開く</div>
                       <div className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
                         {revealIndex + 1} / {results.length}
                       </div>

@@ -4,8 +4,9 @@ export const SCENARIOS: ScenarioMaster[] = [
   {
     scenarioId: 'scenario_w1s1',
     questId: 'q_w1',
-    stageId: 'w1-1',
+    stageId: 'stage_1_1_1',
     backgroundKey: 'forest',
+    displayMode: 'credits',
     lines: [
       { lineId: '1', type: 'narration', text: '遥かなる古の時代——アルカナと呼ばれる神秘の力が、世界の命運を握っていた。' },
       { lineId: '2', type: 'narration', text: 'その力は選ばれし者にのみ宿り、召喚士として覚醒した者だけが扱うことができる。' },
@@ -22,8 +23,9 @@ export const SCENARIOS: ScenarioMaster[] = [
   {
     scenarioId: 'scenario_w1s2',
     questId: 'q_w1',
-    stageId: 'w1-2',
+    stageId: 'stage_1_1_2',
     backgroundKey: 'ruins',
+    displayMode: 'credits',
     lines: [
       { lineId: '1', type: 'narration', text: '魔物を倒した後、少女に連れられ二人は廃墟へと向かった。' },
       { lineId: '2', type: 'dialogue', speakerName: '謎の少女', text: 'ここが「始まりの遺跡」。昔はアルカナの聖剣が祀られていた場所よ。', position: 'left' },
@@ -39,8 +41,9 @@ export const SCENARIOS: ScenarioMaster[] = [
   {
     scenarioId: 'scenario_w1s3',
     questId: 'q_w1',
-    stageId: 'w1-3',
+    stageId: 'stage_1_1_3',
     backgroundKey: 'forest',
+    displayMode: 'credits',
     lines: [
       { lineId: '1', type: 'narration', text: '遺跡の深部で、二人は不気味な影の群れと対峙した。' },
       { lineId: '2', type: 'dialogue', speakerName: '謎の少女', text: '影の魔物……「シャドウ」たちよ。最近、急に数が増えてるの。', position: 'left' },
@@ -55,8 +58,9 @@ export const SCENARIOS: ScenarioMaster[] = [
   {
     scenarioId: 'scenario_w1s4',
     questId: 'q_w1',
-    stageId: 'w1-4',
+    stageId: 'stage_1_1_4',
     backgroundKey: 'temple',
+    displayMode: 'credits',
     lines: [
       { lineId: '1', type: 'narration', text: '影の魔物を退けた二人。少女は一人の老人の元へと連れていった。' },
       { lineId: '2', type: 'dialogue', speakerName: '老賢者クロン', text: 'ほう……君が召喚士として目覚めた者か。その紋章は嘘をつかない。', position: 'left' },
@@ -71,8 +75,9 @@ export const SCENARIOS: ScenarioMaster[] = [
   {
     scenarioId: 'scenario_w1s5',
     questId: 'q_w1',
-    stageId: 'w1-5',
+    stageId: 'stage_1_1_5',
     backgroundKey: 'ruins',
+    displayMode: 'credits',
     lines: [
       { lineId: '1', type: 'narration', text: '賢者クロンから力の扱いを学んだ主人公。しかし、遺跡の最奥部に巨大な魔物の気配を感じた。' },
       { lineId: '2', type: 'dialogue', speakerName: '老賢者クロン', text: '「始まりの番人」……封印が弱まり、解き放たれてしまったか。', position: 'left' },

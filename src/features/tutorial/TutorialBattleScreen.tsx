@@ -1,16 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTutorialStore } from '../../stores/tutorialStore';
 import { getHerosByGenderAndRace, HERO_UNIT_MASTERS } from '../../data/heroes';
 import { ELEMENT_NAMES } from '../../types';
 
 const HINT_STEPS = [
-  { title: '通常攻撃', text: '「⚔️攻撃」ボタンをタップして、スライムを攻撃してみよう！', allowedAction: 'attack' },
-  { title: 'スキル攻撃', text: '「🔥スキル」ボタンをタップして特殊な技を使おう！BBゲージが溜まるよ！', allowedAction: 'skill' },
-  { title: 'ブレイブバースト！', text: 'BBゲージが満タンになった！「💥BB」ボタンで必殺技を放て！', allowedAction: 'bb' },
+  { title: '通常攻撃', text: '「⚔️ 攻撃」ボタンをタップして敵を攻撃しよう！', phase: 'wave1' },
+  { title: 'スキル攻撃', text: 'BBゲージが溜まった！「💥 スキル」でBBを使おう！', phase: 'skill' },
+  { title: 'Wave 2', text: '敵が出現！引き続き攻撃しよう！', phase: 'wave2' },
 ];
 
-type ActionType = 'attack' | 'skill' | 'bb';
+interface Enemy { id: string; name: string; emoji: string; hp: number; maxHp: number; }
+
+const WAVE_1: Enemy[] = [
+  { id: 'slime', name: '影のスライム', emoji: '🫧', hp: 300, maxHp: 300 },
+];
+const WAVE_2: Enemy[] = [
+  { id: 'goblin1', name: '影のゴブリン', emoji: '👺', hp: 500, maxHp: 500 },
+  { id: 'goblin2', name: '影のコウモリ', emoji: '🦇', hp: 200, maxHp: 200 },
+];
 
 export const TutorialBattleScreen = () => {
   const navigate = useNavigate();
@@ -25,106 +33,206 @@ export const TutorialBattleScreen = () => {
   const heroName = hero?.name ?? 'アルカナード';
   const heroEmoji = hero?.emoji ?? '⚔️';
   const heroElement = hero?.element ?? 'fire';
-  const heroHp = hero?.baseStats.hp ?? 4800;
+  const heroMaxHp = hero?.baseStats.hp ?? 4800;
 
-  const [step, setStep] = useState(0);
-  const [slimeHp, setSlimeHp] = useState(300);
-  const [goblinHp, setGoblinHp] = useState(500);
+  const [heroHp, setHeroHp] = useState(heroMaxHp);
+  const [wave, setWave] = useState(1);
+  const [enemies, setEnemies] = useState<Enemy[]>(WAVE_1.map(e => ({ ...e })));
   const [bbGauge, setBbGauge] = useState(0);
-  const [log, setLog] = useState<string[]>([]);
-  const [shaking, setShaking] = useState<string | null>(null);
-  const [done, setDone] = useState(false);
-  const [showHint, setShowHint] = useState(true);
+  const [logQueue, setLogQueue] = useState<string[]>([]);
+  const [logs, setLogs] = useState<string[]>([]);
+  const [phase, setPhase] = useState<'battle' | 'wave_transition' | 'victory'>('battle');
+  const [hintIndex, setHintIndex] = useState(0);
 
-  const addLog = (msg: string) => setLog(prev => [msg, ...prev].slice(0, 4));
+  const isLogAnimatingRef = useRef(false);
 
-  const shake = (target: string, ms = 400) => {
-    setShaking(target);
-    setTimeout(() => setShaking(null), ms);
+  // メインBattlePageと同じ80msログ表示
+  useEffect(() => {
+    if (logQueue.length === 0 || isLogAnimatingRef.current) return;
+    isLogAnimatingRef.current = true;
+    const timer = setTimeout(() => {
+      setLogQueue(prev => {
+        const [first, ...rest] = prev;
+        if (first !== undefined) setLogs(prev2 => [first, ...prev2].slice(0, 20));
+        return rest;
+      });
+      isLogAnimatingRef.current = false;
+    }, 80);
+    return () => {
+      clearTimeout(timer);
+      isLogAnimatingRef.current = false;
+    };
+  }, [logQueue]);
+
+  const addLogs = useCallback((msgs: string[]) => {
+    setLogQueue(prev => [...prev, ...msgs]);
+  }, []);
+
+  const handleAttack = () => {
+    if (phase !== 'battle' || logQueue.length > 0) return;
+
+    const atk = hero?.baseStats.atk ?? 1500;
+    const newEnemies = [...enemies];
+    const newLogs: string[] = [];
+
+    // 全体攻撃（メインシステムと同じ）
+    for (const enemy of newEnemies) {
+      if (enemy.hp <= 0) continue;
+      const dmg = Math.floor(atk * (0.8 + Math.random() * 0.4));
+      enemy.hp = Math.max(0, enemy.hp - dmg);
+      newLogs.push(`⚔️ ${heroName} → ${enemy.name} に ${dmg.toLocaleString()} ダメージ！`);
+      if (enemy.hp <= 0) {
+        newLogs.push(`💀 ${enemy.name} を撃破！`);
+      }
+    }
+
+    // 被ダメージ（生存している敵から）
+    const liveEnemies = newEnemies.filter(e => e.hp > 0);
+    if (liveEnemies.length > 0) {
+      const counterDmg = Math.floor(80 + Math.random() * 60);
+      setHeroHp(prev => Math.max(0, prev - counterDmg));
+      newLogs.push(`🔴 ${liveEnemies[0].name} の反撃！${heroName} に ${counterDmg} ダメージ`);
+    }
+
+    const bbGain = bbGauge < 100 ? Math.min(100, bbGauge + 35) : bbGauge;
+    setBbGauge(bbGain);
+    if (bbGain >= 100 && bbGauge < 100) {
+      newLogs.push(`💥 BBゲージ満タン！スキルが使える！`);
+      setHintIndex(1);
+    }
+
+    const allDead = newEnemies.every(e => e.hp <= 0);
+    if (allDead) {
+      if (wave === 1) {
+        newLogs.push(`━━ Wave 1 クリア！ ━━`);
+        newLogs.push(`━━ Wave 2 開始！ ━━`);
+        setEnemies(newEnemies);
+        setPhase('wave_transition');
+        addLogs(newLogs);
+        setTimeout(() => {
+          setWave(2);
+          setEnemies(WAVE_2.map(e => ({ ...e })));
+          setPhase('battle');
+          setHintIndex(2);
+        }, newLogs.length * 90 + 500);
+      } else {
+        newLogs.push(`✨ 全敵撃破！勝利！`);
+        setEnemies(newEnemies);
+        addLogs(newLogs);
+        setTimeout(() => setPhase('victory'), newLogs.length * 90 + 600);
+      }
+    } else {
+      setEnemies(newEnemies);
+      addLogs(newLogs);
+    }
   };
 
-  const doAttack = (type: ActionType) => {
-    if (done) return;
-    const hint = HINT_STEPS[step];
-    if (hint && hint.allowedAction !== type) return;
+  const handleSkill = () => {
+    if (phase !== 'battle' || logQueue.length > 0 || bbGauge < 100) return;
 
-    if (type === 'attack') {
-      const dmg = 320 + Math.floor(Math.random() * 60);
-      setSlimeHp(prev => Math.max(0, prev - dmg));
-      shake('slime');
-      addLog(`${heroName} の通常攻撃！スライムに ${dmg} ダメージ！`);
-      setBbGauge(prev => Math.min(100, prev + 40));
-      setTimeout(() => setStep(1), 800);
-    } else if (type === 'skill') {
-      const dmg = 280 + Math.floor(Math.random() * 80);
-      setGoblinHp(prev => Math.max(0, prev - dmg));
-      shake('goblin');
-      addLog(`${heroName} のスキル！ゴブリンに ${dmg} ダメージ！`);
-      setBbGauge(100);
-      setTimeout(() => setStep(2), 800);
-    } else if (type === 'bb') {
-      const dmg = 620 + Math.floor(Math.random() * 120);
-      setGoblinHp(0);
-      shake('goblin');
-      addLog(`💥 ブレイブバースト！ゴブリンに ${dmg} ダメージ！必殺！`);
-      setBbGauge(0);
-      setTimeout(() => { setDone(true); navigate('/tutorial/complete'); }, 1800);
+    const atk = hero?.baseStats.atk ?? 1500;
+    const newEnemies = [...enemies];
+    const newLogs: string[] = [];
+
+    newLogs.push(`💥 ${heroName} のBB発動！`);
+
+    for (const enemy of newEnemies) {
+      if (enemy.hp <= 0) continue;
+      const dmg = Math.floor(atk * 2.5 * (0.9 + Math.random() * 0.2));
+      enemy.hp = Math.max(0, enemy.hp - dmg);
+      newLogs.push(`💥 ${enemy.name} に ${dmg.toLocaleString()} ダメージ！`);
+      if (enemy.hp <= 0) newLogs.push(`💀 ${enemy.name} を撃破！`);
+    }
+
+    setBbGauge(0);
+    const allDead = newEnemies.every(e => e.hp <= 0);
+
+    if (allDead) {
+      if (wave === 1) {
+        newLogs.push(`━━ Wave 1 クリア！ ━━`);
+        newLogs.push(`━━ Wave 2 開始！ ━━`);
+        setEnemies(newEnemies);
+        setPhase('wave_transition');
+        addLogs(newLogs);
+        setTimeout(() => {
+          setWave(2);
+          setEnemies(WAVE_2.map(e => ({ ...e })));
+          setPhase('battle');
+          setHintIndex(2);
+        }, newLogs.length * 90 + 500);
+      } else {
+        newLogs.push(`✨ 全敵撃破！勝利！`);
+        setEnemies(newEnemies);
+        addLogs(newLogs);
+        setTimeout(() => setPhase('victory'), newLogs.length * 90 + 600);
+      }
+    } else {
+      setEnemies(newEnemies);
+      addLogs(newLogs);
     }
   };
 
   useEffect(() => {
-    const t = setTimeout(() => setShowHint(true), 200);
-    return () => clearTimeout(t);
-  }, [step]);
+    if (phase === 'victory') {
+      const t = setTimeout(() => navigate('/tutorial/complete'), 1200);
+      return () => clearTimeout(t);
+    }
+  }, [phase, navigate]);
 
-  const hint = HINT_STEPS[step];
+  const liveEnemies = enemies.filter(e => e.hp > 0);
+  const isAttackDisabled = phase !== 'battle' || liveEnemies.length === 0 || logQueue.length > 0;
+  const isSkillDisabled = phase !== 'battle' || bbGauge < 100 || liveEnemies.length === 0 || logQueue.length > 0;
+  const hint = HINT_STEPS[hintIndex];
 
   return (
-    <div className="fixed inset-0 flex flex-col battle-bg overflow-hidden">
+    <div className="fixed inset-0 flex flex-col battle-bg overflow-hidden select-none text-sm">
 
-      {/* ヘッダー */}
-      <div className="px-4 pt-4 pb-2 text-center">
-        <div className="text-xs text-purple-300 tracking-widest">⚔ チュートリアルバトル ⚔</div>
+      {/* ヘッダー（BattlePageと同じスタイル）*/}
+      <div className="px-3 pt-3 pb-2 flex items-center justify-between border-b border-purple-900/30">
+        <div>
+          <p className="text-purple-400 text-xs font-medium tracking-wide">チュートリアルバトル</p>
+          <p className="text-white text-xs font-bold">
+            Wave <span className="text-purple-300">{wave}</span>
+            <span className="text-gray-500">/2</span>
+          </p>
+        </div>
+        <div className="text-xs text-yellow-400 font-bold px-3 py-1 rounded-lg"
+          style={{ background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(167,139,250,0.3)' }}>
+          💡 チュートリアル
+        </div>
       </div>
 
-      {/* 敵エリア */}
-      <div className="flex-1 flex items-center justify-around px-6 py-4">
-
-        {/* スライム */}
-        <div className={`flex flex-col items-center gap-2 transition-all ${shaking === 'slime' ? 'animate-shake' : ''}`}>
-          <div className="text-5xl" style={{ opacity: slimeHp <= 0 ? 0.2 : 1, filter: slimeHp <= 0 ? 'grayscale(1)' : 'none' }}>🫧</div>
-          <div className="text-xs text-gray-400 font-medium">影のスライム</div>
-          <div className="text-xs" style={{ color: '#34d399' }}>風属性</div>
-          <div className="w-24 h-2 bg-gray-800 rounded-full overflow-hidden">
-            <div className="h-full rounded-full transition-all duration-500 hp-bar-fill"
-              style={{ width: `${(slimeHp / 300) * 100}%` }} />
-          </div>
-          <div className="text-xs text-gray-400">{slimeHp}/300</div>
-          {slimeHp <= 0 && <div className="text-xs text-red-400 font-bold">DEFEAT</div>}
-        </div>
-
-        <div className="text-2xl text-gray-600">VS</div>
-
-        {/* ゴブリン */}
-        <div className={`flex flex-col items-center gap-2 transition-all ${shaking === 'goblin' ? 'animate-shake' : ''}`}>
-          <div className="text-5xl" style={{ opacity: goblinHp <= 0 ? 0.2 : 1, filter: goblinHp <= 0 ? 'grayscale(1)' : 'none' }}>👺</div>
-          <div className="text-xs text-gray-400 font-medium">影のゴブリン</div>
-          <div className="text-xs" style={{ color: '#c4b5fd' }}>闇属性</div>
-          <div className="w-24 h-2 bg-gray-800 rounded-full overflow-hidden">
-            <div className="h-full rounded-full transition-all duration-500 hp-bar-fill"
-              style={{ width: `${(goblinHp / 500) * 100}%` }} />
-          </div>
-          <div className="text-xs text-gray-400">{goblinHp}/500</div>
-          {goblinHp <= 0 && <div className="text-xs text-red-400 font-bold">DEFEAT</div>}
+      {/* 敵HP（BattlePageと同じレイアウト）*/}
+      <div className="px-3 py-2 border-b border-gray-800/50">
+        <p className="text-gray-500 text-xs mb-1.5 font-bold tracking-wide">━━ 敵 ━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+        <div className="flex flex-col gap-1.5">
+          {enemies.map(e => {
+            const pct = Math.max(0, e.hp / e.maxHp);
+            const isDead = e.hp <= 0;
+            return (
+              <div key={e.id} className={`flex items-center gap-2 ${isDead ? 'opacity-30' : ''}`}>
+                <span className="text-base w-6 text-center">{e.emoji}</span>
+                <span className="text-xs text-gray-300 w-24 truncate">{e.name}</span>
+                <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${pct * 100}%`,
+                      background: pct > 0.5 ? 'linear-gradient(90deg, #22c55e, #16a34a)' : pct > 0.25 ? 'linear-gradient(90deg, #f59e0b, #d97706)' : 'linear-gradient(90deg, #ef4444, #dc2626)',
+                    }} />
+                </div>
+                <span className="text-xs text-gray-400 w-20 text-right">{isDead ? 'DEFEAT' : `${e.hp}/${e.maxHp}`}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
       {/* ヒントパネル */}
-      {hint && showHint && (
-        <div className="mx-4 mb-3 rounded-xl p-3 animate-fade-in"
+      {hint && (
+        <div className="mx-3 mt-2 rounded-xl p-3 animate-fade-in"
           style={{ background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(167,139,250,0.4)' }}>
           <div className="flex items-start gap-2">
-            <span className="text-yellow-400 text-sm mt-0.5">💡</span>
+            <span className="text-yellow-400 text-sm">💡</span>
             <div>
               <div className="text-xs font-bold text-yellow-300 mb-0.5">{hint.title}</div>
               <div className="text-xs text-gray-200 leading-5">{hint.text}</div>
@@ -133,73 +241,83 @@ export const TutorialBattleScreen = () => {
         </div>
       )}
 
-      {/* バトルログ */}
-      <div className="mx-4 mb-2 h-12 overflow-hidden">
-        {log.slice(0, 2).map((l, i) => (
-          <div key={i} className="text-xs text-gray-300 leading-6 truncate" style={{ opacity: 1 - i * 0.4 }}>{l}</div>
-        ))}
+      {/* バトルログ（BattlePageと同じ）*/}
+      <div className="flex-1 px-3 py-2 overflow-hidden">
+        <div className="h-full rounded-xl p-3 overflow-y-auto flex flex-col-reverse gap-0.5"
+          style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(75,85,99,0.2)' }}>
+          {logs.map((line, i) => (
+            <p key={i} className={`text-xs leading-relaxed ${
+              line.startsWith('⚔️') ? 'text-blue-300' :
+              line.startsWith('🔴') ? 'text-red-400' :
+              line.startsWith('💀') ? 'text-yellow-400' :
+              line.startsWith('━━') ? 'text-purple-400 font-bold' :
+              line.startsWith('💥') ? 'text-orange-400' :
+              line.startsWith('✨') ? 'text-yellow-300 font-bold' :
+              'text-gray-300'
+            }`}>{line}</p>
+          ))}
+          {logs.length === 0 && <p className="text-gray-700 text-xs">バトル開始</p>}
+        </div>
       </div>
 
-      {/* 味方カード */}
-      <div className="mx-4 mb-3 card-base rounded-2xl p-3 flex items-center gap-3">
-        <div className="text-3xl">{heroEmoji}</div>
-        <div className="flex-1">
-          <div className="text-sm font-bold text-white">{heroName}</div>
-          <div className="text-xs mb-1" style={{ color: '#facc15' }}>{ELEMENT_NAMES[heroElement]}属性</div>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-              <div className="h-full rounded-full hp-bar-fill" style={{ width: '100%' }} />
+      {/* 味方カード（BattlePageと同じ）*/}
+      <div className="px-3 py-2 border-t border-purple-900/20">
+        <p className="text-gray-500 text-xs mb-1.5 font-bold tracking-wide">━━ 味方 ━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+        <div className="flex items-center gap-3 px-2 py-2 rounded-xl"
+          style={{ background: 'rgba(20,10,40,0.6)', border: '1px solid rgba(124,58,237,0.3)' }}>
+          <span className="text-3xl">{heroEmoji}</span>
+          <div className="flex-1">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-white font-bold text-xs">{heroName}</span>
+              <span className="text-xs text-gray-400">{ELEMENT_NAMES[heroElement]}属性</span>
             </div>
-            <span className="text-xs text-gray-400">{heroHp}/{heroHp}</span>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${(heroHp / heroMaxHp) * 100}%`,
+                    background: 'linear-gradient(90deg, #22c55e, #16a34a)',
+                  }} />
+              </div>
+              <span className="text-xs text-gray-400">{heroHp}/{heroMaxHp}</span>
+            </div>
           </div>
-        </div>
-        {/* BBゲージ */}
-        <div className="flex flex-col items-center gap-1">
-          <div className="text-xs text-yellow-400 font-bold">BB</div>
-          <div className="w-6 h-14 bg-gray-800 rounded-full overflow-hidden flex flex-col-reverse">
-            <div className="w-full rounded-full bb-gauge-fill transition-all duration-700"
-              style={{ height: `${bbGauge}%` }} />
-          </div>
-          <div className="text-xs text-gray-500">{bbGauge}%</div>
         </div>
       </div>
 
-      {/* アクションボタン */}
-      <div className="px-4 pb-6 grid grid-cols-3 gap-3">
-        <button onClick={() => doAttack('attack')}
-          disabled={step !== 0 || done}
-          className="py-4 rounded-xl font-bold text-sm cursor-pointer active:scale-95 transition-all duration-150"
-          style={{
-            background: step === 0 ? 'linear-gradient(135deg, #1d4ed8, #2563eb)' : 'rgba(30,30,60,0.5)',
-            border: `1.5px solid ${step === 0 ? 'rgba(96,165,250,0.6)' : 'rgba(75,85,99,0.3)'}`,
-            color: step === 0 ? 'white' : '#4b5563',
-            boxShadow: step === 0 ? '0 0 20px rgba(37,99,235,0.35)' : 'none',
-          }}>
-          ⚔️<br /><span className="text-xs">攻撃</span>
-        </button>
+      {/* コマンドボタン（BattlePageと同じ2ボタンレイアウト）*/}
+      <div className="px-3 pb-6 pt-2 border-t border-purple-900/30">
+        <div className="flex gap-2">
+          <button
+            onClick={handleAttack}
+            disabled={isAttackDisabled}
+            className="flex-1 py-3.5 rounded-xl font-bold text-sm text-white bg-gradient-to-b from-blue-700 to-blue-900 border border-blue-500/40 active:scale-95 transition-all disabled:opacity-40">
+            ⚔️ 攻撃
+          </button>
 
-        <button onClick={() => doAttack('skill')}
-          disabled={step !== 1 || done}
-          className="py-4 rounded-xl font-bold text-sm cursor-pointer active:scale-95 transition-all duration-150"
-          style={{
-            background: step === 1 ? 'linear-gradient(135deg, #b45309, #d97706)' : 'rgba(30,30,60,0.5)',
-            border: `1.5px solid ${step === 1 ? 'rgba(251,191,36,0.6)' : 'rgba(75,85,99,0.3)'}`,
-            color: step === 1 ? 'white' : '#4b5563',
-            boxShadow: step === 1 ? '0 0 20px rgba(217,119,6,0.35)' : 'none',
-          }}>
-          🔥<br /><span className="text-xs">スキル</span>
-        </button>
-
-        <button onClick={() => doAttack('bb')}
-          disabled={step !== 2 || bbGauge < 100 || done}
-          className={`py-4 rounded-xl font-bold text-sm cursor-pointer active:scale-95 transition-all duration-150 ${step === 2 && bbGauge >= 100 ? 'animate-bb-ready' : ''}`}
-          style={{
-            background: step === 2 && bbGauge >= 100 ? 'linear-gradient(135deg, #7c3aed, #6d28d9)' : 'rgba(30,30,60,0.5)',
-            border: `1.5px solid ${step === 2 && bbGauge >= 100 ? 'rgba(167,139,250,0.8)' : 'rgba(75,85,99,0.3)'}`,
-            color: step === 2 && bbGauge >= 100 ? 'white' : '#4b5563',
-          }}>
-          💥<br /><span className="text-xs">BB</span>
-        </button>
+          <div className="flex-1 flex flex-col gap-1">
+            <button
+              onClick={handleSkill}
+              disabled={isSkillDisabled}
+              className={`w-full py-2.5 rounded-xl font-bold text-xs text-white border active:scale-95 transition-all disabled:opacity-40 ${
+                bbGauge >= 100
+                  ? 'bg-gradient-to-b from-orange-600 to-red-800 border-orange-400/60'
+                  : 'bg-gradient-to-b from-gray-700 to-gray-900 border-gray-600/40'
+              }`}
+            >
+              💥 スキル BB:{bbGauge}%
+            </button>
+            <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+              <div className="h-full rounded-full transition-all duration-300"
+                style={{
+                  width: `${bbGauge}%`,
+                  background: bbGauge >= 100
+                    ? 'linear-gradient(90deg, #f97316, #ef4444)'
+                    : 'linear-gradient(90deg, #7c3aed, #4f46e5)',
+                }} />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
