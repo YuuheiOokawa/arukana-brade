@@ -35,13 +35,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const body = req.body as CurrencyBody;
 
+  const clamp = (v: number | undefined, min: number, max: number): number | undefined =>
+    typeof v === 'number' && isFinite(v) ? Math.max(min, Math.min(max, Math.floor(v))) : undefined;
+
   const updateData: Record<string, number> = {};
-  if (typeof body.gold === 'number' && body.gold >= 0) updateData.gold = body.gold;
-  if (typeof body.diamond === 'number' && body.diamond >= 0) updateData.diamond = body.diamond;
-  if (typeof body.exp === 'number' && body.exp >= 0) updateData.exp = body.exp;
-  if (typeof body.playerRank === 'number' && body.playerRank >= 1) updateData.playerRank = body.playerRank;
-  if (typeof body.stamina === 'number' && body.stamina >= 0) updateData.stamina = body.stamina;
-  if (typeof body.maxStamina === 'number' && body.maxStamina >= 0) updateData.maxStamina = body.maxStamina;
+  const gold = clamp(body.gold, 0, 999_999_999);
+  if (gold !== undefined) updateData.gold = gold;
+  const diamond = clamp(body.diamond, 0, 999_999);
+  if (diamond !== undefined) updateData.diamond = diamond;
+  const exp = clamp(body.exp, 0, 999_999_999);
+  if (exp !== undefined) updateData.exp = exp;
+  const rank = clamp(body.playerRank, 1, 200);
+  if (rank !== undefined) updateData.playerRank = rank;
+  const stamina = clamp(body.stamina, 0, 999);
+  if (stamina !== undefined) updateData.stamina = stamina;
+  const maxStamina = clamp(body.maxStamina, 1, 999);
+  if (maxStamina !== undefined) updateData.maxStamina = maxStamina;
 
   if (Object.keys(updateData).length === 0) {
     return res.status(400).json({ error: '更新するデータがありません' });

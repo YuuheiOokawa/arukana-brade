@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { BottomNav } from './components/layout/BottomNav';
 import { HomePage } from './features/home/HomePage';
@@ -32,7 +32,7 @@ import { UIShowcasePage } from './features/debug/UIShowcasePage';
 import { useAuthStore } from './stores/authStore';
 import { useTutorialStore } from './stores/tutorialStore';
 import { usePlayerStore } from './stores/playerStore';
-import { hydrateFromGameState, initAutoSave, saveImmediately } from './lib/syncService';
+import { hydrateFromGameState, initAutoSave, saveImmediately, setSaveErrorHandler } from './lib/syncService';
 
 const ADMIN_EMAIL = 'yuuheiookawa@gmail.com';
 
@@ -71,6 +71,7 @@ const AppContent = () => {
   const setAdminMode = usePlayerStore(s => s.setAdminMode);
   const recoverStamina = usePlayerStore(s => s.recoverStamina);
   const showNav = !HIDE_NAV_PATHS.some(p => pathname.startsWith(p));
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // 認証チェック
   useEffect(() => {
@@ -87,6 +88,12 @@ const AppContent = () => {
     }
 
     if (user.email === ADMIN_EMAIL) setAdminMode();
+
+    // 保存失敗時のトースト表示
+    setSaveErrorHandler((msg) => {
+      setSaveError(msg);
+      setTimeout(() => setSaveError(null), 5000);
+    });
 
     // ストア変更を監視して自動デバウンス保存
     const stopAutoSave = initAutoSave();
@@ -111,6 +118,13 @@ const AppContent = () => {
 
   return (
     <div className="max-w-lg mx-auto relative min-h-screen">
+      {/* 保存失敗トースト */}
+      {saveError && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] px-4 py-2 rounded-xl text-sm font-bold text-white"
+          style={{ background: 'rgba(220,38,38,0.95)', boxShadow: '0 4px 16px rgba(0,0,0,0.5)' }}>
+          ⚠️ {saveError}
+        </div>
+      )}
       <Routes>
         {/* 認証不要 */}
         <Route path="/title"    element={<TitleScreen />} />
@@ -144,7 +158,7 @@ const AppContent = () => {
         <Route path="/profile"  element={<AuthGuard><MainGuard><ProfilePage /></MainGuard></AuthGuard>} />
         <Route path="/shop"     element={<AuthGuard><MainGuard><ShopPage /></MainGuard></AuthGuard>} />
         <Route path="/scenario/:stageId" element={<AuthGuard><MainGuard><ScenarioScreen /></MainGuard></AuthGuard>} />
-        <Route path="/ui-showcase" element={<UIShowcasePage />} />
+        {import.meta.env.DEV && <Route path="/ui-showcase" element={<UIShowcasePage />} />}
 
         <Route path="*" element={<Navigate to="/title" replace />} />
       </Routes>

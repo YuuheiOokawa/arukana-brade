@@ -18,6 +18,13 @@ import type { PlayerData, OwnedItem } from '../types';
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 let isSaving = false;
+let failedSaveState: ReturnType<typeof collectGameState> | null = null;
+
+// 保存失敗をUIに通知するコールバック（App.tsxからセット）
+let onSaveError: ((msg: string) => void) | null = null;
+export const setSaveErrorHandler = (handler: (msg: string) => void) => {
+  onSaveError = handler;
+};
 
 // 全ストア状態を1つのJSONに収集
 export const collectGameState = () => {
@@ -64,34 +71,55 @@ export const collectGameState = () => {
   };
 };
 
-// DBへ保存
+// DBへ保存（失敗時はリトライキューに積む）
 export const saveAllToServer = async () => {
   if (isSaving) return;
+  // オフライン時はスキップ（localStorage に保存済み）
+  if (!navigator.onLine) {
+    failedSaveState = collectGameState();
+    return;
+  }
   isSaving = true;
   try {
-    const state = collectGameState();
-    await fetch('/api/player/saveAll', {
+    const state = failedSaveState ?? collectGameState();
+    const res = await fetch('/api/player/saveAll', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ state }),
     });
-  } catch {
-    // ネットワークエラーは無視（localStorage がバックアップ）
+    if (!res.ok) {
+      throw new Error(`saveAll failed: ${res.status}`);
+    }
+    failedSaveState = null; // 成功したらリトライキューをクリア
+  } catch (err) {
+    // 失敗した状態を保持（次回オンライン時にリトライ）
+    if (!failedSaveState) failedSaveState = collectGameState();
+    console.error('[syncService] save failed:', err);
+    onSaveError?.('データの保存に失敗しました。ネットワークを確認してください。');
   } finally {
     isSaving = false;
   }
 };
 
-// デバウンス保存（1.5秒後に実行）
-export const scheduleSave = () => {
+// オンライン復帰時に自動リトライ
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    if (failedSaveState) {
+      void saveAllToServer();
+    }
+  });
+}
+
+// デバウンス保存（3秒後に実行 - 通常の状態変化）
+export const scheduleSave = (delayMs = 3000) => {
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     void saveAllToServer();
-  }, 1500);
+  }, delayMs);
 };
 
-// 即時保存（ページ離脱時などに使用）
+// 即時保存（バトル終了・ガチャなど重要操作 / ページ離脱時）
 export const saveImmediately = () => {
   if (saveTimer) {
     clearTimeout(saveTimer);
@@ -176,17 +204,18 @@ export const hydrateFromGameState = (gameState: Record<string, unknown>) => {
 };
 
 // ストア変更を監視して自動デバウンス保存を設定
-// App.tsx の useEffect 内で呼び出す
+// - 通貨・ユニット変化（バトル後など）: 1秒デバウンス（取りこぼしを防ぐ重要データ）
+// - その他（編成・クエスト進捗など）: 3秒デバウンス
 export const initAutoSave = () => {
   const unsubs = [
-    usePlayerStore.subscribe(() => scheduleSave()),
-    useUnitStore.subscribe(() => scheduleSave()),
-    useQuestStore.subscribe(() => scheduleSave()),
-    usePartyStore.subscribe(() => scheduleSave()),
-    useEquipmentStore.subscribe(() => scheduleSave()),
-    useMissionStore.subscribe(() => scheduleSave()),
-    useLoginBonusStore.subscribe(() => scheduleSave()),
-    useArenaStore.subscribe(() => scheduleSave()),
+    usePlayerStore.subscribe(() => scheduleSave(1000)),   // gold/diamond/stamina変化は早め
+    useUnitStore.subscribe(() => scheduleSave(1000)),     // ユニット変化も早め
+    useQuestStore.subscribe(() => scheduleSave(3000)),
+    usePartyStore.subscribe(() => scheduleSave(3000)),
+    useEquipmentStore.subscribe(() => scheduleSave(3000)),
+    useMissionStore.subscribe(() => scheduleSave(3000)),
+    useLoginBonusStore.subscribe(() => scheduleSave(3000)),
+    useArenaStore.subscribe(() => scheduleSave(1000)),    // アリーナ結果は早め
   ];
   return () => unsubs.forEach(u => u());
 };
