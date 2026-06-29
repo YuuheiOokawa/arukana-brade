@@ -32,7 +32,6 @@ import { UIShowcasePage } from './features/debug/UIShowcasePage';
 import { useAuthStore } from './stores/authStore';
 import { useTutorialStore } from './stores/tutorialStore';
 import { usePlayerStore } from './stores/playerStore';
-import { useUnitStore } from './stores/unitStore';
 import { hydrateFromGameState, initAutoSave, saveImmediately } from './lib/syncService';
 
 const ADMIN_EMAIL = 'yuuheiookawa@gmail.com';
