@@ -15,7 +15,8 @@ import { useMissionStore } from '../stores/missionStore';
 import { useLoginBonusStore } from '../stores/loginBonusStore';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { useArenaStore } from '../stores/arenaStore';
-import type { PlayerData, OwnedItem } from '../types';
+import type { PlayerData, OwnedItem, OwnedUnit, OwnedEquipment } from '../types';
+import type { GameDataResponse } from '../stores/authStore';
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 let isSaving = false;
@@ -153,82 +154,194 @@ export const saveImmediately = () => {
   void saveAllToServer();
 };
 
-// DBから取得したgameStateJsonで全ストアを復元
-export const hydrateFromGameState = (gameState: Record<string, unknown>) => {
-  if (!gameState || typeof gameState !== 'object') return;
+/**
+ * DBから取得したデータで全ストアを復元する。
+ * 新フォーマット (GameDataResponse) と旧フォーマット (gameStateJson) の両方に対応。
+ */
+export const hydrateFromGameState = (
+  gameStateOrData: Record<string, unknown> | GameDataResponse
+) => {
+  if (!gameStateOrData || typeof gameStateOrData !== 'object') return;
 
   isHydrating = true;
 
-  // tutorialStore（最重要：これがないと再チュートリアルになる）
-  if (gameState.tutorialCompleted === true) {
-    useTutorialStore.setState({ completed: true, phase: 'complete' });
-  }
+  // 新フォーマット判定: GameDataResponse は ownedUnits / items / ownedEquipments を持つ
+  const isNewFormat = 'ownedUnits' in gameStateOrData && Array.isArray((gameStateOrData as GameDataResponse).ownedUnits);
 
-  // playerStore
-  if (gameState.player && gameState.items) {
-    usePlayerStore.setState({
-      player: gameState.player as PlayerData,
-      items: gameState.items as OwnedItem[],
-    });
-  }
+  if (isNewFormat) {
+    const gd = gameStateOrData as GameDataResponse;
 
-  // unitStore
-  if (Array.isArray(gameState.ownedUnits)) {
-    useUnitStore.setState({
-      ownedUnits: gameState.ownedUnits as ReturnType<typeof useUnitStore.getState>['ownedUnits'],
-      awakeningCrystals: (gameState.awakeningCrystals as Record<string, number>) ?? {},
-    });
-  }
+    // unitStore: DB の OwnedUnit → フロントの OwnedUnit 型に変換
+    if (Array.isArray(gd.ownedUnits)) {
+      const units: OwnedUnit[] = gd.ownedUnits.map(u => ({
+        instanceId: u.instanceId,
+        masterId: u.masterId,
+        level: u.level,
+        exp: u.exp,
+        awakenRank: u.awakenRank,
+        awakeningCount: u.awakeningCount,
+        currentRarity: Number(u.currentRarity) as OwnedUnit['currentRarity'],
+        currentStats: { hp: 0, atk: 0, def: 0, rec: 0 }, // calcStats で上書きされる
+        isLocked: u.isLocked,
+        acquiredAt: u.acquiredAt,
+      }));
+      // awakeningCrystals は miscData から取得（authStore.player.miscData 経由）
+      // ここでは unitStore に空で入れて、miscData は別途 hydrateFromGameState の呼び出し元で渡す
+      useUnitStore.setState({ ownedUnits: units });
+    }
 
-  // questStore
-  if (Array.isArray(gameState.clearedStageIds)) {
-    useQuestStore.setState({
-      clearedStageIds: gameState.clearedStageIds as string[],
-      claimedAreaRewards: (gameState.claimedAreaRewards as string[]) ?? [],
-      lastSelectedWorldId: (gameState.lastSelectedWorldId as string | null) ?? null,
-    });
-  }
+    // playerStore: items
+    if (Array.isArray(gd.items)) {
+      const items: OwnedItem[] = gd.items.map(i => ({ itemId: i.itemId, quantity: i.quantity }));
+      usePlayerStore.setState({ items });
+    }
 
-  // partyStore
-  if (Array.isArray(gameState.parties)) {
-    usePartyStore.setState({
-      parties: gameState.parties as ReturnType<typeof usePartyStore.getState>['parties'],
-      activePartyId: (gameState.activePartyId as string) ?? 'party_default',
-    });
-  }
+    // equipmentStore: OwnedEquipment
+    if (Array.isArray(gd.ownedEquipments)) {
+      const equipments: OwnedEquipment[] = gd.ownedEquipments.map(e => ({
+        instanceId: e.instanceId,
+        masterId: e.masterId,
+        level: e.level,
+        exp: e.exp,
+        equippedTo: e.equippedTo ?? undefined,
+      }));
+      useEquipmentStore.setState({ ownedEquipments: equipments });
+    }
 
-  // equipmentStore
-  if (Array.isArray(gameState.ownedEquipments)) {
-    useEquipmentStore.setState({
-      ownedEquipments: gameState.ownedEquipments as ReturnType<typeof useEquipmentStore.getState>['ownedEquipments'],
-    });
-  }
+    // questStore
+    if (gd.questProgress) {
+      useQuestStore.setState({
+        clearedStageIds: gd.questProgress.clearedStageIds ?? [],
+        claimedAreaRewards: gd.questProgress.claimedAreaRewards ?? [],
+        lastSelectedWorldId: gd.questProgress.lastSelectedWorldId ?? null,
+      });
+    }
 
-  // missionStore
-  if (gameState.missionDaily) {
-    useMissionStore.setState({
-      daily: gameState.missionDaily as ReturnType<typeof useMissionStore.getState>['daily'],
-      weeklyProgresses: (gameState.missionWeeklyProgresses as ReturnType<typeof useMissionStore.getState>['weeklyProgresses']) ?? [],
-      weekStr: (gameState.missionWeekStr as string) ?? '',
-    });
-  }
+    // partyStore
+    if (Array.isArray(gd.parties) && gd.parties.length > 0) {
+      const activeParty = gd.parties.find(p => p.isActive);
+      usePartyStore.setState({
+        parties: gd.parties.map(p => ({
+          id: p.partyId,
+          name: p.name,
+          slots: p.slots,
+          leaderId: p.leaderId,
+        })),
+        activePartyId: activeParty?.partyId ?? gd.parties[0].partyId,
+      });
+    }
 
-  // loginBonusStore
-  if (gameState.loginBonusClaimedDays !== undefined) {
-    useLoginBonusStore.setState({
-      lastClaimedDate: (gameState.loginBonusLastClaimedDate as string | null) ?? null,
-      claimedDays: (gameState.loginBonusClaimedDays as number[]) ?? [],
-      currentDay: (gameState.loginBonusCurrentDay as number) ?? 1,
-      lastLoginDate: (gameState.loginBonusLastLoginDate as string | null) ?? null,
-    });
-  }
+    // missionStore
+    if (gd.missionProgress) {
+      useMissionStore.setState({
+        daily: {
+          date: gd.missionProgress.dailyDate,
+          progresses: gd.missionProgress.dailyData as ReturnType<typeof useMissionStore.getState>['daily']['progresses'],
+        },
+        weeklyProgresses: gd.missionProgress.weeklyData as ReturnType<typeof useMissionStore.getState>['weeklyProgresses'],
+        weekStr: gd.missionProgress.weekStr,
+      });
+    }
 
-  // arenaStore
-  if (gameState.arenaRecord) {
-    useArenaStore.setState({
-      record: gameState.arenaRecord as ReturnType<typeof useArenaStore.getState>['record'],
-      battleHistory: (gameState.arenaBattleHistory as ReturnType<typeof useArenaStore.getState>['battleHistory']) ?? [],
-    });
+    // loginBonusStore
+    if (gd.loginBonus) {
+      useLoginBonusStore.setState({
+        lastClaimedDate: gd.loginBonus.lastClaimedDate ?? null,
+        claimedDays: gd.loginBonus.claimedDays ?? [],
+        currentDay: gd.loginBonus.currentDay ?? 1,
+        lastLoginDate: gd.loginBonus.lastLoginDate ?? null,
+      });
+    }
+
+    // arenaStore
+    if (gd.arenaRecord) {
+      useArenaStore.setState({
+        record: {
+          wins: gd.arenaRecord.wins,
+          losses: gd.arenaRecord.losses,
+          rank: gd.arenaRecord.rank,
+          points: gd.arenaRecord.points,
+          season: gd.arenaRecord.season,
+        },
+        battleHistory: gd.arenaRecord.battleHistory as ReturnType<typeof useArenaStore.getState>['battleHistory'],
+      });
+    }
+
+  } else {
+    // 旧フォーマット（gameStateJson）互換パス
+    const gameState = gameStateOrData as Record<string, unknown>;
+
+    // tutorialStore（最重要：これがないと再チュートリアルになる）
+    if (gameState.tutorialCompleted === true) {
+      useTutorialStore.setState({ completed: true, phase: 'complete' });
+    }
+
+    // playerStore
+    if (gameState.player && gameState.items) {
+      usePlayerStore.setState({
+        player: gameState.player as PlayerData,
+        items: gameState.items as OwnedItem[],
+      });
+    }
+
+    // unitStore
+    if (Array.isArray(gameState.ownedUnits)) {
+      useUnitStore.setState({
+        ownedUnits: gameState.ownedUnits as ReturnType<typeof useUnitStore.getState>['ownedUnits'],
+        awakeningCrystals: (gameState.awakeningCrystals as Record<string, number>) ?? {},
+      });
+    }
+
+    // questStore
+    if (Array.isArray(gameState.clearedStageIds)) {
+      useQuestStore.setState({
+        clearedStageIds: gameState.clearedStageIds as string[],
+        claimedAreaRewards: (gameState.claimedAreaRewards as string[]) ?? [],
+        lastSelectedWorldId: (gameState.lastSelectedWorldId as string | null) ?? null,
+      });
+    }
+
+    // partyStore
+    if (Array.isArray(gameState.parties)) {
+      usePartyStore.setState({
+        parties: gameState.parties as ReturnType<typeof usePartyStore.getState>['parties'],
+        activePartyId: (gameState.activePartyId as string) ?? 'party_default',
+      });
+    }
+
+    // equipmentStore
+    if (Array.isArray(gameState.ownedEquipments)) {
+      useEquipmentStore.setState({
+        ownedEquipments: gameState.ownedEquipments as ReturnType<typeof useEquipmentStore.getState>['ownedEquipments'],
+      });
+    }
+
+    // missionStore
+    if (gameState.missionDaily) {
+      useMissionStore.setState({
+        daily: gameState.missionDaily as ReturnType<typeof useMissionStore.getState>['daily'],
+        weeklyProgresses: (gameState.missionWeeklyProgresses as ReturnType<typeof useMissionStore.getState>['weeklyProgresses']) ?? [],
+        weekStr: (gameState.missionWeekStr as string) ?? '',
+      });
+    }
+
+    // loginBonusStore
+    if (gameState.loginBonusClaimedDays !== undefined) {
+      useLoginBonusStore.setState({
+        lastClaimedDate: (gameState.loginBonusLastClaimedDate as string | null) ?? null,
+        claimedDays: (gameState.loginBonusClaimedDays as number[]) ?? [],
+        currentDay: (gameState.loginBonusCurrentDay as number) ?? 1,
+        lastLoginDate: (gameState.loginBonusLastLoginDate as string | null) ?? null,
+      });
+    }
+
+    // arenaStore
+    if (gameState.arenaRecord) {
+      useArenaStore.setState({
+        record: gameState.arenaRecord as ReturnType<typeof useArenaStore.getState>['record'],
+        battleHistory: (gameState.arenaBattleHistory as ReturnType<typeof useArenaStore.getState>['battleHistory']) ?? [],
+      });
+    }
   }
 
   // 復元完了後、少し待ってからフラグを解除（setState の subscribe が全部発火するまで待つ）

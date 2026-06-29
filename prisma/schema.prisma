@@ -39,29 +39,48 @@ model Player {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  gameStateJson     Json?
+  // 新フィールド（gameStateJson の代替）
+  staminaRecoveryTime BigInt   @default(0)  // Unix ms
+  arcanaPlayerId      String   @default("")  // ARC-xxxxx形式
+  miscData            Json     @default("{}")  // awakeningCrystals等
 
-  ownedUnits    OwnedUnit[]
-  playerItems   PlayerItem[]
-  summonHistory SummonHistory[]
+  ownedUnits      OwnedUnit[]
+  playerItems     PlayerItem[]
+  summonHistory   SummonHistory[]
+  ownedEquipments OwnedEquipment[]
+  questProgress   PlayerQuestProgress?
+  parties         PlayerParty[]
+  missionProgress PlayerMissionProgress?
+  loginBonus      PlayerLoginBonus?
+  arenaRecord     PlayerArenaRecord?
 
   @@index([userId])
 }
 
 model OwnedUnit {
-  id             String   @id @default(cuid())
+  instanceId     String  @id   // フロントエンド生成ID
   playerId       String
-  player         Player   @relation(fields: [playerId], references: [playerId], onDelete: Cascade)
+  player         Player  @relation(fields: [playerId], references: [playerId], onDelete: Cascade)
   masterId       String
-  level          Int      @default(1)
-  exp            Int      @default(0)
-  awakenRank     Int      @default(0)
-  awakeningCount Int      @default(0)
-  currentRarity  String   @default("1")
-  isLocked       Boolean  @default(false)
-  acquiredAt     DateTime @default(now())
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  level          Int     @default(1)
+  exp            Int     @default(0)
+  awakenRank     Int     @default(0)
+  awakeningCount Int     @default(0)
+  currentRarity  String  @default("1")
+  isLocked       Boolean @default(false)
+  acquiredAt     BigInt  @default(0)  // Unix ms
+
+  @@index([playerId])
+}
+
+model OwnedEquipment {
+  instanceId String  @id    // フロントエンド生成ID
+  playerId   String
+  player     Player  @relation(fields: [playerId], references: [playerId], onDelete: Cascade)
+  masterId   String
+  level      Int     @default(1)
+  exp        Int     @default(0)
+  equippedTo String?
 
   @@index([playerId])
 }
@@ -88,6 +107,61 @@ model SummonHistory {
   pulledAt   DateTime @default(now())
 
   @@index([playerId])
+}
+
+model PlayerQuestProgress {
+  playerId            String   @id
+  player              Player   @relation(fields: [playerId], references: [playerId], onDelete: Cascade)
+  clearedStageIds     String[] @default([])
+  claimedAreaRewards  String[] @default([])
+  lastSelectedWorldId String?
+  updatedAt           DateTime @updatedAt
+}
+
+model PlayerParty {
+  id       String  @id @default(cuid())
+  playerId String
+  player   Player  @relation(fields: [playerId], references: [playerId], onDelete: Cascade)
+  partyId  String
+  name     String  @default("パーティ")
+  slots    Json    @default("[]")  // (string | null)[] unitInstanceId or null
+  leaderId String?
+  isActive Boolean @default(false)
+
+  @@unique([playerId, partyId])
+  @@index([playerId])
+}
+
+model PlayerMissionProgress {
+  playerId   String   @id
+  player     Player   @relation(fields: [playerId], references: [playerId], onDelete: Cascade)
+  dailyDate  String   @default("")
+  dailyData  Json     @default("[]")
+  weeklyData Json     @default("[]")
+  weekStr    String   @default("")
+  updatedAt  DateTime @updatedAt
+}
+
+model PlayerLoginBonus {
+  playerId        String   @id
+  player          Player   @relation(fields: [playerId], references: [playerId], onDelete: Cascade)
+  lastClaimedDate String?
+  lastLoginDate   String?
+  claimedDays     Int[]    @default([])
+  currentDay      Int      @default(1)
+  updatedAt       DateTime @updatedAt
+}
+
+model PlayerArenaRecord {
+  playerId      String   @id
+  player        Player   @relation(fields: [playerId], references: [playerId], onDelete: Cascade)
+  wins          Int      @default(0)
+  losses        Int      @default(0)
+  rank          Int      @default(999)
+  points        Int      @default(1000)
+  season        Int      @default(1)
+  battleHistory Json     @default("[]")
+  updatedAt     DateTime @updatedAt
 }
 
 // マスタデータをDB管理するためのテーブル。idはデータ種別('units','enemies','items','equipment','quests')
