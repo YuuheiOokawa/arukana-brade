@@ -193,11 +193,11 @@ export const HomePage = () => {
         {missionPending > 0 && (
           <button onClick={() => navigate('/missions')}
             className="w-full rounded-xl p-3 flex items-center gap-3 text-left transition-all active:scale-98"
-            style={{ background: 'linear-gradient(135deg, #7c4d00, #a36200)', border: '1px solid rgba(245,158,11,0.9)', boxShadow: '0 0 20px rgba(245,158,11,0.4)' }}>
-            <IconScroll size={22} color="#f59e0b" />
+            style={{ background: 'linear-gradient(135deg, #c46a00, #f5a200)', border: '2px solid rgba(245,162,0,1.0)', boxShadow: '0 0 28px rgba(245,162,0,0.7), inset 0 1px 0 rgba(255,255,255,0.15)' }}>
+            <IconScroll size={22} color="#fff" />
             <div className="flex-1">
-              <p className="text-sm font-bold" style={{ color: '#fbbf24' }}>デイリーミッション達成！</p>
-              <p className="text-xs" style={{ color: '#d1d5db' }}>{missionPending} 件の報酬が受け取れます</p>
+              <p className="text-sm font-bold text-white">デイリーミッション達成！</p>
+              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.85)' }}>{missionPending} 件の報酬が受け取れます</p>
             </div>
             <span className="w-6 h-6 rounded-full bg-red-500 text-white text-xs font-black flex items-center justify-center">
               {missionPending}
@@ -207,11 +207,11 @@ export const HomePage = () => {
         {activeRaids.slice(0, 1).map(raid => (
           <button key={raid.id} onClick={() => navigate('/raid')}
             className="w-full rounded-xl p-3 flex items-center gap-3 text-left transition-all active:scale-98"
-            style={{ background: 'linear-gradient(135deg, #3b1060, #6d28a0)', border: '1px solid rgba(167,139,250,0.7)', boxShadow: '0 0 16px rgba(139,92,246,0.35)' }}>
-            <IconDragon size={22} color="#c4b5fd" />
+            style={{ background: 'linear-gradient(135deg, #6b18b0, #9d40e0)', border: '2px solid rgba(196,181,253,0.9)', boxShadow: '0 0 28px rgba(139,92,246,0.7), inset 0 1px 0 rgba(255,255,255,0.1)' }}>
+            <IconDragon size={22} color="#fff" />
             <div className="flex-1">
-              <p className="text-sm font-bold text-white">{raid.name}</p>
-              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.75)' }}>レイドボス開催中！</p>
+              <p className="text-sm font-bold text-white drop-shadow">{raid.name}</p>
+              <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.9)' }}>レイドボス開催中！</p>
             </div>
             <span style={{ color: 'rgba(255,255,255,0.6)' }}>›</span>
           </button>
@@ -219,8 +219,8 @@ export const HomePage = () => {
         {activeEvents.slice(0, 1).map(event => (
           <button key={event.id} onClick={() => navigate('/quests')}
             className="w-full rounded-xl p-3 flex items-center gap-3 text-left transition-all active:scale-98"
-            style={{ background: 'linear-gradient(135deg, #3b1060, #6d28a0)', border: '1px solid rgba(167,139,250,0.9)', boxShadow: '0 0 20px rgba(139,92,246,0.5)' }}>
-            <IconSword size={22} color="#c4b5fd" />
+            style={{ background: 'linear-gradient(135deg, #1a1070, #2d28c0)', border: '2px solid rgba(130,160,255,0.9)', boxShadow: '0 0 28px rgba(80,100,240,0.7), inset 0 1px 0 rgba(255,255,255,0.1)' }}>
+            <IconSword size={22} color="#fff" />
             <div className="flex-1">
               <p className="text-sm font-bold text-white">{event.name}</p>
               <p className="text-xs" style={{ color: 'rgba(255,255,255,0.75)' }}>期間限定イベント開催中！</p>
