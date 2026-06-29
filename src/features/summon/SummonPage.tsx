@@ -156,6 +156,16 @@ const CardReveal = ({ unit, star, index, total, onOpen, opened, resultType, awak
         <div className="card-face card-front" style={{ borderColor: starBorder(star) }}>
           <div className="card-front-bg" />
           <div className="card-front-glass" />
+          {/* ユニット絵文字（大） */}
+          <div style={{
+            position: 'absolute', top: '32%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            fontSize: 80, zIndex: 3,
+            filter: `drop-shadow(0 0 24px ${color}) drop-shadow(0 0 48px ${color}66)`,
+            lineHeight: 1,
+          }}>
+            {unit.emoji}
+          </div>
           <div className="card-front-bottom" />
           <div className="card-unit-info">
             <div className="card-unit-name">{unit.name}</div>

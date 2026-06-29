@@ -123,7 +123,14 @@ export const usePlayerStore = create<PlayerStore>()(
       },
 
       setupFromTutorial: (name) => {
+        const { player, items } = get();
         const now = Date.now();
+        // 既にプレイ実績がある場合は名前のみ更新してリセットしない
+        const hasProgress = player.rank > 1 || player.gold > 5000 || player.diamond > 500 || items.length > 8;
+        if (hasProgress) {
+          set(s => ({ player: { ...s.player, name: name || s.player.name } }));
+          return;
+        }
         set(s => ({
           player: {
             ...s.player,
