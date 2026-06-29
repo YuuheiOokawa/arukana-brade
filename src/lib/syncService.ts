@@ -57,6 +57,7 @@ export const collectGameState = () => {
     // questStore
     clearedStageIds: qs.clearedStageIds,
     claimedAreaRewards: qs.claimedAreaRewards,
+    lastSelectedWorldId: qs.lastSelectedWorldId,
     // partyStore
     parties: party.parties,
     activePartyId: party.activePartyId,
@@ -70,6 +71,7 @@ export const collectGameState = () => {
     loginBonusLastClaimedDate: lb.lastClaimedDate,
     loginBonusClaimedDays: lb.claimedDays,
     loginBonusCurrentDay: lb.currentDay,
+    loginBonusLastLoginDate: lb.lastLoginDate,
     // tutorialStore
     tutorialCompleted: ts.completed,
     // arenaStore
@@ -183,6 +185,7 @@ export const hydrateFromGameState = (gameState: Record<string, unknown>) => {
     useQuestStore.setState({
       clearedStageIds: gameState.clearedStageIds as string[],
       claimedAreaRewards: (gameState.claimedAreaRewards as string[]) ?? [],
+      lastSelectedWorldId: (gameState.lastSelectedWorldId as string | null) ?? null,
     });
   }
 
@@ -216,6 +219,7 @@ export const hydrateFromGameState = (gameState: Record<string, unknown>) => {
       lastClaimedDate: (gameState.loginBonusLastClaimedDate as string | null) ?? null,
       claimedDays: (gameState.loginBonusClaimedDays as number[]) ?? [],
       currentDay: (gameState.loginBonusCurrentDay as number) ?? 1,
+      lastLoginDate: (gameState.loginBonusLastLoginDate as string | null) ?? null,
     });
   }
 
@@ -257,14 +261,14 @@ export const resetAllStores = () => {
     lastUsedFriendId: null,
   });
   useUnitStore.setState({ ownedUnits: [], awakeningCrystals: {} });
-  useQuestStore.setState({ clearedStageIds: [], claimedAreaRewards: [], pendingStageId: null, pendingFriendId: null });
+  useQuestStore.setState({ clearedStageIds: [], claimedAreaRewards: [], pendingStageId: null, pendingFriendId: null, lastSelectedWorldId: null });
   usePartyStore.setState({
     parties: [{ id: 'party_default', name: 'パーティ1', slots: [null, null, null, null, null], leaderId: null }],
     activePartyId: 'party_default',
   });
   useEquipmentStore.setState({ ownedEquipments: [] });
   useMissionStore.setState({ daily: { date: '', progresses: [] }, weeklyProgresses: [], weekStr: '' });
-  useLoginBonusStore.setState({ lastClaimedDate: null, claimedDays: [], currentDay: 1 });
+  useLoginBonusStore.setState({ lastClaimedDate: null, claimedDays: [], currentDay: 1, lastLoginDate: null });
   useArenaStore.setState({ record: { wins: 0, losses: 0, rank: 999, points: 1000, season: 1 }, battleHistory: [] });
   useTutorialStore.setState({ completed: false, phase: 'title', playerName: '', selectedHeroId: null, selectedGender: null, selectedRace: null });
   setTimeout(() => { isHydrating = false; }, 300);

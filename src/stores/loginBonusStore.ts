@@ -43,7 +43,11 @@ interface LoginBonusStore {
   lastClaimedDate: string | null;
   claimedDays: number[];
   currentDay: number;
+  /** 当日初回ログイン済みフラグ（0時リセット）。モーダルを1日1回だけ表示するために使う */
+  lastLoginDate: string | null;
   canClaim: () => boolean;
+  /** 今日初めてのログインならtrueを返しフラグを立てる。2回目以降はfalse */
+  markLoggedInToday: () => boolean;
   claimToday: () => LoginBonusDay | null;
   getNextReward: () => LoginBonusDay | null;
 }
@@ -56,10 +60,18 @@ export const useLoginBonusStore = create<LoginBonusStore>()(
       lastClaimedDate: null,
       claimedDays: [],
       currentDay: 1,
+      lastLoginDate: null,
 
       canClaim: () => {
         const { lastClaimedDate } = get();
         return lastClaimedDate !== today();
+      },
+
+      markLoggedInToday: () => {
+        const { lastLoginDate } = get();
+        if (lastLoginDate === today()) return false; // 今日すでにログイン済み
+        set({ lastLoginDate: today() });
+        return true; // 今日初めてのログイン
       },
 
       claimToday: () => {
