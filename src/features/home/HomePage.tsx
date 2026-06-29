@@ -189,15 +189,19 @@ export const HomePage = () => {
       </div>
 
       {/* お知らせ */}
-      <div className="px-4 space-y-2 mb-4">
+      <div className="px-4 space-y-2 mb-4" style={{ position: 'relative', zIndex: 2 }}>
         {missionPending > 0 && (
           <button onClick={() => navigate('/missions')}
             className="w-full rounded-xl p-3 flex items-center gap-3 text-left transition-all active:scale-98"
-            style={{ background: 'linear-gradient(135deg, #c46a00, #f5a200)', border: '2px solid rgba(245,162,0,1.0)', boxShadow: '0 0 28px rgba(245,162,0,0.7), inset 0 1px 0 rgba(255,255,255,0.15)' }}>
-            <IconScroll size={22} color="#fff" />
+            style={{
+              background: 'linear-gradient(145deg, #6b3800, #3d2000)',
+              border: '2px solid #f59e0b',
+              boxShadow: '0 0 20px rgba(245,158,11,0.8), 0 4px 12px rgba(0,0,0,0.6)',
+            }}>
+            <IconScroll size={22} color="#fbbf24" />
             <div className="flex-1">
-              <p className="text-sm font-bold text-white">デイリーミッション達成！</p>
-              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.85)' }}>{missionPending} 件の報酬が受け取れます</p>
+              <p className="text-sm font-bold" style={{ color: '#fde68a' }}>デイリーミッション達成！</p>
+              <p className="text-xs" style={{ color: '#fcd34d' }}>{missionPending} 件の報酬が受け取れます</p>
             </div>
             <span className="w-6 h-6 rounded-full bg-red-500 text-white text-xs font-black flex items-center justify-center">
               {missionPending}
@@ -207,31 +211,39 @@ export const HomePage = () => {
         {activeRaids.slice(0, 1).map(raid => (
           <button key={raid.id} onClick={() => navigate('/raid')}
             className="w-full rounded-xl p-3 flex items-center gap-3 text-left transition-all active:scale-98"
-            style={{ background: 'linear-gradient(135deg, #6b18b0, #9d40e0)', border: '2px solid rgba(196,181,253,0.9)', boxShadow: '0 0 28px rgba(139,92,246,0.7), inset 0 1px 0 rgba(255,255,255,0.1)' }}>
-            <IconDragon size={22} color="#fff" />
+            style={{
+              background: 'linear-gradient(145deg, #3d0870, #1e0440)',
+              border: '2px solid #a855f7',
+              boxShadow: '0 0 20px rgba(168,85,247,0.8), 0 4px 12px rgba(0,0,0,0.6)',
+            }}>
+            <IconDragon size={22} color="#d8b4fe" />
             <div className="flex-1">
-              <p className="text-sm font-bold text-white drop-shadow">{raid.name}</p>
-              <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.9)' }}>レイドボス開催中！</p>
+              <p className="text-sm font-bold" style={{ color: '#e9d5ff' }}>{raid.name}</p>
+              <p className="text-xs" style={{ color: '#c4b5fd' }}>レイドボス開催中！</p>
             </div>
-            <span style={{ color: 'rgba(255,255,255,0.6)' }}>›</span>
+            <span style={{ color: '#c4b5fd' }}>›</span>
           </button>
         ))}
         {activeEvents.slice(0, 1).map(event => (
           <button key={event.id} onClick={() => navigate('/quests')}
             className="w-full rounded-xl p-3 flex items-center gap-3 text-left transition-all active:scale-98"
-            style={{ background: 'linear-gradient(135deg, #1a1070, #2d28c0)', border: '2px solid rgba(130,160,255,0.9)', boxShadow: '0 0 28px rgba(80,100,240,0.7), inset 0 1px 0 rgba(255,255,255,0.1)' }}>
-            <IconSword size={22} color="#fff" />
+            style={{
+              background: 'linear-gradient(145deg, #0a0870, #060548)',
+              border: '2px solid #6366f1',
+              boxShadow: '0 0 20px rgba(99,102,241,0.8), 0 4px 12px rgba(0,0,0,0.6)',
+            }}>
+            <IconSword size={22} color="#a5b4fc" />
             <div className="flex-1">
-              <p className="text-sm font-bold text-white">{event.name}</p>
-              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.75)' }}>期間限定イベント開催中！</p>
+              <p className="text-sm font-bold" style={{ color: '#c7d2fe' }}>{event.name}</p>
+              <p className="text-xs" style={{ color: '#a5b4fc' }}>期間限定イベント開催中！</p>
             </div>
-            <span style={{ color: 'rgba(255,255,255,0.6)' }}>›</span>
+            <span style={{ color: '#a5b4fc' }}>›</span>
           </button>
         ))}
       </div>
 
       {/* クイックアクション */}
-      <div className="px-4 mb-4">
+      <div className="px-4 mb-4" style={{ position: 'relative', zIndex: 2 }}>
         <p className="text-xs font-bold tracking-widest mb-3" style={{ color: '#4b5563' }}>— メニュー —</p>
         <div className="grid grid-cols-3 gap-2.5">
           {QUICK_ACTIONS.map(btn => {
@@ -241,8 +253,8 @@ export const HomePage = () => {
                 className="rounded-2xl p-3 flex flex-col items-center text-center transition-all active:scale-95 relative overflow-hidden"
                 style={{
                   background: btn.bg,
-                  border: `1px solid ${btn.accent}aa`,
-                  boxShadow: `0 4px 16px rgba(0,0,0,0.5), 0 0 14px ${btn.accent}44`,
+                  border: `2px solid ${btn.accent}`,
+                  boxShadow: `0 4px 16px rgba(0,0,0,0.6), 0 0 18px ${btn.accent}88`,
                 }}>
                 <div className="absolute top-0 left-0 right-0 h-px" style={{
                   background: `linear-gradient(90deg, transparent, ${btn.accent}50, transparent)`,
@@ -256,7 +268,7 @@ export const HomePage = () => {
       </div>
 
       {/* コンテンツ一覧 */}
-      <div className="px-4 grid grid-cols-2 gap-2.5 mb-4">
+      <div className="px-4 grid grid-cols-2 gap-2.5 mb-4" style={{ position: 'relative', zIndex: 2 }}>
         {[
           { path: '/pvp',      label: 'アリーナ',   sub: 'PvP対戦',     Icon: IconTrophy,  accent: '#f59e0b', bg: 'linear-gradient(145deg,#3d2800,#1e1000)' },
           { path: '/guild',    label: 'ギルド',     sub: '仲間と協力',   Icon: IconCastle,  accent: '#8b5cf6', bg: 'linear-gradient(145deg,#2d1460,#120a30)' },
@@ -269,8 +281,8 @@ export const HomePage = () => {
               className="rounded-2xl p-4 text-left transition-all active:scale-95 relative"
               style={{
                 background: item.bg,
-                border: `1px solid ${item.accent}99`,
-                boxShadow: `0 4px 16px rgba(0,0,0,0.5), 0 0 16px ${item.accent}55`,
+                border: `2px solid ${item.accent}`,
+                boxShadow: `0 4px 16px rgba(0,0,0,0.6), 0 0 18px ${item.accent}88`,
               }}>
               <IconComp size={26} color={item.accent} />
               <p className="text-white font-black text-sm mt-2">{item.label}</p>
