@@ -1,8 +1,9 @@
 /**
  * syncService - 全ゲームデータのDB同期サービス
  *
- * - scheduleSave(): 1.5秒デバウンスで自動保存
- * - saveImmediately(): ページ離脱時などに即時保存
+ * - scheduleSave(): デバウンスで自動保存
+ * - saveImmediately(): blur時などに即時保存
+ * - saveBeforeUnload(): ページ離脱時の keepalive 保存
  * - hydrateFromGameState(): 認証後にDBからストアを復元
  */
 import { usePlayerStore } from '../stores/playerStore';
@@ -19,11 +20,19 @@ import type { PlayerData, OwnedItem } from '../types';
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 let isSaving = false;
 let failedSaveState: ReturnType<typeof collectGameState> | null = null;
+// hydrateFromGameState / resetAllStores 実行中はセーブをスキップする（DBの古いデータで上書きを防ぐ）
+let isHydrating = false;
 
 // 保存失敗をUIに通知するコールバック（App.tsxからセット）
 let onSaveError: ((msg: string) => void) | null = null;
 export const setSaveErrorHandler = (handler: (msg: string) => void) => {
   onSaveError = handler;
+};
+
+// 保存成功をUIに通知するコールバック（App.tsxからセット）
+let onSaveSuccess: (() => void) | null = null;
+export const setSaveSuccessHandler = (handler: () => void) => {
+  onSaveSuccess = handler;
 };
 
 // 全ストア状態を1つのJSONに収集
@@ -74,11 +83,6 @@ export const collectGameState = () => {
 // DBへ保存（失敗時はリトライキューに積む）
 export const saveAllToServer = async () => {
   if (isSaving) return;
-  // オフライン時はスキップ（localStorage に保存済み）
-  if (!navigator.onLine) {
-    failedSaveState = collectGameState();
-    return;
-  }
   isSaving = true;
   try {
     const state = failedSaveState ?? collectGameState();
@@ -91,15 +95,32 @@ export const saveAllToServer = async () => {
     if (!res.ok) {
       throw new Error(`saveAll failed: ${res.status}`);
     }
-    failedSaveState = null; // 成功したらリトライキューをクリア
+    failedSaveState = null;
+    onSaveSuccess?.();
   } catch (err) {
-    // 失敗した状態を保持（次回オンライン時にリトライ）
     if (!failedSaveState) failedSaveState = collectGameState();
     console.error('[syncService] save failed:', err);
     onSaveError?.('データの保存に失敗しました。ネットワークを確認してください。');
   } finally {
     isSaving = false;
   }
+};
+
+// ページ離脱時専用保存 (keepalive=true でブラウザが強制終了しても送信完了させる)
+export const saveBeforeUnload = () => {
+  const state = failedSaveState ?? collectGameState();
+  const body = JSON.stringify({ state });
+  // keepalive の制限は 64KB。超える場合は通常のセーブに任せる
+  if (body.length > 60_000) return;
+  try {
+    fetch('/api/player/saveAll', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+      keepalive: true,
+    });
+  } catch { /* ignore */ }
 };
 
 // オンライン復帰時に自動リトライ
@@ -111,16 +132,18 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// デバウンス保存（3秒後に実行 - 通常の状態変化）
+// デバウンス保存
 export const scheduleSave = (delayMs = 3000) => {
+  if (isHydrating) return; // 復元中はスキップ
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     void saveAllToServer();
   }, delayMs);
 };
 
-// 即時保存（バトル終了・ガチャなど重要操作 / ページ離脱時）
+// 即時保存（バトル終了・ガチャなど重要操作 / ページblur時）
 export const saveImmediately = () => {
+  if (isHydrating) return;
   if (saveTimer) {
     clearTimeout(saveTimer);
     saveTimer = null;
@@ -131,6 +154,8 @@ export const saveImmediately = () => {
 // DBから取得したgameStateJsonで全ストアを復元
 export const hydrateFromGameState = (gameState: Record<string, unknown>) => {
   if (!gameState || typeof gameState !== 'object') return;
+
+  isHydrating = true;
 
   // tutorialStore（最重要：これがないと再チュートリアルになる）
   if (gameState.tutorialCompleted === true) {
@@ -201,10 +226,14 @@ export const hydrateFromGameState = (gameState: Record<string, unknown>) => {
       battleHistory: (gameState.arenaBattleHistory as ReturnType<typeof useArenaStore.getState>['battleHistory']) ?? [],
     });
   }
+
+  // 復元完了後、少し待ってからフラグを解除（setState の subscribe が全部発火するまで待つ）
+  setTimeout(() => { isHydrating = false; }, 300);
 };
 
 // 全ストアをリセット（別ユーザーへの切り替え時に呼ぶ）
 export const resetAllStores = () => {
+  isHydrating = true; // リセット中もセーブをスキップ
   const now = Date.now();
   usePlayerStore.setState({
     player: {
@@ -238,21 +267,21 @@ export const resetAllStores = () => {
   useLoginBonusStore.setState({ lastClaimedDate: null, claimedDays: [], currentDay: 1 });
   useArenaStore.setState({ record: { wins: 0, losses: 0, rank: 999, points: 1000, season: 1 }, battleHistory: [] });
   useTutorialStore.setState({ completed: false, phase: 'title', playerName: '', selectedHeroId: null, selectedGender: null, selectedRace: null });
+  setTimeout(() => { isHydrating = false; }, 300);
 };
 
 // ストア変更を監視して自動デバウンス保存を設定
-// - 通貨・ユニット変化（バトル後など）: 1秒デバウンス（取りこぼしを防ぐ重要データ）
-// - その他（編成・クエスト進捗など）: 3秒デバウンス
 export const initAutoSave = () => {
   const unsubs = [
-    usePlayerStore.subscribe(() => scheduleSave(1000)),   // gold/diamond/stamina変化は早め
-    useUnitStore.subscribe(() => scheduleSave(1000)),     // ユニット変化も早め
-    useQuestStore.subscribe(() => scheduleSave(3000)),
-    usePartyStore.subscribe(() => scheduleSave(3000)),
-    useEquipmentStore.subscribe(() => scheduleSave(3000)),
-    useMissionStore.subscribe(() => scheduleSave(3000)),
-    useLoginBonusStore.subscribe(() => scheduleSave(3000)),
-    useArenaStore.subscribe(() => scheduleSave(1000)),    // アリーナ結果は早め
+    usePlayerStore.subscribe(() => scheduleSave(1000)),
+    useUnitStore.subscribe(() => scheduleSave(1000)),
+    useQuestStore.subscribe(() => scheduleSave(2000)),
+    usePartyStore.subscribe(() => scheduleSave(2000)),
+    useEquipmentStore.subscribe(() => scheduleSave(2000)),
+    useMissionStore.subscribe(() => scheduleSave(2000)),
+    useLoginBonusStore.subscribe(() => scheduleSave(500)),   // ログインボーナス取得は早めに保存
+    useArenaStore.subscribe(() => scheduleSave(1000)),
+    useTutorialStore.subscribe(() => scheduleSave(500)),     // チュートリアル完了は早めに保存
   ];
   return () => unsubs.forEach(u => u());
 };

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { BottomNav } from './components/layout/BottomNav';
 import { HomePage } from './features/home/HomePage';
@@ -32,9 +32,10 @@ import { UIShowcasePage } from './features/debug/UIShowcasePage';
 import { useAuthStore } from './stores/authStore';
 import { useTutorialStore } from './stores/tutorialStore';
 import { usePlayerStore } from './stores/playerStore';
-import { hydrateFromGameState, resetAllStores, initAutoSave, saveImmediately, setSaveErrorHandler } from './lib/syncService';
+import { hydrateFromGameState, resetAllStores, initAutoSave, saveImmediately, saveBeforeUnload, setSaveErrorHandler, setSaveSuccessHandler } from './lib/syncService';
 
 const ADMIN_EMAIL = 'yuuheiookawa@gmail.com';
+const LAST_USER_KEY = 'arcana-last-user-id';
 
 // 認証済みでないと通過できないガード
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
@@ -72,7 +73,7 @@ const AppContent = () => {
   const recoverStamina = usePlayerStore(s => s.recoverStamina);
   const showNav = !HIDE_NAV_PATHS.some(p => pathname.startsWith(p));
   const [saveError, setSaveError] = useState<string | null>(null);
-  const prevUserIdRef = useRef<string | null>(null);
+  const [saveOk, setSaveOk] = useState(false);
 
   // 認証チェック
   useEffect(() => {
@@ -84,10 +85,12 @@ const AppContent = () => {
     if (!user) return;
 
     // 別ユーザーへ切り替わった場合は全ストアをリセット（前ユーザーのデータが混入しないように）
-    if (prevUserIdRef.current !== null && prevUserIdRef.current !== user.id) {
+    // prevUserIdRef の代わりに localStorage を使うことでページリロード後も検知できる
+    const storedUserId = localStorage.getItem(LAST_USER_KEY);
+    if (storedUserId && storedUserId !== user.id) {
       resetAllStores();
     }
-    prevUserIdRef.current = user.id;
+    localStorage.setItem(LAST_USER_KEY, user.id);
 
     // DBに保存済みのゲーム状態があればストアを上書き復元
     if (gameStateJson) {
@@ -96,19 +99,23 @@ const AppContent = () => {
 
     if (user.email === ADMIN_EMAIL) setAdminMode();
 
-    // 保存失敗時のトースト表示
+    // 保存失敗・成功のUI通知
     setSaveErrorHandler((msg) => {
       setSaveError(msg);
       setTimeout(() => setSaveError(null), 5000);
+    });
+    setSaveSuccessHandler(() => {
+      setSaveOk(true);
+      setTimeout(() => setSaveOk(false), 1500);
     });
 
     // ストア変更を監視して自動デバウンス保存
     const stopAutoSave = initAutoSave();
 
-    // ページ離脱・フォーカスロス時に即時保存
-    const handleSave = () => saveImmediately();
-    window.addEventListener('blur', handleSave);
-    window.addEventListener('beforeunload', handleSave);
+    // フォーカスロス時に即時保存
+    window.addEventListener('blur', saveImmediately);
+    // ページ離脱時は keepalive 付き専用関数で保存（非同期fetchはページ終了時に中断されるため）
+    window.addEventListener('beforeunload', saveBeforeUnload);
 
     // スタミナ回復タイマー
     recoverStamina();
@@ -116,8 +123,8 @@ const AppContent = () => {
 
     return () => {
       stopAutoSave();
-      window.removeEventListener('blur', handleSave);
-      window.removeEventListener('beforeunload', handleSave);
+      window.removeEventListener('blur', saveImmediately);
+      window.removeEventListener('beforeunload', saveBeforeUnload);
       clearInterval(staminaInterval);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -130,6 +137,13 @@ const AppContent = () => {
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] px-4 py-2 rounded-xl text-sm font-bold text-white"
           style={{ background: 'rgba(220,38,38,0.95)', boxShadow: '0 4px 16px rgba(0,0,0,0.5)' }}>
           ⚠️ {saveError}
+        </div>
+      )}
+      {/* 保存成功インジケーター */}
+      {saveOk && (
+        <div className="fixed top-4 right-4 z-[200] px-3 py-1.5 rounded-lg text-xs font-bold text-green-300"
+          style={{ background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(34,197,94,0.4)' }}>
+          ✓ 保存済み
         </div>
       )}
       <Routes>
