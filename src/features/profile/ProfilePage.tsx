@@ -226,11 +226,12 @@ export const ProfilePage = () => {
       {editing && (
         <div className="fixed inset-0 z-50 flex items-end" style={{ background: 'rgba(0,0,0,0.7)' }}
           onClick={e => { if (e.target === e.currentTarget) setEditing(false); }}>
-          <div className="w-full max-w-lg mx-auto rounded-t-3xl pb-8 pt-6 px-5"
+          <div className="w-full max-w-lg mx-auto rounded-t-3xl pt-6 px-5"
             style={{
               background: 'linear-gradient(180deg, #1a0838 0%, #0d0620 100%)',
               border: '1px solid rgba(139,92,246,0.4)',
-              maxHeight: '85vh', overflowY: 'auto',
+              maxHeight: '90vh', overflowY: 'auto',
+              paddingBottom: 'max(32px, env(safe-area-inset-bottom, 32px))',
             }}>
             <div className="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-5" />
             <h3 className="text-white font-black text-lg mb-5 text-center">プロフィール編集</h3>
@@ -325,7 +326,8 @@ export const ProfilePage = () => {
             </div>
 
             {/* 保存 / キャンセル */}
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-3 mt-6 sticky bottom-0 pt-3"
+              style={{ background: 'linear-gradient(to bottom, transparent, #0d0620 30%)' }}>
               <button
                 onClick={() => setEditing(false)}
                 className="flex-1 py-3 rounded-xl text-sm font-bold text-gray-400"
