@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import type { OwnedUnit } from '../../types';
-import { UNIT_MASTER } from '../../data/units';
 import { getUnitMaster } from '../../data/units';
+import { UNIT_MASTER } from '../../data/units';
 import { ElementBadge } from './ElementBadge';
 import { RarityBadge } from './RarityBadge';
 import { getStarColor, getLevelCap, AWAKENING_CONFIG } from '../../data/rarityConfig';
+import { resolveUnitImage } from '../../lib/unitImage';
 
 interface Props {
   unit: OwnedUnit;
@@ -19,6 +21,7 @@ export const UnitCard = ({ unit, selected, onClick, compact = false }: Props) =>
   const rarity = unit.currentRarity ?? 1;
   const starColor = getStarColor(rarity);
   const awakeningCount = unit.awakeningCount ?? 0;
+  const imgSrc = resolveUnitImage(unit.masterId, rarity);
 
   const isMaxed =
     unit.level >= getLevelCap(rarity) &&
@@ -51,12 +54,12 @@ export const UnitCard = ({ unit, selected, onClick, compact = false }: Props) =>
         </div>
       )}
       <div className="flex items-center gap-2">
-        <div
-          className={`rounded-lg flex items-center justify-center flex-shrink-0 ${compact ? 'w-10 h-10 text-xl' : 'w-14 h-14 text-3xl'}`}
-          style={{ background: elementGradient(master.element) }}
-        >
-          {master.emoji}
-        </div>
+        <UnitIcon
+          src={imgSrc}
+          fallbackEmoji={master.emoji}
+          element={master.element}
+          size={compact ? 40 : 56}
+        />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1 flex-wrap">
             <RarityBadge rarity={rarity} size="sm" />
@@ -86,6 +89,48 @@ export const UnitCard = ({ unit, selected, onClick, compact = false }: Props) =>
     );
   }
   return cardInner;
+};
+
+// キャラ画像アイコン（エラー時はemoji fallback）
+export const UnitIcon = ({
+  src,
+  fallbackEmoji,
+  element,
+  size = 56,
+  className = '',
+}: {
+  src: string | null;
+  fallbackEmoji: string;
+  element: string;
+  size?: number;
+  className?: string;
+}) => {
+  const [imgError, setImgError] = useState(false);
+
+  if (!src || imgError) {
+    return (
+      <div
+        className={`rounded-lg flex items-center justify-center flex-shrink-0 ${className}`}
+        style={{ width: size, height: size, background: elementGradient(element), fontSize: size * 0.5 }}
+      >
+        {fallbackEmoji}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`rounded-lg overflow-hidden flex-shrink-0 ${className}`}
+      style={{ width: size, height: size, background: elementGradient(element) }}
+    >
+      <img
+        src={src}
+        alt=""
+        onError={() => setImgError(true)}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
+      />
+    </div>
+  );
 };
 
 const elementGradient = (element: string): string => {

@@ -28,6 +28,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
+  const now = BigInt(Date.now());
+  const arcanaId = `ARC-${Date.now().toString(36).toUpperCase()}`;
 
   const user = await prisma.user.create({
     data: {
@@ -37,18 +39,64 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         create: {
           playerName: '勇者',
           tutorialCompleted: false,
+          staminaRecoveryTime: now + BigInt(5 * 60 * 1000),
+          arcanaPlayerId: arcanaId,
         },
       },
     },
-    include: { player: true },
+    include: {
+      player: {
+        include: {
+          ownedUnits: true,
+          playerItems: true,
+          ownedEquipments: true,
+          questProgress: true,
+          parties: true,
+          missionProgress: true,
+          loginBonus: true,
+          arenaRecord: true,
+        },
+      },
+    },
   });
 
   const token = signToken({ userId: user.id, email: user.email });
   res.setHeader('Set-Cookie', setCookieHeader(token));
 
-  const p = user.player;
+  const player = user.player;
+  if (!player) {
+    return res.status(201).json({ user: { id: user.id, email: user.email }, player: null, gameData: null });
+  }
+
+  const {
+    ownedUnits,
+    playerItems,
+    ownedEquipments,
+    questProgress,
+    parties,
+    missionProgress,
+    loginBonus,
+    arenaRecord,
+    ...playerFields
+  } = player;
+
+  const playerForJson = {
+    ...playerFields,
+    staminaRecoveryTime: Number(playerFields.staminaRecoveryTime),
+  };
+
   return res.status(201).json({
     user: { id: user.id, email: user.email },
-    player: p ? { ...p, staminaRecoveryTime: Number(p.staminaRecoveryTime) } : null,
+    player: playerForJson,
+    gameData: {
+      ownedUnits: ownedUnits.map(u => ({ ...u, acquiredAt: Number(u.acquiredAt) })),
+      items: playerItems,
+      ownedEquipments,
+      questProgress,
+      parties,
+      missionProgress,
+      loginBonus,
+      arenaRecord,
+    },
   });
 }

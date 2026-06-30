@@ -14,9 +14,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'メールアドレスとパスワードは必須です' });
   }
 
+  // 全関連テーブルをincludeして一括取得
   const user = await prisma.user.findUnique({
     where: { email },
-    include: { player: true },
+    include: {
+      player: {
+        include: {
+          ownedUnits: true,
+          playerItems: true,
+          ownedEquipments: true,
+          questProgress: true,
+          parties: true,
+          missionProgress: true,
+          loginBonus: true,
+          arenaRecord: true,
+        },
+      },
+    },
   });
 
   if (!user) {
@@ -48,9 +62,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const token = signToken({ userId: user.id, email: user.email });
   res.setHeader('Set-Cookie', setCookieHeader(token));
 
-  const p = user.player;
+  const player = user.player;
+  if (!player) {
+    return res.status(200).json({ user: { id: user.id, email: user.email }, player: null, gameData: null });
+  }
+
+  // 関連テーブルを gameData として分離
+  const {
+    ownedUnits,
+    playerItems,
+    ownedEquipments,
+    questProgress,
+    parties,
+    missionProgress,
+    loginBonus,
+    arenaRecord,
+    ...playerFields
+  } = player;
+
+  const playerForJson = {
+    ...playerFields,
+    staminaRecoveryTime: Number(playerFields.staminaRecoveryTime),
+  };
+
+  const ownedUnitsForJson = ownedUnits.map(u => ({
+    ...u,
+    acquiredAt: Number(u.acquiredAt),
+  }));
+
   return res.status(200).json({
     user: { id: user.id, email: user.email },
-    player: p ? { ...p, staminaRecoveryTime: Number(p.staminaRecoveryTime) } : null,
+    player: playerForJson,
+    gameData: {
+      ownedUnits: ownedUnitsForJson,
+      items: playerItems,
+      ownedEquipments,
+      questProgress,
+      parties,
+      missionProgress,
+      loginBonus,
+      arenaRecord,
+    },
   });
 }

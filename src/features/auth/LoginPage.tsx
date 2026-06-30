@@ -40,6 +40,7 @@ export const LoginPage = () => {
           favoriteUnitId: string | null; loginDays: number; lastLoginAt: string;
           staminaRecoveryTime: number; arcanaPlayerId: string; miscData: Record<string, unknown>;
         };
+        gameData?: import('../../stores/authStore').GameDataResponse | null;
         error?: string;
       };
 
@@ -49,7 +50,7 @@ export const LoginPage = () => {
       }
 
       if (data.user && data.player) {
-        setAuth(data.user, data.player);
+        setAuth(data.user, data.player, data.gameData);
         if (data.player.tutorialCompleted) {
           completeTutorial();
           navigate('/', { replace: true });

@@ -65,6 +65,53 @@ interface GameStateBody {
   state: Record<string, unknown>;
 }
 
+// stage IDのフォーマット検証: stage_{world}_{area}_{num}
+const STAGE_RE = /^stage_\d+_\d+_\d+$/;
+const isValidStageId = (id: string) => STAGE_RE.test(id);
+
+// クリア済みセットに対してステージの到達可能性を検証し、
+// 有効なステージのみを含む配列を返す
+function validateStageProgression(incoming: string[], dbCleared: Set<string>): string[] {
+  // DB確定値を基準に、新規クリアを1つずつ検証して追加する
+  const confirmed = new Set<string>(dbCleared);
+
+  // ステージが到達可能かチェック（既クリアセット内で）
+  const isAccessible = (stageId: string, cleared: Set<string>): boolean => {
+    const parts = stageId.split('_'); // ['stage', world, area, num]
+    const world = Number(parts[1]);
+    const area = Number(parts[2]);
+    const num = Number(parts[3]);
+    if (!world || !area || !num) return false;
+
+    if (num === 1) {
+      // エリア最初のステージ: エリア1は常に開放、2以降は前エリアの最終ステージ(5)クリア必須
+      if (area === 1) return true;
+      return cleared.has(`stage_${world}_${area - 1}_5`);
+    } else {
+      // 前のステージがクリア済みなら到達可能
+      return cleared.has(`stage_${world}_${area}_${num - 1}`);
+    }
+  };
+
+  // 未確定のステージを繰り返し処理（依存関係のため複数パスが必要な場合あり）
+  let remaining = incoming.filter(id => !confirmed.has(id));
+  let prevSize = -1;
+  while (remaining.length > 0 && remaining.length !== prevSize) {
+    prevSize = remaining.length;
+    const nextRemaining: string[] = [];
+    for (const id of remaining) {
+      if (isAccessible(id, confirmed)) {
+        confirmed.add(id);
+      } else {
+        nextRemaining.push(id);
+      }
+    }
+    remaining = nextRemaining;
+  }
+
+  return Array.from(confirmed);
+}
+
 const clamp = (v: unknown, min: number, max: number): number => {
   if (typeof v !== 'number' || !isFinite(v)) return min;
   return Math.max(min, Math.min(max, Math.floor(v)));
@@ -178,17 +225,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Quest progress
+    // Quest progress（サーバー側でクリア進行を検証）
+    const rawCleared = ((state.clearedStageIds as string[]) ?? []).filter(isValidStageId);
+    const existingProgress = await tx.playerQuestProgress.findUnique({ where: { playerId: player.playerId } });
+    const dbCleared = new Set<string>(existingProgress?.clearedStageIds ?? []);
+    // DB確定済みに新クリアを1つずつ検証して追加
+    const validatedCleared = validateStageProgression(rawCleared, dbCleared);
+
     await tx.playerQuestProgress.upsert({
       where: { playerId: player.playerId },
       update: {
-        clearedStageIds: (state.clearedStageIds as string[]) ?? [],
+        clearedStageIds: validatedCleared,
         claimedAreaRewards: (state.claimedAreaRewards as string[]) ?? [],
         lastSelectedWorldId: (state.lastSelectedWorldId as string) ?? null,
       },
       create: {
         playerId: player.playerId,
-        clearedStageIds: (state.clearedStageIds as string[]) ?? [],
+        clearedStageIds: validatedCleared,
         claimedAreaRewards: (state.claimedAreaRewards as string[]) ?? [],
         lastSelectedWorldId: (state.lastSelectedWorldId as string) ?? null,
       },

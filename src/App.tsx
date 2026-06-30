@@ -81,22 +81,23 @@ const AppContent = () => {
     void checkAuth();
   }, [checkAuth]);
 
-  // 認証後: DBからゲーム状態を全復元 → 自動保存開始
+  // gameData が変化するたびに（ログイン・ページ初期化時）ストアを復元
+  useEffect(() => {
+    if (!user || !gameData) return;
+    hydrateFromGameState(gameData);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameData]);
+
+  // user が確定したとき一度だけ実行: ユーザー切り替え検出・自動保存・スタミナ回復
   useEffect(() => {
     if (!user) return;
 
-    // 別ユーザーへ切り替わった場合は全ストアをリセット（前ユーザーのデータが混入しないように）
-    // prevUserIdRef の代わりに localStorage を使うことでページリロード後も検知できる
+    // 別ユーザーへ切り替わった場合は全ストアをリセット
     const storedUserId = localStorage.getItem(LAST_USER_KEY);
     if (storedUserId && storedUserId !== user.id) {
       resetAllStores();
     }
     localStorage.setItem(LAST_USER_KEY, user.id);
-
-    // DBに保存済みのゲーム状態があればストアを上書き復元
-    if (gameData) {
-      hydrateFromGameState(gameData);
-    }
 
     // マスタデータをDBから取得してキャッシュに投入（失敗時はTypeScriptデータにフォールバック）
     void fetchAndPopulateMasterData();
@@ -118,7 +119,7 @@ const AppContent = () => {
 
     // フォーカスロス時に即時保存
     window.addEventListener('blur', saveImmediately);
-    // ページ離脱時は keepalive 付き専用関数で保存（非同期fetchはページ終了時に中断されるため）
+    // ページ離脱時は keepalive 付き専用関数で保存
     window.addEventListener('beforeunload', saveBeforeUnload);
 
     // スタミナ回復タイマー
