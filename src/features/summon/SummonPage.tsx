@@ -9,8 +9,10 @@ import { ELEMENT_NAMES } from '../../types';
 import type { SummonPool, RarityType, UnitMaster, GachaApplyResult } from '../../types';
 import type { GachaStar } from '../../types';
 import { RARITY_TO_STAR, STAR_COLORS, STAR_LABELS } from '../../types';
-import { AWAKENING_CONFIG } from '../../data/rarityConfig';
+import { AWAKENING_CONFIG, RARITY_TYPE_TO_STAR } from '../../data/rarityConfig';
 import { CurrencyIcon } from '../../components/ui/game/GameIcons';
+import { UnitIcon } from '../../components/ui/UnitCard';
+import { resolveUnitImage } from '../../lib/unitImage';
 
 /* ============================================================
    パーティクル
@@ -156,15 +158,19 @@ const CardReveal = ({ unit, star, index, total, onOpen, opened, resultType, awak
         <div className="card-face card-front" style={{ borderColor: starBorder(star) }}>
           <div className="card-front-bg" />
           <div className="card-front-glass" />
-          {/* ユニット絵文字（大） */}
+          {/* ユニット画像（大） */}
           <div style={{
             position: 'absolute', top: '32%', left: '50%',
             transform: 'translate(-50%, -50%)',
-            fontSize: 80, zIndex: 3,
+            zIndex: 3,
             filter: `drop-shadow(0 0 24px ${color}) drop-shadow(0 0 48px ${color}66)`,
-            lineHeight: 1,
           }}>
-            {unit.emoji}
+            <UnitIcon
+              src={resolveUnitImage(unit.id, RARITY_TYPE_TO_STAR[unit.rarity] ?? 1)}
+              fallbackEmoji={unit.emoji}
+              element={unit.element}
+              size={120}
+            />
           </div>
           <div className="card-front-bottom" />
           <div className="card-unit-info">
@@ -236,6 +242,14 @@ const ResultGrid = ({ units, resultTypes, onClose, onAgain }: {
             <div className="mini-card-inner">
               <div className="mini-card-stars" style={{ color: STAR_COLORS[star] }}>
                 {'★'.repeat(star)}
+              </div>
+              <div style={{ margin: '4px auto' }}>
+                <UnitIcon
+                  src={resolveUnitImage(u.id, RARITY_TYPE_TO_STAR[u.rarity] ?? 1)}
+                  fallbackEmoji={u.emoji}
+                  element={u.element}
+                  size={52}
+                />
               </div>
               <div className="mini-card-name">{u.name}</div>
               <div className="mini-card-elem" style={{ color: elemColor }}>
