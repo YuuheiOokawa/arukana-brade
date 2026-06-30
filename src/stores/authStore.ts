@@ -111,7 +111,7 @@ interface AuthStore {
   isChecked: boolean;
 
   checkAuth: () => Promise<void>;
-  setAuth: (user: AuthUser, player: AuthPlayer) => void;
+  setAuth: (user: AuthUser, player: AuthPlayer, gameData?: GameDataResponse | null) => void;
   clearAuth: () => void;
   logout: () => Promise<void>;
   // [DB SAVE] /api/player/save — プレイヤー名・チュートリアル完了フラグ
@@ -149,7 +149,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     }
   },
 
-  setAuth: (user, player) => set({ user, player, isChecked: true }),
+  setAuth: (user, player, gameData) => set({ user, player, gameData: gameData ?? null, isChecked: true }),
 
   clearAuth: () => set({ user: null, player: null, gameData: null }),
 
