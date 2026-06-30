@@ -41,11 +41,11 @@ export const ShopPage = () => {
     if (player.diamond < pack.diamondCost) { showMsg('ダイヤが不足しています'); return; }
     setBuying(true);
     try {
-      const res = await fetch('/api/shop/buy', {
+      const res = await fetch('/api/actions', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category: 'stamina', packId: pack.id }),
+        body: JSON.stringify({ action: 'shop_stamina', packId: pack.id }),
       });
       const data = await res.json() as { ok?: boolean; error?: string; diamond?: number; stamina?: number; staminaAdded?: number };
       if (!res.ok || !data.ok) { showMsg(data.error ?? '購入に失敗しました'); return; }
@@ -66,11 +66,11 @@ export const ShopPage = () => {
     if (!hasEnough) { showMsg(shop.diamondCost > 0 ? 'ダイヤが不足しています' : 'ゴールドが不足しています'); return; }
     setBuying(true);
     try {
-      const res = await fetch('/api/shop/buy', {
+      const res = await fetch('/api/actions', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category: 'item', packId: shop.id }),
+        body: JSON.stringify({ action: 'shop_item', packId: shop.id }),
       });
       const data = await res.json() as { ok?: boolean; error?: string; diamond?: number; gold?: number; itemId?: string; quantityAdded?: number };
       if (!res.ok || !data.ok) { showMsg(data.error ?? '購入に失敗しました'); return; }

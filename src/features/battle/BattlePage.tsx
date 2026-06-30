@@ -377,10 +377,10 @@ export const BattlePage = () => {
                       const dmg = totalDamageRef.current;
                       totalDamageRef.current = 0;
                       dealRaidDamage(raidBossId, dmg);
-                      void fetch('/api/raid/battle', {
+                      void fetch('/api/actions', {
                         method: 'POST', credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ bossId: raidBossId, damageDealt: dmg }),
+                        body: JSON.stringify({ action: 'raid_battle', bossId: raidBossId, damageDealt: dmg }),
                       }).catch(() => { /* saveAll でフォールバック */ });
                     }
                     setTimeout(() => {
@@ -501,10 +501,10 @@ export const BattlePage = () => {
                       const dmg = totalDamageRef.current;
                       totalDamageRef.current = 0;
                       dealRaidDamage(raidBossId, dmg);
-                      void fetch('/api/raid/battle', {
+                      void fetch('/api/actions', {
                         method: 'POST', credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ bossId: raidBossId, damageDealt: dmg }),
+                        body: JSON.stringify({ action: 'raid_battle', bossId: raidBossId, damageDealt: dmg }),
                       }).catch(() => { /* saveAll でフォールバック */ });
                     }
                     setTimeout(() => {

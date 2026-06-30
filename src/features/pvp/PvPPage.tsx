@@ -136,11 +136,11 @@ export const PvPPage = () => {
           setResult({ won, pointsGained: battleResult.pointsGained, gold: battleResult.goldReward, diamond: battleResult.diamondReward });
           setPhase('result');
           // サーバー側にバトル結果を記録（非同期・失敗しても局所的に許容）
-          void fetch('/api/arena/battle', {
+          void fetch('/api/actions', {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ won, pointsGained: battleResult.pointsGained, goldReward: battleResult.goldReward, diamondReward: battleResult.diamondReward }),
+            body: JSON.stringify({ action: 'arena_battle', won, pointsGained: battleResult.pointsGained, goldReward: battleResult.goldReward, diamondReward: battleResult.diamondReward }),
           }).catch(() => { /* saveAll でフォールバック */ });
         }
       }, 500);
