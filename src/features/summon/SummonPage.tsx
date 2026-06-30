@@ -11,6 +11,7 @@ import type { GachaStar } from '../../types';
 import { RARITY_TO_STAR, STAR_COLORS, STAR_LABELS } from '../../types';
 import { AWAKENING_CONFIG, RARITY_TYPE_TO_STAR } from '../../data/rarityConfig';
 import { CurrencyIcon } from '../../components/ui/game/GameIcons';
+import { formatCompact } from '../../utils/format';
 import { UnitIcon } from '../../components/ui/UnitCard';
 import { resolveUnitImage } from '../../lib/unitImage';
 
@@ -241,7 +242,7 @@ const MiniCardImage = ({ src, fallbackEmoji, element }: { src: string | null; fa
   }
   return (
     <img src={src} alt="" onError={() => setErr(true)}
-      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'top center' }} />
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', transform: 'scale(1.5)', transformOrigin: 'top center' }} />
   );
 };
 
@@ -570,24 +571,24 @@ export const SummonPage = () => {
       {/* ヘッダー */}
       <header className="summon-header">
         <h1 className="summon-title">召喚神殿</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {/* スキップボタン: アニメーション中またはカード開封中のみ表示 */}
           {(phase === 'summon' || phase === 'crystal' || phase === 'shatter' || phase === 'reveal') && (
             <button
               onClick={handleSkip}
-              className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all active:scale-95"
+              className="text-xs font-bold px-2 py-1 rounded-lg transition-all active:scale-95 flex-shrink-0"
               style={{
                 background: 'rgba(0,0,0,0.5)',
                 border: '1px solid rgba(255,255,255,0.2)',
                 color: 'rgba(255,255,255,0.7)',
                 backdropFilter: 'blur(4px)',
               }}>
-              SKIP ▶▶
+              SKIP
             </button>
           )}
-          <div className="summon-currency">
+          <div className="summon-currency flex-shrink-0">
             <div className="currency-gem" />
-            <span className="font-black text-sm text-yellow-200">{player.diamond}</span>
+            <span className="font-black text-sm text-yellow-200">{formatCompact(player.diamond)}</span>
           </div>
         </div>
       </header>

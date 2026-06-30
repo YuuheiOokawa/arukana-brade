@@ -226,17 +226,19 @@ export const ProfilePage = () => {
       {editing && (
         <div className="fixed inset-0 z-50 flex items-end" style={{ background: 'rgba(0,0,0,0.7)' }}
           onClick={e => { if (e.target === e.currentTarget) setEditing(false); }}>
-          <div className="w-full max-w-lg mx-auto rounded-t-3xl pt-6 px-5"
+          <div className="w-full max-w-lg mx-auto rounded-t-3xl pt-6 flex flex-col"
             style={{
               background: 'linear-gradient(180deg, #1a0838 0%, #0d0620 100%)',
               border: '1px solid rgba(139,92,246,0.4)',
-              maxHeight: '90vh', overflowY: 'auto',
-              paddingBottom: 'max(32px, env(safe-area-inset-bottom, 32px))',
+              maxHeight: '90vh',
             }}>
-            <div className="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-5" />
-            <h3 className="text-white font-black text-lg mb-5 text-center">プロフィール編集</h3>
+            <div className="px-5">
+              <div className="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-5" />
+              <h3 className="text-white font-black text-lg mb-5 text-center">プロフィール編集</h3>
+            </div>
 
-            <div className="space-y-4">
+            {/* スクロール可能コンテンツ */}
+            <div className="flex-1 overflow-y-auto px-5 space-y-4 pb-4">
               {/* プレイヤー名 */}
               <div>
                 <label className="text-gray-400 text-xs font-bold block mb-1.5">プレイヤー名</label>
@@ -325,9 +327,13 @@ export const ProfilePage = () => {
               </div>
             </div>
 
-            {/* 保存 / キャンセル */}
-            <div className="flex gap-3 mt-6 sticky bottom-0 pt-3"
-              style={{ background: 'linear-gradient(to bottom, transparent, #0d0620 30%)' }}>
+            {/* 保存 / キャンセル（常に下部に固定表示） */}
+            <div className="flex gap-3 px-5 pt-3"
+              style={{
+                paddingBottom: 'max(24px, env(safe-area-inset-bottom, 24px))',
+                borderTop: '1px solid rgba(100,80,140,0.2)',
+                background: '#0d0620',
+              }}>
               <button
                 onClick={() => setEditing(false)}
                 className="flex-1 py-3 rounded-xl text-sm font-bold text-gray-400"

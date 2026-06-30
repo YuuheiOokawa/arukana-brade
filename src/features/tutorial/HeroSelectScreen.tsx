@@ -111,7 +111,7 @@ export const HeroSelectScreen = () => {
                           src={imgSrc}
                           alt={raceHero.name}
                           onError={() => setImgErrors(prev => ({ ...prev, [imgKey]: true }))}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', transform: 'scale(1.6)', transformOrigin: 'top center' }}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-2xl">
