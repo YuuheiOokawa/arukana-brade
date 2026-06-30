@@ -180,10 +180,12 @@ export const hydrateFromGameState = (
     // unitStore: DB の OwnedUnit → フロントの OwnedUnit 型に変換
     if (Array.isArray(gd.ownedUnits)) {
       const units: OwnedUnit[] = gd.ownedUnits.map(u => {
-        const rarity: OwnedUnit['currentRarity'] =
-          u.currentRarity === 'CROWN' || u.currentRarity === '8'
-            ? 'CROWN'
-            : (Number(u.currentRarity) || 1) as OwnedUnit['currentRarity'];
+        const rarity: OwnedUnit['currentRarity'] = (() => {
+          const r = u.currentRarity as unknown;
+          if (r === 'CROWN' || r === 'crown' || r === 8 || r === '8') return 'CROWN';
+          const n = Number(r);
+          return (n >= 1 && n <= 7 ? n : 1) as OwnedUnit['currentRarity'];
+        })();
         const awakenRank = u.awakenRank ?? 0;
         const awakeningCount = u.awakeningCount ?? 0;
         const master = getUnitMaster(u.masterId);
