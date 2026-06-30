@@ -169,7 +169,8 @@ const CardReveal = ({ unit, star, index, total, onOpen, opened, resultType, awak
               src={resolveUnitImage(unit.id, RARITY_TYPE_TO_STAR[unit.rarity] ?? 1)}
               fallbackEmoji={unit.emoji}
               element={unit.element}
-              size={120}
+              size={108}
+              height={180}
             />
           </div>
           <div className="card-front-bottom" />
@@ -223,6 +224,27 @@ const CardReveal = ({ unit, star, index, total, onOpen, opened, resultType, awak
 /* ============================================================
    ResultGrid
 ============================================================ */
+// summon-mini-card (170px tall) をキャラ画像でフル充填するサブコンポーネント
+const MiniCardImage = ({ src, fallbackEmoji, element }: { src: string | null; fallbackEmoji: string; element: string }) => {
+  const [err, setErr] = useState(false);
+  const bgMap: Record<string, string> = {
+    fire: '#7f1d1d', water: '#1e3a5f', wind: '#064e3b',
+    earth: '#451a03', light: '#713f12', dark: '#2e1065',
+  };
+  const bg = bgMap[element] ?? '#1a1a2e';
+  if (!src || err) {
+    return (
+      <div style={{ position: 'absolute', inset: 0, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px' }}>
+        {fallbackEmoji}
+      </div>
+    );
+  }
+  return (
+    <img src={src} alt="" onError={() => setErr(true)}
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
+  );
+};
+
 const ResultGrid = ({ units, resultTypes, onClose, onAgain }: {
   units: UnitMaster[];
   resultTypes: GachaApplyResult[];
@@ -239,17 +261,16 @@ const ResultGrid = ({ units, resultTypes, onClose, onAgain }: {
         return (
           <div key={i} className={`summon-mini-card star-${star}`}
             style={{ animationDelay: `${i * 0.07}s` }}>
-            <div className="mini-card-inner">
+            {/* キャラ画像 - カード全体に表示 */}
+            <MiniCardImage
+              src={resolveUnitImage(u.id, RARITY_TYPE_TO_STAR[u.rarity] ?? 1)}
+              fallbackEmoji={u.emoji}
+              element={u.element}
+            />
+            {/* テキスト - カード下部グラデーション上に重ね */}
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px 8px 8px', background: 'linear-gradient(transparent, rgba(0,0,0,0.92))' }}>
               <div className="mini-card-stars" style={{ color: STAR_COLORS[star] }}>
                 {'★'.repeat(star)}
-              </div>
-              <div style={{ margin: '4px auto' }}>
-                <UnitIcon
-                  src={resolveUnitImage(u.id, RARITY_TYPE_TO_STAR[u.rarity] ?? 1)}
-                  fallbackEmoji={u.emoji}
-                  element={u.element}
-                  size={52}
-                />
               </div>
               <div className="mini-card-name">{u.name}</div>
               <div className="mini-card-elem" style={{ color: elemColor }}>
