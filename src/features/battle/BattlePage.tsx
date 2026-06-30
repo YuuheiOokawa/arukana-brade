@@ -6,6 +6,7 @@ import { useUnitStore } from '../../stores/unitStore';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useEquipmentStore } from '../../stores/equipmentStore';
 import { useMissionStore } from '../../stores/missionStore';
+import { saveImmediately } from '../../lib/syncService';
 import { getStage } from '../../data/quests';
 import { getEventStage } from '../../data/events';
 import { getScenario } from '../../data/scenarios';
@@ -367,7 +368,10 @@ export const BattlePage = () => {
                     if (updAllies.some(a => a.isFriend && a.currentHp > 0)) {
                       addDailyProgress('friend_battle');
                     }
-                    setTimeout(() => void syncCurrencyToServer(), 500);
+                    setTimeout(() => {
+                      void syncCurrencyToServer();
+                      saveImmediately();
+                    }, 500);
                     setPhase('victory');
                   }
                   return curStage;
@@ -475,7 +479,10 @@ export const BattlePage = () => {
                     if (updAllies.some(a => a.isFriend && a.currentHp > 0)) {
                       addDailyProgress('friend_battle');
                     }
-                    setTimeout(() => void syncCurrencyToServer(), 500);
+                    setTimeout(() => {
+                      void syncCurrencyToServer();
+                      saveImmediately();
+                    }, 500);
                     setPhase('victory');
                   }
                   return curStage;
