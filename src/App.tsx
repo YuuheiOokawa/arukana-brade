@@ -70,7 +70,7 @@ const HIDE_NAV_PATHS = ['/battle', '/friends', '/title', '/login', '/register', 
 
 const AppContent = () => {
   const { pathname } = useLocation();
-  const { checkAuth, user, gameData } = useAuthStore();
+  const { checkAuth, user, gameData, player: authPlayer } = useAuthStore();
   const setAdminMode = usePlayerStore(s => s.setAdminMode);
   const recoverStamina = usePlayerStore(s => s.recoverStamina);
   const showNav = !HIDE_NAV_PATHS.some(p => pathname.startsWith(p));
@@ -85,7 +85,7 @@ const AppContent = () => {
   // gameData が変化するたびに（ログイン・ページ初期化時）ストアを復元
   useEffect(() => {
     if (!user || !gameData) return;
-    hydrateFromGameState(gameData);
+    hydrateFromGameState(gameData, authPlayer?.miscData ?? undefined);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameData]);
 

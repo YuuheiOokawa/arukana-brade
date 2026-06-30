@@ -8,7 +8,8 @@ import { useEquipmentStore } from '../../stores/equipmentStore';
 import { useMissionStore } from '../../stores/missionStore';
 import { saveImmediately } from '../../lib/syncService';
 import { getStage } from '../../data/quests';
-import { getEventStage } from '../../data/events';
+import { getEventStage, getRaidStage } from '../../data/events';
+import { useRaidStore } from '../../stores/raidStore';
 import { getScenario } from '../../data/scenarios';
 import { getEnemyMaster } from '../../data/enemies';
 import { UNIT_MASTER, calcUnitStats } from '../../data/units';
@@ -42,6 +43,7 @@ export const BattlePage = () => {
   const { getActiveParty } = usePartyStore();
   const { ownedUnits, levelUpUnit } = useUnitStore();
   const { spendStamina, addGold, addExp, addItem, syncCurrencyToServer } = usePlayerStore();
+  const { dealDamage: dealRaidDamage } = useRaidStore();
   const { getEquippedByUnit } = useEquipmentStore();
   const { addDailyProgress } = useMissionStore();
 
@@ -53,6 +55,7 @@ export const BattlePage = () => {
   const [logs, setLogs] = useState<string[]>([]);
   const [logQueue, setLogQueue] = useState<string[]>([]);
   const isLogAnimatingRef = useRef(false);
+  const totalDamageRef = useRef(0);
   const [phase, setPhase] = useState<Phase>('battle');
   const [leaderBbGauge, setLeaderBbGauge] = useState(0);
   const [isAutoMode, setIsAutoMode] = useState(false);
@@ -88,7 +91,7 @@ export const BattlePage = () => {
   // バトル初期化
   useEffect(() => {
     if (!pendingStageId) { navigate('/quests'); return; }
-    const s = getStage(pendingStageId) ?? getEventStage(pendingStageId);
+    const s = getStage(pendingStageId) ?? getEventStage(pendingStageId) ?? getRaidStage(pendingStageId);
     if (!s) { navigate('/quests'); return; }
 
     const ok = spendStamina(s.staminaCost);
@@ -368,6 +371,18 @@ export const BattlePage = () => {
                     if (updAllies.some(a => a.isFriend && a.currentHp > 0)) {
                       addDailyProgress('friend_battle');
                     }
+                    // レイドバトルの場合はダメージを記録
+                    if (curStage.id.startsWith('raid_')) {
+                      const raidBossId = curStage.id.replace(/^raid_/, '').replace(/_stage$/, '');
+                      const dmg = totalDamageRef.current;
+                      totalDamageRef.current = 0;
+                      dealRaidDamage(raidBossId, dmg);
+                      void fetch('/api/raid/battle', {
+                        method: 'POST', credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ bossId: raidBossId, damageDealt: dmg }),
+                      }).catch(() => { /* saveAll でフォールバック */ });
+                    }
                     setTimeout(() => {
                       void syncCurrencyToServer();
                       saveImmediately();
@@ -400,6 +415,7 @@ export const BattlePage = () => {
                 const tIdx = updEnemies.findIndex(e => e.instanceId === target.instanceId);
                 const prevHp = updEnemies[tIdx].currentHp;
                 updEnemies[tIdx] = { ...updEnemies[tIdx], currentHp: Math.max(0, prevHp - finalDmg) };
+                totalDamageRef.current += finalDmg;
                 if (isCrit) {
                   newLines.push(`💥 ${ally.emoji} ${ally.name} のクリティカル！ ${target.name} に ${finalDmg.toLocaleString()} の大ダメージ！`);
                 } else {
@@ -478,6 +494,18 @@ export const BattlePage = () => {
                     addDailyProgress('quest_clear');
                     if (updAllies.some(a => a.isFriend && a.currentHp > 0)) {
                       addDailyProgress('friend_battle');
+                    }
+                    // レイドバトルの場合はダメージを記録
+                    if (curStage.id.startsWith('raid_')) {
+                      const raidBossId = curStage.id.replace(/^raid_/, '').replace(/_stage$/, '');
+                      const dmg = totalDamageRef.current;
+                      totalDamageRef.current = 0;
+                      dealRaidDamage(raidBossId, dmg);
+                      void fetch('/api/raid/battle', {
+                        method: 'POST', credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ bossId: raidBossId, damageDealt: dmg }),
+                      }).catch(() => { /* saveAll でフォールバック */ });
                     }
                     setTimeout(() => {
                       void syncCurrencyToServer();

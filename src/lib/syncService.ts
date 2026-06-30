@@ -15,6 +15,7 @@ import { useMissionStore } from '../stores/missionStore';
 import { useLoginBonusStore } from '../stores/loginBonusStore';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { useArenaStore } from '../stores/arenaStore';
+import { useRaidStore } from '../stores/raidStore';
 import type { PlayerData, OwnedItem, OwnedUnit, OwnedEquipment } from '../types';
 import type { GameDataResponse } from '../stores/authStore';
 import { getUnitMaster, calcUnitStats } from '../data/units';
@@ -48,6 +49,7 @@ export const collectGameState = () => {
   const lb = useLoginBonusStore.getState();
   const ts = useTutorialStore.getState();
   const as = useArenaStore.getState();
+  const rs = useRaidStore.getState();
 
   return {
     // playerStore
@@ -79,6 +81,8 @@ export const collectGameState = () => {
     // arenaStore
     arenaRecord: as.record,
     arenaBattleHistory: as.battleHistory,
+    // raidStore
+    raidStates: rs.raidStates,
     // メタ
     savedAt: Date.now(),
   };
@@ -160,7 +164,8 @@ export const saveImmediately = () => {
  * 新フォーマット (GameDataResponse) と旧フォーマット (gameStateJson) の両方に対応。
  */
 export const hydrateFromGameState = (
-  gameStateOrData: Record<string, unknown> | GameDataResponse
+  gameStateOrData: Record<string, unknown> | GameDataResponse,
+  playerMiscData?: Record<string, unknown>
 ) => {
   if (!gameStateOrData || typeof gameStateOrData !== 'object') return;
 
@@ -275,6 +280,16 @@ export const hydrateFromGameState = (
         },
         battleHistory: gd.arenaRecord.battleHistory as ReturnType<typeof useArenaStore.getState>['battleHistory'],
       });
+    }
+
+    // miscData から awakeningCrystals と raidStates を復元
+    if (playerMiscData) {
+      if (playerMiscData.awakeningCrystals && typeof playerMiscData.awakeningCrystals === 'object') {
+        useUnitStore.setState({ awakeningCrystals: playerMiscData.awakeningCrystals as Record<string, number> });
+      }
+      if (Array.isArray(playerMiscData.raidStates)) {
+        useRaidStore.setState({ raidStates: playerMiscData.raidStates as ReturnType<typeof useRaidStore.getState>['raidStates'] });
+      }
     }
 
   } else {
