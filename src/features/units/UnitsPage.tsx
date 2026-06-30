@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUnitStore } from '../../stores/unitStore';
 import { usePlayerStore } from '../../stores/playerStore';
+import { usePartyStore } from '../../stores/partyStore';
 import { getUnitMaster } from '../../data/units';
 import { UnitCard } from '../../components/ui/UnitCard';
 import { TopBar } from '../../components/layout/TopBar';
@@ -39,6 +40,20 @@ export const UnitsPage = () => {
   const [releaseMode, setReleaseMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmRelease, setConfirmRelease] = useState(false);
+  const [actionUnit, setActionUnit] = useState<OwnedUnit | null>(null);
+
+  const { setSlot, getActiveParty } = usePartyStore();
+  const activeParty = getActiveParty();
+  const isInParty = (instanceId: string) => activeParty.slots.includes(instanceId);
+  const toggleParty = (unit: OwnedUnit) => {
+    const slotIdx = activeParty.slots.findIndex(s => s === unit.instanceId);
+    if (slotIdx !== -1) {
+      setSlot(activeParty.id, slotIdx, null);
+    } else {
+      const emptySlot = activeParty.slots.findIndex(s => s === null);
+      if (emptySlot !== -1) setSlot(activeParty.id, emptySlot, unit.instanceId);
+    }
+  };
 
   const filtered = ownedUnits
     .filter(u => {
@@ -159,7 +174,7 @@ export const UnitsPage = () => {
           const isSelected = selected.has(unit.instanceId);
           return (
             <div key={unit.instanceId} className="relative"
-              onClick={() => releaseMode ? toggleSelect(unit.instanceId) : navigate(`/units/${unit.instanceId}`)}>
+              onClick={() => releaseMode ? toggleSelect(unit.instanceId) : setActionUnit(unit)}>
               {releaseMode && (
                 <div className="absolute inset-0 z-10 rounded-xl pointer-events-none transition-all"
                   style={{
@@ -181,6 +196,73 @@ export const UnitsPage = () => {
           </div>
         )}
       </div>
+
+      {/* ユニットアクションシート */}
+      {actionUnit && !releaseMode && (() => {
+        const master = getUnitMaster(actionUnit.masterId);
+        const inParty = isInParty(actionUnit.instanceId);
+        const partyFull = activeParty.slots.filter(Boolean).length >= 5;
+        return (
+          <div className="fixed inset-0 z-50 flex items-end"
+            style={{ background: 'rgba(0,0,0,0.7)' }}
+            onClick={() => setActionUnit(null)}>
+            <div className="w-full max-w-lg mx-auto rounded-t-2xl px-5 pt-4"
+              style={{
+                background: 'linear-gradient(180deg, #1a0838 0%, #0d0620 100%)',
+                border: '1px solid rgba(139,92,246,0.4)',
+                paddingBottom: 'max(24px, env(safe-area-inset-bottom, 24px))',
+              }}
+              onClick={e => e.stopPropagation()}>
+              <div className="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-4" />
+              {master && (
+                <div className="flex items-center gap-3 mb-4 px-1">
+                  <span className="text-2xl">{master.emoji}</span>
+                  <div>
+                    <p className="text-white font-bold">{master.name}</p>
+                    <p className="text-gray-400 text-xs">Lv.{actionUnit.level} · {master.title}</p>
+                  </div>
+                  {inParty && (
+                    <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-bold"
+                      style={{ background: 'rgba(124,58,237,0.4)', color: '#c4b5fd' }}>
+                      編成中
+                    </span>
+                  )}
+                </div>
+              )}
+              <div className="space-y-2">
+                <button
+                  onClick={() => { toggleParty(actionUnit); setActionUnit(null); }}
+                  disabled={!inParty && partyFull}
+                  className="w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-95"
+                  style={{
+                    background: inParty
+                      ? 'linear-gradient(135deg, rgba(239,68,68,0.3), rgba(185,28,28,0.3))'
+                      : partyFull
+                      ? 'rgba(55,65,81,0.4)'
+                      : 'linear-gradient(135deg, rgba(124,58,237,0.5), rgba(79,70,229,0.5))',
+                    border: inParty
+                      ? '1px solid rgba(239,68,68,0.5)'
+                      : '1px solid rgba(139,92,246,0.5)',
+                    color: inParty ? '#fca5a5' : partyFull ? '#6b7280' : '#c4b5fd',
+                  }}>
+                  {inParty ? '⚔️ パーティから外す' : partyFull ? 'パーティが満員です' : '⚔️ パーティに追加'}
+                </button>
+                <button
+                  onClick={() => { navigate(`/units/${actionUnit.instanceId}`); setActionUnit(null); }}
+                  className="w-full py-3 rounded-xl font-bold text-sm text-gray-300 transition-all active:scale-95"
+                  style={{ background: 'rgba(40,30,60,0.6)', border: '1px solid rgba(100,80,140,0.3)' }}>
+                  詳細を見る
+                </button>
+                <button
+                  onClick={() => setActionUnit(null)}
+                  className="w-full py-2.5 rounded-xl text-sm text-gray-500 transition-all">
+                  キャンセル
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* 解放確認モーダル */}
       {confirmRelease && (

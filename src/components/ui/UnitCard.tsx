@@ -132,7 +132,7 @@ export const UnitIcon = ({
         src={src}
         alt=""
         onError={() => setImgError(true)}
-        style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'top center' }}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', transform: 'scale(1.5)', transformOrigin: 'top center' }}
       />
     </div>
   );

@@ -131,7 +131,7 @@ export const PartyPage = () => {
                         src={resolveUnitImage(unit.masterId, unit.currentRarity ?? 1)}
                         alt=""
                         onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                        style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'top center', position: 'absolute', inset: 0 }}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', position: 'absolute', inset: 0, transform: 'scale(1.5)', transformOrigin: 'top center' }}
                       />
                       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.7))', padding: '4px 2px 2px' }}>
                         <span className="text-white text-[9px] font-bold block text-center">Lv{unit.level}</span>
@@ -260,7 +260,7 @@ export const PartyPage = () => {
       <div className="fixed bottom-0 left-0 right-0 z-20"
         style={{
           background: 'linear-gradient(to top, rgba(8,8,26,0.98) 60%, transparent)',
-          paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))',
+          paddingBottom: 'calc(64px + max(8px, env(safe-area-inset-bottom, 8px)))',
         }}>
         <div className="max-w-lg mx-auto px-4 pt-4 pb-2">
 
@@ -282,7 +282,7 @@ export const PartyPage = () => {
                         src={resolveUnitImage(u.masterId, u.currentRarity ?? 1)}
                         alt=""
                         onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                        style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'top center' }}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', transform: 'scale(1.5)', transformOrigin: 'top center' }}
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center">
