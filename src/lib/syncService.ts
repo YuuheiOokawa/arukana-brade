@@ -176,7 +176,7 @@ export const hydrateFromGameState = (
     if (Array.isArray(gd.ownedUnits)) {
       const units: OwnedUnit[] = gd.ownedUnits.map(u => {
         const rarity: OwnedUnit['currentRarity'] =
-          u.currentRarity === 'CROWN' || u.currentRarity === 8
+          u.currentRarity === 'CROWN' || u.currentRarity === '8'
             ? 'CROWN'
             : (Number(u.currentRarity) || 1) as OwnedUnit['currentRarity'];
         const awakenRank = u.awakenRank ?? 0;
