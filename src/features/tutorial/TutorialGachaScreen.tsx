@@ -6,6 +6,9 @@ import { useTutorialStore } from '../../stores/tutorialStore';
 import { useAuthStore } from '../../stores/authStore';
 import { ELEMENT_NAMES, RARITY_TO_STAR, STAR_COLORS, STAR_LABELS } from '../../types';
 import type { UnitMaster, GachaStar, RarityType, GachaApplyResult } from '../../types';
+import { UnitIcon } from '../../components/ui/UnitCard';
+import { resolveUnitImage } from '../../lib/unitImage';
+import { RARITY_TYPE_TO_STAR } from '../../data/rarityConfig';
 
 /* 初回チュートリアルガチャ: ★1〜★3 10連固定・無料 */
 const TUTORIAL_POOL_RATES: { rarity: RarityType; rate: number }[] = [
@@ -337,7 +340,14 @@ export const TutorialGachaScreen = () => {
                   }}>
                   {opened.has(revealIndex) ? (
                     <>
-                      <div className="text-5xl mb-2">{results[revealIndex].emoji}</div>
+                      <div className="flex justify-center mb-2">
+                        <UnitIcon
+                          src={resolveUnitImage(results[revealIndex].id, RARITY_TYPE_TO_STAR[results[revealIndex].rarity] ?? 1)}
+                          fallbackEmoji={results[revealIndex].emoji}
+                          element={results[revealIndex].element}
+                          size={80}
+                        />
+                      </div>
                       <div className="font-black text-white text-base mb-1">{results[revealIndex].name}</div>
                       <div className="text-sm mb-1 font-bold"
                         style={{ color: STAR_COLORS[RARITY_TO_STAR[results[revealIndex].rarity]] }}>
@@ -432,7 +442,14 @@ export const TutorialGachaScreen = () => {
                     boxShadow: `0 0 8px ${STAR_COLORS[star]}44`,
                     animationDelay: `${i * 0.05}s`,
                   }}>
-                  <div className="text-2xl mb-1">{u.emoji}</div>
+                  <div className="flex justify-center mb-1">
+                    <UnitIcon
+                      src={resolveUnitImage(u.id, RARITY_TYPE_TO_STAR[u.rarity] ?? 1)}
+                      fallbackEmoji={u.emoji}
+                      element={u.element}
+                      size={40}
+                    />
+                  </div>
                   <div className="text-white font-bold text-[9px] leading-tight mb-0.5 truncate">{u.name}</div>
                   <div style={{ color: STAR_COLORS[star], fontSize: '9px', fontWeight: 'bold' }}>
                     {'★'.repeat(star)}

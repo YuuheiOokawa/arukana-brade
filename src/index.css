@@ -14,6 +14,11 @@
     max-width: 100vw;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  /* iOS Safe Area (ノッチ・ホームバー対応) */
+  :root {
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+  }
   #root {
     width: 100%;
     min-height: 100vh;
@@ -175,6 +180,15 @@
 /* ===== スクロールバー非表示 ===== */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ===== iOS Safe Area ユーティリティ ===== */
+.pb-safe {
+  padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
+}
+.pb-nav-safe {
+  /* ボトムナビ高さ(64px) + iOS ホームバー */
+  padding-bottom: calc(64px + max(0px, env(safe-area-inset-bottom, 0px)));
+}
 
 /* ===== アニメーション ===== */
 @keyframes slide-up {

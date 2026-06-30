@@ -109,6 +109,57 @@ export const CreditsScrollScreen = ({
   );
 };
 
+// スピーカー名 → emoji マッピング（既知キャラクター）
+const SPEAKER_EMOJI: Record<string, string> = {
+  '謎の少女':     '🌙',
+  '老賢者クロン': '🧙',
+  '闇の声':       '👁️',
+  '???':          '⚔️',
+};
+
+const CharacterSlot = ({
+  position,
+  speakerName,
+  accent,
+}: {
+  position: 'left' | 'right';
+  speakerName?: string;
+  accent: string;
+}) => {
+  const emoji = speakerName ? (SPEAKER_EMOJI[speakerName] ?? '👤') : '👤';
+  const posClass = position === 'left' ? 'left-4' : 'right-4';
+
+  return (
+    <div className={`absolute ${posClass} bottom-44 w-24 h-48 pointer-events-none flex flex-col items-center justify-end pb-3`}
+      style={{
+        background: `linear-gradient(to top, ${accent}40, ${accent}15)`,
+        borderRadius: '16px',
+        border: `1px solid ${accent}30`,
+        backdropFilter: 'blur(4px)',
+      }}>
+      <div style={{ fontSize: '56px', lineHeight: 1, filter: `drop-shadow(0 0 12px ${accent})` }}>
+        {emoji}
+      </div>
+      {speakerName && speakerName !== '???' && (
+        <div className="mt-2 px-2 py-0.5 rounded-full"
+          style={{
+            background: `${accent}33`,
+            border: `1px solid ${accent}55`,
+            fontSize: '9px',
+            color: '#e5e7eb',
+            fontWeight: 'bold',
+            maxWidth: '88px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}>
+          {speakerName}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ===== 通常対話モード + ルーティング =====
 export const ScenarioScreen = () => {
   const { stageId } = useParams<{ stageId: string }>();
@@ -267,23 +318,12 @@ export const ScenarioScreen = () => {
       </div>
 
       {/* キャラクター立ち絵エリア */}
-      {!isNarration && currentLine?.position === 'left' && (
-        <div className="absolute left-4 bottom-44 w-24 h-48 pointer-events-none">
-          <div className="w-full h-full rounded-2xl" style={{
-            background: `linear-gradient(to top, ${accent}40, ${accent}15)`,
-            border: `1px solid ${accent}30`,
-            backdropFilter: 'blur(4px)',
-          }} />
-        </div>
-      )}
-      {!isNarration && currentLine?.position === 'right' && (
-        <div className="absolute right-4 bottom-44 w-24 h-48 pointer-events-none">
-          <div className="w-full h-full rounded-2xl" style={{
-            background: `linear-gradient(to top, ${accent}40, ${accent}15)`,
-            border: `1px solid ${accent}30`,
-            backdropFilter: 'blur(4px)',
-          }} />
-        </div>
+      {!isNarration && (currentLine?.position === 'left' || currentLine?.position === 'right') && (
+        <CharacterSlot
+          position={currentLine.position as 'left' | 'right'}
+          speakerName={currentLine.speakerName}
+          accent={accent}
+        />
       )}
 
       {/* ダイアログボックス */}
