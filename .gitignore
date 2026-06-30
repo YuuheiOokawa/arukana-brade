@@ -27,3 +27,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# 元の大きな画像ファイル（分割済み）
+public/キャラ画像/
