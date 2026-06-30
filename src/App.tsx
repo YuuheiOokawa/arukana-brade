@@ -34,6 +34,7 @@ import { useTutorialStore } from './stores/tutorialStore';
 import { usePlayerStore } from './stores/playerStore';
 import { hydrateFromGameState, resetAllStores, initAutoSave, saveImmediately, saveBeforeUnload, setSaveErrorHandler, setSaveSuccessHandler } from './lib/syncService';
 import { fetchAndPopulateMasterData } from './lib/masterDataCache';
+import { populateImageCache } from './lib/unitImage';
 
 const ADMIN_EMAIL = 'yuuheiookawa@gmail.com';
 const LAST_USER_KEY = 'arcana-last-user-id';
@@ -101,6 +102,14 @@ const AppContent = () => {
 
     // マスタデータをDBから取得してキャッシュに投入（失敗時はTypeScriptデータにフォールバック）
     void fetchAndPopulateMasterData();
+
+    // キャラ画像パスをDBから取得してキャッシュに投入
+    fetch('/api/master/images', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then((data: { images: Array<{ unitId: string; rarity: number; imagePath: string }> } | null) => {
+        if (data?.images) populateImageCache(data.images);
+      })
+      .catch(() => { /* 失敗時は静的パスにフォールバック */ });
 
     if (user.email === ADMIN_EMAIL) setAdminMode();
 
