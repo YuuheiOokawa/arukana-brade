@@ -27,7 +27,22 @@ export const QuestsPage = () => {
   const [staminaModal, setStaminaModal] = useState<{ stageId: string; cost: number } | null>(null);
 
   const questWorlds = getQuestWorlds();
-  const selectedWorld = questWorlds.find(w => w.id === selectedWorldId)!;
+
+  // 前ワールドの最終ステージをクリアしないと次ワールドは非表示
+  const isWorldAccessible = (worldIdx: number): boolean => {
+    if (worldIdx === 0) return true;
+    const prevWorld = questWorlds[worldIdx - 1];
+    const prevLastArea = prevWorld.areas[prevWorld.areas.length - 1];
+    const prevLastStage = prevLastArea?.stages[prevLastArea.stages.length - 1];
+    return prevLastStage ? isCleared(prevLastStage.id) : false;
+  };
+  const accessibleWorlds = questWorlds.filter((_, idx) => isWorldAccessible(idx));
+  // 選択中ワールドがロックされた場合は最後の解放済みワールドへ
+  const effectiveWorldId = accessibleWorlds.some(w => w.id === selectedWorldId)
+    ? selectedWorldId
+    : (accessibleWorlds[accessibleWorlds.length - 1]?.id ?? questWorlds[0].id);
+  const selectedWorld = questWorlds.find(w => w.id === effectiveWorldId)!;
+
   const party = getActiveParty();
   const hasParty = party.slots.some(Boolean);
   const activeEvents = getActiveEvents();
@@ -104,13 +119,13 @@ export const QuestsPage = () => {
       {/* ストーリー */}
       {mainTab === 'story' && (
         <>
-          {/* ワールドタブ */}
+          {/* ワールドタブ（解放済みワールドのみ表示） */}
           <div className="px-4 mb-4">
             <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-              {questWorlds.map(w => (
+              {accessibleWorlds.map(w => (
                 <button key={w.id} onClick={() => { setSelectedWorldId(w.id); setLastSelectedWorldId(w.id); setSelectedArea(null); }}
                   className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                    selectedWorldId === w.id ? 'tab-active' : 'tab-inactive'
+                    effectiveWorldId === w.id ? 'tab-active' : 'tab-inactive'
                   }`}>
                   {w.name}
                 </button>
@@ -121,44 +136,46 @@ export const QuestsPage = () => {
           {!selectedArea ? (
             <div className="px-4 space-y-3">
               <p className="text-gray-600 text-xs font-bold uppercase tracking-widest mb-3">エリア選択</p>
-              {selectedWorld.areas.map((area, areaIdx) => {
-                // 前エリアの最終ステージをクリアしないと次エリアは表示されない
-                if (areaIdx > 0) {
+              {/* 前エリアの最終ステージをクリアしないと次エリアは非表示（ステージと同様） */}
+              {selectedWorld.areas
+                .filter((_, areaIdx) => {
+                  if (areaIdx === 0) return true;
                   const prevArea = selectedWorld.areas[areaIdx - 1];
                   const prevLastStage = prevArea.stages[prevArea.stages.length - 1];
-                  if (!isCleared(prevLastStage.id)) return null;
-                }
-                const totalStages = area.stages.length;
-                const cleared = area.stages.filter(s => isCleared(s.id)).length;
-                const isComplete = cleared === totalStages;
-                return (
-                  <button key={area.id} onClick={() => setSelectedArea(area)}
-                    className="w-full card-base p-4 text-left unit-card-hover">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 ${
-                        isComplete ? 'bg-emerald-900/50 border border-emerald-700/40' : 'bg-purple-900/40 border border-purple-700/30'
-                      }`}>
-                        {area.emoji}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <p className="text-white font-bold text-sm">{area.name}</p>
-                          {isComplete && <span className="text-emerald-400 text-xs">✓</span>}
+                  return isCleared(prevLastStage.id);
+                })
+                .map((area) => {
+                  const totalStages = area.stages.length;
+                  const cleared = area.stages.filter(s => isCleared(s.id)).length;
+                  const isComplete = cleared === totalStages;
+                  return (
+                    <button key={area.id} onClick={() => setSelectedArea(area)}
+                      className="w-full card-base p-4 text-left unit-card-hover">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 ${
+                          isComplete ? 'bg-emerald-900/50 border border-emerald-700/40' : 'bg-purple-900/40 border border-purple-700/30'
+                        }`}>
+                          {area.emoji}
                         </div>
-                        <p className="text-gray-500 text-xs mb-2">{area.description}</p>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden">
-                            <div className={`h-full rounded-full transition-all ${isComplete ? 'bg-emerald-500' : 'bg-purple-500'}`}
-                              style={{ width: `${(cleared / totalStages) * 100}%` }} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <p className="text-white font-bold text-sm">{area.name}</p>
+                            {isComplete && <span className="text-emerald-400 text-xs">✓</span>}
                           </div>
-                          <span className="text-xs text-gray-500 tabular-nums">{cleared}/{totalStages}</span>
+                          <p className="text-gray-500 text-xs mb-2">{area.description}</p>
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden">
+                              <div className={`h-full rounded-full transition-all ${isComplete ? 'bg-emerald-500' : 'bg-purple-500'}`}
+                                style={{ width: `${(cleared / totalStages) * 100}%` }} />
+                            </div>
+                            <span className="text-xs text-gray-500 tabular-nums">{cleared}/{totalStages}</span>
+                          </div>
                         </div>
+                        <span className="text-gray-600 text-lg flex-shrink-0">›</span>
                       </div>
-                      <span className="text-gray-600 text-lg flex-shrink-0">›</span>
-                    </div>
-                  </button>
-                );
-              })}
+                    </button>
+                  );
+                })}
             </div>
           ) : (
             <StageList
