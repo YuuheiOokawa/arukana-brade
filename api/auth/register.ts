@@ -46,8 +46,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const token = signToken({ userId: user.id, email: user.email });
   res.setHeader('Set-Cookie', setCookieHeader(token));
 
+  const p = user.player;
   return res.status(201).json({
     user: { id: user.id, email: user.email },
-    player: user.player,
+    player: p ? { ...p, staminaRecoveryTime: Number(p.staminaRecoveryTime) } : null,
   });
 }
