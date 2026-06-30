@@ -33,8 +33,8 @@ export function getUnitImagePath(unitId: string, rarity: number | string): strin
   const suffix = RARITY_TO_IMAGE_SUFFIX[r];
   if (!suffix) return null;
 
-  // unit_001 または unit_001_xxx 形式から unit_001 部分を抽出
-  const match = unitId.match(/^(unit_\d{3})(?:[_-].*)?$/);
+  // unit_001 または hero_xxx 形式から base ID を抽出
+  const match = unitId.match(/^(unit_\d{3}|hero_[a-z]+)(?:[_-].*)?$/);
   if (!match) return null;
   const baseId = match[1];
 

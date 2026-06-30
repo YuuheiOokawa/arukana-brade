@@ -69,7 +69,7 @@ async function splitImage(srcFile, unitId) {
 
 async function main() {
   const files = await fs.readdir(SRC_DIR);
-  const webpFiles = files.filter(f => f.match(/^unit_\d+\.(webp|png|jpg|jpeg)$/i));
+  const webpFiles = files.filter(f => f.match(/^(unit_\d+|hero_[a-z]+)\.(webp|png|jpg|jpeg)$/i));
 
   console.log(`Found ${webpFiles.length} source images`);
 
