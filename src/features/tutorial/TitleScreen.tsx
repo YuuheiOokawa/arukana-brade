@@ -24,6 +24,15 @@ export const TitleScreen = () => {
     return () => clearTimeout(t);
   }, [checkAuth]);
 
+  // タイトル画面でSW更新チェック → 新版があれば自動リロード
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    const handleControllerChange = () => { window.location.reload(); };
+    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+    navigator.serviceWorker.getRegistration().then(reg => { reg?.update(); });
+    return () => { navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange); };
+  }, []);
+
   useEffect(() => {
     if (!isChecked) return;
     if (user && authPlayer) {
