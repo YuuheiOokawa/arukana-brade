@@ -51,9 +51,9 @@ export const UnitDetailPage = () => {
           background: 'rgba(12,8,24,0.9)',
           boxShadow: `0 0 24px ${starColor}22`,
         }}>
-          {/* ユニット画像エリア */}
-          <div className="h-48 flex items-center justify-center relative overflow-hidden"
-            style={{ background: elementGradient(master.element) }}>
+          {/* ユニット画像エリア - 縦長カード全体表示 */}
+          <div className="flex items-center justify-center relative overflow-hidden"
+            style={{ height: '280px', background: elementGradient(master.element) }}>
             <div className="absolute inset-0 opacity-20"
               style={{ background: 'radial-gradient(ellipse at center, white 0%, transparent 70%)' }} />
             {/* 星レアリティ光輪 */}
@@ -64,7 +64,8 @@ export const UnitDetailPage = () => {
                 src={resolveUnitImage(unit.masterId, currentRarity)}
                 fallbackEmoji={master.emoji}
                 element={master.element}
-                size={160}
+                size={130}
+                height={260}
               />
             </div>
             {/* レアリティバッジ */}

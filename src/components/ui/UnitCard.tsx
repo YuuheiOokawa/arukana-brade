@@ -58,7 +58,8 @@ export const UnitCard = ({ unit, selected, onClick, compact = false }: Props) =>
           src={imgSrc}
           fallbackEmoji={master.emoji}
           element={master.element}
-          size={compact ? 40 : 56}
+          size={compact ? 40 : 52}
+          height={compact ? 60 : 78}
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1 flex-wrap">
@@ -92,26 +93,30 @@ export const UnitCard = ({ unit, selected, onClick, compact = false }: Props) =>
 };
 
 // キャラ画像アイコン（エラー時はemoji fallback）
+// 画像は 256×512 (1:2 縦長) → height を指定して縦長表示推奨
 export const UnitIcon = ({
   src,
   fallbackEmoji,
   element,
   size = 56,
+  height,
   className = '',
 }: {
   src: string | null;
   fallbackEmoji: string;
   element: string;
   size?: number;
+  height?: number;
   className?: string;
 }) => {
   const [imgError, setImgError] = useState(false);
+  const h = height ?? size;
 
   if (!src || imgError) {
     return (
       <div
         className={`rounded-lg flex items-center justify-center flex-shrink-0 ${className}`}
-        style={{ width: size, height: size, background: elementGradient(element), fontSize: size * 0.5 }}
+        style={{ width: size, height: h, background: elementGradient(element), fontSize: size * 0.5 }}
       >
         {fallbackEmoji}
       </div>
@@ -121,7 +126,7 @@ export const UnitIcon = ({
   return (
     <div
       className={`rounded-lg overflow-hidden flex-shrink-0 ${className}`}
-      style={{ width: size, height: size, background: elementGradient(element) }}
+      style={{ width: size, height: h, background: elementGradient(element) }}
     >
       <img
         src={src}

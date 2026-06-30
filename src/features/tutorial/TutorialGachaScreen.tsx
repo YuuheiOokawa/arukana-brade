@@ -345,7 +345,8 @@ export const TutorialGachaScreen = () => {
                           src={resolveUnitImage(results[revealIndex].id, RARITY_TYPE_TO_STAR[results[revealIndex].rarity] ?? 1)}
                           fallbackEmoji={results[revealIndex].emoji}
                           element={results[revealIndex].element}
-                          size={80}
+                          size={90}
+                          height={160}
                         />
                       </div>
                       <div className="font-black text-white text-base mb-1">{results[revealIndex].name}</div>
@@ -447,7 +448,8 @@ export const TutorialGachaScreen = () => {
                       src={resolveUnitImage(u.id, RARITY_TYPE_TO_STAR[u.rarity] ?? 1)}
                       fallbackEmoji={u.emoji}
                       element={u.element}
-                      size={40}
+                      size={44}
+                      height={66}
                     />
                   </div>
                   <div className="text-white font-bold text-[9px] leading-tight mb-0.5 truncate">{u.name}</div>
