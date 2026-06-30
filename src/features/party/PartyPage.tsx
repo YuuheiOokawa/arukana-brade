@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePartyStore } from '../../stores/partyStore';
 import { useUnitStore } from '../../stores/unitStore';
@@ -5,7 +6,9 @@ import { UNIT_MASTER } from '../../data/units';
 import { RARITY_TYPE_TO_STAR } from '../../data/rarityConfig';
 import { ElementBadge } from '../../components/ui/ElementBadge';
 import { RarityBadge } from '../../components/ui/RarityBadge';
+import { UnitIcon } from '../../components/ui/UnitCard';
 import { TopBar } from '../../components/layout/TopBar';
+import { resolveUnitImage } from '../../lib/unitImage';
 import type { OwnedUnit } from '../../types';
 
 const MAX_SLOTS = 5;
@@ -29,7 +32,18 @@ export const PartyPage = () => {
   const { ownedUnits } = useUnitStore();
 
   const party = getActiveParty();
-  const filledSlots = party.slots.filter(Boolean).length;
+
+  // 存在しないユニットIDを参照している古いスロットを起動時にクリア
+  useEffect(() => {
+    party.slots.forEach((id, idx) => {
+      if (id && !ownedUnits.find(u => u.instanceId === id)) {
+        setSlot(party.id, idx, null);
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const filledSlots = party.slots.filter(id => id && ownedUnits.find(u => u.instanceId === id)).length;
 
   const getUnitInSlot = (instanceId: string | null) =>
     instanceId ? ownedUnits.find(u => u.instanceId === instanceId) : null;
@@ -98,10 +112,11 @@ export const PartyPage = () => {
                 )}
 
                 <button
-                  onClick={() => instanceId && handleUnitTap(getUnitInSlot(instanceId)!)}
-                  disabled={!instanceId}
-                  className="w-full aspect-square rounded-xl flex flex-col items-center justify-center transition-all active:scale-90"
+                  onClick={() => instanceId && unit && handleUnitTap(unit)}
+                  disabled={!instanceId || !unit}
+                  className="w-full rounded-xl overflow-hidden transition-all active:scale-90 relative"
                   style={{
+                    aspectRatio: '1 / 1.3',
                     background: master ? elementGradient(master.element) : 'rgba(26,26,53,0.8)',
                     border: isLeader
                       ? '2px solid #d97706'
@@ -112,11 +127,20 @@ export const PartyPage = () => {
                   }}>
                   {unit && master ? (
                     <>
-                      <span className="text-2xl leading-none">{master.emoji}</span>
-                      <span className="text-white text-[9px] font-bold mt-0.5 opacity-90">Lv{unit.level}</span>
+                      <img
+                        src={resolveUnitImage(unit.masterId, unit.currentRarity ?? 1)}
+                        alt=""
+                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', position: 'absolute', inset: 0 }}
+                      />
+                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.7))', padding: '4px 2px 2px' }}>
+                        <span className="text-white text-[9px] font-bold block text-center">Lv{unit.level}</span>
+                      </div>
                     </>
                   ) : (
-                    <span style={{ color: 'rgba(107,114,128,0.6)', fontSize: '22px' }}>＋</span>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span style={{ color: 'rgba(107,114,128,0.6)', fontSize: '22px' }}>＋</span>
+                    </div>
                   )}
                 </button>
 
@@ -192,10 +216,13 @@ export const PartyPage = () => {
                     boxShadow: inParty ? '0 0 12px rgba(124,58,237,0.2)' : 'none',
                   }}>
                   {/* アイコン */}
-                  <div className="w-11 h-11 rounded-lg flex items-center justify-center text-2xl flex-shrink-0"
-                    style={{ background: elementGradient(master.element) }}>
-                    {master.emoji}
-                  </div>
+                  <UnitIcon
+                    src={resolveUnitImage(unit.masterId, unit.currentRarity ?? RARITY_TYPE_TO_STAR[master.rarity] ?? 1)}
+                    fallbackEmoji={master.emoji}
+                    element={master.element}
+                    size={44}
+                    height={64}
+                  />
 
                   {/* 情報 */}
                   <div className="flex-1 min-w-0">
@@ -244,12 +271,24 @@ export const PartyPage = () => {
                 const u = getUnitInSlot(id);
                 const m = u ? UNIT_MASTER.find(mm => mm.id === u.masterId) : null;
                 return (
-                  <div key={i} className="flex-1 h-8 rounded-lg flex items-center justify-center text-base"
+                  <div key={i} className="flex-1 rounded-lg overflow-hidden relative"
                     style={{
+                      height: '44px',
                       background: m ? elementGradient(m.element) : 'rgba(30,30,60,0.5)',
                       border: id === party.leaderId ? '1.5px solid #d97706' : '1px solid rgba(75,85,99,0.3)',
                     }}>
-                    {m ? m.emoji : <span style={{ color: 'rgba(107,114,128,0.3)', fontSize: '12px' }}>—</span>}
+                    {u && m ? (
+                      <img
+                        src={resolveUnitImage(u.masterId, u.currentRarity ?? 1)}
+                        alt=""
+                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span style={{ color: 'rgba(107,114,128,0.3)', fontSize: '12px' }}>—</span>
+                      </div>
+                    )}
                   </div>
                 );
               })}

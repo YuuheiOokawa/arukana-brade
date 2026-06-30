@@ -17,6 +17,7 @@ import { useTutorialStore } from '../stores/tutorialStore';
 import { useArenaStore } from '../stores/arenaStore';
 import type { PlayerData, OwnedItem, OwnedUnit, OwnedEquipment } from '../types';
 import type { GameDataResponse } from '../stores/authStore';
+import { getUnitMaster, calcUnitStats } from '../data/units';
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 let isSaving = false;
@@ -173,20 +174,29 @@ export const hydrateFromGameState = (
 
     // unitStore: DB の OwnedUnit → フロントの OwnedUnit 型に変換
     if (Array.isArray(gd.ownedUnits)) {
-      const units: OwnedUnit[] = gd.ownedUnits.map(u => ({
-        instanceId: u.instanceId,
-        masterId: u.masterId,
-        level: u.level,
-        exp: u.exp,
-        awakenRank: u.awakenRank,
-        awakeningCount: u.awakeningCount,
-        currentRarity: Number(u.currentRarity) as OwnedUnit['currentRarity'],
-        currentStats: { hp: 0, atk: 0, def: 0, rec: 0 }, // calcStats で上書きされる
-        isLocked: u.isLocked,
-        acquiredAt: u.acquiredAt,
-      }));
-      // awakeningCrystals は miscData から取得（authStore.player.miscData 経由）
-      // ここでは unitStore に空で入れて、miscData は別途 hydrateFromGameState の呼び出し元で渡す
+      const units: OwnedUnit[] = gd.ownedUnits.map(u => {
+        const rarity: OwnedUnit['currentRarity'] =
+          u.currentRarity === 'CROWN' || u.currentRarity === 8
+            ? 'CROWN'
+            : (Number(u.currentRarity) || 1) as OwnedUnit['currentRarity'];
+        const awakenRank = u.awakenRank ?? 0;
+        const awakeningCount = u.awakeningCount ?? 0;
+        const master = getUnitMaster(u.masterId);
+        return {
+          instanceId: u.instanceId,
+          masterId: u.masterId,
+          level: u.level,
+          exp: u.exp,
+          awakenRank,
+          awakeningCount,
+          currentRarity: rarity,
+          currentStats: master
+            ? calcUnitStats(master, u.level, awakenRank, awakeningCount)
+            : { hp: 0, atk: 0, def: 0, rec: 0 },
+          isLocked: u.isLocked,
+          acquiredAt: u.acquiredAt,
+        };
+      });
       useUnitStore.setState({ ownedUnits: units });
     }
 

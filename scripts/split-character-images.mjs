@@ -55,8 +55,7 @@ async function splitImage(srcFile, unitId) {
           height: extractH,
         })
         .resize(TARGET_WIDTH, TARGET_HEIGHT, {
-          fit: 'contain',
-          background: { r: 0, g: 0, b: 0, alpha: 0 },
+          fit: 'cover',
           position: 'top',
         })
         .webp({ quality: 85 })
