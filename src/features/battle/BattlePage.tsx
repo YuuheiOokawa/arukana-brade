@@ -42,7 +42,7 @@ export const BattlePage = () => {
   const { pendingStageId, pendingFriendId, clearPending, markCleared, checkAreaComplete, claimAreaReward } = useQuestStore();
   const { getActiveParty } = usePartyStore();
   const { ownedUnits, levelUpUnit } = useUnitStore();
-  const { spendStamina, addGold, addExp, addItem, syncCurrencyToServer } = usePlayerStore();
+  const { spendStamina, recoverStamina, addGold, addExp, addItem, syncCurrencyToServer } = usePlayerStore();
   const { dealDamage: dealRaidDamage } = useRaidStore();
   const { getEquippedByUnit } = useEquipmentStore();
   const { addDailyProgress } = useMissionStore();
@@ -94,6 +94,7 @@ export const BattlePage = () => {
     const s = getStage(pendingStageId) ?? getEventStage(pendingStageId) ?? getRaidStage(pendingStageId);
     if (!s) { navigate('/quests'); return; }
 
+    recoverStamina();
     const ok = spendStamina(s.staminaCost);
     if (!ok) { navigate('/quests'); return; }
 
