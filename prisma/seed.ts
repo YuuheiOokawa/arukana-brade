@@ -20,6 +20,10 @@ const UNIT_IDS = [
   'unit_013','unit_014','unit_015','unit_016','unit_017','unit_018',
   'unit_019','unit_020','unit_021','unit_022','unit_023','unit_024',
   'unit_025','unit_026','unit_027','unit_028','unit_029','unit_030',
+  'unit_031','unit_032','unit_033','unit_034','unit_035','unit_036',
+  'unit_037','unit_038','unit_039','unit_040','unit_041','unit_042',
+  'unit_043','unit_044','unit_045','unit_046','unit_047','unit_048',
+  'unit_049','unit_050',
   // チュートリアル主人公
   'hero_sol','hero_luna','hero_darius','hero_lilith',
   'hero_vaal','hero_serena','hero_raiga','hero_fen',
