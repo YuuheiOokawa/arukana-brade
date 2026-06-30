@@ -38,6 +38,7 @@ export const LoginPage = () => {
           gold: number; diamond: number; exp: number;
           title: string | null; bio: string | null;
           favoriteUnitId: string | null; loginDays: number; lastLoginAt: string;
+          staminaRecoveryTime: number; arcanaPlayerId: string; miscData: Record<string, unknown>;
         };
         error?: string;
       };

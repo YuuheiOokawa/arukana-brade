@@ -13,6 +13,7 @@ import { prisma } from '../../lib/prisma.js';
 import { getTokenFromRequest, verifyToken } from '../../lib/auth.js';
 
 interface UnitRecord {
+  instanceId: string;
   masterId: string;
   level: number;
   exp: number;
@@ -20,6 +21,7 @@ interface UnitRecord {
   awakeningCount: number;
   currentRarity: string;
   isLocked: boolean;
+  acquiredAt?: number;
 }
 
 interface SyncBody {
@@ -40,13 +42,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const body = req.body as SyncBody;
   if (!Array.isArray(body?.units)) return res.status(400).json({ error: 'units array required' });
 
-  const now = new Date();
-
   // [DB SAVE] 既存全削除 → 全件再登録（シンプルな完全同期）
   await prisma.$transaction([
     prisma.ownedUnit.deleteMany({ where: { playerId: player.playerId } }),
     prisma.ownedUnit.createMany({
       data: body.units.map(u => ({
+        instanceId: u.instanceId,
         playerId: player.playerId,
         masterId: u.masterId,
         level: u.level,
@@ -55,7 +56,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         awakeningCount: u.awakeningCount,
         currentRarity: String(u.currentRarity),
         isLocked: u.isLocked,
-        acquiredAt: now,
+        acquiredAt: BigInt(u.acquiredAt ?? Date.now()),
       })),
     }),
   ]);
