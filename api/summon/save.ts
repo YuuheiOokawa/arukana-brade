@@ -45,8 +45,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // [DB SAVE] OwnedUnit: new ユニットのみ DB に追加（awakening/crystal は既存レコードを更新すべきだが簡略化）
     const newUnits = body.units.filter(u => u.resultType === 'new');
     if (newUnits.length > 0) {
+      const nowMs = BigInt(Date.now());
       await tx.ownedUnit.createMany({
-        data: newUnits.map(u => ({
+        data: newUnits.map((u, i) => ({
+          instanceId: `unit_${Date.now() + i}_${u.masterId}`,
           playerId: player.playerId,
           masterId: u.masterId,
           level: 1,
@@ -55,7 +57,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           awakeningCount: 0,
           currentRarity: u.rarity === 'SSR' ? '3' : u.rarity === 'SR' ? '2' : '1',
           isLocked: false,
-          acquiredAt: now,
+          acquiredAt: nowMs + BigInt(i),
         })),
       });
     }
