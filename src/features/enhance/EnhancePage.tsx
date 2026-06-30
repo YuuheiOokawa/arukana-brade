@@ -11,6 +11,7 @@ import { GameButton } from '../../components/ui/game/GameButton';
 import { TopBar } from '../../components/layout/TopBar';
 import { formatNumber, calcTotalPower, getExpForLevel } from '../../utils/format';
 import { getLevelCap, getStarDisplay, NEXT_RARITY, AWAKENING_CONFIG, EVOLUTION_MATERIALS, EVOLUTION_GOLD_COST } from '../../data/rarityConfig';
+import { saveImmediately } from '../../lib/syncService';
 
 export const EnhancePage = () => {
   const navigate = useNavigate();
@@ -118,6 +119,7 @@ export const EnhancePage = () => {
     const nextR = NEXT_RARITY[String(unit.currentRarity)];
     const ok = rarityUp(unit.instanceId);
     if (!ok) { setMessage('進化できません'); return; }
+    saveImmediately();
     addDailyProgress('enhance');
     setMessage(`✨ ${getStarDisplay(nextR!)} に進化！`);
     setTimeout(() => setMessage(''), 2500);

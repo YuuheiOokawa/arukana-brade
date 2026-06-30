@@ -188,7 +188,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             exp: clamp(u.exp, 0, 999_999_999),
             awakenRank: clamp(u.awakenRank, 0, 10),
             awakeningCount: clamp(u.awakeningCount, 0, 10),
-            currentRarity: String(u.currentRarity ?? '1'),
+            currentRarity: (() => {
+              const r = u.currentRarity;
+              if (r === 'CROWN' || r === 'crown' || r === 8 || r === '8') return 'CROWN';
+              const n = Number(r);
+              if (n >= 1 && n <= 7) return String(n);
+              return '1';
+            })(),
             isLocked: u.isLocked ?? false,
             acquiredAt: BigInt(typeof u.acquiredAt === 'number' ? u.acquiredAt : 0),
           })),

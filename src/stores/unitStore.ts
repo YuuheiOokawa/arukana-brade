@@ -27,7 +27,13 @@ function migrateUnit(raw: Partial<OwnedUnit> & { instanceId: string; masterId: s
   const awakeningCount = raw.awakeningCount ?? 0;
   const awakenRank = raw.awakenRank ?? 0;
   const level = raw.level ?? 1;
-  const currentRarity: StarRarity = raw.currentRarity ?? (master ? (RARITY_TYPE_TO_STAR[master.rarity] ?? 1) : 1);
+  const rawR = raw.currentRarity as unknown;
+  const currentRarity: StarRarity = (() => {
+    if (rawR === 'CROWN' || rawR === 'crown' || rawR === 8 || rawR === '8') return 'CROWN';
+    const n = Number(rawR);
+    if (n >= 1 && n <= 7) return n as StarRarity;
+    return ((master ? (RARITY_TYPE_TO_STAR[master.rarity] ?? 1) : 1)) as StarRarity;
+  })();
   const currentStats =
     raw.currentStats && raw.currentStats.hp > 0
       ? raw.currentStats

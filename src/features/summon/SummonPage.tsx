@@ -241,7 +241,7 @@ const MiniCardImage = ({ src, fallbackEmoji, element }: { src: string | null; fa
   }
   return (
     <img src={src} alt="" onError={() => setErr(true)}
-      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'top center' }} />
   );
 };
 
