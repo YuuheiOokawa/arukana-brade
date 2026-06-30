@@ -165,7 +165,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         loginDays: typeof p?.loginDays === 'number' ? p.loginDays : undefined,
         arcanaPlayerId: typeof p?.playerId === 'string' ? p.playerId : undefined,
         tutorialCompleted: state.tutorialCompleted === true ? true : undefined,
-        miscData: { awakeningCrystals: (state.awakeningCrystals as Record<string, number>) ?? {} },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        miscData: JSON.parse(JSON.stringify({
+          awakeningCrystals: (state.awakeningCrystals as Record<string, number>) ?? {},
+          raidStates: (state.raidStates as unknown[]) ?? [],
+        })) as any,
         updatedAt: new Date(),
       },
     });

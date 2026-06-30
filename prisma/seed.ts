@@ -17,6 +17,9 @@ const RARITY_SUFFIXES: Record<number, string> = {
 const UNIT_IDS = [
   'unit_001','unit_002','unit_003','unit_004','unit_005','unit_006',
   'unit_007','unit_008','unit_009','unit_010','unit_011','unit_012',
+  'unit_013','unit_014','unit_015','unit_016','unit_017','unit_018',
+  'unit_019','unit_020','unit_021','unit_022','unit_023','unit_024',
+  'unit_025','unit_026','unit_027','unit_028','unit_029','unit_030',
 ];
 
 async function seedUnitImages() {

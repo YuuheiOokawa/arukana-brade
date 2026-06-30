@@ -29,33 +29,61 @@ const DIAMOND_PACKS = [
 ];
 
 export const ShopPage = () => {
-  const { player, spendDiamond, spendGold, addItem } = usePlayerStore();
+  const { player, addItem } = usePlayerStore();
   const [tab, setTab] = useState<ShopTab>('stamina');
   const [message, setMessage] = useState('');
+  const [buying, setBuying] = useState(false);
 
-  const showMsg = (msg: string) => { setMessage(msg); setTimeout(() => setMessage(''), 2000); };
+  const showMsg = (msg: string) => { setMessage(msg); setTimeout(() => setMessage(''), 2500); };
 
-  const buyStamina = (pack: typeof STAMINA_PACKS[0]) => {
+  const buyStamina = async (pack: typeof STAMINA_PACKS[0]) => {
+    if (buying) return;
     if (player.diamond < pack.diamondCost) { showMsg('ダイヤが不足しています'); return; }
-    if (!spendDiamond(pack.diamondCost)) return;
-    const { player: p } = usePlayerStore.getState();
-    const add = pack.amount === -1 ? Math.max(0, p.maxStamina - p.stamina) : pack.amount;
-    usePlayerStore.setState(s => ({
-      player: { ...s.player, stamina: Math.min(s.player.stamina + add, s.player.maxStamina) },
-    }));
-    showMsg(`⚡ スタミナ +${add} 回復！`);
+    setBuying(true);
+    try {
+      const res = await fetch('/api/shop/buy', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category: 'stamina', packId: pack.id }),
+      });
+      const data = await res.json() as { ok?: boolean; error?: string; diamond?: number; stamina?: number; staminaAdded?: number };
+      if (!res.ok || !data.ok) { showMsg(data.error ?? '購入に失敗しました'); return; }
+      usePlayerStore.setState(s => ({
+        player: { ...s.player, diamond: data.diamond ?? s.player.diamond, stamina: data.stamina ?? s.player.stamina },
+      }));
+      showMsg(`⚡ スタミナ +${data.staminaAdded} 回復！`);
+    } catch {
+      showMsg('通信エラーが発生しました');
+    } finally {
+      setBuying(false);
+    }
   };
 
-  const buyItem = (shop: typeof ITEM_SHOP[0]) => {
-    if (shop.diamondCost > 0) {
-      if (player.diamond < shop.diamondCost) { showMsg('ダイヤが不足しています'); return; }
-      if (!spendDiamond(shop.diamondCost)) return;
-    } else {
-      if (player.gold < shop.goldCost) { showMsg('ゴールドが不足しています'); return; }
-      if (!spendGold(shop.goldCost)) return;
+  const buyItem = async (shop: typeof ITEM_SHOP[0]) => {
+    if (buying) return;
+    const hasEnough = shop.diamondCost > 0 ? player.diamond >= shop.diamondCost : player.gold >= shop.goldCost;
+    if (!hasEnough) { showMsg(shop.diamondCost > 0 ? 'ダイヤが不足しています' : 'ゴールドが不足しています'); return; }
+    setBuying(true);
+    try {
+      const res = await fetch('/api/shop/buy', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category: 'item', packId: shop.id }),
+      });
+      const data = await res.json() as { ok?: boolean; error?: string; diamond?: number; gold?: number; itemId?: string; quantityAdded?: number };
+      if (!res.ok || !data.ok) { showMsg(data.error ?? '購入に失敗しました'); return; }
+      usePlayerStore.setState(s => ({
+        player: { ...s.player, diamond: data.diamond ?? s.player.diamond, gold: data.gold ?? s.player.gold },
+      }));
+      if (data.itemId && data.quantityAdded) addItem(data.itemId, data.quantityAdded);
+      showMsg(`${shop.emoji} ${shop.label} ×${data.quantityAdded} 獲得！`);
+    } catch {
+      showMsg('通信エラーが発生しました');
+    } finally {
+      setBuying(false);
     }
-    addItem(shop.itemId, shop.quantity);
-    showMsg(`${shop.emoji} ${shop.label} ×${shop.quantity} 獲得！`);
   };
 
   return (

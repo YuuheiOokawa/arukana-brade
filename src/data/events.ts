@@ -411,3 +411,23 @@ export const getEventStage = (stageId: string) => {
   }
   return undefined;
 };
+
+// レイドボスをバトルシステムが読める QuestStage に変換
+export const getRaidStage = (stageId: string) => {
+  // stageId 形式: raid_<bossId>_stage
+  const bossId = stageId.replace(/^raid_/, '').replace(/_stage$/, '');
+  const boss = RAID_BOSSES.find(b => b.id === bossId);
+  if (!boss) return undefined;
+  return {
+    id: stageId,
+    name: boss.name,
+    staminaCost: boss.entryStaminaCost,
+    recommendedPower: 50000,
+    waves: boss.waves,
+    rewardGold: 3000,
+    rewardExp: 1000,
+    rewardItems: boss.rewards[0]?.items.map(itemId => ({ itemId, quantity: 1, chance: 1.0 })) ?? [],
+    isCleared: false,
+    raidBossId: boss.id,
+  };
+};

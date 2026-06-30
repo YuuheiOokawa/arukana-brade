@@ -4,6 +4,7 @@ import { useTutorialStore } from '../../stores/tutorialStore';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useUnitStore } from '../../stores/unitStore';
 import { useAuthStore } from '../../stores/authStore';
+import { saveImmediately } from '../../lib/syncService';
 import { HERO_MASTER } from '../../data/heroes';
 import { ELEMENT_NAMES } from '../../types';
 import { CurrencyIcon } from '../../components/ui/game/GameIcons';
@@ -55,6 +56,9 @@ export const TutorialCompleteScreen = () => {
     if (heroMaster?.unitMasterId) {
       try { addUnit(heroMaster.unitMasterId); } catch { /* ignore */ }
     }
+
+    // 主人公ユニットをすぐに DB に保存（ガチャ前に離脱してもデータが残るよう）
+    saveImmediately();
 
     // [DB SAVE] プレイヤー名を DB に保存
     void syncPlayerName(playerName || '勇者');
