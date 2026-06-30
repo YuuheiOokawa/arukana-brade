@@ -4,11 +4,13 @@ import { getUnitMaster } from '../../data/units';
 import { getSkill } from '../../data/skills';
 import { ElementBadge } from '../../components/ui/ElementBadge';
 import { RarityBadge } from '../../components/ui/RarityBadge';
+import { UnitIcon } from '../../components/ui/UnitCard';
 import { TopBar } from '../../components/layout/TopBar';
 import { formatNumber, calcTotalPower, getExpForLevel } from '../../utils/format';
 import { getStarDisplay, getStarColor, getLevelCap, nextRarity, AWAKENING_CONFIG } from '../../data/rarityConfig';
 import type { StarRarity } from '../../types';
 import { calcUnitStats } from '../../data/units';
+import { resolveUnitImage } from '../../lib/unitImage';
 
 export const UnitDetailPage = () => {
   const { instanceId } = useParams<{ instanceId: string }>();
@@ -50,14 +52,21 @@ export const UnitDetailPage = () => {
           boxShadow: `0 0 24px ${starColor}22`,
         }}>
           {/* ユニット画像エリア */}
-          <div className="h-36 flex items-center justify-center relative"
+          <div className="h-48 flex items-center justify-center relative overflow-hidden"
             style={{ background: elementGradient(master.element) }}>
             <div className="absolute inset-0 opacity-20"
               style={{ background: 'radial-gradient(ellipse at center, white 0%, transparent 70%)' }} />
             {/* 星レアリティ光輪 */}
             <div className="absolute inset-0 opacity-30"
               style={{ background: `radial-gradient(ellipse at center, ${starColor} 0%, transparent 65%)` }} />
-            <span className="text-8xl relative z-10">{master.emoji}</span>
+            <div className="relative z-10">
+              <UnitIcon
+                src={resolveUnitImage(unit.masterId, currentRarity)}
+                fallbackEmoji={master.emoji}
+                element={master.element}
+                size={160}
+              />
+            </div>
             {/* レアリティバッジ */}
             <div className="absolute top-2 left-2 z-20">
               <RarityBadge rarity={currentRarity} size="md" />
