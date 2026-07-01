@@ -36,7 +36,7 @@ import { hydrateFromGameState, resetAllStores, initAutoSave, saveImmediately, sa
 import { fetchAndPopulateMasterData } from './lib/masterDataCache';
 import { populateImageCache } from './lib/unitImage';
 
-const ADMIN_EMAIL = 'yuuheiookawa@gmail.com';
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL ?? 'yuuheiookawa@gmail.com';
 const LAST_USER_KEY = 'arcana-last-user-id';
 
 // 認証済みでないと通過できないガード

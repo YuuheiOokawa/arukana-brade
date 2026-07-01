@@ -2,6 +2,13 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Guild, GuildMember } from '../types';
 
+const weekMondayStr = () => {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(d.getFullYear(), d.getMonth(), diff).toISOString().slice(0, 10);
+};
+
 // ダミーギルドメンバー
 const DUMMY_MEMBERS: GuildMember[] = [
   { id: 'npc_1', name: 'アルカナの騎士', rank: 45, power: 85000, role: 'master',  joinedAt: Date.now() - 30 * 86400000 },
@@ -22,11 +29,13 @@ const GUILD_MISSIONS = [
 interface GuildStore {
   guild: Guild | null;
   guildMissions: typeof GUILD_MISSIONS;
+  lastGuildMissionReset: string;
   guildChatMessages: { sender: string; text: string; timestamp: number }[];
   createGuild: (name: string, emblem: string, playerName: string) => void;
   leaveGuild: () => void;
   addGuildExp: (amount: number) => void;
   updateGuildMissionProgress: (type: 'battle' | 'exp' | 'raid', count?: number) => void;
+  checkAndResetGuildMissions: () => void;
   sendChatMessage: (playerName: string, text: string) => void;
   claimGuildMission: (id: string) => boolean;
 }
@@ -43,6 +52,7 @@ export const useGuildStore = create<GuildStore>()(
     (set, get) => ({
       guild: null,
       guildMissions: GUILD_MISSIONS,
+      lastGuildMissionReset: '',
       guildChatMessages: [
         { sender: 'アルカナの騎士', text: 'ようこそ！一緒に強くなりましょう！', timestamp: Date.now() - 3600000 },
         { sender: '炎の魔法使い',   text: 'ラスボス討伐の準備ができた人は連絡を', timestamp: Date.now() - 1800000 },
@@ -99,6 +109,15 @@ export const useGuildStore = create<GuildStore>()(
               : m
           ),
         }));
+      },
+
+      checkAndResetGuildMissions: () => {
+        const monday = weekMondayStr();
+        if (get().lastGuildMissionReset === monday) return;
+        set({
+          guildMissions: GUILD_MISSIONS.map(m => ({ ...m, progress: 0, claimed: false })),
+          lastGuildMissionReset: monday,
+        });
       },
 
       sendChatMessage: (playerName, text) => {

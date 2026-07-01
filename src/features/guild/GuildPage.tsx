@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GameButton } from '../../components/ui/game/GameButton';
 import { useGuildStore, PRESET_GUILDS } from '../../stores/guildStore';
 import { usePlayerStore } from '../../stores/playerStore';
@@ -7,12 +7,16 @@ import { TopBar } from '../../components/layout/TopBar';
 type Tab = 'home' | 'members' | 'mission' | 'chat';
 
 export const GuildPage = () => {
-  const { guild, createGuild, leaveGuild, claimGuildMission, guildMissions, guildChatMessages, sendChatMessage } = useGuildStore();
+  const { guild, createGuild, leaveGuild, claimGuildMission, guildMissions, guildChatMessages, sendChatMessage, checkAndResetGuildMissions } = useGuildStore();
   const { player } = usePlayerStore();
   const [tab, setTab] = useState<Tab>('home');
   const [chatInput, setChatInput] = useState('');
   const [newGuildName, setNewGuildName] = useState('');
   const [newGuildEmblem, setNewGuildEmblem] = useState('⚔️');
+
+  useEffect(() => {
+    checkAndResetGuildMissions();
+  }, [checkAndResetGuildMissions]);
 
   const EMBLEMS = ['⚔️', '🛡️', '🔥', '💧', '🌿', '⚡', '🌑', '🌟', '🐉', '👑'];
 

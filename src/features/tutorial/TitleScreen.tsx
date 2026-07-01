@@ -4,7 +4,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { useTutorialStore } from '../../stores/tutorialStore';
 import { usePlayerStore } from '../../stores/playerStore';
 
-const ADMIN_EMAIL = 'yuuheiookawa@gmail.com';
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL ?? 'yuuheiookawa@gmail.com';
 
 type TitlePhase = 'loading' | 'tap' | 'menu';
 

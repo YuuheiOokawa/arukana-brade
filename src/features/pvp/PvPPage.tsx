@@ -4,11 +4,13 @@ import { useArenaStore } from '../../stores/arenaStore';
 import { usePartyStore } from '../../stores/partyStore';
 import { useUnitStore } from '../../stores/unitStore';
 import { usePlayerStore } from '../../stores/playerStore';
+import { useMissionStore } from '../../stores/missionStore';
 import { UNIT_MASTER, calcUnitStats } from '../../data/units';
 import { TopBar } from '../../components/layout/TopBar';
 import { elementGradient } from '../../utils/elementUtils';
 import { calcTotalPower } from '../../utils/format';
 import type { ArenaOpponent } from '../../types';
+import { ELEMENT_ADVANTAGE } from '../../types';
 
 type Phase = 'list' | 'battle' | 'result';
 
@@ -46,6 +48,7 @@ export const PvPPage = () => {
   const { getActiveParty } = usePartyStore();
   const { ownedUnits } = useUnitStore();
   const { addGold, addDiamond } = usePlayerStore();
+  const { addDailyProgress, addWeeklyProgress } = useMissionStore();
 
   const [phase, setPhase] = useState<Phase>('list');
   const [opponents, setOpponents] = useState<ArenaOpponent[]>([]);
@@ -90,19 +93,30 @@ export const PvPPage = () => {
       .filter((u): u is NonNullable<typeof u> => u != null);
 
     const oppMaster = UNIT_MASTER.find(m => m.id === opponent.leaderUnitMasterId);
+    const oppStats = oppMaster
+      ? calcUnitStats(oppMaster, opponent.leaderUnitLevel, opponent.leaderUnitAwakenRank)
+      : { atk: Math.floor(oppPower / 10), def: Math.floor(oppPower / 20), hp: oppPower, rec: 100 };
+
     const logs: string[] = [];
     logs.push('アリーナバトル開始！');
     logs.push(`${opponent.playerName} の ${oppMaster?.name ?? '???'} に挑戦...`);
 
-    if (partyUnits.length > 0) {
-      for (let i = 0; i < 3; i++) {
-        const unit = partyUnits[i % partyUnits.length];
-        if (!unit) continue;
-        const master = UNIT_MASTER.find(m => m.id === unit.masterId);
-        if (!master) continue;
-        const dmg = Math.floor(Math.random() * 5000 + 2000);
-        logs.push(`${master.emoji} ${master.name} が ${dmg.toLocaleString()} ダメージ！`);
-      }
+    // 実ステータス + 属性相性でダメージ計算
+    partyUnits.forEach(unit => {
+      const master = UNIT_MASTER.find(m => m.id === unit.masterId);
+      if (!master) return;
+      const stats = calcUnitStats(master, unit.level, unit.awakenRank);
+      const elemMult = ELEMENT_ADVANTAGE[master.element]?.[oppMaster?.element ?? 'none' as never] ?? 1.0;
+      const baseDmg = Math.max(1, stats.atk * (0.85 + Math.random() * 0.3) - oppStats.def * 0.3);
+      const dmg = Math.floor(baseDmg * elemMult);
+      const elemNote = elemMult > 1.0 ? ' ⚡属性有利！' : elemMult < 1.0 ? ' ↓属性不利' : '';
+      logs.push(`${master.emoji} ${master.name} → ${dmg.toLocaleString()} ダメージ！${elemNote}`);
+    });
+
+    // 敵リーダーの反撃
+    if (oppMaster) {
+      const enemyDmg = Math.floor(oppStats.atk * (0.8 + Math.random() * 0.4));
+      logs.push(`${oppMaster.emoji} ${oppMaster.name} の反撃 → ${enemyDmg.toLocaleString()} ダメージ！`);
     }
 
     logs.push(won ? '✨ 勝利！相手のHPを削り切った！' : '💀 敗北...HPが尽きた');
@@ -133,6 +147,10 @@ export const PvPPage = () => {
           const battleResult = won ? recordWin(opponent.id) : recordLoss(opponent.id);
           if (battleResult.goldReward > 0) addGold(battleResult.goldReward);
           if (battleResult.diamondReward > 0) addDiamond(battleResult.diamondReward);
+          if (won) {
+            addDailyProgress('battle_win');
+            addWeeklyProgress('battle_win');
+          }
           setResult({ won, pointsGained: battleResult.pointsGained, gold: battleResult.goldReward, diamond: battleResult.diamondReward });
           setPhase('result');
           // サーバー側にバトル結果を記録（非同期・失敗しても局所的に許容）
