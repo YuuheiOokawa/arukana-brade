@@ -88,8 +88,8 @@ export const useGuildStore = create<GuildStore>()(
           if (!s.guild) return {};
           let { level, exp } = s.guild;
           exp += amount;
-          const needed = level * 1000;
-          if (exp >= needed && level < 20) { exp -= needed; level++; }
+          let needed = level * 1000;
+          while (exp >= needed && level < 20) { exp -= needed; level++; needed = level * 1000; }
           return {
             guild: { ...s.guild, level, exp },
             guildMissions: s.guildMissions.map(m =>

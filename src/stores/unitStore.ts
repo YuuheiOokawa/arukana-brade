@@ -217,7 +217,7 @@ export const useUnitStore = create<UnitStore>()(
           const allForMaster = [
             ...currentOwned.filter(u => u.masterId === masterId),
             ...newUnits.filter(u => u.masterId === masterId),
-          ].sort((a, b) => a.awakeningCount - b.awakeningCount);
+          ].sort((a, b) => (a.awakeningCount ?? 0) - (b.awakeningCount ?? 0));
 
           const target = allForMaster[0];
 
