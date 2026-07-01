@@ -26,8 +26,10 @@ export interface ArenaBattleResult {
 interface ArenaStore {
   record: ArenaRecord;
   opponents: ArenaOpponent[];
+  lastOpponentRefreshDate: string;
   battleHistory: { timestamp: number; opponentName: string; won: boolean; points: number }[];
   refreshOpponents: () => void;
+  checkDailyRefresh: () => void;
   recordWin: (opponentId: string) => ArenaBattleResult;
   recordLoss: (opponentId: string) => ArenaBattleResult;
   getMatchOpponents: () => ArenaOpponent[];
@@ -38,7 +40,20 @@ export const useArenaStore = create<ArenaStore>()(
     (set, get) => ({
       record: INITIAL_RECORD,
       opponents: ARENA_OPPONENTS,
+      lastOpponentRefreshDate: '',
       battleHistory: [],
+
+      checkDailyRefresh: () => {
+        const today = new Date().toISOString().slice(0, 10);
+        if (get().lastOpponentRefreshDate === today) return;
+        const { points } = get().record;
+        const withScore = ARENA_OPPONENTS.map(o => ({
+          opponent: o,
+          score: Math.abs(o.arenaPoints - points) + Math.random() * 400,
+        }));
+        withScore.sort((a, b) => a.score - b.score);
+        set({ opponents: withScore.map(w => w.opponent), lastOpponentRefreshDate: today });
+      },
 
       refreshOpponents: () => {
         const { points } = get().record;

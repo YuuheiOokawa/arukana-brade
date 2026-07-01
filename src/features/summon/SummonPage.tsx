@@ -310,7 +310,7 @@ type Phase = 'idle' | 'summon' | 'crystal' | 'shatter' | 'reveal' | 'results';
 type CrystalPhase = 'idle' | 'appear' | 'shatter';
 
 export const SummonPage = () => {
-  const { player, spendDiamond, useItem, items } = usePlayerStore();
+  const { player, spendDiamond, useItem, items, recordSummon } = usePlayerStore();
   const { processSummonResults, addAwakeningCrystal } = useUnitStore();
   const { addDailyProgress } = useMissionStore();
   const { syncSummonResult } = useAuthStore();
@@ -441,6 +441,7 @@ export const SummonPage = () => {
     setSummonResultTypes(gachaResults);
     addDailyProgress('summon');
     useMissionStore.getState().addWeeklyProgress('summon');
+    recordSummon(summonedMasters.length);
 
     // [DB SAVE] ガチャ結果を非同期でDBに保存（演出と並行）
     void syncSummonResult(
