@@ -114,11 +114,13 @@ export const EnhancePage = () => {
       setTimeout(() => setMessage(''), 2500);
       return;
     }
-    for (const mat of mats) useItem(mat.itemId, mat.quantity);
-    spendGold(goldCost);
+    // rarityUp を先に試みて、成功後に素材・ゴールドを消費する
+    // (逆順だと rarityUp 失敗時に素材が消滅するバグを防ぐ)
     const nextR = NEXT_RARITY[String(unit.currentRarity)];
     const ok = rarityUp(unit.instanceId);
     if (!ok) { setMessage('進化できません'); return; }
+    for (const mat of mats) useItem(mat.itemId, mat.quantity);
+    spendGold(goldCost);
     saveImmediately();
     addDailyProgress('enhance');
     setMessage(`✨ ${getStarDisplay(nextR!)} に進化！`);

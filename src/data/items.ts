@@ -7,7 +7,7 @@ export const ITEM_MASTER: ItemMaster[] = [
   { id: 'item_wolf_fang',        name: 'ダークウルフの爪',   description: '強化素材として使用できる',         category: 'material',        emoji: '🐾', sellPrice: 100 },
   { id: 'item_slime_gel',        name: 'マグマスライムのゲル', description: '強化素材として使用できる',       category: 'material',        emoji: '🫧', sellPrice: 60 },
   { id: 'item_stone_core',       name: 'ストーンコア',       description: '強化素材として使用できる',         category: 'material',        emoji: '💎', sellPrice: 200 },
-  { id: 'item_magic_crystal',    name: '魔力の結晶',         description: '強化素材として使用できる',         category: 'material',        emoji: '🔮', sellPrice: 250 },
+  { id: 'item_magic_crystal',    name: '魔法結晶',           description: '★3以上の進化に必要な魔力を秘めた結晶', category: 'material',        emoji: '🔮', sellPrice: 300 },
   { id: 'item_dark_shard',       name: '闇の欠片',           description: '強化素材として使用できる',         category: 'material',        emoji: '🌑', sellPrice: 180 },
   { id: 'item_dragon_scale',     name: 'ドラゴンスケイル',   description: '希少な強化素材',                   category: 'material',        emoji: '🐉', sellPrice: 500 },
   { id: 'item_angel_feather',    name: '天使の羽根',         description: '希少な強化素材',                   category: 'material',        emoji: '🪶', sellPrice: 450 },
@@ -36,7 +36,7 @@ export const ITEM_MASTER: ItemMaster[] = [
   { id: 'item_thunder_gem',      name: '雷の宝玉',           description: '雷属性ユニットの覚醒に使用',       category: 'awaken_material', emoji: '🟡', sellPrice: 100 },
   { id: 'item_arcana_shard',       name: 'アルカナの欠片',     description: '上位覚醒に必要な希少素材',         category: 'awaken_material', emoji: '✨', sellPrice: 500 },
   { id: 'item_awakening_crystal',  name: '覚醒結晶',           description: 'ガチャ被りで覚醒上限に達した際に得られる結晶。将来的に覚醒素材として使用可能。', category: 'awaken_material', emoji: '💠', sellPrice: 300 },
-  { id: 'item_arcana_orb',       name: 'アルカナオーブ',     description: '最高位覚醒に必要な至高素材',       category: 'awaken_material', emoji: '🌟', sellPrice: 2000 },
+  { id: 'item_arcana_orb',       name: 'アルカナオーブ',     description: '★5以上の進化・最高位覚醒に使用する神秘の宝珠', category: 'material', emoji: '🌟', sellPrice: 2000 },
   { id: 'item_elemental_core',   name: '元素核',             description: 'あらゆる属性の覚醒に使用できる万能素材', category: 'awaken_material', emoji: '🎯', sellPrice: 1500 },
 
   // ===== 経験値ポーション =====
@@ -94,10 +94,8 @@ export const ITEM_MASTER: ItemMaster[] = [
   { id: 'item_raid_relic',       name: '討伐の遺物',         description: 'レイドボス撃破で得られる希少な遺物', category: 'material',      emoji: '🏺', sellPrice: 5000 },
   { id: 'item_boss_essence',     name: 'ボス精髄',           description: '強大なボスの力が宿るエッセンス',   category: 'material',        emoji: '⚗️', sellPrice: 2000 },
 
-  // ===== 進化素材（高レアリティ）=====
-  { id: 'item_magic_crystal',    name: '魔法結晶',           description: '★3以上の進化に必要な魔力を秘めた結晶',    category: 'material', emoji: '🔮', sellPrice: 300 },
+  // ===== 進化専用素材 =====
   { id: 'item_element_core',     name: '元素核',             description: '★4以上の進化に必要な元素の核',             category: 'material', emoji: '⚡', sellPrice: 800 },
-  { id: 'item_arcana_orb',       name: 'アルカナオーブ',     description: '★5以上の進化にのみ使用できる神秘の宝珠',   category: 'material', emoji: '🌐', sellPrice: 2000 },
   { id: 'item_mystic_stone',     name: '神秘石',             description: '★7・CROWN進化に必要な極めて希少な石',       category: 'material', emoji: '💎', sellPrice: 8000 },
 ];
 

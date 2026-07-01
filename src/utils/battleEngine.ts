@@ -185,30 +185,61 @@ export const executeEnemyTurn = (
   enemies: BattleEnemy[],
   turn: number
 ): BattleResult => {
-  const target = allies.filter(a => a.currentHp > 0)[Math.floor(Math.random() * allies.filter(a => a.currentHp > 0).length)];
-  if (!target) return { updatedAllies: allies, updatedEnemies: enemies, logs: [] };
+  const livingAllies = allies.filter(a => a.currentHp > 0);
+  if (livingAllies.length === 0) return { updatedAllies: allies, updatedEnemies: enemies, logs: [] };
 
   const useSkill = enemy.skillId && Math.random() < 0.3;
   const skill = useSkill ? getSkill(enemy.skillId!) : null;
 
-  if (skill && skill.target !== 'all_allies' && skill.target !== 'single_ally') {
-    return executeSkillOnTargets(enemy, skill, allies, enemies, turn);
+  // 敵スキル: プレイヤー側ユニット(allies)を直接ターゲット
+  // executeSkillOnTargets は BattleEnemy[] を攻撃対象とするため敵には転用不可
+  if (skill && skill.effects.some(e => e.type === 'damage')) {
+    const isAoe = skill.target === 'all_enemies' || skill.target === 'all_allies';
+    const targets = isAoe
+      ? livingAllies
+      : [livingAllies[Math.floor(Math.random() * livingAllies.length)]];
+
+    let updatedAllies = [...allies];
+    let totalDamage = 0;
+    let hasElementBonus = false;
+    const targetNames: string[] = [];
+
+    for (const effect of skill.effects.filter(e => e.type === 'damage')) {
+      for (const t of targets) {
+        const { damage, elementBonus } = calcDamage(
+          enemy.atk, t.def, effect.power, enemy.element, t.element, enemy.buffs, t.buffs
+        );
+        updatedAllies = updatedAllies.map(a =>
+          a.instanceId === t.instanceId
+            ? { ...a, currentHp: Math.max(0, a.currentHp - damage), bbGauge: Math.min(100, a.bbGauge + 10) }
+            : a
+        );
+        totalDamage += damage;
+        hasElementBonus = hasElementBonus || elementBonus;
+        if (!targetNames.includes(t.name)) targetNames.push(t.name);
+      }
+    }
+
+    const log: BattleLog = {
+      turn,
+      actorName: enemy.name,
+      action: 'skill',
+      targetNames,
+      damage: totalDamage,
+      elementBonus: hasElementBonus,
+    };
+    return { updatedAllies, updatedEnemies: enemies, logs: [log] };
   }
 
+  // 通常攻撃
+  const target = livingAllies[Math.floor(Math.random() * livingAllies.length)];
   const { damage, elementBonus } = calcDamage(
     enemy.atk, target.def, 1.0, enemy.element, target.element, enemy.buffs, target.buffs
   );
 
   const updatedAllies = allies.map(a =>
     a.instanceId === target.instanceId
-      ? { ...a, currentHp: Math.max(0, a.currentHp - damage) }
-      : a
-  );
-
-  // BBゲージ増加
-  const withBB = updatedAllies.map(a =>
-    a.instanceId === target.instanceId
-      ? { ...a, bbGauge: Math.min(100, a.bbGauge + 10) }
+      ? { ...a, currentHp: Math.max(0, a.currentHp - damage), bbGauge: Math.min(100, a.bbGauge + 10) }
       : a
   );
 
@@ -221,7 +252,7 @@ export const executeEnemyTurn = (
     elementBonus,
   };
 
-  return { updatedAllies: withBB, updatedEnemies: enemies, logs: [log] };
+  return { updatedAllies, updatedEnemies: enemies, logs: [log] };
 };
 
 /**
