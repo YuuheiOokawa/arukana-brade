@@ -6,6 +6,7 @@ import { useUnitStore } from '../../stores/unitStore';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useEquipmentStore } from '../../stores/equipmentStore';
 import { useMissionStore } from '../../stores/missionStore';
+import { useGuildStore } from '../../stores/guildStore';
 import { saveImmediately } from '../../lib/syncService';
 import { getStage } from '../../data/quests';
 import { getEventStage, getRaidStage } from '../../data/events';
@@ -45,7 +46,7 @@ export const BattlePage = () => {
   const { spendStamina, addGold, addExp, addItem, syncCurrencyToServer } = usePlayerStore();
   const { dealDamage: dealRaidDamage } = useRaidStore();
   const { getEquippedByUnit } = useEquipmentStore();
-  const { addDailyProgress } = useMissionStore();
+  const { addDailyProgress, addWeeklyProgress } = useMissionStore();
 
   const [allies, setAllies] = useState<BattleUnit[]>([]);
   const [enemies, setEnemies] = useState<BattleEnemy[]>([]);
@@ -368,9 +369,11 @@ export const BattlePage = () => {
                     nonFriendAlive.forEach(a => levelUpUnit(a.instanceId, Math.floor(exp / nonFriendCount)));
                     addDailyProgress('battle_win');
                     addDailyProgress('quest_clear');
+                    addWeeklyProgress('battle_win');
                     if (updAllies.some(a => a.isFriend && a.currentHp > 0)) {
                       addDailyProgress('friend_battle');
                     }
+                    useGuildStore.getState().addGuildExp(Math.floor(exp * 0.1));
                     // レイドバトルの場合はダメージを記録
                     if (curStage.id.startsWith('raid_')) {
                       const raidBossId = curStage.id.replace(/^raid_/, '').replace(/_stage$/, '');
@@ -492,9 +495,11 @@ export const BattlePage = () => {
                     nonFriendAlive.forEach(a => levelUpUnit(a.instanceId, Math.floor(exp / nonFriendCount)));
                     addDailyProgress('battle_win');
                     addDailyProgress('quest_clear');
+                    addWeeklyProgress('battle_win');
                     if (updAllies.some(a => a.isFriend && a.currentHp > 0)) {
                       addDailyProgress('friend_battle');
                     }
+                    useGuildStore.getState().addGuildExp(Math.floor(exp * 0.1));
                     // レイドバトルの場合はダメージを記録
                     if (curStage.id.startsWith('raid_')) {
                       const raidBossId = curStage.id.replace(/^raid_/, '').replace(/_stage$/, '');
@@ -541,7 +546,7 @@ export const BattlePage = () => {
   // オートモード
   useEffect(() => {
     if (!isAutoMode || phase !== 'battle') return;
-    const timer = setTimeout(() => processRound(false), 1000);
+    const timer = setTimeout(() => processRound(true), 1000);
     return () => clearTimeout(timer);
   }, [isAutoMode, phase, round, processRound]);
 

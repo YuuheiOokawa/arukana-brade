@@ -317,6 +317,7 @@ export const SummonPage = () => {
 
   const [selectedPool, setSelectedPool] = useState(SUMMON_POOLS[0]);
   const [phase, setPhase] = useState<Phase>('idle');
+  const [toast, setToast] = useState<{ msg: string; type: 'error' | 'info' } | null>(null);
   const [summonResults, setSummonResults] = useState<UnitMaster[]>([]);
   const [summonResultTypes, setSummonResultTypes] = useState<GachaApplyResult[]>([]);
   const [revealIndex, setRevealIndex] = useState(0);
@@ -408,11 +409,17 @@ export const SummonPage = () => {
 
     let diamondSpent = 0;
     if (useTicket) {
-      if (ticketCount < count) { alert('チケットが足りません'); return; }
+      if (ticketCount < count) {
+        setToast({ msg: `チケットが足りません (所持: ${ticketCount})`, type: 'error' });
+        return;
+      }
       useItem('item_summon_ticket', count);
     } else {
       const cost = count === 1 ? selectedPool.cost1 : selectedPool.cost10;
-      if (!spendDiamond(cost)) { alert('ダイヤが足りません'); return; }
+      if (!spendDiamond(cost)) {
+        setToast({ msg: `ダイヤが足りません (必要: ${cost})`, type: 'error' });
+        return;
+      }
       diamondSpent = cost;
     }
 
@@ -433,6 +440,7 @@ export const SummonPage = () => {
     }
     setSummonResultTypes(gachaResults);
     addDailyProgress('summon');
+    useMissionStore.getState().addWeeklyProgress('summon');
 
     // [DB SAVE] ガチャ結果を非同期でDBに保存（演出と並行）
     void syncSummonResult(
@@ -530,6 +538,13 @@ export const SummonPage = () => {
     setCurrentStar(1);
     particlesRef.current = [];
   };
+
+  // トースト自動消去
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   /* ---- レンダー ---- */
   const isAnimating = phase !== 'idle' && phase !== 'results';
@@ -693,6 +708,18 @@ export const SummonPage = () => {
           onClose={reset}
           onAgain={reset}
         />
+      )}
+
+      {/* エラートースト */}
+      {toast && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[200] px-5 py-3 rounded-2xl text-sm font-bold text-white pointer-events-none"
+          style={{
+            background: toast.type === 'error' ? 'rgba(220,38,38,0.95)' : 'rgba(79,70,229,0.95)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
+            animation: 'slideDown 0.2s ease',
+          }}>
+          {toast.type === 'error' ? '⚠️ ' : 'ℹ️ '}{toast.msg}
+        </div>
       )}
     </div>
   );
