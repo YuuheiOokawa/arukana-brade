@@ -332,7 +332,12 @@ export const SummonPage = () => {
   const particlesRef = useRef<Particle[]>([]);
   const animFrameRef = useRef<number>(0);
 
-  const ticketCount = items.find(i => i.itemId === 'item_summon_ticket')?.quantity ?? 0;
+  const ticketCount    = items.find(i => i.itemId === 'item_summon_ticket')?.quantity ?? 0;
+  const srTicketCount  = items.find(i => i.itemId === 'item_summon_ticket_sr')?.quantity ?? 0;
+  const ssrTicketCount = items.find(i => i.itemId === 'item_summon_ticket_ssr')?.quantity ?? 0;
+
+  const SR_POOL  = SUMMON_POOLS.find(p => p.id === 'summon_ticket')!;
+  const SSR_POOL = SUMMON_POOLS.find(p => p.id === 'summon_ssr_ticket')!;
 
   /* ---- パーティクルループ ---- */
   const spawnBurst = useCallback((count: number, color: string, power = 1) => {
@@ -403,17 +408,34 @@ export const SummonPage = () => {
   }, [spawnBurst, phase]);
 
   /* ---- 召喚アニメーション ---- */
-  const startSummon = async (count: number, useTicket = false) => {
+  const startSummon = async (count: number, ticketType: 'normal' | 'sr' | 'ssr' | null = null) => {
     if (phase !== 'idle') return;
     skipRef.current = false;
 
     let diamondSpent = 0;
-    if (useTicket) {
+    let pool = selectedPool;
+
+    if (ticketType === 'normal') {
       if (ticketCount < count) {
         setToast({ msg: `チケットが足りません (所持: ${ticketCount})`, type: 'error' });
         return;
       }
       useItem('item_summon_ticket', count);
+      pool = SR_POOL;
+    } else if (ticketType === 'sr') {
+      if (srTicketCount < 1) {
+        setToast({ msg: 'SR確定チケットがありません', type: 'error' });
+        return;
+      }
+      useItem('item_summon_ticket_sr', 1);
+      pool = SR_POOL;
+    } else if (ticketType === 'ssr') {
+      if (ssrTicketCount < 1) {
+        setToast({ msg: 'SSR確定チケットがありません', type: 'error' });
+        return;
+      }
+      useItem('item_summon_ticket_ssr', 1);
+      pool = SSR_POOL;
     } else {
       const cost = count === 1 ? selectedPool.cost1 : selectedPool.cost10;
       if (!spendDiamond(cost)) {
@@ -423,7 +445,7 @@ export const SummonPage = () => {
       diamondSpent = cost;
     }
 
-    const summonedMasters = performSummon(selectedPool, count);
+    const summonedMasters = performSummon(pool, count);
     const maxStar = Math.max(...summonedMasters.map(u => RARITY_TO_STAR[u.rarity])) as GachaStar;
     setCurrentStar(maxStar);
     setSummonResults(summonedMasters);
@@ -445,7 +467,7 @@ export const SummonPage = () => {
 
     // [DB SAVE] ガチャ結果を非同期でDBに保存（演出と並行）
     void syncSummonResult(
-      selectedPool.id,
+      pool.id,
       summonedMasters.map((m, i) => ({
         masterId: m.id,
         rarity: m.rarity,
@@ -672,9 +694,21 @@ export const SummonPage = () => {
             </button>
           </div>
           {ticketCount > 0 && (
-            <button className="arcana-btn arcana-btn-ticket" onClick={() => startSummon(1, true)}>
+            <button className="arcana-btn arcana-btn-ticket" onClick={() => startSummon(1, 'normal')}>
               <span className="btn-main-text">チケット召喚</span>
-              <span className="btn-sub-text">残り {ticketCount} 枚</span>
+              <span className="btn-sub-text">残り {ticketCount} 枚 · SR以上確定</span>
+            </button>
+          )}
+          {srTicketCount > 0 && (
+            <button className="arcana-btn arcana-btn-ticket" style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }} onClick={() => startSummon(1, 'sr')}>
+              <span className="btn-main-text">🌠 SR確定チケット召喚</span>
+              <span className="btn-sub-text">残り {srTicketCount} 枚 · SR以上確定</span>
+            </button>
+          )}
+          {ssrTicketCount > 0 && (
+            <button className="arcana-btn arcana-btn-ticket" style={{ background: 'linear-gradient(135deg, #d97706, #b45309)' }} onClick={() => startSummon(1, 'ssr')}>
+              <span className="btn-main-text">🌟 SSR確定チケット召喚</span>
+              <span className="btn-sub-text">残り {ssrTicketCount} 枚 · SSR確定</span>
             </button>
           )}
           <div className="summon-diamond-count" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>

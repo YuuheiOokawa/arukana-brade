@@ -8,7 +8,8 @@ type Tab = 'home' | 'members' | 'mission' | 'chat';
 
 export const GuildPage = () => {
   const { guild, createGuild, leaveGuild, claimGuildMission, guildMissions, guildChatMessages, sendChatMessage, checkAndResetGuildMissions } = useGuildStore();
-  const { player } = usePlayerStore();
+  const { player, addItem, addGold } = usePlayerStore();
+  const [rewardToast, setRewardToast] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('home');
   const [chatInput, setChatInput] = useState('');
   const [newGuildName, setNewGuildName] = useState('');
@@ -17,6 +18,24 @@ export const GuildPage = () => {
   useEffect(() => {
     checkAndResetGuildMissions();
   }, [checkAndResetGuildMissions]);
+
+  const handleClaimMission = (id: string) => {
+    const reward = claimGuildMission(id);
+    if (!reward) return;
+    let msg = '';
+    if (reward.type === 'diamond') {
+      usePlayerStore.getState().addDiamond(reward.amount);
+      msg = `💎 ダイヤ×${reward.amount} を獲得！`;
+    } else if (reward.type === 'gold') {
+      addGold(reward.amount);
+      msg = `🪙 ゴールド×${reward.amount} を獲得！`;
+    } else if (reward.type === 'item') {
+      addItem(reward.itemId, reward.amount);
+      msg = `✨ アイテムを獲得！`;
+    }
+    setRewardToast(msg);
+    setTimeout(() => setRewardToast(null), 3000);
+  };
 
   const EMBLEMS = ['⚔️', '🛡️', '🔥', '💧', '🌿', '⚡', '🌑', '🌟', '🐉', '👑'];
 
@@ -97,6 +116,11 @@ export const GuildPage = () => {
   return (
     <div className="min-h-screen pb-28">
       <TopBar title="ギルド" />
+      {rewardToast && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-yellow-900/90 border border-yellow-600 text-yellow-200 text-sm font-bold px-4 py-2 rounded-xl shadow-lg">
+          {rewardToast}
+        </div>
+      )}
 
       {/* ギルドヘッダー */}
       <div className="mx-4 mb-4 rounded-2xl p-4 border border-purple-800/40"
@@ -150,7 +174,7 @@ export const GuildPage = () => {
                 <div className="text-xs text-gray-500">{m.reward}</div>
                 {m.progress >= m.target && !m.claimed && (
                   <GameButton variant="gold" size="sm"
-                    onClick={() => claimGuildMission(m.id)}>受取</GameButton>
+                    onClick={() => handleClaimMission(m.id)}>受取</GameButton>
                 )}
               </div>
             ))}
@@ -199,7 +223,7 @@ export const GuildPage = () => {
                 <span className="text-gray-500 text-xs">{m.progress}/{m.target}</span>
                 {m.progress >= m.target && !m.claimed && (
                   <GameButton variant="gold" size="sm"
-                    onClick={() => claimGuildMission(m.id)}>受取</GameButton>
+                    onClick={() => handleClaimMission(m.id)}>受取</GameButton>
                 )}
               </div>
             </div>

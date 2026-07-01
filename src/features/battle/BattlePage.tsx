@@ -96,10 +96,11 @@ export const BattlePage = () => {
     const s = getStage(pendingStageId) ?? getEventStage(pendingStageId) ?? getRaidStage(pendingStageId);
     if (!s) { navigate('/quests'); return; }
 
+    const party = getActiveParty();
+    if (!party.slots.some(Boolean)) { navigate('/party'); return; }
+
     const ok = spendStamina(s.staminaCost);
     if (!ok) { navigate('/quests'); return; }
-
-    const party = getActiveParty();
     const friendCandidate = pendingFriendId
       ? FRIEND_CANDIDATES.find(f => f.friendId === pendingFriendId)
       : null;
