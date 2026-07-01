@@ -20,10 +20,27 @@ const DUMMY_MEMBERS: GuildMember[] = [
   { id: 'npc_7', name: '光の聖女',       rank: 19, power: 36000, role: 'member',  joinedAt: Date.now() -  3 * 86400000 },
 ];
 
-const GUILD_MISSIONS = [
-  { id: 'gm_1', type: 'battle' as const, title: 'ギルドバトル5回', target: 5, progress: 0, reward: '💎×50', claimed: false },
-  { id: 'gm_2', type: 'exp'    as const, title: 'ギルドEXP獲得',   target: 1000, progress: 0, reward: '🪙×5000', claimed: false },
-  { id: 'gm_3', type: 'raid'   as const, title: 'ラス討伐参加',    target: 1, progress: 0, reward: '✨チケット×1', claimed: false },
+export type GuildMissionReward =
+  | { type: 'diamond'; amount: number }
+  | { type: 'gold'; amount: number }
+  | { type: 'item'; itemId: string; amount: number };
+
+export const GUILD_MISSIONS = [
+  {
+    id: 'gm_1', type: 'battle' as const, title: 'ギルドバトル5回',
+    target: 5, progress: 0, reward: '💎×50', claimed: false,
+    rewardData: { type: 'diamond', amount: 50 } as GuildMissionReward,
+  },
+  {
+    id: 'gm_2', type: 'exp' as const, title: 'ギルドEXP獲得',
+    target: 1000, progress: 0, reward: '🪙×5000', claimed: false,
+    rewardData: { type: 'gold', amount: 5000 } as GuildMissionReward,
+  },
+  {
+    id: 'gm_3', type: 'raid' as const, title: 'ラス討伐参加',
+    target: 1, progress: 0, reward: '✨チケット×1', claimed: false,
+    rewardData: { type: 'item', itemId: 'item_summon_ticket', amount: 1 } as GuildMissionReward,
+  },
 ];
 
 interface GuildStore {
@@ -37,7 +54,7 @@ interface GuildStore {
   updateGuildMissionProgress: (type: 'battle' | 'exp' | 'raid', count?: number) => void;
   checkAndResetGuildMissions: () => void;
   sendChatMessage: (playerName: string, text: string) => void;
-  claimGuildMission: (id: string) => boolean;
+  claimGuildMission: (id: string) => GuildMissionReward | null;
 }
 
 const PRESET_GUILDS = [
@@ -131,11 +148,11 @@ export const useGuildStore = create<GuildStore>()(
 
       claimGuildMission: (id) => {
         const m = get().guildMissions.find(gm => gm.id === id);
-        if (!m || m.progress < m.target || m.claimed) return false;
+        if (!m || m.progress < m.target || m.claimed) return null;
         set(s => ({
           guildMissions: s.guildMissions.map(gm => gm.id === id ? { ...gm, claimed: true } : gm),
         }));
-        return true;
+        return m.rewardData;
       },
     }),
     { name: 'arcana-guild' }
