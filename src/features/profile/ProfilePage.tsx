@@ -229,7 +229,7 @@ export const ProfilePage = () => {
 
       {/* ===== 編集モーダル ===== */}
       {editing && (
-        <div className="fixed inset-0 z-50 flex items-end" style={{ background: 'rgba(0,0,0,0.7)' }}
+        <div className="fixed inset-0 z-[60] flex items-end" style={{ background: 'rgba(0,0,0,0.7)' }}
           onClick={e => { if (e.target === e.currentTarget) setEditing(false); }}>
           <div className="w-full max-w-lg mx-auto rounded-t-3xl pt-6 flex flex-col"
             style={{

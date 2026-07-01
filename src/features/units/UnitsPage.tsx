@@ -203,7 +203,7 @@ export const UnitsPage = () => {
         const inParty = isInParty(actionUnit.instanceId);
         const partyFull = activeParty.slots.filter(Boolean).length >= 5;
         return (
-          <div className="fixed inset-0 z-50 flex items-end"
+          <div className="fixed inset-0 z-[60] flex items-end"
             style={{ background: 'rgba(0,0,0,0.7)' }}
             onClick={() => setActionUnit(null)}>
             <div className="w-full max-w-lg mx-auto rounded-t-2xl px-5 pt-4"
@@ -266,7 +266,7 @@ export const UnitsPage = () => {
 
       {/* 解放確認モーダル */}
       {confirmRelease && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }}>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }}>
           <div className="rounded-2xl p-6 w-full max-w-sm" style={{ background: '#1a0a2e', border: '1px solid rgba(239,68,68,0.4)' }}>
             <h2 className="text-red-400 font-black text-lg mb-2">本当に解放しますか？</h2>
             <p className="text-gray-300 text-sm mb-1">{selected.size}体のユニットを解放します</p>
