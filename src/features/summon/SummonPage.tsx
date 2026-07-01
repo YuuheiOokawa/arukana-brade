@@ -13,6 +13,7 @@ import { AWAKENING_CONFIG, RARITY_TYPE_TO_STAR } from '../../data/rarityConfig';
 import { CurrencyIcon } from '../../components/ui/game/GameIcons';
 import { formatCompact } from '../../utils/format';
 import { UnitIcon } from '../../components/ui/UnitCard';
+import { getUnitSpritesheet, getSpritesheetCellIndex, SPRITESHEET_TOTAL_CELLS } from '../../lib/unitImage';
 import { resolveUnitImage } from '../../lib/unitImage';
 
 /* ============================================================
@@ -168,6 +169,8 @@ const CardReveal = ({ unit, star, index, total, onOpen, opened, resultType, awak
           }}>
             <UnitIcon
               src={resolveUnitImage(unit.id, RARITY_TYPE_TO_STAR[unit.rarity] ?? 1)}
+              masterId={unit.id}
+              unitRarity={RARITY_TYPE_TO_STAR[unit.rarity] ?? 1}
               fallbackEmoji={unit.emoji}
               element={unit.element}
               size={108}
@@ -226,13 +229,34 @@ const CardReveal = ({ unit, star, index, total, onOpen, opened, resultType, awak
    ResultGrid
 ============================================================ */
 // summon-mini-card (170px tall) をキャラ画像でフル充填するサブコンポーネント
-const MiniCardImage = ({ src, fallbackEmoji, element }: { src: string | null; fallbackEmoji: string; element: string }) => {
+const MiniCardImage = ({
+  src, fallbackEmoji, element, masterId, unitRarity,
+}: {
+  src: string | null; fallbackEmoji: string; element: string;
+  masterId?: string; unitRarity?: number | string;
+}) => {
   const [err, setErr] = useState(false);
   const bgMap: Record<string, string> = {
     fire: '#7f1d1d', water: '#1e3a5f', wind: '#064e3b',
     earth: '#451a03', light: '#713f12', dark: '#2e1065',
   };
   const bg = bgMap[element] ?? '#1a1a2e';
+
+  const spritesheetSrc = masterId ? getUnitSpritesheet(masterId) : null;
+  const cellIdx = (spritesheetSrc && unitRarity !== undefined) ? getSpritesheetCellIndex(unitRarity) : null;
+
+  if (spritesheetSrc && cellIdx !== null) {
+    if (err) return <div style={{ position: 'absolute', inset: 0, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px' }}>{fallbackEmoji}</div>;
+    return (
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+        <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', transform: 'scale(1.5)', transformOrigin: 'top center' }}>
+          <img src={spritesheetSrc} alt="" onError={() => setErr(true)}
+            style={{ position: 'absolute', top: 0, left: 0, width: `${SPRITESHEET_TOTAL_CELLS * 100}%`, height: 'auto', transform: `translateX(-${(cellIdx / SPRITESHEET_TOTAL_CELLS) * 100}%)`, transformOrigin: 'top left' }} />
+        </div>
+      </div>
+    );
+  }
+
   if (!src || err) {
     return (
       <div style={{ position: 'absolute', inset: 0, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px' }}>
@@ -265,6 +289,8 @@ const ResultGrid = ({ units, resultTypes, onClose, onAgain }: {
             {/* キャラ画像 - カード全体に表示 */}
             <MiniCardImage
               src={resolveUnitImage(u.id, RARITY_TYPE_TO_STAR[u.rarity] ?? 1)}
+              masterId={u.id}
+              unitRarity={RARITY_TYPE_TO_STAR[u.rarity] ?? 1}
               fallbackEmoji={u.emoji}
               element={u.element}
             />
