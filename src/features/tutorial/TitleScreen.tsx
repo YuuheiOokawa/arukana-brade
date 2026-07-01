@@ -17,6 +17,7 @@ export const TitleScreen = () => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [newsOpen, setNewsOpen] = useState(false);
   const [logoVisible, setLogoVisible] = useState(false);
+  const [legalOpen, setLegalOpen] = useState<'tos' | 'privacy' | null>(null);
 
   useEffect(() => {
     void checkAuth();
@@ -256,7 +257,7 @@ export const TitleScreen = () => {
           <button
             className="text-xs transition-colors"
             style={{ color: '#374151', fontFamily: "'Noto Sans JP', sans-serif" }}
-            onClick={() => alert('利用規約（準備中）')}
+            onClick={() => setLegalOpen('tos')}
           >
             利用規約
           </button>
@@ -264,7 +265,7 @@ export const TitleScreen = () => {
           <button
             className="text-xs transition-colors"
             style={{ color: '#374151', fontFamily: "'Noto Sans JP', sans-serif" }}
-            onClick={() => alert('プライバシーポリシー（準備中）')}
+            onClick={() => setLegalOpen('privacy')}
           >
             プライバシーポリシー
           </button>
@@ -326,6 +327,75 @@ export const TitleScreen = () => {
             <div className="p-4">
               <button
                 onClick={() => setNewsOpen(false)}
+                className="w-full py-2.5 rounded-xl text-sm font-bold text-white"
+                style={{
+                  background: 'rgba(124,58,237,0.4)',
+                  fontFamily: "'Noto Sans JP', sans-serif",
+                }}
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 利用規約/プライバシーポリシー モーダル */}
+      {legalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center pb-8 px-4"
+          style={{ zIndex: 50 }}
+          onClick={() => setLegalOpen(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl overflow-hidden"
+            style={{ background: 'rgba(10,6,28,0.97)', border: '1px solid rgba(139,92,246,0.3)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div
+              className="px-5 pt-4 pb-3 flex items-center justify-between"
+              style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+            >
+              <h3
+                className="font-bold text-white text-sm"
+                style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
+              >
+                {legalOpen === 'tos' ? '利用規約' : 'プライバシーポリシー'}
+              </h3>
+              <button onClick={() => setLegalOpen(null)} className="text-gray-500 text-xl leading-none">×</button>
+            </div>
+            <div className="px-5 py-4 space-y-2" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+              {legalOpen === 'tos' ? (
+                <>
+                  <p className="text-gray-400 text-xs" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>
+                    本サービス（以下「アルカナブレイド」）のご利用にあたっては、以下の利用規約に同意いただく必要があります。
+                  </p>
+                  <p className="text-gray-300 text-xs font-bold mt-3">第1条（サービスの利用）</p>
+                  <p className="text-gray-400 text-xs">本サービスは個人利用を目的としています。商業目的での利用や、不正なアクセスは禁止します。</p>
+                  <p className="text-gray-300 text-xs font-bold mt-2">第2条（禁止事項）</p>
+                  <p className="text-gray-400 text-xs">不正ツールの使用、他ユーザーへの迷惑行為、サービスの妨害行為は禁止します。</p>
+                  <p className="text-gray-300 text-xs font-bold mt-2">第3条（免責事項）</p>
+                  <p className="text-gray-400 text-xs">本サービスは現状提供であり、サービスの継続性や完全性を保証するものではありません。</p>
+                  <p className="text-gray-500 text-[10px] mt-3">最終更新日：2026年6月25日</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-gray-400 text-xs" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>
+                    本サービスにおける個人情報の取り扱いについてご説明します。
+                  </p>
+                  <p className="text-gray-300 text-xs font-bold mt-3">収集する情報</p>
+                  <p className="text-gray-400 text-xs">メールアドレス、ゲームプレイデータ（進行状況、所持ユニット等）を収集します。</p>
+                  <p className="text-gray-300 text-xs font-bold mt-2">情報の利用目的</p>
+                  <p className="text-gray-400 text-xs">収集した情報はサービスの提供・改善のためにのみ使用します。第三者への提供は行いません。</p>
+                  <p className="text-gray-300 text-xs font-bold mt-2">データの保管</p>
+                  <p className="text-gray-400 text-xs">ゲームデータはお客様のデバイスおよびサーバーに保管されます。アカウント削除時にはデータも削除されます。</p>
+                  <p className="text-gray-500 text-[10px] mt-3">最終更新日：2026年6月25日</p>
+                </>
+              )}
+            </div>
+            <div className="p-4">
+              <button
+                onClick={() => setLegalOpen(null)}
                 className="w-full py-2.5 rounded-xl text-sm font-bold text-white"
                 style={{
                   background: 'rgba(124,58,237,0.4)',
