@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { GameButton } from '../../components/ui/game/GameButton';
-import { useEquipmentStore } from '../../stores/equipmentStore';
+import { useEquipmentStore, EXP_PER_LEVEL } from '../../stores/equipmentStore';
 import { useUnitStore } from '../../stores/unitStore';
+import { usePlayerStore } from '../../stores/playerStore';
 import { UNIT_MASTER } from '../../data/units';
 import { calcEquipmentStats, getEquipmentMaster } from '../../data/equipments';
 import { TopBar } from '../../components/layout/TopBar';
@@ -22,8 +23,9 @@ const SLOT_LABEL: Record<EquipmentSlot, string> = {
 type TabType = 'list' | 'equip';
 
 export const EquipmentPage = () => {
-  const { ownedEquipments, sellEquipment, equipToUnit } = useEquipmentStore();
+  const { ownedEquipments, sellEquipment, equipToUnit, unequipEquipment, levelUpEquipment } = useEquipmentStore();
   const { ownedUnits } = useUnitStore();
+  const { player, spendGold } = usePlayerStore();
   const [tab, setTab] = useState<TabType>('list');
   const [selectedEq, setSelectedEq] = useState<OwnedEquipment | null>(null);
   const [filterSlot, setFilterSlot] = useState<EquipmentSlot | 'all'>('all');
@@ -129,25 +131,68 @@ export const EquipmentPage = () => {
                   </div>
 
                   {/* 展開メニュー */}
-                  {selectedEq?.instanceId === eq.instanceId && (
-                    <div className="mt-3 pt-3 border-t border-gray-700/40 flex gap-2">
-                      <GameButton variant="primary" size="sm" fullWidth
-                        onClick={(e) => { e.stopPropagation(); setTab('equip'); }}>
-                        ユニットに装備
-                      </GameButton>
-                      {!eq.equippedTo && (
-                        <GameButton variant="secondary" size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            sellEquipment(eq.instanceId);
+                  {selectedEq?.instanceId === eq.instanceId && (() => {
+                    const enhanceCost = eq.level * 150;
+                    const isMaxLevel = eq.level >= (master.maxLevel ?? 80);
+                    const canAfford = player.gold >= enhanceCost;
+                    return (
+                      <div className="mt-3 pt-3 border-t border-gray-700/40 space-y-2" onClick={e => e.stopPropagation()}>
+                        <div className="flex gap-2">
+                          <GameButton variant="primary" size="sm" fullWidth
+                            onClick={() => setTab('equip')}>
+                            ユニットに装備
+                          </GameButton>
+                          {eq.equippedTo ? (
+                            <GameButton variant="secondary" size="sm"
+                              onClick={() => {
+                                unequipEquipment(eq.instanceId);
+                                setSelectedEq(null);
+                                showToast('装備を外しました');
+                              }}>
+                              外す
+                            </GameButton>
+                          ) : (
+                            <GameButton variant="secondary" size="sm"
+                              onClick={() => {
+                                sellEquipment(eq.instanceId);
+                                setSelectedEq(null);
+                                showToast('売却しました');
+                              }}>
+                              売却
+                            </GameButton>
+                          )}
+                        </div>
+                        {/* 強化ボタン */}
+                        <button
+                          disabled={isMaxLevel || !canAfford}
+                          onClick={() => {
+                            if (isMaxLevel || !canAfford) return;
+                            spendGold(enhanceCost);
+                            levelUpEquipment(eq.instanceId, EXP_PER_LEVEL(eq.level));
+                            showToast(`強化しました！ (Lv${eq.level + 1})`);
                             setSelectedEq(null);
-                            showToast('売却しました');
+                          }}
+                          className="w-full py-2 rounded-xl text-xs font-bold transition-all active:scale-95"
+                          style={{
+                            background: isMaxLevel
+                              ? 'rgba(55,65,81,0.3)'
+                              : canAfford
+                              ? 'linear-gradient(135deg, rgba(245,158,11,0.4), rgba(180,83,9,0.4))'
+                              : 'rgba(55,65,81,0.3)',
+                            border: isMaxLevel
+                              ? '1px solid rgba(75,85,99,0.3)'
+                              : canAfford
+                              ? '1px solid rgba(245,158,11,0.5)'
+                              : '1px solid rgba(75,85,99,0.3)',
+                            color: isMaxLevel ? '#6b7280' : canAfford ? '#fbbf24' : '#6b7280',
                           }}>
-                          売却
-                        </GameButton>
-                      )}
-                    </div>
-                  )}
+                          {isMaxLevel
+                            ? '最大Lvです'
+                            : `⬆️ 強化 (🪙 ${enhanceCost.toLocaleString()} / 所持: ${player.gold.toLocaleString()})`}
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}

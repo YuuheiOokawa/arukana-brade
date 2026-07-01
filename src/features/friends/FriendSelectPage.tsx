@@ -14,12 +14,14 @@ export const FriendSelectPage = () => {
   const { pendingStageId, setPendingFriend } = useQuestStore();
   const { lastUsedFriendId } = usePlayerStore();
   const [selected, setSelected] = useState<string | null>(lastUsedFriendId);
+  const [noSelectionError, setNoSelectionError] = useState(false);
 
   const stage = pendingStageId ? getStage(pendingStageId) : null;
 
   const handleConfirm = () => {
     if (!selected) {
-      alert('フレンドを選択してください');
+      setNoSelectionError(true);
+      setTimeout(() => setNoSelectionError(false), 2500);
       return;
     }
     setPendingFriend(selected);
@@ -121,7 +123,13 @@ export const FriendSelectPage = () => {
       {/* 決定ボタン */}
       <div className="fixed bottom-0 left-0 right-0 p-4 space-y-2"
         style={{ background: 'linear-gradient(to top, #0a0a1a 60%, transparent)' }}>
-        <GameButton variant="gold" fullWidth onClick={handleConfirm} disabled={!selected}>
+        {noSelectionError && (
+          <div className="rounded-xl px-3 py-2 text-sm text-red-400 font-bold text-center"
+            style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.3)' }}>
+            ⚠️ フレンドを選択してください
+          </div>
+        )}
+        <GameButton variant="gold" fullWidth onClick={handleConfirm}>
           ⚔️ バトル開始
         </GameButton>
         <button onClick={handleSkip} className="w-full text-gray-500 text-sm py-2">

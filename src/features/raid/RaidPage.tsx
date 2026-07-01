@@ -56,10 +56,11 @@ export const RaidPage = () => {
 };
 
 const RaidBossDetail = ({ boss, navigate }: { boss: RaidBossMaster; navigate: ReturnType<typeof useNavigate> }) => {
-  const { getRaidState, getRewardTier } = useRaidStore();
+  const { getRaidState, getRewardTier, resetRaid } = useRaidStore();
   const { player } = usePlayerStore();
   const { setPendingStage, setPendingFriend } = useQuestStore();
   const { getActiveParty } = usePartyStore();
+  const [staminaError, setStaminaError] = useState(false);
 
   const state = getRaidState(boss.id);
   const hpPct = state.currentHp / boss.totalHp;
@@ -80,7 +81,8 @@ const RaidBossDetail = ({ boss, navigate }: { boss: RaidBossMaster; navigate: Re
       return;
     }
     if (player.stamina < boss.entryStaminaCost) {
-      alert(`スタミナが足りません (必要: ${boss.entryStaminaCost})`);
+      setStaminaError(true);
+      setTimeout(() => setStaminaError(false), 3000);
       return;
     }
 
@@ -187,19 +189,36 @@ const RaidBossDetail = ({ boss, navigate }: { boss: RaidBossMaster; navigate: Re
         </div>
       </div>
 
-      {/* 挑戦ボタン */}
-      <div className="pb-4">
-        <GameButton variant="primary" fullWidth
-          disabled={state.currentHp <= 0}
-          onClick={handleChallenge}>
-          {state.currentHp <= 0 ? '討伐済み' : `⚔️ 挑戦する (⚡${boss.entryStaminaCost})`}
-        </GameButton>
-        {nextTierRewards && (
-          <p className="text-center text-gray-600 text-xs mt-2">
-            次の報酬まであと {formatHp(nextTierRewards.minDamage - state.totalDamageDealt)} ダメージ
-          </p>
-        )}
-      </div>
+      {/* 討伐済み → リセットボタン */}
+      {state.currentHp <= 0 ? (
+        <div className="pb-4 space-y-3">
+          <div className="rounded-2xl p-4 text-center"
+            style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.1))', border: '1px solid rgba(16,185,129,0.3)' }}>
+            <p className="text-emerald-400 font-black text-lg mb-1">🎉 討伐成功！</p>
+            <p className="text-gray-400 text-sm">このボスを討伐しました</p>
+          </div>
+          <GameButton variant="secondary" fullWidth onClick={() => resetRaid(boss.id)}>
+            🔄 次の挑戦を開始する
+          </GameButton>
+        </div>
+      ) : (
+        <div className="pb-4">
+          {staminaError && (
+            <div className="mb-2 rounded-xl px-3 py-2 text-sm text-red-400 font-bold text-center"
+              style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.3)' }}>
+              ⚠️ スタミナが足りません（必要: ⚡{boss.entryStaminaCost} / 現在: ⚡{player.stamina}）
+            </div>
+          )}
+          <GameButton variant="primary" fullWidth onClick={handleChallenge}>
+            ⚔️ 挑戦する (⚡{boss.entryStaminaCost})
+          </GameButton>
+          {nextTierRewards && (
+            <p className="text-center text-gray-600 text-xs mt-2">
+              次の報酬まであと {formatHp(nextTierRewards.minDamage - state.totalDamageDealt)} ダメージ
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 };

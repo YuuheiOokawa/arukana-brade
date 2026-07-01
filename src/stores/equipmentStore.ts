@@ -10,12 +10,13 @@ interface EquipmentStore {
   addEquipment: (masterId: string) => string;
   equipToUnit: (equipInstanceId: string, unitInstanceId: string, slot: string) => void;
   unequipFromUnit: (unitInstanceId: string, slot: string) => void;
+  unequipEquipment: (equipInstanceId: string) => void;
   levelUpEquipment: (equipInstanceId: string, expGain: number) => void;
   getEquippedByUnit: (unitInstanceId: string) => OwnedEquipment[];
   sellEquipment: (equipInstanceId: string) => boolean;
 }
 
-const EXP_PER_LEVEL = (level: number) => Math.floor(80 * Math.pow(level, 1.2));
+export const EXP_PER_LEVEL = (level: number) => Math.floor(80 * Math.pow(level, 1.2));
 
 export const useEquipmentStore = create<EquipmentStore>()(
   persist(
@@ -49,6 +50,14 @@ export const useEquipmentStore = create<EquipmentStore>()(
         set(s => ({
           ownedEquipments: s.ownedEquipments.map(eq =>
             eq.equippedTo === unitInstanceId ? { ...eq, equippedTo: undefined } : eq
+          ),
+        }));
+      },
+
+      unequipEquipment: (equipInstanceId) => {
+        set(s => ({
+          ownedEquipments: s.ownedEquipments.map(eq =>
+            eq.instanceId === equipInstanceId ? { ...eq, equippedTo: undefined } : eq
           ),
         }));
       },

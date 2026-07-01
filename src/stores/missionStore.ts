@@ -1,17 +1,26 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { DailyMissionState, MissionProgress, MissionType } from '../types';
-import { DAILY_MISSIONS } from '../data/missions';
+import { DAILY_MISSIONS, WEEKLY_MISSIONS } from '../data/missions';
 import { usePlayerStore } from './playerStore';
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
+const weekMondayStr = () => {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(d.getFullYear(), d.getMonth(), diff).toISOString().slice(0, 10);
+};
+
 const buildFreshProgress = (): MissionProgress[] =>
   DAILY_MISSIONS.map(m => ({
-    missionId: m.id,
-    progress: 0,
-    completed: false,
-    claimed: false,
+    missionId: m.id, progress: 0, completed: false, claimed: false,
+  }));
+
+const buildFreshWeeklyProgress = (): MissionProgress[] =>
+  WEEKLY_MISSIONS.map(m => ({
+    missionId: m.id, progress: 0, completed: false, claimed: false,
   }));
 
 interface MissionStore {
@@ -19,20 +28,25 @@ interface MissionStore {
   weeklyProgresses: MissionProgress[];
   weekStr: string;
 
-  // 今日のミッション
   getDailyProgress: (missionId: string) => MissionProgress | undefined;
   addDailyProgress: (type: MissionType, count?: number) => void;
   claimDailyReward: (missionId: string) => boolean;
   checkDailyReset: () => void;
   getCompletedCount: () => number;
   getClaimedCount: () => number;
+
+  addWeeklyProgress: (type: MissionType, count?: number) => void;
+  claimWeeklyReward: (missionId: string) => boolean;
+  checkWeeklyReset: () => void;
+  getWeeklyCompletedCount: () => number;
+  getWeeklyClaimedCount: () => number;
 }
 
 export const useMissionStore = create<MissionStore>()(
   persist(
     (set, get) => ({
       daily: { date: todayStr(), progresses: buildFreshProgress() },
-      weeklyProgresses: [],
+      weeklyProgresses: buildFreshWeeklyProgress(),
       weekStr: '',
 
       checkDailyReset: () => {
@@ -40,7 +54,6 @@ export const useMissionStore = create<MissionStore>()(
         if (get().daily.date !== today) {
           set({ daily: { date: today, progresses: buildFreshProgress() } });
         }
-        // ログインミッションを自動完了
         const loginMission = get().daily.progresses.find(p => p.missionId === 'daily_login');
         if (loginMission && !loginMission.completed) {
           set(s => ({
@@ -51,6 +64,13 @@ export const useMissionStore = create<MissionStore>()(
               ),
             },
           }));
+        }
+      },
+
+      checkWeeklyReset: () => {
+        const week = weekMondayStr();
+        if (get().weekStr !== week) {
+          set({ weekStr: week, weeklyProgresses: buildFreshWeeklyProgress() });
         }
       },
 
@@ -73,13 +93,24 @@ export const useMissionStore = create<MissionStore>()(
         });
       },
 
+      addWeeklyProgress: (type, count = 1) => {
+        get().checkWeeklyReset();
+        set(s => ({
+          weeklyProgresses: s.weeklyProgresses.map(prog => {
+            const mission = WEEKLY_MISSIONS.find(m => m.id === prog.missionId);
+            if (!mission || mission.type !== type || prog.completed) return prog;
+            const newProgress = Math.min(prog.progress + count, mission.target);
+            const completed = newProgress >= mission.target;
+            return { ...prog, progress: newProgress, completed };
+          }),
+        }));
+      },
+
       claimDailyReward: (missionId) => {
         const progress = get().daily.progresses.find(p => p.missionId === missionId);
         if (!progress?.completed || progress.claimed) return false;
-
         const mission = DAILY_MISSIONS.find(m => m.id === missionId);
         if (!mission) return false;
-
         const playerStore = usePlayerStore.getState();
         mission.rewards.forEach(reward => {
           if (reward.type === 'gold') playerStore.addGold(reward.amount);
@@ -92,7 +123,6 @@ export const useMissionStore = create<MissionStore>()(
             playerStore.addItem(reward.itemId, reward.amount);
           }
         });
-
         set(s => ({
           daily: {
             ...s.daily,
@@ -104,11 +134,42 @@ export const useMissionStore = create<MissionStore>()(
         return true;
       },
 
+      claimWeeklyReward: (missionId) => {
+        const progress = get().weeklyProgresses.find(p => p.missionId === missionId);
+        if (!progress?.completed || progress.claimed) return false;
+        const mission = WEEKLY_MISSIONS.find(m => m.id === missionId);
+        if (!mission) return false;
+        const playerStore = usePlayerStore.getState();
+        mission.rewards.forEach(reward => {
+          if (reward.type === 'gold') playerStore.addGold(reward.amount);
+          else if (reward.type === 'diamond') playerStore.addDiamond(reward.amount);
+          else if (reward.type === 'stamina') {
+            usePlayerStore.setState(s => ({
+              player: { ...s.player, stamina: Math.min(s.player.stamina + reward.amount, s.player.maxStamina) },
+            }));
+          } else if (reward.type === 'item' && reward.itemId) {
+            playerStore.addItem(reward.itemId, reward.amount);
+          }
+        });
+        set(s => ({
+          weeklyProgresses: s.weeklyProgresses.map(p =>
+            p.missionId === missionId ? { ...p, claimed: true } : p
+          ),
+        }));
+        return true;
+      },
+
       getCompletedCount: () =>
         get().daily.progresses.filter(p => p.completed).length,
 
       getClaimedCount: () =>
         get().daily.progresses.filter(p => p.claimed).length,
+
+      getWeeklyCompletedCount: () =>
+        get().weeklyProgresses.filter(p => p.completed).length,
+
+      getWeeklyClaimedCount: () =>
+        get().weeklyProgresses.filter(p => p.claimed).length,
     }),
     { name: 'arcana-missions' }
   )
