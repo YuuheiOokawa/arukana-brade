@@ -6,6 +6,30 @@
  * - 未登録の場合はデフォルト画像にフォールバック
  */
 
+// 1枚のスプライトシートに8列で格納されているユニット
+// /キャラ画像/{unitId}.webp (1672×941 px, 8列 = 209px/列)
+export const SPRITESHEET_UNITS = new Set([
+  'unit_051', 'unit_052', 'unit_053', 'unit_054', 'unit_055',
+  'unit_056', 'unit_057', 'unit_058', 'unit_059', 'unit_060',
+]);
+
+export const SPRITESHEET_TOTAL_CELLS = 8;
+
+/** スプライトシートユニットのパスを返す。非対象なら null */
+export function getUnitSpritesheet(unitId: string): string | null {
+  if (!SPRITESHEET_UNITS.has(unitId)) return null;
+  return `/キャラ画像/${unitId}.webp`;
+}
+
+/**
+ * レアリティ→スプライトシートの列インデックス (0〜7)
+ * ★1→0, ★2→1, ..., ★7→6, CROWN(8)→7
+ */
+export function getSpritesheetCellIndex(rarity: number | string): number {
+  const r = starRarityToImageRarity(rarity);
+  return Math.min(Math.max(r - 1, 0), SPRITESHEET_TOTAL_CELLS - 1);
+}
+
 // ★Crown は rarity = 8 として扱う
 export const RARITY_TO_IMAGE_SUFFIX: Record<number, string> = {
   1: '1',

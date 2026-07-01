@@ -6,7 +6,7 @@ import { UNIT_MASTER } from '../../data/units';
 import { RARITY_TYPE_TO_STAR } from '../../data/rarityConfig';
 import { ElementBadge } from '../../components/ui/ElementBadge';
 import { RarityBadge } from '../../components/ui/RarityBadge';
-import { UnitIcon } from '../../components/ui/UnitCard';
+import { UnitIcon, UnitSlotImg } from '../../components/ui/UnitCard';
 import { TopBar } from '../../components/layout/TopBar';
 import { resolveUnitImage } from '../../lib/unitImage';
 import type { OwnedUnit } from '../../types';
@@ -127,12 +127,7 @@ export const PartyPage = () => {
                   }}>
                   {unit && master ? (
                     <>
-                      <img
-                        src={resolveUnitImage(unit.masterId, unit.currentRarity ?? 1)}
-                        alt=""
-                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', position: 'absolute', inset: 0, transform: 'scale(1.5)', transformOrigin: 'top center' }}
-                      />
+                      <UnitSlotImg masterId={unit.masterId} rarity={unit.currentRarity ?? 1} />
                       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.7))', padding: '4px 2px 2px' }}>
                         <span className="text-white text-[9px] font-bold block text-center">Lv{unit.level}</span>
                       </div>
@@ -218,6 +213,8 @@ export const PartyPage = () => {
                   {/* アイコン */}
                   <UnitIcon
                     src={resolveUnitImage(unit.masterId, unit.currentRarity ?? RARITY_TYPE_TO_STAR[master.rarity] ?? 1)}
+                    masterId={unit.masterId}
+                    unitRarity={unit.currentRarity ?? RARITY_TYPE_TO_STAR[master.rarity] ?? 1}
                     fallbackEmoji={master.emoji}
                     element={master.element}
                     size={44}
@@ -278,12 +275,7 @@ export const PartyPage = () => {
                       border: id === party.leaderId ? '1.5px solid #d97706' : '1px solid rgba(75,85,99,0.3)',
                     }}>
                     {u && m ? (
-                      <img
-                        src={resolveUnitImage(u.masterId, u.currentRarity ?? 1)}
-                        alt=""
-                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', transform: 'scale(1.5)', transformOrigin: 'top center' }}
-                      />
+                      <UnitSlotImg masterId={u.masterId} rarity={u.currentRarity ?? 1} />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center">
                         <span style={{ color: 'rgba(107,114,128,0.3)', fontSize: '12px' }}>—</span>

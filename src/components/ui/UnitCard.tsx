@@ -5,7 +5,7 @@ import { UNIT_MASTER } from '../../data/units';
 import { ElementBadge } from './ElementBadge';
 import { RarityBadge } from './RarityBadge';
 import { getStarColor, getLevelCap, AWAKENING_CONFIG } from '../../data/rarityConfig';
-import { resolveUnitImage } from '../../lib/unitImage';
+import { resolveUnitImage, getUnitSpritesheet, getSpritesheetCellIndex, SPRITESHEET_TOTAL_CELLS } from '../../lib/unitImage';
 
 interface Props {
   unit: OwnedUnit;
@@ -56,6 +56,8 @@ export const UnitCard = ({ unit, selected, onClick, compact = false }: Props) =>
       <div className="flex items-center gap-2">
         <UnitIcon
           src={imgSrc}
+          masterId={unit.masterId}
+          unitRarity={rarity}
           fallbackEmoji={master.emoji}
           element={master.element}
           size={compact ? 40 : 52}
@@ -94,8 +96,11 @@ export const UnitCard = ({ unit, selected, onClick, compact = false }: Props) =>
 
 // キャラ画像アイコン（エラー時はemoji fallback）
 // 画像は 256×512 (1:2 縦長) → height を指定して縦長表示推奨
+// masterId + unitRarity を渡すとスプライトシート対応ユニット(unit_051〜)を自動で8分割表示
 export const UnitIcon = ({
   src,
+  masterId,
+  unitRarity,
   fallbackEmoji,
   element,
   size = 56,
@@ -103,6 +108,8 @@ export const UnitIcon = ({
   className = '',
 }: {
   src: string | null;
+  masterId?: string;
+  unitRarity?: number | string;
   fallbackEmoji: string;
   element: string;
   size?: number;
@@ -112,16 +119,58 @@ export const UnitIcon = ({
   const [imgError, setImgError] = useState(false);
   const h = height ?? size;
 
-  if (!src || imgError) {
+  // スプライトシート対応: masterId と unitRarity が渡されている場合に判定
+  const spritesheetSrc = masterId ? getUnitSpritesheet(masterId) : null;
+  const cellIndex = (spritesheetSrc && unitRarity !== undefined)
+    ? getSpritesheetCellIndex(unitRarity)
+    : null;
+
+  const fallbackEl = (
+    <div
+      className={`rounded-lg flex items-center justify-center flex-shrink-0 ${className}`}
+      style={{ width: size, height: h, background: elementGradient(element), fontSize: size * 0.5 }}
+    >
+      {fallbackEmoji}
+    </div>
+  );
+
+  // スプライトシート表示 (unit_051〜: 1枚のwebpに8列で格納)
+  if (spritesheetSrc && cellIndex !== null) {
+    if (imgError) return fallbackEl;
     return (
       <div
-        className={`rounded-lg flex items-center justify-center flex-shrink-0 ${className}`}
-        style={{ width: size, height: h, background: elementGradient(element), fontSize: size * 0.5 }}
+        className={`rounded-lg overflow-hidden flex-shrink-0 ${className}`}
+        style={{ width: size, height: h, background: elementGradient(element) }}
       >
-        {fallbackEmoji}
+        {/* scale層: 中身を1.5倍ズーム (上中央基点) して外側のoverflowでクリップ */}
+        <div style={{
+          width: '100%', height: '100%',
+          overflow: 'hidden', position: 'relative',
+          transform: 'scale(1.5)',
+          transformOrigin: 'top center',
+        }}>
+          {/* 位置層: スプライトシートを横800%に広げ、cellIndex分だけ左へオフセット */}
+          <img
+            src={spritesheetSrc}
+            alt=""
+            onError={() => setImgError(true)}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: `${SPRITESHEET_TOTAL_CELLS * 100}%`,
+              height: 'auto',
+              transform: `translateX(-${(cellIndex / SPRITESHEET_TOTAL_CELLS) * 100}%)`,
+              transformOrigin: 'top left',
+            }}
+          />
+        </div>
       </div>
     );
   }
+
+  // 通常表示
+  if (!src || imgError) return fallbackEl;
 
   return (
     <div
@@ -135,6 +184,59 @@ export const UnitIcon = ({
         style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', transform: 'scale(1.5)', transformOrigin: 'top center' }}
       />
     </div>
+  );
+};
+
+/**
+ * PartyPage等でposition:absoluteに使う画像コンポーネント。
+ * スプライトシートユニット(unit_051〜)は8分割表示、それ以外は通常表示。
+ */
+export const UnitSlotImg = ({
+  masterId,
+  rarity,
+}: {
+  masterId: string;
+  rarity: number | string;
+}) => {
+  const spritesheetSrc = getUnitSpritesheet(masterId);
+
+  if (spritesheetSrc) {
+    const cellIdx = getSpritesheetCellIndex(rarity);
+    return (
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+        <div style={{
+          width: '100%', height: '100%',
+          overflow: 'hidden', position: 'relative',
+          transform: 'scale(1.5)', transformOrigin: 'top center',
+        }}>
+          <img
+            src={spritesheetSrc}
+            alt=""
+            style={{
+              position: 'absolute', top: 0, left: 0,
+              width: `${SPRITESHEET_TOTAL_CELLS * 100}%`, height: 'auto',
+              transform: `translateX(-${(cellIdx / SPRITESHEET_TOTAL_CELLS) * 100}%)`,
+              transformOrigin: 'top left',
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  const imgSrc = resolveUnitImage(masterId, rarity);
+  return (
+    <img
+      src={imgSrc}
+      alt=""
+      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+      style={{
+        width: '100%', height: '100%',
+        objectFit: 'cover', objectPosition: 'top center',
+        position: 'absolute', inset: 0,
+        transform: 'scale(1.5)', transformOrigin: 'top center',
+      }}
+    />
   );
 };
 

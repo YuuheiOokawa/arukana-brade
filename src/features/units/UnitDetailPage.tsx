@@ -62,6 +62,8 @@ export const UnitDetailPage = () => {
             <div className="relative z-10">
               <UnitIcon
                 src={resolveUnitImage(unit.masterId, currentRarity)}
+                masterId={unit.masterId}
+                unitRarity={currentRarity}
                 fallbackEmoji={master.emoji}
                 element={master.element}
                 size={130}
