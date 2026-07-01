@@ -134,6 +134,37 @@ export const SCENARIOS: ScenarioMaster[] = [
     ],
   },
 
+  // ===== 第二世界「闇の大陸」ステージシナリオ =====
+  {
+    scenarioId: 'scenario_w2s1',
+    questId: 'q_w2',
+    stageId: 'stage_2_1_1',
+    backgroundKey: 'darkness',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '第一世界の戦いを終えた主人公たちは、「奈落の扉」の根源を追い、第二世界「ヴォイドランド」へと足を踏み入れた。' },
+      { lineId: '2', type: 'dialogue', speakerName: 'ルナ', text: '……空気が違う。第一世界よりずっと濃い闇の気配がする。', position: 'left' },
+      { lineId: '3', type: 'dialogue', speakerName: '???', text: '「奈落の扉」の影響がここまで広がっているのか。', position: 'center' },
+      { lineId: '4', type: 'narration', text: '視界が霞む。漆黒の霧が立ち込め、行く手を阻んでいた。' },
+      { lineId: '5', type: 'dialogue', speakerName: 'ルナ', text: '仲間がいれば大丈夫。前に進もう——', position: 'left', effect: 'flash' },
+    ],
+  },
+  {
+    scenarioId: 'scenario_w3s1',
+    questId: 'q_w3',
+    stageId: 'stage_3_1_1',
+    backgroundKey: 'sky',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '第二世界の闇を突き破り、主人公たちは天空の領域「ルーメン」へ至った。雲の上に浮かぶ光輝く島々が広がっていた。' },
+      { lineId: '2', type: 'dialogue', speakerName: 'ルナ', text: 'きれい……！こんな世界があったなんて。', position: 'left' },
+      { lineId: '3', type: 'dialogue', speakerName: 'ゼファー', text: '油断するな。天空の守護者たちは強い。ここは神々が眠る領域だ。', position: 'right' },
+      { lineId: '4', type: 'dialogue', speakerName: '???', text: 'アルカナブレイドの最後の欠片が、この先にある。', position: 'center' },
+      { lineId: '5', type: 'narration', text: '聖剣の復活まで、残り僅か。しかし——最大の試練もまた、目前に迫っていた。' },
+      { lineId: '6', type: 'dialogue', speakerName: 'ゼファー', text: '行くぞ。「奈落の王」との最終決戦に向けて。', position: 'right', effect: 'flash' },
+    ],
+  },
+
   // ===== 第二世界「闇の大陸」エリアクリアシナリオ =====
   {
     scenarioId: 'area_clear_2_1',
