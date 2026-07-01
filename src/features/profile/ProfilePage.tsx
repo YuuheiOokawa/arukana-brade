@@ -193,6 +193,11 @@ export const ProfilePage = () => {
             <StatCard label="ユニット数" value={`${ownedUnits.length}体`} accent="#a78bfa" />
             <StatCard label="ログイン日数" value={`${loginDays}日`} accent="#34d399" />
           </div>
+          <div className="grid grid-cols-3 gap-3 mt-3">
+            <StatCard label="バトル勝利" value={`${(player.battleWins ?? 0).toLocaleString()}回`} accent="#ef4444" />
+            <StatCard label="クエスト" value={`${(player.questClears ?? 0).toLocaleString()}回`} accent="#f97316" />
+            <StatCard label="召喚回数" value={`${(player.summonCount ?? 0).toLocaleString()}回`} accent="#8b5cf6" />
+          </div>
           <div className="grid grid-cols-2 gap-3 mt-3">
             <StatCard label="プレイヤーランク" value={`Rank ${player.rank}`} accent="#f97316" />
             <StatCard label="所持ゴールド" value={formatNumber(player.gold)} accent="#eab308" />

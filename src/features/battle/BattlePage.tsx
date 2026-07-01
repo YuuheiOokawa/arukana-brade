@@ -44,7 +44,7 @@ export const BattlePage = () => {
   const { pendingStageId, pendingFriendId, clearPending, markCleared, checkAreaComplete, claimAreaReward } = useQuestStore();
   const { getActiveParty } = usePartyStore();
   const { ownedUnits, levelUpUnit } = useUnitStore();
-  const { spendStamina, addGold, addExp, addItem, syncCurrencyToServer } = usePlayerStore();
+  const { spendStamina, addGold, addExp, addItem, syncCurrencyToServer, recordBattleWin, recordQuestClear } = usePlayerStore();
   const { dealDamage: dealRaidDamage } = useRaidStore();
   const { getEquippedByUnit } = useEquipmentStore();
   const { addDailyProgress, addWeeklyProgress } = useMissionStore();
@@ -401,6 +401,8 @@ export const BattlePage = () => {
                   if (updAllies.some(a => a.isFriend && a.currentHp > 0)) {
                     addDailyProgress('friend_battle');
                   }
+                  recordBattleWin();
+                  recordQuestClear();
                   useGuildStore.getState().addGuildExp(Math.floor(exp * 0.1));
                   useGuildStore.getState().updateGuildMissionProgress('battle', 1);
                   if (curStage.id.startsWith('raid_')) {

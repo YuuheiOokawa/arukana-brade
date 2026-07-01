@@ -44,7 +44,7 @@ const RANK_TITLES: { min: number; label: string; color: string }[] = (() => {
 const getRankTitle = (pts: number) => RANK_TITLES.find(r => pts >= r.min) ?? RANK_TITLES[RANK_TITLES.length - 1];
 
 export const PvPPage = () => {
-  const { record, getMatchOpponents, recordWin, recordLoss, battleHistory } = useArenaStore();
+  const { record, getMatchOpponents, recordWin, recordLoss, battleHistory, checkDailyRefresh } = useArenaStore();
   const { getActiveParty } = usePartyStore();
   const { ownedUnits } = useUnitStore();
   const { addGold, addDiamond } = usePlayerStore();
@@ -58,8 +58,9 @@ export const PvPPage = () => {
   const [isBattling, setIsBattling] = useState(false);
 
   useEffect(() => {
+    checkDailyRefresh();
     setOpponents(getMatchOpponents());
-  }, [record.points]);
+  }, [record.points, checkDailyRefresh]);
 
   const calcPlayerPower = () => {
     try {

@@ -335,6 +335,10 @@ export interface PlayerData {
   bio?: string;
   favoriteUnitInstanceId?: string | null;
   loginDays?: number;
+  // ゲーム実績統計 (オプション: 旧データとの互換)
+  battleWins?: number;
+  questClears?: number;
+  summonCount?: number;
 }
 
 // ===== プロフィール =====

@@ -40,6 +40,9 @@ interface PlayerStore {
   syncCurrencyToServer: () => Promise<void>;
   updateProfile: (patch: { name?: string; title?: string; bio?: string; favoriteUnitInstanceId?: string | null }) => void;
   recordLogin: () => void;
+  recordBattleWin: () => void;
+  recordQuestClear: () => void;
+  recordSummon: (count?: number) => void;
 }
 
 const INITIAL_PLAYER: PlayerData = {
@@ -284,6 +287,18 @@ export const usePlayerStore = create<PlayerStore>()(
             lastLoginAt: Date.now(),
           },
         }));
+      },
+
+      recordBattleWin: () => {
+        set(s => ({ player: { ...s.player, battleWins: (s.player.battleWins ?? 0) + 1 } }));
+      },
+
+      recordQuestClear: () => {
+        set(s => ({ player: { ...s.player, questClears: (s.player.questClears ?? 0) + 1 } }));
+      },
+
+      recordSummon: (count = 1) => {
+        set(s => ({ player: { ...s.player, summonCount: (s.player.summonCount ?? 0) + count } }));
       },
     }),
     { name: 'arcana-player' }

@@ -173,23 +173,27 @@ export const ShopPage = () => {
               <p className="text-blue-400 font-bold text-sm">💎 所持ダイヤ</p>
               <p className="text-white font-black text-2xl">{player.diamond.toLocaleString()}</p>
             </div>
+            <div className="rounded-xl p-4 mb-2 text-center"
+              style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.25)' }}>
+              <p className="text-purple-300 font-bold text-sm mb-1">🔒 近日公開予定</p>
+              <p className="text-gray-500 text-xs">課金機能は現在準備中です。<br />リリース後にお使いいただけます。</p>
+            </div>
             {DIAMOND_PACKS.map(pack => (
-              <div key={pack.id} className="flex items-center gap-3 p-4 rounded-xl"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(96,165,250,0.2)' }}>
-                <span className="text-3xl">{pack.emoji}</span>
+              <div key={pack.id} className="flex items-center gap-3 p-4 rounded-xl opacity-50 pointer-events-none select-none"
+                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(96,165,250,0.1)' }}>
+                <span className="text-3xl grayscale">{pack.emoji}</span>
                 <div className="flex-1">
-                  <p className="text-white font-bold text-sm">{pack.label}</p>
-                  <p className="text-blue-300 text-xs font-bold">💎 {pack.amount.toLocaleString()}
-                    {pack.bonus && <span className="text-yellow-400 ml-1">{pack.bonus}</span>}
+                  <p className="text-gray-400 font-bold text-sm">{pack.label}</p>
+                  <p className="text-gray-500 text-xs font-bold">💎 {pack.amount.toLocaleString()}
+                    {pack.bonus && <span className="text-gray-600 ml-1">{pack.bonus}</span>}
                   </p>
                 </div>
-                <div className="px-3 py-2 rounded-xl text-sm font-black text-white"
-                  style={{ background: 'linear-gradient(135deg, #1d4ed8, #7c3aed)' }}>
-                  {pack.price}
+                <div className="px-3 py-2 rounded-xl text-xs font-bold text-gray-500"
+                  style={{ background: 'rgba(55,65,81,0.5)', border: '1px solid rgba(75,85,99,0.4)' }}>
+                  準備中
                 </div>
               </div>
             ))}
-            <p className="text-center text-gray-600 text-xs pt-2">※ 課金機能は実装予定</p>
           </>
         )}
       </div>
