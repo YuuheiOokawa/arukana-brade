@@ -35,7 +35,7 @@ export const StaminaModal = ({ requiredStamina, onClose, onUsed }: Props) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end modal-overlay" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end modal-overlay" onClick={onClose}>
       <div className="w-full bottom-sheet animate-slide-bottom" onClick={e => e.stopPropagation()}>
         {/* ドラッグハンドル */}
         <div className="flex justify-center pt-3 pb-1">
