@@ -17,9 +17,10 @@ import { UNIT_MASTER, calcUnitStats } from '../../data/units';
 import { FRIEND_CANDIDATES } from '../../data/friends';
 import { getItemMaster } from '../../data/items';
 import { calcEquipmentStats, getEquipmentMaster } from '../../data/equipments';
-import { applyLeaderSkills } from '../../utils/battleEngine';
+import { applyLeaderSkills, executeNormalAttack, executeEnemyTurn, executeSkillOnTargets, tickBuffs } from '../../utils/battleEngine';
+import { getSkill } from '../../data/skills';
 import { GameButton } from '../../components/ui/game/GameButton';
-import type { BattleUnit, BattleEnemy, QuestStage, LeaderSkillEffect } from '../../types';
+import type { BattleUnit, BattleEnemy, BattleLog, QuestStage, LeaderSkillEffect } from '../../types';
 
 let idCounter = 0;
 const uid = () => `bid_${Date.now()}_${idCounter++}`;
@@ -255,284 +256,184 @@ export const BattlePage = () => {
             const leader = liveAllies[0];
             const isSkillTurn = useSkill && curBb >= 100;
 
-            // --- 味方フェーズ ---
-            if (isSkillTurn) {
-              // リーダースキル: 全敵に2-3倍ダメージ
-              const multiplier = 2 + Math.random();
-              const skillDmgPerEnemy = updEnemies.map(enemy => {
-                if (enemy.currentHp <= 0) return 0;
-                const base = Math.max(1, Math.floor(leader.atk * (0.8 + Math.random() * 0.4) - enemy.def * 0.3));
-                return Math.floor(base * multiplier);
-              });
-              let totalDmg = 0;
-              updEnemies = updEnemies.map((enemy, idx) => {
-                const dmg = skillDmgPerEnemy[idx];
-                if (dmg === 0) return enemy;
-                totalDmg += dmg;
-                const newHp = Math.max(0, enemy.currentHp - dmg);
-                return { ...enemy, currentHp: newHp };
-              });
-              newLines.push(`✨ ${leader.emoji} ${leader.name} のスキル発動！全体に ${totalDmg.toLocaleString()} ダメージ！`);
-              // 撃破チェック
-              updEnemies.forEach(e => {
-                if (e.currentHp <= 0 && curEnemies.find(ce => ce.instanceId === e.instanceId)!.currentHp > 0) {
-                  newLines.push(`💀 ${e.name} を撃破！`);
-                }
-              });
+            // ===== 味方フェーズ =====
+            let nextBb = curBb;
 
-              // 他の味方は通常攻撃
+            // BattleResultを updAllies/updEnemies に反映（bbGaugeは leaderBbGauge で別管理）
+            const applyEnemyResult = (result: { updatedAllies: BattleUnit[]; updatedEnemies: BattleEnemy[]; logs: BattleLog[] }) => {
+              const prevHps = new Map(updEnemies.map(e => [e.instanceId, e.currentHp]));
+              updAllies = updAllies.map(a => {
+                const u = result.updatedAllies.find(ua => ua.instanceId === a.instanceId);
+                return u ? { ...u, bbGauge: a.bbGauge } : a;
+              });
+              updEnemies = updEnemies.map(e => result.updatedEnemies.find(ue => ue.instanceId === e.instanceId) ?? e);
+              result.updatedEnemies.forEach(e => {
+                if (e.currentHp <= 0 && (prevHps.get(e.instanceId) ?? 1) > 0) newLines.push(`💀 ${e.name} を撃破！`);
+              });
+              totalDamageRef.current += result.logs.reduce((s, l) => s + (l.damage ?? 0), 0);
+            };
+
+            if (isSkillTurn) {
+              // BBスキル（リーダー）
+              const leaderSkill = leader.bbSkillId ? getSkill(leader.bbSkillId) : null;
+              if (leaderSkill) {
+                const result = executeSkillOnTargets(leader, leaderSkill, updAllies, updEnemies, curRound);
+                applyEnemyResult(result);
+                result.logs.forEach(log => {
+                  const elem = log.elementBonus ? '（属性有利！）' : '';
+                  newLines.push(log.heal
+                    ? `💚 ${leader.emoji} ${log.actorName} のスキル → ${log.targetNames.join('・')} を ${log.heal.toLocaleString()} 回復！`
+                    : `✨ ${leader.emoji} ${log.actorName} のBBスキル → ${log.targetNames.join('・')} に ${(log.damage ?? 0).toLocaleString()} ダメージ！${elem}`);
+                });
+              } else {
+                // フォールバック: 全体2〜3倍ダメージ
+                const multiplier = 2 + Math.random();
+                let totalDmg = 0;
+                const prevHps = new Map(updEnemies.map(e => [e.instanceId, e.currentHp]));
+                updEnemies = updEnemies.map(e => {
+                  if (e.currentHp <= 0) return e;
+                  const dmg = Math.max(1, Math.floor(leader.atk * (0.8 + Math.random() * 0.4) * multiplier - e.def * 0.3));
+                  totalDmg += dmg;
+                  return { ...e, currentHp: Math.max(0, e.currentHp - dmg) };
+                });
+                totalDamageRef.current += totalDmg;
+                newLines.push(`✨ ${leader.emoji} ${leader.name} のBBスキル発動！全体に ${totalDmg.toLocaleString()} ダメージ！`);
+                updEnemies.forEach(e => {
+                  if (e.currentHp <= 0 && (prevHps.get(e.instanceId) ?? 1) > 0) newLines.push(`💀 ${e.name} を撃破！`);
+                });
+              }
+              // 残りの味方は通常攻撃
               for (let i = 1; i < liveAllies.length; i++) {
                 const ally = liveAllies[i];
-                const targets = updEnemies.filter(e => e.currentHp > 0);
-                if (targets.length === 0) break;
-                const target = targets.reduce((a, b) => a.currentHp < b.currentHp ? a : b);
-                const dmg = Math.max(1, Math.floor(ally.atk * (0.8 + Math.random() * 0.4) - target.def * 0.3));
-                const isCrit = Math.random() < 0.1;
-                const finalDmg = isCrit ? Math.floor(dmg * 1.5) : dmg;
-                const tIdx = updEnemies.findIndex(e => e.instanceId === target.instanceId);
-                const prevHp = updEnemies[tIdx].currentHp;
-                updEnemies[tIdx] = { ...updEnemies[tIdx], currentHp: Math.max(0, prevHp - finalDmg) };
-                if (isCrit) {
-                  newLines.push(`💥 ${ally.emoji} ${ally.name} のクリティカル！ ${target.name} に ${finalDmg.toLocaleString()} の大ダメージ！`);
-                } else {
-                  newLines.push(`⚔️ ${ally.emoji} ${ally.name} → ${target.name} に ${finalDmg.toLocaleString()} ダメージ！`);
-                }
-                if (updEnemies[tIdx].currentHp <= 0 && prevHp > 0) {
-                  newLines.push(`💀 ${target.name} を撃破！`);
-                }
-              }
-
-              // BBゲージをリセット
-              const nextBb = 0;
-
-              // 敵フェーズ
-              const liveEnemiesAfterAlly = updEnemies.filter(e => e.currentHp > 0);
-              if (liveEnemiesAfterAlly.length > 0) {
-                liveEnemiesAfterAlly.forEach(enemy => {
-                  const aliveAlliesNow = updAllies.filter(a => a.currentHp > 0);
-                  if (aliveAlliesNow.length === 0) return;
-                  const randTarget = aliveAlliesNow[Math.floor(Math.random() * aliveAlliesNow.length)];
-                  const dmg = Math.max(1, Math.floor(enemy.atk * (0.8 + Math.random() * 0.4) - randTarget.def * 0.3));
-                  const aIdx = updAllies.findIndex(a => a.instanceId === randTarget.instanceId);
-                  const prevHp2 = updAllies[aIdx].currentHp;
-                  updAllies[aIdx] = { ...updAllies[aIdx], currentHp: Math.max(0, prevHp2 - dmg) };
-                  newLines.push(`🔴 ${enemy.emoji} ${enemy.name} → ${randTarget.name} に ${dmg.toLocaleString()} ダメージ！`);
-                  if (updAllies[aIdx].currentHp <= 0 && prevHp2 > 0) {
-                    newLines.push(`😵 ${randTarget.name} が倒れた...`);
-                  }
+                if (!updEnemies.some(e => e.currentHp > 0)) break;
+                const result = executeNormalAttack(ally, updEnemies.filter(e => e.currentHp > 0), updAllies, curRound);
+                applyEnemyResult(result);
+                result.logs.forEach(log => {
+                  const elem = log.elementBonus ? '（属性有利！）' : '';
+                  newLines.push(`⚔️ ${ally.emoji} ${log.actorName} → ${log.targetNames.join('・')} に ${(log.damage ?? 0).toLocaleString()} ダメージ！${elem}`);
                 });
               }
-
-              addLogs(newLines);
-
-              // 勝敗判定（setStage経由で参照）
-              const allDead = updEnemies.every(e => e.currentHp <= 0);
-              if (allDead) {
-                setStage(curStage => {
-                  if (!curStage) return curStage;
-                  const nextWave = waveIndex + 1;
-                  if (nextWave < curStage.waves.length) {
-                    const newWaveEnemies = buildWave(curStage, nextWave);
-                    setWaveIndex(nextWave);
-                    setEnemies(newWaveEnemies);
-                    setAllies(updAllies);
-                    addLogs([`━━ Wave ${nextWave + 1} 開始！ ━━━━━━━━━━━━━━`]);
-                  } else {
-                    const gold = curStage.rewardGold;
-                    const exp = curStage.rewardExp;
-                    const items: string[] = [];
-                    curStage.rewardItems.forEach(ri => {
-                      if (Math.random() < ri.chance) {
-                        for (let i = 0; i < ri.quantity; i++) items.push(ri.itemId);
-                      }
-                    });
-                    setRewardGold(gold);
-                    setRewardExp(exp);
-                    setRewardItems(items);
-                    const isAreaClear = checkAreaComplete(curStage.id);
-                    markCleared(curStage.id);
-                    clearPending();
-                    addGold(gold);
-                    addExp(exp);
-                    items.forEach(id => addItem(id, 1));
-                    if (isAreaClear) {
-                      const parts = curStage.id.split('_');
-                      if (parts.length >= 3) {
-                        const areaKey = `${parts[1]}_${parts[2]}`;
-                        claimAreaReward(areaKey);
-                        setAreaClearedKey(areaKey);
-                      }
-                      addItem('item_summon_ticket', 5);
-                    }
-                    const nonFriendAlive = updAllies.filter(a => !a.isFriend && a.currentHp > 0);
-                    const nonFriendCount = updAllies.filter(a => !a.isFriend).length || 1;
-                    nonFriendAlive.forEach(a => levelUpUnit(a.instanceId, Math.floor(exp / nonFriendCount)));
-                    addDailyProgress('battle_win');
-                    addDailyProgress('quest_clear');
-                    addWeeklyProgress('battle_win');
-                    if (updAllies.some(a => a.isFriend && a.currentHp > 0)) {
-                      addDailyProgress('friend_battle');
-                    }
-                    useGuildStore.getState().addGuildExp(Math.floor(exp * 0.1));
-                    // レイドバトルの場合はダメージを記録
-                    if (curStage.id.startsWith('raid_')) {
-                      const raidBossId = curStage.id.replace(/^raid_/, '').replace(/_stage$/, '');
-                      const dmg = totalDamageRef.current;
-                      totalDamageRef.current = 0;
-                      dealRaidDamage(raidBossId, dmg);
-                      void fetch('/api/actions', {
-                        method: 'POST', credentials: 'include',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'raid_battle', bossId: raidBossId, damageDealt: dmg }),
-                      }).catch(() => { /* saveAll でフォールバック */ });
-                    }
-                    setTimeout(() => {
-                      void syncCurrencyToServer();
-                      saveImmediately();
-                    }, 500);
-                    setPhase('victory');
-                  }
-                  return curStage;
-                });
-              } else if (updAllies.every(a => a.currentHp <= 0)) {
-                clearPending();
-                setPhase('defeat');
-                setAllies(updAllies);
-                setEnemies(updEnemies);
-              } else {
-                setAllies(updAllies);
-                setEnemies(updEnemies);
-                setRound(r => r + 1);
-              }
-
-              return nextBb;
+              nextBb = 0;
             } else {
-              // --- 通常攻撃ラウンド ---
-              liveAllies.forEach(ally => {
-                const targets = updEnemies.filter(e => e.currentHp > 0);
-                if (targets.length === 0) return;
-                const target = targets.reduce((a, b) => a.currentHp < b.currentHp ? a : b);
-                const dmg = Math.max(1, Math.floor(ally.atk * (0.8 + Math.random() * 0.4) - target.def * 0.3));
-                const isCrit = Math.random() < 0.1;
-                const finalDmg = isCrit ? Math.floor(dmg * 1.5) : dmg;
-                const tIdx = updEnemies.findIndex(e => e.instanceId === target.instanceId);
-                const prevHp = updEnemies[tIdx].currentHp;
-                updEnemies[tIdx] = { ...updEnemies[tIdx], currentHp: Math.max(0, prevHp - finalDmg) };
-                totalDamageRef.current += finalDmg;
-                if (isCrit) {
-                  newLines.push(`💥 ${ally.emoji} ${ally.name} のクリティカル！ ${target.name} に ${finalDmg.toLocaleString()} の大ダメージ！`);
-                } else {
-                  newLines.push(`⚔️ ${ally.emoji} ${ally.name} → ${target.name} に ${finalDmg.toLocaleString()} ダメージ！`);
-                }
-                if (updEnemies[tIdx].currentHp <= 0 && prevHp > 0) {
-                  newLines.push(`💀 ${target.name} を撃破！`);
-                }
-              });
-
-              // 敵フェーズ
-              const liveEnemiesAfterAlly = updEnemies.filter(e => e.currentHp > 0);
-              if (liveEnemiesAfterAlly.length > 0) {
-                liveEnemiesAfterAlly.forEach(enemy => {
-                  const aliveAlliesNow = updAllies.filter(a => a.currentHp > 0);
-                  if (aliveAlliesNow.length === 0) return;
-                  const randTarget = aliveAlliesNow[Math.floor(Math.random() * aliveAlliesNow.length)];
-                  const dmg = Math.max(1, Math.floor(enemy.atk * (0.8 + Math.random() * 0.4) - randTarget.def * 0.3));
-                  const aIdx = updAllies.findIndex(a => a.instanceId === randTarget.instanceId);
-                  const prevHp2 = updAllies[aIdx].currentHp;
-                  updAllies[aIdx] = { ...updAllies[aIdx], currentHp: Math.max(0, prevHp2 - dmg) };
-                  newLines.push(`🔴 ${enemy.emoji} ${enemy.name} → ${randTarget.name} に ${dmg.toLocaleString()} ダメージ！`);
-                  if (updAllies[aIdx].currentHp <= 0 && prevHp2 > 0) {
-                    newLines.push(`😵 ${randTarget.name} が倒れた...`);
-                  }
+              // 全味方が通常攻撃
+              for (const ally of liveAllies) {
+                if (!updEnemies.some(e => e.currentHp > 0)) break;
+                const result = executeNormalAttack(ally, updEnemies.filter(e => e.currentHp > 0), updAllies, curRound);
+                applyEnemyResult(result);
+                result.logs.forEach(log => {
+                  const elem = log.elementBonus ? '（属性有利！）' : '';
+                  newLines.push(`⚔️ ${ally.emoji} ${log.actorName} → ${log.targetNames.join('・')} に ${(log.damage ?? 0).toLocaleString()} ダメージ！${elem}`);
                 });
               }
-
-              // BBゲージ増加
-              const nextBb = Math.min(100, curBb + 20);
-
-              addLogs(newLines);
-
-              const allDead = updEnemies.every(e => e.currentHp <= 0);
-              if (allDead) {
-                setStage(curStage => {
-                  if (!curStage) return curStage;
-                  const nextWave = waveIndex + 1;
-                  if (nextWave < curStage.waves.length) {
-                    const newWaveEnemies = buildWave(curStage, nextWave);
-                    setWaveIndex(nextWave);
-                    setEnemies(newWaveEnemies);
-                    setAllies(updAllies);
-                    addLogs([`━━ Wave ${nextWave + 1} 開始！ ━━━━━━━━━━━━━━`]);
-                  } else {
-                    const gold = curStage.rewardGold;
-                    const exp = curStage.rewardExp;
-                    const items: string[] = [];
-                    curStage.rewardItems.forEach(ri => {
-                      if (Math.random() < ri.chance) {
-                        for (let i = 0; i < ri.quantity; i++) items.push(ri.itemId);
-                      }
-                    });
-                    setRewardGold(gold);
-                    setRewardExp(exp);
-                    setRewardItems(items);
-                    const isAreaClear = checkAreaComplete(curStage.id);
-                    markCleared(curStage.id);
-                    clearPending();
-                    addGold(gold);
-                    addExp(exp);
-                    items.forEach(id => addItem(id, 1));
-                    if (isAreaClear) {
-                      const parts = curStage.id.split('_');
-                      if (parts.length >= 3) {
-                        const areaKey = `${parts[1]}_${parts[2]}`;
-                        claimAreaReward(areaKey);
-                        setAreaClearedKey(areaKey);
-                      }
-                      addItem('item_summon_ticket', 5);
-                    }
-                    const nonFriendAlive = updAllies.filter(a => !a.isFriend && a.currentHp > 0);
-                    const nonFriendCount = updAllies.filter(a => !a.isFriend).length || 1;
-                    nonFriendAlive.forEach(a => levelUpUnit(a.instanceId, Math.floor(exp / nonFriendCount)));
-                    addDailyProgress('battle_win');
-                    addDailyProgress('quest_clear');
-                    addWeeklyProgress('battle_win');
-                    if (updAllies.some(a => a.isFriend && a.currentHp > 0)) {
-                      addDailyProgress('friend_battle');
-                    }
-                    useGuildStore.getState().addGuildExp(Math.floor(exp * 0.1));
-                    // レイドバトルの場合はダメージを記録
-                    if (curStage.id.startsWith('raid_')) {
-                      const raidBossId = curStage.id.replace(/^raid_/, '').replace(/_stage$/, '');
-                      const dmg = totalDamageRef.current;
-                      totalDamageRef.current = 0;
-                      dealRaidDamage(raidBossId, dmg);
-                      void fetch('/api/actions', {
-                        method: 'POST', credentials: 'include',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'raid_battle', bossId: raidBossId, damageDealt: dmg }),
-                      }).catch(() => { /* saveAll でフォールバック */ });
-                    }
-                    setTimeout(() => {
-                      void syncCurrencyToServer();
-                      saveImmediately();
-                    }, 500);
-                    setPhase('victory');
-                  }
-                  return curStage;
-                });
-              } else if (updAllies.every(a => a.currentHp <= 0)) {
-                clearPending();
-                setPhase('defeat');
-                setAllies(updAllies);
-                setEnemies(updEnemies);
-              } else {
-                setAllies(updAllies);
-                setEnemies(updEnemies);
-                setRound(r => r + 1);
-              }
-
-              return nextBb;
+              nextBb = Math.min(100, curBb + 20);
             }
+
+            // ===== 敵フェーズ =====
+            for (const enemy of updEnemies.filter(e => e.currentHp > 0)) {
+              if (!updAllies.some(a => a.currentHp > 0)) break;
+              const prevAllyHps = new Map(updAllies.map(a => [a.instanceId, a.currentHp]));
+              const result = executeEnemyTurn(enemy, updAllies.filter(a => a.currentHp > 0), updEnemies, curRound);
+              updAllies = updAllies.map(a => {
+                const u = result.updatedAllies.find(ua => ua.instanceId === a.instanceId);
+                return u ? { ...u, bbGauge: a.bbGauge } : a;
+              });
+              result.logs.forEach(log => {
+                const prefix = (log.action === 'skill' || log.action === 'bb_skill') ? '💥' : '🔴';
+                newLines.push(`${prefix} ${enemy.emoji} ${log.actorName} → ${log.targetNames.join('・')} に ${(log.damage ?? 0).toLocaleString()} ダメージ！`);
+              });
+              updAllies.forEach(a => {
+                if (a.currentHp <= 0 && (prevAllyHps.get(a.instanceId) ?? 1) > 0) newLines.push(`😵 ${a.name} が倒れた...`);
+              });
+            }
+
+            // ===== バフ/デバフ経過処理 =====
+            const ticked = tickBuffs(updAllies, updEnemies);
+            updAllies = ticked.allies;
+            updEnemies = ticked.enemies;
+
+            addLogs(newLines);
+
+            // ===== 勝敗判定 =====
+            const allDead = updEnemies.every(e => e.currentHp <= 0);
+            if (allDead) {
+              setStage(curStage => {
+                if (!curStage) return curStage;
+                const nextWave = waveIndex + 1;
+                if (nextWave < curStage.waves.length) {
+                  const newWaveEnemies = buildWave(curStage, nextWave);
+                  setWaveIndex(nextWave);
+                  setEnemies(newWaveEnemies);
+                  setAllies(updAllies);
+                  addLogs([`━━ Wave ${nextWave + 1} 開始！ ━━━━━━━━━━━━━━`]);
+                } else {
+                  const gold = curStage.rewardGold;
+                  const exp = curStage.rewardExp;
+                  const items: string[] = [];
+                  curStage.rewardItems.forEach(ri => {
+                    if (Math.random() < ri.chance) {
+                      for (let i = 0; i < ri.quantity; i++) items.push(ri.itemId);
+                    }
+                  });
+                  setRewardGold(gold);
+                  setRewardExp(exp);
+                  setRewardItems(items);
+                  const isAreaClear = checkAreaComplete(curStage.id);
+                  markCleared(curStage.id);
+                  clearPending();
+                  addGold(gold);
+                  addExp(exp);
+                  items.forEach(id => addItem(id, 1));
+                  if (isAreaClear) {
+                    const parts = curStage.id.split('_');
+                    if (parts.length >= 3) {
+                      const areaKey = `${parts[1]}_${parts[2]}`;
+                      claimAreaReward(areaKey);
+                      setAreaClearedKey(areaKey);
+                    }
+                    addItem('item_summon_ticket', 5);
+                  }
+                  const nonFriendAlive = updAllies.filter(a => !a.isFriend && a.currentHp > 0);
+                  const nonFriendCount = updAllies.filter(a => !a.isFriend).length || 1;
+                  nonFriendAlive.forEach(a => levelUpUnit(a.instanceId, Math.floor(exp / nonFriendCount)));
+                  addDailyProgress('battle_win');
+                  addDailyProgress('quest_clear');
+                  addWeeklyProgress('battle_win');
+                  if (updAllies.some(a => a.isFriend && a.currentHp > 0)) {
+                    addDailyProgress('friend_battle');
+                  }
+                  useGuildStore.getState().addGuildExp(Math.floor(exp * 0.1));
+                  useGuildStore.getState().updateGuildMissionProgress('battle', 1);
+                  if (curStage.id.startsWith('raid_')) {
+                    const raidBossId = curStage.id.replace(/^raid_/, '').replace(/_stage$/, '');
+                    const dmg = totalDamageRef.current;
+                    totalDamageRef.current = 0;
+                    dealRaidDamage(raidBossId, dmg);
+                    void fetch('/api/actions', {
+                      method: 'POST', credentials: 'include',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ action: 'raid_battle', bossId: raidBossId, damageDealt: dmg }),
+                    }).catch(() => { /* saveAll でフォールバック */ });
+                  }
+                  setTimeout(() => {
+                    void syncCurrencyToServer();
+                    saveImmediately();
+                  }, 500);
+                  setPhase('victory');
+                }
+                return curStage;
+              });
+            } else if (updAllies.every(a => a.currentHp <= 0)) {
+              clearPending();
+              setPhase('defeat');
+              setAllies(updAllies);
+              setEnemies(updEnemies);
+            } else {
+              setAllies(updAllies);
+              setEnemies(updEnemies);
+              setRound(r => r + 1);
+            }
+
+            return nextBb;
           });
           return curRound;
         });

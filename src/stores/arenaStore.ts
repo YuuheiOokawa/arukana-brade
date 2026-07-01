@@ -41,15 +41,21 @@ export const useArenaStore = create<ArenaStore>()(
       battleHistory: [],
 
       refreshOpponents: () => {
-        // 現在のポイント付近の相手を返す (refreshは自動)
+        const { points } = get().record;
+        const withScore = ARENA_OPPONENTS.map(o => ({
+          opponent: o,
+          score: Math.abs(o.arenaPoints - points) + Math.random() * 400,
+        }));
+        withScore.sort((a, b) => a.score - b.score);
+        set({ opponents: withScore.map(w => w.opponent) });
       },
 
       getMatchOpponents: () => {
         const { points } = get().record;
-        const sorted = [...ARENA_OPPONENTS].sort((a, b) =>
-          Math.abs(a.arenaPoints - points) - Math.abs(b.arenaPoints - points)
-        );
-        return sorted.slice(0, 3);
+        const pool = get().opponents.length > 0 ? get().opponents : ARENA_OPPONENTS;
+        return [...pool]
+          .sort((a, b) => Math.abs(a.arenaPoints - points) - Math.abs(b.arenaPoints - points))
+          .slice(0, 3);
       },
 
       recordWin: (opponentId) => {

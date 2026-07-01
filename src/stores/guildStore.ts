@@ -14,9 +14,9 @@ const DUMMY_MEMBERS: GuildMember[] = [
 ];
 
 const GUILD_MISSIONS = [
-  { id: 'gm_1', title: 'ギルドバトル5回', target: 5, progress: 3, reward: '💎×50', claimed: false },
-  { id: 'gm_2', title: 'ギルドEXP獲得',   target: 1000, progress: 750, reward: '🪙×5000', claimed: false },
-  { id: 'gm_3', title: 'ラス討伐参加',    target: 1, progress: 0, reward: '✨チケット×1', claimed: false },
+  { id: 'gm_1', type: 'battle' as const, title: 'ギルドバトル5回', target: 5, progress: 0, reward: '💎×50', claimed: false },
+  { id: 'gm_2', type: 'exp'    as const, title: 'ギルドEXP獲得',   target: 1000, progress: 0, reward: '🪙×5000', claimed: false },
+  { id: 'gm_3', type: 'raid'   as const, title: 'ラス討伐参加',    target: 1, progress: 0, reward: '✨チケット×1', claimed: false },
 ];
 
 interface GuildStore {
@@ -26,6 +26,7 @@ interface GuildStore {
   createGuild: (name: string, emblem: string, playerName: string) => void;
   leaveGuild: () => void;
   addGuildExp: (amount: number) => void;
+  updateGuildMissionProgress: (type: 'battle' | 'exp' | 'raid', count?: number) => void;
   sendChatMessage: (playerName: string, text: string) => void;
   claimGuildMission: (id: string) => boolean;
 }
@@ -79,8 +80,25 @@ export const useGuildStore = create<GuildStore>()(
           exp += amount;
           const needed = level * 1000;
           if (exp >= needed && level < 20) { exp -= needed; level++; }
-          return { guild: { ...s.guild, level, exp } };
+          return {
+            guild: { ...s.guild, level, exp },
+            guildMissions: s.guildMissions.map(m =>
+              m.type === 'exp' && !m.claimed && m.progress < m.target
+                ? { ...m, progress: Math.min(m.target, m.progress + amount) }
+                : m
+            ),
+          };
         });
+      },
+
+      updateGuildMissionProgress: (type, count = 1) => {
+        set(s => ({
+          guildMissions: s.guildMissions.map(m =>
+            m.type === type && !m.claimed && m.progress < m.target
+              ? { ...m, progress: Math.min(m.target, m.progress + count) }
+              : m
+          ),
+        }));
       },
 
       sendChatMessage: (playerName, text) => {

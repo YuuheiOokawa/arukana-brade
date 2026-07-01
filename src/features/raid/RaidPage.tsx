@@ -5,6 +5,7 @@ import { useRaidStore } from '../../stores/raidStore';
 import { useQuestStore } from '../../stores/questStore';
 import { usePlayerStore } from '../../stores/playerStore';
 import { usePartyStore } from '../../stores/partyStore';
+import { useGuildStore } from '../../stores/guildStore';
 import { getActiveRaids } from '../../data/events';
 import { getItemMaster } from '../../data/items';
 import { TopBar } from '../../components/layout/TopBar';
@@ -92,6 +93,7 @@ const RaidBossDetail = ({ boss, navigate }: { boss: RaidBossMaster; navigate: Re
     setPendingStage(pseudoStageId);
     // フレンドなしでバトルへ
     setPendingFriend('');
+    useGuildStore.getState().updateGuildMissionProgress('raid', 1);
     navigate('/battle', { state: { isRaid: true, raidBossId: boss.id, raidWaves: boss.waves } });
   };
 
