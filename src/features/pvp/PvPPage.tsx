@@ -12,7 +12,7 @@ import { calcTotalPower } from '../../utils/format';
 import type { ArenaOpponent } from '../../types';
 import { ELEMENT_ADVANTAGE } from '../../types';
 
-type Phase = 'list' | 'battle' | 'result';
+type Phase = 'list' | 'confirm' | 'battle' | 'result';
 
 const NUM = ['Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ⅵ','Ⅶ','Ⅷ','Ⅸ','Ⅹ'];
 const RANK_TIERS: { name: string; color: string; step: number; count: number }[] = [
@@ -55,12 +55,17 @@ export const PvPPage = () => {
   const [currentOpponent, setCurrentOpponent] = useState<ArenaOpponent | null>(null);
   const [battleLog, setBattleLog] = useState<string[]>([]);
   const [result, setResult] = useState<{ won: boolean; pointsGained: number; gold: number; diamond: number } | null>(null);
-  const [isBattling, setIsBattling] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    checkDailyRefresh();
-    setOpponents(getMatchOpponents());
-  }, [record.points, checkDailyRefresh]);
+    try {
+      checkDailyRefresh();
+      setOpponents(getMatchOpponents());
+    } catch (e) {
+      console.error('Arena init error:', e);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [record.points]);
 
   const calcPlayerPower = () => {
     try {
@@ -73,13 +78,12 @@ export const PvPPage = () => {
           if (!unit) return sum;
           const master = UNIT_MASTER.find(m => m.id === unit.masterId);
           if (!master) return sum;
-          const stats = calcUnitStats(master, unit.level, unit.awakenRank);
-          return sum + calcTotalPower(stats);
+          return sum + calcTotalPower(calcUnitStats(master, unit.level, unit.awakenRank));
         }, 0);
     } catch { return 0; }
   };
 
-  const simulateBattle = (opponent: ArenaOpponent) => {
+  const simulateBattle = (opponent: ArenaOpponent): { won: boolean; logs: string[] } => {
     const playerPower = calcPlayerPower();
     const oppPower = opponent.power;
     const ratio = playerPower / Math.max(1, oppPower);
@@ -87,8 +91,7 @@ export const PvPPage = () => {
     const won = Math.random() < winChance;
 
     const party = getActiveParty();
-    const slots = party?.slots ?? [];
-    const partyUnits = slots
+    const partyUnits = (party?.slots ?? [])
       .filter(Boolean)
       .map(id => ownedUnits.find(u => u.instanceId === id))
       .filter((u): u is NonNullable<typeof u> => u != null);
@@ -99,10 +102,10 @@ export const PvPPage = () => {
       : { atk: Math.floor(oppPower / 10), def: Math.floor(oppPower / 20), hp: oppPower, rec: 100 };
 
     const logs: string[] = [];
-    logs.push('アリーナバトル開始！');
-    logs.push(`${opponent.playerName} の ${oppMaster?.name ?? '???'} に挑戦...`);
+    logs.push(`⚔️ ${opponent.playerName} への挑戦開始！`);
+    logs.push(`相手リーダー: ${oppMaster?.name ?? '???'} (戦力 ${oppPower.toLocaleString()})`);
+    logs.push('');
 
-    // 実ステータス + 属性相性でダメージ計算
     partyUnits.forEach(unit => {
       const master = UNIT_MASTER.find(m => m.id === unit.masterId);
       if (!master) return;
@@ -114,60 +117,66 @@ export const PvPPage = () => {
       logs.push(`${master.emoji} ${master.name} → ${dmg.toLocaleString()} ダメージ！${elemNote}`);
     });
 
-    // 敵リーダーの反撃
     if (oppMaster) {
       const enemyDmg = Math.floor(oppStats.atk * (0.8 + Math.random() * 0.4));
       logs.push(`${oppMaster.emoji} ${oppMaster.name} の反撃 → ${enemyDmg.toLocaleString()} ダメージ！`);
     }
-
+    logs.push('');
     logs.push(won ? '✨ 勝利！相手のHPを削り切った！' : '💀 敗北...HPが尽きた');
     return { won, logs };
   };
 
-  const handleChallenge = (opponent: ArenaOpponent) => {
+  // 相手選択 → 確認フェーズへ
+  const handleSelectOpponent = (opponent: ArenaOpponent) => {
     try {
       const party = getActiveParty();
       if (!party || !(party.slots ?? []).some(Boolean)) {
-        setBattleLog(['パーティを編成してください']);
+        setErrorMsg('パーティを編成してください');
         return;
       }
+      setErrorMsg(null);
       setCurrentOpponent(opponent);
-      setPhase('battle');
-      setIsBattling(true);
-      setBattleLog([]);
-
-      const { won, logs } = simulateBattle(opponent);
-
-      let i = 0;
-      const timer = setInterval(() => {
-        if (i < logs.length) {
-          setBattleLog(prev => [...prev, logs[i++]]);
-        } else {
-          clearInterval(timer);
-          setIsBattling(false);
-          const battleResult = won ? recordWin(opponent.id) : recordLoss(opponent.id);
-          if (battleResult.goldReward > 0) addGold(battleResult.goldReward);
-          if (battleResult.diamondReward > 0) addDiamond(battleResult.diamondReward);
-          if (won) {
-            addDailyProgress('battle_win');
-            addWeeklyProgress('battle_win');
-          }
-          setResult({ won, pointsGained: battleResult.pointsGained, gold: battleResult.goldReward, diamond: battleResult.diamondReward });
-          setPhase('result');
-          // サーバー側にバトル結果を記録（非同期・失敗しても局所的に許容）
-          void fetch('/api/actions', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'arena_battle', won, pointsGained: battleResult.pointsGained, goldReward: battleResult.goldReward, diamondReward: battleResult.diamondReward }),
-          }).catch(() => { /* saveAll でフォールバック */ });
-        }
-      }, 500);
-    } catch (err) {
-      console.error('Arena battle error:', err);
-      setPhase('list');
-      setIsBattling(false);
+      setPhase('confirm');
+    } catch (e) {
+      console.error('Arena select error:', e);
     }
+  };
+
+  // バトル実行 → battle → result
+  const handleStartBattle = () => {
+    if (!currentOpponent) return;
+    try {
+      const { won, logs } = simulateBattle(currentOpponent);
+      setBattleLog(logs);
+      setPhase('battle');
+
+      const battleResult = won ? recordWin(currentOpponent.id) : recordLoss(currentOpponent.id);
+      if (battleResult.goldReward > 0) addGold(battleResult.goldReward);
+      if (battleResult.diamondReward > 0) addDiamond(battleResult.diamondReward);
+      if (won) {
+        addDailyProgress('battle_win');
+        addWeeklyProgress('battle_win');
+      }
+      setResult({ won, pointsGained: battleResult.pointsGained, gold: battleResult.goldReward, diamond: battleResult.diamondReward });
+
+      void fetch('/api/actions', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'arena_battle', won, pointsGained: battleResult.pointsGained, goldReward: battleResult.goldReward, diamondReward: battleResult.diamondReward }),
+      }).catch(() => {});
+    } catch (e) {
+      console.error('Arena battle error:', e);
+      setPhase('list');
+    }
+  };
+
+  const backToList = () => {
+    setPhase('list');
+    setCurrentOpponent(null);
+    setBattleLog([]);
+    setResult(null);
+    try { setOpponents(getMatchOpponents()); } catch { /* ignore */ }
   };
 
   const rankTitle = getRankTitle(record.points);
@@ -176,136 +185,158 @@ export const PvPPage = () => {
     <div className="min-h-screen pb-28">
       <TopBar title="アリーナ" />
 
-      {phase === 'list' && (
-        <>
-          {/* 自分のランク */}
-          <div className="mx-4 mb-5 rounded-2xl p-5 border border-purple-800/30"
-            style={{ background: 'linear-gradient(135deg, #0d0530, #1a0a40)' }}>
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">現在のランク</p>
-                <p className="text-3xl font-black" style={{ color: rankTitle.color }}>
-                  {rankTitle.label}
-                </p>
-                <p className="text-gray-400 text-sm mt-0.5">{record.points} pt · #{record.rank}</p>
-              </div>
-              <div className="text-right">
-                <div className="flex gap-4">
-                  <div>
-                    <p className="text-gray-500 text-xs">勝利</p>
-                    <p className="text-emerald-400 font-black text-xl">{record.wins}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-xs">敗北</p>
-                    <p className="text-red-400 font-black text-xl">{record.losses}</p>
-                  </div>
-                </div>
-              </div>
+      {/* ── 自分のランク（list / confirm で表示） ── */}
+      {(phase === 'list' || phase === 'confirm') && (
+        <div className="mx-4 mb-5 rounded-2xl p-5 border border-purple-800/30"
+          style={{ background: 'linear-gradient(135deg, #0d0530, #1a0a40)' }}>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">現在のランク</p>
+              <p className="text-3xl font-black" style={{ color: rankTitle.color }}>{rankTitle.label}</p>
+              <p className="text-gray-400 text-sm mt-0.5">{record.points} pt · #{record.rank}</p>
             </div>
-            <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
-              <div className="h-full rounded-full transition-all"
-                style={{
-                  width: `${Math.min(100, ((record.points % 500) / 500) * 100)}%`,
-                  background: `linear-gradient(90deg, ${rankTitle.color}88, ${rankTitle.color})`,
-                }} />
+            <div className="flex gap-4">
+              <div className="text-center">
+                <p className="text-gray-500 text-xs">勝利</p>
+                <p className="text-emerald-400 font-black text-xl">{record.wins}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-gray-500 text-xs">敗北</p>
+                <p className="text-red-400 font-black text-xl">{record.losses}</p>
+              </div>
             </div>
           </div>
-
-          {/* 対戦相手 */}
-          <div className="px-4 mb-4">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-gray-500 text-xs font-bold uppercase tracking-wider">対戦相手</p>
-              <button onClick={() => setOpponents(getMatchOpponents())}
-                className="text-purple-400 text-xs">更新</button>
-            </div>
-            <div className="space-y-2">
-              {opponents.map(opp => {
-                const master = UNIT_MASTER.find(m => m.id === opp.leaderUnitMasterId);
-                const oppTitle = getRankTitle(opp.arenaPoints);
-                return (
-                  <div key={opp.id} className="card-base p-4 flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-                      style={{ background: master ? elementGradient(master.element) : '#1a1a35' }}>
-                      {master?.emoji ?? '👤'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <p className="text-white font-bold text-sm">{opp.playerName}</p>
-                        <span className="text-[10px] font-bold" style={{ color: oppTitle.color }}>
-                          {oppTitle.label}
-                        </span>
-                      </div>
-                      <p className="text-gray-500 text-xs">
-                        Rank {opp.playerRank} · {opp.arenaPoints} pt · 戦力 {opp.power.toLocaleString()}
-                      </p>
-                      {master && (
-                        <p className="text-gray-600 text-xs mt-0.5">
-                          リーダー: {master.name} Lv{opp.leaderUnitLevel}
-                        </p>
-                      )}
-                    </div>
-                    <GameButton variant="primary" size="sm" onClick={() => handleChallenge(opp)}>
-                      挑戦
-                    </GameButton>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 戦績履歴 */}
-          {battleHistory.length > 0 && (
-            <div className="px-4">
-              <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2">最近の戦績</p>
-              <div className="space-y-1.5">
-                {battleHistory.slice(0, 5).map((h, i) => (
-                  <div key={i} className="flex items-center gap-3 bg-gray-800/30 rounded-xl px-3 py-2">
-                    <span className={`text-xs font-black w-8 text-center ${h.won ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {h.won ? '勝' : '敗'}
-                    </span>
-                    <span className="text-gray-400 text-xs flex-1">{h.opponentName}</span>
-                    <span className={`text-xs font-bold ${h.points >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {h.points >= 0 ? '+' : ''}{h.points} pt
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </>
-      )}
-
-      {phase === 'battle' && currentOpponent && (
-        <div className="px-4">
-          <div className="card-base p-5 min-h-[400px] flex flex-col">
-            <p className="text-purple-400 text-xs font-bold uppercase tracking-wider mb-4">バトル進行中...</p>
-            <div className="flex-1 space-y-2 font-mono">
-              {battleLog.map((log, i) => (
-                <p key={i} className={`text-sm animate-slide-up ${
-                  log.includes('勝利') ? 'text-yellow-400 font-bold' :
-                  log.includes('敗北') ? 'text-red-400 font-bold' :
-                  log.includes('ダメージ') ? 'text-white' : 'text-gray-400'
-                }`}>
-                  {log}
-                </p>
-              ))}
-              {isBattling && (
-                <div className="flex gap-1 pt-2">
-                  {[0, 1, 2].map(i => (
-                    <div key={i} className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
-                      style={{ animationDelay: `${i * 0.2}s` }} />
-                  ))}
-                </div>
-              )}
-            </div>
+          <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+            <div className="h-full rounded-full transition-all"
+              style={{ width: `${Math.min(100, ((record.points % 500) / 500) * 100)}%`, background: `linear-gradient(90deg, ${rankTitle.color}88, ${rankTitle.color})` }} />
           </div>
         </div>
       )}
 
+      {/* ── 対戦相手リスト ── */}
+      {phase === 'list' && (
+        <div className="px-4">
+          {errorMsg && (
+            <div className="mb-3 px-4 py-2 rounded-xl bg-red-900/40 border border-red-700/40 text-red-300 text-sm">{errorMsg}</div>
+          )}
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-gray-500 text-xs font-bold uppercase tracking-wider">対戦相手を選択</p>
+            <button onClick={() => { try { setOpponents(getMatchOpponents()); } catch { /* ignore */ } }}
+              className="text-purple-400 text-xs">更新</button>
+          </div>
+          <div className="space-y-2 mb-6">
+            {opponents.map(opp => {
+              const master = UNIT_MASTER.find(m => m.id === opp.leaderUnitMasterId);
+              const oppTitle = getRankTitle(opp.arenaPoints);
+              return (
+                <div key={opp.id} className="card-base p-4 flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+                    style={{ background: master ? elementGradient(master.element) : '#1a1a35' }}>
+                    {master?.emoji ?? '👤'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <p className="text-white font-bold text-sm">{opp.playerName}</p>
+                      <span className="text-[10px] font-bold" style={{ color: oppTitle.color }}>{oppTitle.label}</span>
+                    </div>
+                    <p className="text-gray-500 text-xs">Rank {opp.playerRank} · {opp.arenaPoints} pt · 戦力 {opp.power.toLocaleString()}</p>
+                    {master && <p className="text-gray-600 text-xs mt-0.5">リーダー: {master.name} Lv{opp.leaderUnitLevel}</p>}
+                  </div>
+                  <GameButton variant="primary" size="sm" onClick={() => handleSelectOpponent(opp)}>挑戦</GameButton>
+                </div>
+              );
+            })}
+          </div>
+
+          {battleHistory.length > 0 && (
+            <>
+              <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2">最近の戦績</p>
+              <div className="space-y-1.5">
+                {battleHistory.slice(0, 5).map((h, i) => (
+                  <div key={i} className="flex items-center gap-3 bg-gray-800/30 rounded-xl px-3 py-2">
+                    <span className={`text-xs font-black w-8 text-center ${h.won ? 'text-emerald-400' : 'text-red-400'}`}>{h.won ? '勝' : '敗'}</span>
+                    <span className="text-gray-400 text-xs flex-1">{h.opponentName}</span>
+                    <span className={`text-xs font-bold ${h.points >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{h.points >= 0 ? '+' : ''}{h.points} pt</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── 確認画面 ── */}
+      {phase === 'confirm' && currentOpponent && (() => {
+        const opp = currentOpponent;
+        const master = UNIT_MASTER.find(m => m.id === opp.leaderUnitMasterId);
+        const oppTitle = getRankTitle(opp.arenaPoints);
+        const playerPower = calcPlayerPower();
+        const powerDiff = playerPower - opp.power;
+        return (
+          <div className="px-4">
+            <div className="card-base p-5 mb-4">
+              <p className="text-purple-400 text-xs font-bold uppercase tracking-wider mb-4 text-center">対戦確認</p>
+              <div className="flex items-center justify-between mb-5">
+                {/* 自分 */}
+                <div className="text-center flex-1">
+                  <div className="w-14 h-14 rounded-xl bg-purple-900/40 flex items-center justify-center text-2xl mx-auto mb-1">🧑</div>
+                  <p className="text-white font-bold text-sm">あなた</p>
+                  <p className="text-purple-400 text-xs">{rankTitle.label}</p>
+                  <p className="text-gray-500 text-xs mt-0.5">戦力 {playerPower.toLocaleString()}</p>
+                </div>
+                <div className="text-gray-500 font-black text-2xl px-2">VS</div>
+                {/* 相手 */}
+                <div className="text-center flex-1">
+                  <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl mx-auto mb-1"
+                    style={{ background: master ? elementGradient(master.element) : '#1a1a35' }}>
+                    {master?.emoji ?? '👤'}
+                  </div>
+                  <p className="text-white font-bold text-sm">{opp.playerName}</p>
+                  <p className="text-xs" style={{ color: oppTitle.color }}>{oppTitle.label}</p>
+                  <p className="text-gray-500 text-xs mt-0.5">戦力 {opp.power.toLocaleString()}</p>
+                </div>
+              </div>
+              <div className="text-center text-xs mb-4" style={{ color: powerDiff >= 0 ? '#34d399' : '#f87171' }}>
+                {powerDiff >= 0 ? `戦力差 +${powerDiff.toLocaleString()} 有利` : `戦力差 ${powerDiff.toLocaleString()} 不利`}
+              </div>
+              <div className="flex gap-3">
+                <GameButton variant="secondary" fullWidth onClick={backToList}>キャンセル</GameButton>
+                <GameButton variant="primary" fullWidth onClick={handleStartBattle}>バトル開始！</GameButton>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── バトルログ ── */}
+      {phase === 'battle' && (
+        <div className="px-4">
+          <div className="card-base p-5 mb-4" style={{ minHeight: '320px' }}>
+            <p className="text-purple-400 text-xs font-bold uppercase tracking-wider mb-4">バトルログ</p>
+            <div className="space-y-1.5 mb-4">
+              {battleLog.map((log, i) => (
+                <p key={i} className={`text-sm font-mono ${
+                  log.includes('勝利') ? 'text-yellow-400 font-bold' :
+                  log.includes('敗北') ? 'text-red-400 font-bold' :
+                  log.startsWith('⚔️') || log.startsWith('相手') ? 'text-purple-300' :
+                  log === '' ? 'h-2 block' : 'text-gray-300'
+                }`}>{log}</p>
+              ))}
+            </div>
+          </div>
+          {result && (
+            <GameButton variant="primary" fullWidth onClick={() => setPhase('result')}>
+              {result.won ? '🏆 結果を見る' : '💀 結果を見る'}
+            </GameButton>
+          )}
+        </div>
+      )}
+
+      {/* ── 結果 ── */}
       {phase === 'result' && result && (
         <div className="px-4">
           <div className={`rounded-2xl p-6 text-center mb-4 ${result.won ? 'border border-yellow-700/40' : 'border border-red-900/40'}`}
-            style={{ background: result.won ? 'linear-gradient(135deg, #1a1000, #3d2000)' : 'linear-gradient(135deg, #1a0000, #3d0000)' }}>
+            style={{ background: result.won ? 'linear-gradient(135deg,#1a1000,#3d2000)' : 'linear-gradient(135deg,#1a0000,#3d0000)' }}>
             <p className="text-6xl mb-3">{result.won ? '🏆' : '💀'}</p>
             <h2 className={`text-3xl font-black mb-1 ${result.won ? 'text-gradient-gold' : 'text-red-400'}`}>
               {result.won ? 'VICTORY!' : 'DEFEAT'}
@@ -319,11 +350,9 @@ export const PvPPage = () => {
             </div>
           </div>
           <div className="flex gap-3">
-            <GameButton variant="secondary" fullWidth onClick={() => { setPhase('list'); setOpponents(getMatchOpponents()); }}>
-              戻る
-            </GameButton>
+            <GameButton variant="secondary" fullWidth onClick={backToList}>戻る</GameButton>
             {currentOpponent && (
-              <GameButton variant="primary" fullWidth onClick={() => handleChallenge(currentOpponent)}>
+              <GameButton variant="primary" fullWidth onClick={() => { setPhase('confirm'); setResult(null); setBattleLog([]); }}>
                 再挑戦
               </GameButton>
             )}

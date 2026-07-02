@@ -214,16 +214,17 @@ export const ProfilePage = () => {
           <FrameDecoration color="purple">
             {([1, 2, 3, 4, 5, 6, 7, 'CROWN'] as StarRarity[]).map(r => {
               const cnt = ownedUnits.filter(u => (u.currentRarity ?? 1) === r).length;
-              if (cnt === 0) return null;
-              const pct = ownedUnits.length > 0 ? cnt / ownedUnits.length * 100 : 0;
+              const pct = ownedUnits.length > 0 ? (cnt / ownedUnits.length) * 100 : 0;
               const col = getStarColor(r);
               return (
                 <div key={String(r)} className="flex items-center gap-3 mb-2">
-                  <span className="text-xs font-bold w-12" style={{ color: col }}>{getStarDisplay(r)}</span>
+                  <span className="text-xs font-bold w-12" style={{ color: cnt > 0 ? col : '#4b5563' }}>
+                    {getStarDisplay(r)}
+                  </span>
                   <div className="flex-1 h-2 bg-gray-800/60 rounded-full overflow-hidden">
                     <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: col }} />
                   </div>
-                  <span className="text-xs text-gray-400 w-6 text-right">{cnt}</span>
+                  <span className="text-xs w-6 text-right" style={{ color: cnt > 0 ? '#d1d5db' : '#4b5563' }}>{cnt}</span>
                 </div>
               );
             })}

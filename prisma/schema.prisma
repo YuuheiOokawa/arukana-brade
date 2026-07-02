@@ -53,6 +53,7 @@ model Player {
   missionProgress PlayerMissionProgress?
   loginBonus      PlayerLoginBonus?
   arenaRecord     PlayerArenaRecord?
+  guildMembership GuildMember?
 
   @@index([userId])
 }
@@ -184,4 +185,29 @@ model UnitImage {
 
   @@unique([unitId, rarity])
   @@index([unitId])
+}
+
+model Guild {
+  id          String        @id @default(cuid())
+  name        String
+  emblem      String        @default("⚔️")
+  description String        @default("")
+  level       Int           @default(1)
+  exp         Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  members     GuildMember[]
+}
+
+model GuildMember {
+  id        String   @id @default(cuid())
+  guildId   String
+  guild     Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  playerId  String   @unique
+  player    Player   @relation(fields: [playerId], references: [playerId], onDelete: Cascade)
+  role      String   @default("member")
+  joinedAt  DateTime @default(now())
+
+  @@index([guildId])
 }

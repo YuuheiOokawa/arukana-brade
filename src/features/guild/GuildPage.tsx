@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { GameButton } from '../../components/ui/game/GameButton';
 import { useGuildStore, PRESET_GUILDS } from '../../stores/guildStore';
 import { usePlayerStore } from '../../stores/playerStore';
@@ -6,18 +6,53 @@ import { TopBar } from '../../components/layout/TopBar';
 
 type Tab = 'home' | 'members' | 'mission' | 'chat';
 
+interface ApiGuild {
+  id: string;
+  name: string;
+  emblem: string;
+  description: string;
+  level: number;
+  exp: number;
+  members: { id: string; playerId: string; role: string; joinedAt: string }[];
+}
+
 export const GuildPage = () => {
-  const { guild, createGuild, leaveGuild, claimGuildMission, guildMissions, guildChatMessages, sendChatMessage, checkAndResetGuildMissions } = useGuildStore();
+  const {
+    guild, createGuild, leaveGuild,
+    claimGuildMission, guildMissions, guildChatMessages,
+    sendChatMessage, checkAndResetGuildMissions,
+  } = useGuildStore();
   const { player, addItem, addGold } = usePlayerStore();
+
   const [rewardToast, setRewardToast] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('home');
   const [chatInput, setChatInput] = useState('');
   const [newGuildName, setNewGuildName] = useState('');
   const [newGuildEmblem, setNewGuildEmblem] = useState('⚔️');
+  const [apiLoading, setApiLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   useEffect(() => {
     checkAndResetGuildMissions();
   }, [checkAndResetGuildMissions]);
+
+  // 起動時にサーバーからギルド情報を取得してローカルストアに反映
+  const fetchGuildFromServer = useCallback(async () => {
+    try {
+      const res = await fetch('/api/guild', { credentials: 'include' });
+      if (!res.ok) return;
+      const data = await res.json() as { guild: ApiGuild | null };
+      if (data.guild && !guild) {
+        // サーバー側にギルドがあるのにローカルにない場合は同期
+        createGuild(data.guild.name, data.guild.emblem, player.name);
+      }
+    } catch { /* offline時はlocalStorage継続 */ }
+  }, [guild, createGuild, player.name]);
+
+  useEffect(() => {
+    void fetchGuildFromServer();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleClaimMission = (id: string) => {
     const reward = claimGuildMission(id);
@@ -37,6 +72,73 @@ export const GuildPage = () => {
     setTimeout(() => setRewardToast(null), 3000);
   };
 
+  const handleCreateGuild = async () => {
+    const name = newGuildName.trim();
+    if (!name) return;
+    setApiLoading(true);
+    setApiError(null);
+    try {
+      const res = await fetch('/api/guild', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create', name, emblem: newGuildEmblem }),
+      });
+      const data = await res.json() as { guild?: ApiGuild; error?: string };
+      if (!res.ok || data.error) {
+        setApiError(data.error ?? 'ギルド作成に失敗しました');
+        // APIが失敗してもローカルには保存する
+        createGuild(name, newGuildEmblem, player.name);
+      } else if (data.guild) {
+        createGuild(data.guild.name, data.guild.emblem, player.name);
+      }
+    } catch {
+      // オフライン時はローカルのみ保存
+      createGuild(name, newGuildEmblem, player.name);
+    } finally {
+      setApiLoading(false);
+    }
+  };
+
+  const handleJoinPreset = async (pg: typeof PRESET_GUILDS[0]) => {
+    setApiLoading(true);
+    setApiError(null);
+    try {
+      // プリセットギルドはサーバーにまだ存在しないため create → join の代わりに
+      // サーバー側でギルドを作成してから参加する
+      const createRes = await fetch('/api/guild', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create', name: pg.name, emblem: pg.emblem }),
+      });
+      if (!createRes.ok) {
+        // APIエラーでもローカルには参加
+        createGuild(pg.name, pg.emblem, player.name);
+        return;
+      }
+      const data = await createRes.json() as { guild?: ApiGuild };
+      if (data.guild) createGuild(data.guild.name, data.guild.emblem, player.name);
+      else createGuild(pg.name, pg.emblem, player.name);
+    } catch {
+      createGuild(pg.name, pg.emblem, player.name);
+    } finally {
+      setApiLoading(false);
+    }
+  };
+
+  const handleLeaveGuild = async () => {
+    try {
+      await fetch('/api/guild', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'leave' }),
+      });
+    } catch { /* offline時はローカルのみ */ }
+    leaveGuild();
+  };
+
   const EMBLEMS = ['⚔️', '🛡️', '🔥', '💧', '🌿', '⚡', '🌑', '🌟', '🐉', '👑'];
 
   if (!guild) {
@@ -44,12 +146,15 @@ export const GuildPage = () => {
       <div className="min-h-screen pb-28">
         <TopBar title="ギルド" />
         <div className="px-4 space-y-4 py-2">
-          {/* ギルド未加入 */}
           <div className="card-base p-5 text-center">
             <p className="text-5xl mb-3">🏰</p>
             <p className="text-white font-bold text-lg mb-1">ギルドに参加していません</p>
             <p className="text-gray-500 text-sm">ギルドに参加してレイドに挑戦しよう！</p>
           </div>
+
+          {apiError && (
+            <div className="px-4 py-2 rounded-xl bg-red-900/40 border border-red-700/40 text-red-300 text-sm">{apiError}</div>
+          )}
 
           {/* おすすめギルド */}
           <div>
@@ -67,8 +172,9 @@ export const GuildPage = () => {
                       <p className="text-purple-400 text-xs mt-0.5">ギルドLv {pg.level}</p>
                     </div>
                     <GameButton variant="primary" size="sm"
-                      onClick={() => createGuild(pg.name, pg.emblem, player.name)}>
-                      参加
+                      disabled={apiLoading}
+                      onClick={() => void handleJoinPreset(pg)}>
+                      {apiLoading ? '...' : '参加'}
                     </GameButton>
                   </div>
                 </div>
@@ -99,9 +205,9 @@ export const GuildPage = () => {
               </div>
             </div>
             <GameButton variant="primary" fullWidth
-              disabled={!newGuildName.trim()}
-              onClick={() => { if (newGuildName.trim()) createGuild(newGuildName.trim(), newGuildEmblem, player.name); }}>
-              ギルドを作成
+              disabled={!newGuildName.trim() || apiLoading}
+              onClick={() => void handleCreateGuild()}>
+              {apiLoading ? '作成中...' : 'ギルドを作成'}
             </GameButton>
           </div>
         </div>
@@ -150,7 +256,7 @@ export const GuildPage = () => {
             {label}
           </button>
         ))}
-        <button onClick={leaveGuild} className="ml-auto flex-shrink-0 btn-ghost text-xs py-2 px-3 min-h-0">
+        <button onClick={() => void handleLeaveGuild()} className="ml-auto flex-shrink-0 btn-ghost text-xs py-2 px-3 min-h-0">
           脱退
         </button>
       </div>
@@ -173,8 +279,7 @@ export const GuildPage = () => {
                 </div>
                 <div className="text-xs text-gray-500">{m.reward}</div>
                 {m.progress >= m.target && !m.claimed && (
-                  <GameButton variant="gold" size="sm"
-                    onClick={() => handleClaimMission(m.id)}>受取</GameButton>
+                  <GameButton variant="gold" size="sm" onClick={() => handleClaimMission(m.id)}>受取</GameButton>
                 )}
               </div>
             ))}
@@ -222,8 +327,7 @@ export const GuildPage = () => {
                 </div>
                 <span className="text-gray-500 text-xs">{m.progress}/{m.target}</span>
                 {m.progress >= m.target && !m.claimed && (
-                  <GameButton variant="gold" size="sm"
-                    onClick={() => handleClaimMission(m.id)}>受取</GameButton>
+                  <GameButton variant="gold" size="sm" onClick={() => handleClaimMission(m.id)}>受取</GameButton>
                 )}
               </div>
             </div>
@@ -246,9 +350,7 @@ export const GuildPage = () => {
                     msg.sender === player.name
                       ? 'bg-purple-700/60 text-white rounded-tr-sm'
                       : 'bg-gray-800/80 text-gray-200 rounded-tl-sm'
-                  }`}>
-                    {msg.text}
-                  </div>
+                  }`}>{msg.text}</div>
                 </div>
               </div>
             ))}
