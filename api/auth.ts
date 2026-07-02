@@ -102,13 +102,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const isValid = await bcrypt.compare(password, user.passwordHash);
     if (!isValid) return res.status(401).json({ error: 'メールアドレスまたはパスワードが正しくありません' });
 
-    if (user.player) {
+    // loginDays は最新値でレスポンスを返す（古い値をsaveAllで上書きされないよう再fetch）
+    let playerData = user.player;
+    if (playerData) {
       const today = new Date(); today.setHours(0, 0, 0, 0);
-      const lastLogin = new Date(user.player.lastLoginAt); lastLogin.setHours(0, 0, 0, 0);
+      const lastLogin = new Date(playerData.lastLoginAt); lastLogin.setHours(0, 0, 0, 0);
       if (lastLogin < today) {
-        await prisma.player.update({
-          where: { playerId: user.player.playerId },
+        playerData = await prisma.player.update({
+          where: { playerId: playerData.playerId },
           data: { loginDays: { increment: 1 }, lastLoginAt: new Date() },
+          include: PLAYER_INCLUDE,
         });
       }
     }
@@ -116,8 +119,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const token = signToken({ userId: user.id, email: user.email });
     res.setHeader('Set-Cookie', setCookieHeader(token));
 
-    if (!user.player) return res.status(200).json({ user: { id: user.id, email: user.email }, player: null, gameData: null });
-    const { player, gameData } = serializePlayerData(user.player);
+    if (!playerData) return res.status(200).json({ user: { id: user.id, email: user.email }, player: null, gameData: null });
+    const { player, gameData } = serializePlayerData(playerData);
     return res.status(200).json({ user: { id: user.id, email: user.email }, player, gameData });
   }
 
