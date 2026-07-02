@@ -13,7 +13,6 @@ import { AWAKENING_CONFIG, RARITY_TYPE_TO_STAR } from '../../data/rarityConfig';
 import { CurrencyIcon } from '../../components/ui/game/GameIcons';
 import { formatCompact } from '../../utils/format';
 import { UnitIcon } from '../../components/ui/UnitCard';
-import { getUnitSpritesheet, getSpritesheetCellIndex, SPRITESHEET_TOTAL_CELLS } from '../../lib/unitImage';
 import { resolveUnitImage } from '../../lib/unitImage';
 
 /* ============================================================
@@ -26,7 +25,7 @@ interface Particle {
 }
 
 /* ============================================================
-   ガチャロジック（既存流用）
+   ガチャロジック
 ============================================================ */
 const performSummon = (pool: SummonPool, count: number): UnitMaster[] => {
   const results: UnitMaster[] = [];
@@ -113,227 +112,9 @@ const MagicCircle = ({ active, star }: { active: boolean; star: GachaStar }) => 
 };
 
 /* ============================================================
-   Crystal
-============================================================ */
-const Crystal = ({ phase }: { phase: CrystalPhase }) => (
-  <div className={`summon-crystal-wrap ${phase === 'appear' ? 'appear' : ''} ${phase === 'shatter' ? 'shatter' : ''}`}>
-    <div className="summon-crystal">
-      <div className="facet f1" /><div className="facet f2" /><div className="facet f3" />
-      <div className="facet f4" /><div className="facet f5" />
-    </div>
-  </div>
-);
-
-/* ============================================================
-   CardReveal
-============================================================ */
-interface CardRevealProps {
-  unit: UnitMaster;
-  star: GachaStar;
-  index: number;
-  total: number;
-  onOpen: () => void;
-  opened: boolean;
-  resultType?: 'new' | 'awakening' | 'crystal';
-  awakeningCount?: number;
-}
-const CardReveal = ({ unit, star, index, total, onOpen, opened, resultType, awakeningCount }: CardRevealProps) => {
-  const color = STAR_COLORS[star];
-  const elemColor = ELEMENT_COLOR[unit.element] ?? '#fff';
-  return (
-    <div className="summon-reveal-area">
-      {/* オーラ */}
-      <div className="summon-rarity-aura" style={{
-        background: `radial-gradient(circle, ${color}, transparent 65%)`,
-        opacity: opened ? 0.7 : 0.25,
-        transition: 'opacity 0.6s',
-      }} />
-      {/* カード */}
-      <div className={`summon-unit-card star-${star} ${opened ? 'open' : ''}`}>
-        {/* 裏面 */}
-        <div className="card-face card-back">
-          <div className="card-orbit orbit-a" />
-          <div className="card-orbit orbit-b" />
-          <div className="card-emblem" />
-        </div>
-        {/* 表面 */}
-        <div className="card-face card-front" style={{ borderColor: starBorder(star) }}>
-          <div className="card-front-bg" />
-          <div className="card-front-glass" />
-          {/* ユニット画像（大） */}
-          <div style={{
-            position: 'absolute', top: '32%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            zIndex: 3,
-            filter: `drop-shadow(0 0 24px ${color}) drop-shadow(0 0 48px ${color}66)`,
-          }}>
-            <UnitIcon
-              src={resolveUnitImage(unit.id, RARITY_TYPE_TO_STAR[unit.rarity] ?? 1)}
-              masterId={unit.id}
-              unitRarity={RARITY_TYPE_TO_STAR[unit.rarity] ?? 1}
-              fallbackEmoji={unit.emoji}
-              element={unit.element}
-              size={108}
-              height={180}
-            />
-          </div>
-          <div className="card-front-bottom" />
-          <div className="card-unit-info">
-            <div className="card-unit-name">{unit.name}</div>
-            <div className="card-unit-stars" style={{ color: STAR_COLORS[star] }}>
-              {'★'.repeat(star)}{'☆'.repeat(3 - star)}
-            </div>
-            <div className="card-unit-class" style={{ color: color }}>{STAR_LABELS[star]}</div>
-            <div className="card-unit-element" style={{ color: elemColor }}>
-              {ELEMENT_NAMES[unit.element]}属性 · {unit.title}
-            </div>
-            {/* 被り結果バッジ */}
-            {resultType === 'awakening' && awakeningCount !== undefined && (
-              <div style={{
-                marginTop: '6px',
-                background: 'rgba(255,200,80,0.25)',
-                border: '1px solid rgba(255,200,80,0.7)',
-                borderRadius: '6px', padding: '3px 8px',
-                fontSize: '11px', fontWeight: 'bold', color: '#ffe48d',
-              }}>
-                覚醒 +1 ({awakeningCount}/{AWAKENING_CONFIG.maxAwakeningCount})
-              </div>
-            )}
-            {resultType === 'crystal' && (
-              <div style={{
-                marginTop: '6px',
-                background: 'rgba(80,180,255,0.25)',
-                border: '1px solid rgba(80,180,255,0.7)',
-                borderRadius: '6px', padding: '3px 8px',
-                fontSize: '11px', fontWeight: 'bold', color: '#7bc8ff',
-              }}>
-                覚醒結晶に変換
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      {/* OPENボタン */}
-      {!opened && (
-        <button className="summon-open-btn" onClick={onOpen}>
-          <span className="btn-main-text">
-            {total === 1 ? 'OPEN' : `${index + 1} / ${total} OPEN`}
-          </span>
-        </button>
-      )}
-    </div>
-  );
-};
-
-/* ============================================================
-   ResultGrid
-============================================================ */
-// summon-mini-card (170px tall) をキャラ画像でフル充填するサブコンポーネント
-const MiniCardImage = ({
-  src, fallbackEmoji, element, masterId, unitRarity,
-}: {
-  src: string | null; fallbackEmoji: string; element: string;
-  masterId?: string; unitRarity?: number | string;
-}) => {
-  const [err, setErr] = useState(false);
-  const bgMap: Record<string, string> = {
-    fire: '#7f1d1d', water: '#1e3a5f', wind: '#064e3b',
-    earth: '#451a03', light: '#713f12', dark: '#2e1065',
-  };
-  const bg = bgMap[element] ?? '#1a1a2e';
-
-  const spritesheetSrc = masterId ? getUnitSpritesheet(masterId) : null;
-  const cellIdx = (spritesheetSrc && unitRarity !== undefined) ? getSpritesheetCellIndex(unitRarity) : null;
-
-  if (spritesheetSrc && cellIdx !== null) {
-    if (err) return <div style={{ position: 'absolute', inset: 0, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px' }}>{fallbackEmoji}</div>;
-    return (
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}>
-        <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', transform: 'scale(1.5)', transformOrigin: 'top center' }}>
-          <img src={spritesheetSrc} alt="" onError={() => setErr(true)}
-            style={{ position: 'absolute', top: 0, left: 0, width: `${SPRITESHEET_TOTAL_CELLS * 100}%`, height: 'auto', transform: `translateX(-${(cellIdx / SPRITESHEET_TOTAL_CELLS) * 100}%)`, transformOrigin: 'top left' }} />
-        </div>
-      </div>
-    );
-  }
-
-  if (!src || err) {
-    return (
-      <div style={{ position: 'absolute', inset: 0, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px' }}>
-        {fallbackEmoji}
-      </div>
-    );
-  }
-  return (
-    <img src={src} alt="" onError={() => setErr(true)}
-      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
-  );
-};
-
-const ResultGrid = ({ units, resultTypes, onClose, onAgain }: {
-  units: UnitMaster[];
-  resultTypes: GachaApplyResult[];
-  onClose: () => void;
-  onAgain: () => void;
-}) => (
-  <div className="summon-result-panel animate-fade-in">
-    <h2 className="summon-result-title">召喚結果</h2>
-    <div className="summon-result-grid">
-      {units.map((u, i) => {
-        const star = RARITY_TO_STAR[u.rarity];
-        const elemColor = ELEMENT_COLOR[u.element] ?? '#fff';
-        const rt = resultTypes[i];
-        return (
-          <div key={i} className={`summon-mini-card star-${star}`}
-            style={{ animationDelay: `${i * 0.07}s` }}>
-            {/* キャラ画像 - カード全体に表示 */}
-            <MiniCardImage
-              src={resolveUnitImage(u.id, RARITY_TYPE_TO_STAR[u.rarity] ?? 1)}
-              masterId={u.id}
-              unitRarity={RARITY_TYPE_TO_STAR[u.rarity] ?? 1}
-              fallbackEmoji={u.emoji}
-              element={u.element}
-            />
-            {/* テキスト - カード下部グラデーション上に重ね */}
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px 8px 8px', background: 'linear-gradient(transparent, rgba(0,0,0,0.92))' }}>
-              <div className="mini-card-stars" style={{ color: STAR_COLORS[star] }}>
-                {'★'.repeat(star)}
-              </div>
-              <div className="mini-card-name">{u.name}</div>
-              <div className="mini-card-elem" style={{ color: elemColor }}>
-                {ELEMENT_NAMES[u.element]}
-              </div>
-              {rt?.type === 'awakening' && (
-                <div style={{ fontSize: '9px', color: '#ffe48d', fontWeight: 'bold', marginTop: '2px' }}>
-                  覚醒+1 ({rt.awakeningCount}/4)
-                </div>
-              )}
-              {rt?.type === 'crystal' && (
-                <div style={{ fontSize: '9px', color: '#7bc8ff', fontWeight: 'bold', marginTop: '2px' }}>
-                  覚醒結晶
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-    <div className="summon-result-actions">
-      <button className="arcana-btn arcana-btn-gold" onClick={onAgain}>
-        <span className="btn-main-text">もう一度召喚</span>
-      </button>
-      <button className="arcana-btn arcana-btn-blue" onClick={onClose}>
-        <span className="btn-main-text">閉じる</span>
-      </button>
-    </div>
-  </div>
-);
-
-/* ============================================================
    メインコンポーネント
 ============================================================ */
-type Phase = 'idle' | 'summon' | 'crystal' | 'shatter' | 'reveal' | 'results';
-type CrystalPhase = 'idle' | 'appear' | 'shatter';
+type Phase = 'idle' | 'summon' | 'reveal' | 'results';
 
 export const SummonPage = () => {
   const { player, spendDiamond, useItem, items, recordSummon } = usePlayerStore();
@@ -351,7 +132,6 @@ export const SummonPage = () => {
   const [shakePage, setShakePage] = useState(false);
   const [whiteFlash, setWhiteFlash] = useState(false);
   const [currentStar, setCurrentStar] = useState<GachaStar>(1);
-  // スキップフラグ: true になると演出を即座に中断してresultsへ
   const skipRef = useRef(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -421,7 +201,6 @@ export const SummonPage = () => {
     };
     animFrameRef.current = requestAnimationFrame(loop);
 
-    // アイドル時の微粒子
     const idleInterval = setInterval(() => {
       if (phase === 'idle') spawnBurst(4, 'rgba(148,200,255,.3)', 0.18);
     }, 280);
@@ -479,10 +258,7 @@ export const SummonPage = () => {
     setRevealIndex(0);
     setOpenedCards(new Set());
 
-    // [localStorage SAVE] processSummonResults を先に実行してから演出開始
-    // → スキップ時も正しい結果を使えるようにする
     const gachaResults = processSummonResults(summonedMasters.map(m => m.id));
-    // キャラ専用覚醒結晶を配布
     for (const r of gachaResults) {
       if (r.type === 'crystal') addAwakeningCrystal(r.masterId);
     }
@@ -491,7 +267,6 @@ export const SummonPage = () => {
     useMissionStore.getState().addWeeklyProgress('summon');
     recordSummon(summonedMasters.length);
 
-    // [DB SAVE] ガチャ結果を非同期でDBに保存（演出と並行）
     void syncSummonResult(
       pool.id,
       summonedMasters.map((m, i) => ({
@@ -502,45 +277,36 @@ export const SummonPage = () => {
       diamondSpent,
     );
 
-    // Phase: summon
-    setPhase('summon');
     const pColor = maxStar === 3 ? 'rgba(255,228,141,.8)' : maxStar === 2 ? 'rgba(183,115,255,.8)' : 'rgba(123,200,255,.8)';
+
+    setPhase('summon');
     spawnBurst(120, pColor, 0.45);
     if (skipRef.current) { setPhase('results'); return; }
-    await sleep(1000);
+    await sleep(1200);
 
-    // Phase: crystal
     if (skipRef.current) { setPhase('results'); return; }
-    setPhase('crystal');
-    spawnBurst(160, 'rgba(255,244,190,.85)', 0.6);
-    await sleep(900);
-
-    // Shake
-    if (skipRef.current) { setPhase('results'); return; }
+    spawnBurst(200, 'rgba(255,244,190,.85)', 0.6);
     setShakePage(true);
     spawnBurst(220, pColor, 1.0);
-    await sleep(500);
+    await sleep(400);
     setShakePage(false);
 
-    // Shatter + flash
     if (skipRef.current) { setPhase('results'); return; }
-    setPhase('shatter');
     spawnBurst(260, 'rgba(190,249,255,.9)', 1.1);
     setWhiteFlash(true);
     await sleep(200);
     setWhiteFlash(false);
     if (skipRef.current) { setPhase('results'); return; }
-    await sleep(700);
+    await sleep(600);
 
     setPhase('reveal');
   };
 
-  /* スキップ: 演出中断 → 即results表示 */
+  /* スキップ */
   const handleSkip = () => {
     skipRef.current = true;
     setShakePage(false);
     setWhiteFlash(false);
-    // reveal フェーズ中は全カードを開封状態にしてresultsへ
     if (phase === 'reveal') {
       setOpenedCards(new Set(summonResults.map((_, i) => i)));
       setTimeout(() => setPhase('results'), 80);
@@ -569,7 +335,7 @@ export const SummonPage = () => {
       spawnBurst(100, color, 0.55);
     }
 
-    await sleep(1100);
+    await sleep(1000);
     if (revealIndex + 1 >= summonResults.length) {
       setPhase('results');
     } else {
@@ -588,7 +354,6 @@ export const SummonPage = () => {
     particlesRef.current = [];
   };
 
-  // トースト自動消去
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 3000);
@@ -596,11 +361,14 @@ export const SummonPage = () => {
   }, [toast]);
 
   /* ---- レンダー ---- */
-  const isAnimating = phase !== 'idle' && phase !== 'results';
+  const isAnimating = phase === 'summon';
   const showButtons = phase === 'idle';
   const showReveal  = phase === 'reveal';
   const showResults = phase === 'results';
   const showStage   = phase !== 'results';
+
+  const currentUnit = summonResults[revealIndex];
+  const currentStar_ = currentUnit ? RARITY_TO_STAR[currentUnit.rarity] : 1 as GachaStar;
 
   return (
     <div className={`summon-page ${shakePage ? 'summon-shake' : ''}`}>
@@ -636,8 +404,7 @@ export const SummonPage = () => {
       <header className="summon-header">
         <h1 className="summon-title">召喚神殿</h1>
         <div className="flex items-center gap-2 flex-shrink-0">
-          {/* スキップボタン: アニメーション中またはカード開封中のみ表示 */}
-          {(phase === 'summon' || phase === 'crystal' || phase === 'shatter' || phase === 'reveal') && (
+          {(phase === 'summon' || phase === 'reveal') && (
             <button
               onClick={handleSkip}
               className="text-xs font-bold px-2 py-1 rounded-lg transition-all active:scale-95 flex-shrink-0"
@@ -657,25 +424,17 @@ export const SummonPage = () => {
         </div>
       </header>
 
-      {/* メインステージ (idle / summon / crystal / shatter) — ビジュアルのみ */}
+      {/* メインステージ (idle / summon) */}
       {showStage && (
         <div className="summon-stage" style={{ opacity: showReveal ? 0 : 1, transition: 'opacity 0.6s' }}>
-          {/* 光柱 */}
           <div className={`summon-light-column ${isAnimating ? 'active' : ''}`} />
-          {/* 魔法陣 */}
           <MagicCircle active={isAnimating} star={currentStar} />
-          {/* クリスタル */}
-          <Crystal phase={
-            phase === 'shatter' ? 'shatter' :
-            phase === 'crystal' ? 'appear' : 'idle'
-          } />
         </div>
       )}
 
-      {/* 召喚コントロール — 常に画面下部に固定 */}
+      {/* 召喚コントロール */}
       {showButtons && (
         <div className="summon-controls-dock animate-fade-in">
-          {/* 台座タブ */}
           <div className="summon-pool-tabs">
             {SUMMON_POOLS.map(pool => (
               <button key={pool.id} onClick={() => setSelectedPool(pool)}
@@ -685,7 +444,6 @@ export const SummonPage = () => {
             ))}
           </div>
 
-          {/* 排出率 */}
           <div className="summon-rates">
             <div className="summon-rate-item star3">
               <span className="rate-star">★★★</span>
@@ -708,31 +466,30 @@ export const SummonPage = () => {
             </div>
           </div>
 
-          {/* 召喚ボタン */}
           <div className="summon-btn-row">
-            <button className="arcana-btn arcana-btn-blue" onClick={() => startSummon(1)}>
+            <button className="arcana-btn arcana-btn-blue" onClick={() => void startSummon(1)}>
               <span className="btn-main-text">1回召喚</span>
               <span className="btn-sub-text">ダイヤ {selectedPool.cost1}</span>
             </button>
-            <button className="arcana-btn arcana-btn-gold" onClick={() => startSummon(10)}>
+            <button className="arcana-btn arcana-btn-gold" onClick={() => void startSummon(10)}>
               <span className="btn-main-text">10連召喚</span>
               <span className="btn-sub-text">ダイヤ {selectedPool.cost10} · ★★保証</span>
             </button>
           </div>
           {ticketCount > 0 && (
-            <button className="arcana-btn arcana-btn-ticket" onClick={() => startSummon(1, 'normal')}>
+            <button className="arcana-btn arcana-btn-ticket" onClick={() => void startSummon(1, 'normal')}>
               <span className="btn-main-text">チケット召喚</span>
               <span className="btn-sub-text">残り {ticketCount} 枚 · SR以上確定</span>
             </button>
           )}
           {srTicketCount > 0 && (
-            <button className="arcana-btn arcana-btn-ticket" style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }} onClick={() => startSummon(1, 'sr')}>
+            <button className="arcana-btn arcana-btn-ticket" style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }} onClick={() => void startSummon(1, 'sr')}>
               <span className="btn-main-text">🌠 SR確定チケット召喚</span>
               <span className="btn-sub-text">残り {srTicketCount} 枚 · SR以上確定</span>
             </button>
           )}
           {ssrTicketCount > 0 && (
-            <button className="arcana-btn arcana-btn-ticket" style={{ background: 'linear-gradient(135deg, #d97706, #b45309)' }} onClick={() => startSummon(1, 'ssr')}>
+            <button className="arcana-btn arcana-btn-ticket" style={{ background: 'linear-gradient(135deg, #d97706, #b45309)' }} onClick={() => void startSummon(1, 'ssr')}>
               <span className="btn-main-text">🌟 SSR確定チケット召喚</span>
               <span className="btn-sub-text">残り {ssrTicketCount} 枚 · SSR確定</span>
             </button>
@@ -744,31 +501,188 @@ export const SummonPage = () => {
         </div>
       )}
 
-      {/* カード開封フェーズ */}
-      {showReveal && summonResults[revealIndex] && (() => {
-        const rt = summonResultTypes[revealIndex];
-        return (
-          <CardReveal
-            unit={summonResults[revealIndex]}
-            star={RARITY_TO_STAR[summonResults[revealIndex].rarity]}
-            index={revealIndex}
-            total={summonResults.length}
-            onOpen={openCard}
-            opened={openedCards.has(revealIndex)}
-            resultType={rt?.type}
-            awakeningCount={rt?.type === 'awakening' ? rt.awakeningCount : undefined}
-          />
-        );
-      })()}
+      {/* カード開封フェーズ（チュートリアルと同じシンプルスタイル） */}
+      {showReveal && currentUnit && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+          <div
+            className="w-48 rounded-2xl p-4 text-center cursor-pointer active:scale-95 transition-all duration-200"
+            onClick={() => void openCard()}
+            style={{
+              background: openedCards.has(revealIndex)
+                ? 'linear-gradient(145deg, rgba(20,10,40,0.95), rgba(10,5,20,0.98))'
+                : 'rgba(10,5,25,0.9)',
+              border: `2px solid ${starBorder(currentStar_)}`,
+              boxShadow: openedCards.has(revealIndex)
+                ? `0 0 30px ${STAR_COLORS[currentStar_]}`
+                : '0 4px 20px rgba(0,0,0,0.8)',
+              transform: openedCards.has(revealIndex) ? 'scale(1.05)' : 'scale(1)',
+              transition: 'all 0.5s ease',
+            }}>
+            {openedCards.has(revealIndex) ? (
+              <>
+                <div className="flex justify-center mb-2">
+                  <UnitIcon
+                    src={resolveUnitImage(currentUnit.id, RARITY_TYPE_TO_STAR[currentUnit.rarity] ?? 1)}
+                    masterId={currentUnit.id}
+                    unitRarity={RARITY_TYPE_TO_STAR[currentUnit.rarity] ?? 1}
+                    fallbackEmoji={currentUnit.emoji}
+                    element={currentUnit.element}
+                    size={90}
+                    height={160}
+                  />
+                </div>
+                <div className="font-black text-white text-base mb-1">{currentUnit.name}</div>
+                <div className="text-sm mb-1 font-bold" style={{ color: STAR_COLORS[currentStar_] }}>
+                  {'★'.repeat(currentStar_)}{' '}{STAR_LABELS[currentStar_]}
+                </div>
+                <div className="text-xs font-bold" style={{ color: ELEMENT_COLOR[currentUnit.element] }}>
+                  {ELEMENT_NAMES[currentUnit.element]}属性 · {currentUnit.title}
+                </div>
+                {summonResultTypes[revealIndex]?.type === 'awakening' && (
+                  <div style={{
+                    marginTop: '6px',
+                    background: 'rgba(255,200,80,0.25)',
+                    border: '1px solid rgba(255,200,80,0.7)',
+                    borderRadius: '6px', padding: '3px 8px',
+                    fontSize: '11px', fontWeight: 'bold', color: '#ffe48d',
+                  }}>
+                    覚醒 +1 ({summonResultTypes[revealIndex].awakeningCount}/{AWAKENING_CONFIG.maxAwakeningCount})
+                  </div>
+                )}
+                {summonResultTypes[revealIndex]?.type === 'crystal' && (
+                  <div style={{
+                    marginTop: '6px',
+                    background: 'rgba(80,180,255,0.25)',
+                    border: '1px solid rgba(80,180,255,0.7)',
+                    borderRadius: '6px', padding: '3px 8px',
+                    fontSize: '11px', fontWeight: 'bold', color: '#7bc8ff',
+                  }}>
+                    覚醒結晶に変換
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="relative w-14 h-14 mx-auto mb-3 flex items-center justify-center">
+                  <div className="absolute inset-0 rounded-full animate-spin"
+                    style={{
+                      background: 'conic-gradient(from 0deg, rgba(124,58,237,0.8), rgba(79,70,229,0.4), rgba(124,58,237,0.8))',
+                      animationDuration: '3s',
+                    }} />
+                  <div className="absolute inset-2 rounded-full flex items-center justify-center"
+                    style={{ background: 'rgba(8,8,26,0.9)' }}>
+                    <span className="text-2xl">✨</span>
+                  </div>
+                </div>
+                <div className="text-xs text-purple-300 font-bold">タップして開く</div>
+                <div className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  {revealIndex + 1} / {summonResults.length}
+                </div>
+              </>
+            )}
+          </div>
 
-      {/* 結果一覧 */}
+          {!openedCards.has(revealIndex) && (
+            <button
+              onClick={() => void openCard()}
+              className="mt-4 px-8 py-2 rounded-xl font-bold text-sm active:scale-95 transition-all"
+              style={{
+                background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+                color: 'white',
+                boxShadow: '0 0 16px rgba(124,58,237,0.5)',
+              }}>
+              {summonResults.length === 1 ? 'OPEN' : `${revealIndex + 1} / ${summonResults.length} OPEN`}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* 結果グリッド（チュートリアルと同じ5列スタイル） */}
       {showResults && (
-        <ResultGrid
-          units={summonResults}
-          resultTypes={summonResultTypes}
-          onClose={reset}
-          onAgain={reset}
-        />
+        <div className="absolute inset-0 z-20 overflow-y-auto px-4 pt-4 pb-6"
+          style={{ background: 'radial-gradient(ellipse at 50% 20%, #1a0535 0%, #08081a 70%)' }}>
+          <h2 className="text-center font-black text-white text-base mb-3">召喚結果</h2>
+          <div className="grid grid-cols-5 gap-2 mb-4">
+            {summonResults.map((u, i) => {
+              const star = RARITY_TO_STAR[u.rarity];
+              const elemColor = ELEMENT_COLOR[u.element] ?? '#fff';
+              const rt = summonResultTypes[i];
+              return (
+                <div key={i} className="rounded-xl p-2 text-center"
+                  style={{
+                    background: 'linear-gradient(145deg, rgba(20,10,40,0.9), rgba(10,5,20,0.95))',
+                    border: `1.5px solid ${STAR_COLORS[star]}`,
+                    boxShadow: `0 0 8px ${STAR_COLORS[star]}44`,
+                  }}>
+                  <div className="flex justify-center mb-1">
+                    <UnitIcon
+                      src={resolveUnitImage(u.id, RARITY_TYPE_TO_STAR[u.rarity] ?? 1)}
+                      masterId={u.id}
+                      unitRarity={RARITY_TYPE_TO_STAR[u.rarity] ?? 1}
+                      fallbackEmoji={u.emoji}
+                      element={u.element}
+                      size={44}
+                      height={66}
+                    />
+                  </div>
+                  <div className="text-white font-bold text-[9px] leading-tight mb-0.5 truncate">{u.name}</div>
+                  <div style={{ color: STAR_COLORS[star], fontSize: '9px', fontWeight: 'bold' }}>
+                    {'★'.repeat(star)}
+                  </div>
+                  {rt?.type === 'awakening' && (
+                    <div style={{ fontSize: '8px', color: '#ffe48d', fontWeight: 'bold' }}>覚醒+1</div>
+                  )}
+                  {rt?.type === 'crystal' && (
+                    <div style={{ fontSize: '8px', color: '#7bc8ff', fontWeight: 'bold' }}>結晶</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {summonResults.some(u => RARITY_TO_STAR[u.rarity] === 3) && (
+            <div className="rounded-2xl p-3 mb-3 text-center"
+              style={{
+                background: 'linear-gradient(135deg, rgba(240,192,64,0.15), rgba(253,230,138,0.1))',
+                border: '1px solid rgba(240,192,64,0.4)',
+              }}>
+              <p className="text-yellow-300 font-black text-sm">🎉 ★★★ ARCANA 獲得！</p>
+              <p className="text-yellow-400 text-xs mt-0.5">最高レアリティのユニットを引き当てました！</p>
+            </div>
+          )}
+
+          {summonResultTypes.filter(r => r.type === 'crystal').length > 0 && (
+            <div className="rounded-xl p-2 mb-3 text-center"
+              style={{ background: 'rgba(80,180,255,0.1)', border: '1px solid rgba(80,180,255,0.3)' }}>
+              <p className="text-xs" style={{ color: '#7bc8ff' }}>
+                💎 覚醒結晶 ×{summonResultTypes.filter(r => r.type === 'crystal').length} 獲得
+              </p>
+            </div>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              className="flex-1 py-3 rounded-2xl font-black text-white text-sm active:scale-95 transition-all"
+              style={{
+                background: 'linear-gradient(135deg, #f0c040, #d97706)',
+                boxShadow: '0 4px 16px rgba(240,192,64,0.4)',
+                border: '1px solid rgba(255,220,80,0.4)',
+              }}
+              onClick={reset}>
+              もう一度召喚
+            </button>
+            <button
+              className="flex-1 py-3 rounded-2xl font-black text-sm active:scale-95 transition-all"
+              style={{
+                background: 'rgba(30,30,60,0.8)',
+                border: '1px solid rgba(75,85,99,0.4)',
+                color: '#9ca3af',
+              }}
+              onClick={reset}>
+              閉じる
+            </button>
+          </div>
+        </div>
       )}
 
       {/* エラートースト */}
