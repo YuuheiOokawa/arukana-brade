@@ -605,7 +605,6 @@ export const SummonPage = () => {
           <div className="grid grid-cols-5 gap-2 mb-4">
             {summonResults.map((u, i) => {
               const star = RARITY_TO_STAR[u.rarity];
-              const elemColor = ELEMENT_COLOR[u.element] ?? '#fff';
               const rt = summonResultTypes[i];
               return (
                 <div key={i} className="rounded-xl p-2 text-center"
