@@ -21,6 +21,8 @@ import { applyLeaderSkills, executeNormalAttack, executeEnemyTurn, executeSkillO
 import { getSkill } from '../../data/skills';
 import { GameButton } from '../../components/ui/game/GameButton';
 import type { BattleUnit, BattleEnemy, BattleLog, QuestStage, LeaderSkillEffect } from '../../types';
+import { UnitIcon } from '../../components/ui/UnitCard';
+import { resolveUnitImage } from '../../lib/unitImage';
 
 let idCounter = 0;
 const uid = () => `bid_${Date.now()}_${idCounter++}`;
@@ -149,6 +151,7 @@ export const BattlePage = () => {
           masterId: master.id,
           name: master.name,
           element: master.element,
+          currentRarity: Number(owned.currentRarity) || 1,
           currentHp: totalHp,
           maxHp: totalHp,
           atk: totalAtk,
@@ -174,6 +177,7 @@ export const BattlePage = () => {
           masterId: fm.id,
           name: `[F]${fm.name}`,
           element: fm.element,
+          currentRarity: 1,
           currentHp: stats.hp,
           maxHp: stats.hp,
           atk: stats.atk,
@@ -556,7 +560,15 @@ export const BattlePage = () => {
             const isDead = a.currentHp <= 0;
             return (
               <div key={a.instanceId} className={`flex items-center gap-2 ${isDead ? 'opacity-30' : ''}`}>
-                <span className="text-base w-6 text-center">{a.emoji}</span>
+                <UnitIcon
+                  src={resolveUnitImage(a.masterId, a.currentRarity)}
+                  masterId={a.masterId}
+                  unitRarity={a.currentRarity}
+                  fallbackEmoji={a.emoji}
+                  element={a.element}
+                  size={24}
+                  height={36}
+                />
                 <span className={`text-xs w-28 truncate ${a.isFriend ? 'text-purple-300' : 'text-gray-200'}`}>
                   {a.name}
                 </span>

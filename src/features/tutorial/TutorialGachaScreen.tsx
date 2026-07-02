@@ -343,6 +343,8 @@ export const TutorialGachaScreen = () => {
                       <div className="flex justify-center mb-2">
                         <UnitIcon
                           src={resolveUnitImage(results[revealIndex].id, RARITY_TYPE_TO_STAR[results[revealIndex].rarity] ?? 1)}
+                          masterId={results[revealIndex].id}
+                          unitRarity={RARITY_TYPE_TO_STAR[results[revealIndex].rarity] ?? 1}
                           fallbackEmoji={results[revealIndex].emoji}
                           element={results[revealIndex].element}
                           size={90}
@@ -446,6 +448,8 @@ export const TutorialGachaScreen = () => {
                   <div className="flex justify-center mb-1">
                     <UnitIcon
                       src={resolveUnitImage(u.id, RARITY_TYPE_TO_STAR[u.rarity] ?? 1)}
+                      masterId={u.id}
+                      unitRarity={RARITY_TYPE_TO_STAR[u.rarity] ?? 1}
                       fallbackEmoji={u.emoji}
                       element={u.element}
                       size={44}

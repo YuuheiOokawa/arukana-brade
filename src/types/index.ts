@@ -265,6 +265,7 @@ export interface BattleUnit {
   masterId: string;
   name: string;
   element: ElementType;
+  currentRarity: number;
   currentHp: number;
   maxHp: number;
   atk: number;
