@@ -192,6 +192,7 @@ export const useUnitStore = create<UnitStore>()(
             body: JSON.stringify({
               action: 'units_sync',
               units: ownedUnits.map(u => ({
+                instanceId: u.instanceId,
                 masterId: u.masterId,
                 level: u.level,
                 exp: u.exp,
@@ -199,6 +200,7 @@ export const useUnitStore = create<UnitStore>()(
                 awakeningCount: u.awakeningCount ?? 0,
                 currentRarity: String(u.currentRarity),
                 isLocked: u.isLocked,
+                acquiredAt: typeof u.acquiredAt === 'number' ? u.acquiredAt : Number(u.acquiredAt),
               })),
             }),
           });

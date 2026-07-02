@@ -132,7 +132,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           diamond: p?.diamond !== undefined ? clamp(p.diamond, 0, MAX_DIAMOND) : undefined,
           stamina: p?.stamina !== undefined ? clamp(p.stamina, 0, MAX_STAMINA) : undefined,
           maxStamina: p?.maxStamina !== undefined ? clamp(p.maxStamina, 1, MAX_STAMINA) : undefined,
-          staminaRecoveryTime: BigInt(p?.staminaRecoveryTime ?? 0),
+          staminaRecoveryTime: p?.staminaRecoveryTime !== undefined ? BigInt(p.staminaRecoveryTime) : undefined,
           title: typeof p?.title === 'string' ? p.title.slice(0, 50) : undefined,
           bio: typeof p?.bio === 'string' ? p.bio.slice(0, 200) : undefined,
           favoriteUnitId: p?.favoriteUnitInstanceId ?? null,
