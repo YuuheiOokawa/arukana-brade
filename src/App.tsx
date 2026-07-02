@@ -104,7 +104,7 @@ const AppContent = () => {
     void fetchAndPopulateMasterData();
 
     // キャラ画像パスをDBから取得してキャッシュに投入
-    fetch('/api/master/images', { credentials: 'include' })
+    fetch('/api/master?type=images', { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
       .then((data: { images: Array<{ unitId: string; rarity: number; imagePath: string }> } | null) => {
         if (data?.images) populateImageCache(data.images);

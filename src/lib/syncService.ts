@@ -94,11 +94,11 @@ export const saveAllToServer = async () => {
   isSaving = true;
   try {
     const state = failedSaveState ?? collectGameState();
-    const res = await fetch('/api/player/saveAll', {
+    const res = await fetch('/api/player', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ state }),
+      body: JSON.stringify({ action: 'saveAll', state }),
     });
     if (!res.ok) {
       throw new Error(`saveAll failed: ${res.status}`);
@@ -117,11 +117,11 @@ export const saveAllToServer = async () => {
 // ページ離脱時専用保存 (keepalive=true でブラウザが強制終了しても送信完了させる)
 export const saveBeforeUnload = () => {
   const state = failedSaveState ?? collectGameState();
-  const body = JSON.stringify({ state });
+  const body = JSON.stringify({ action: 'saveAll', state });
   // keepalive の制限は 64KB。超える場合は通常のセーブに任せる
   if (body.length > 60_000) return;
   try {
-    fetch('/api/player/saveAll', {
+    fetch('/api/player', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },

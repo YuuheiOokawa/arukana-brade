@@ -185,11 +185,12 @@ export const useUnitStore = create<UnitStore>()(
       syncUnitsToServer: async () => {
         const { ownedUnits } = get();
         try {
-          await fetch('/api/units/sync', {
+          await fetch('/api/actions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({
+              action: 'units_sync',
               units: ownedUnits.map(u => ({
                 masterId: u.masterId,
                 level: u.level,
