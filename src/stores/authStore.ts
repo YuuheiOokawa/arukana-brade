@@ -135,7 +135,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   checkAuth: async () => {
     set({ isLoading: true });
     try {
-      const res = await fetch('/api/auth/me', { credentials: 'include' });
+      const res = await fetch('/api/auth', { credentials: 'include' });
       if (res.ok) {
         const data = await res.json() as { user: AuthUser; player: AuthPlayer; gameData: GameDataResponse | null };
         set({ user: data.user, player: data.player, gameData: data.gameData ?? null });
@@ -154,7 +154,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   clearAuth: () => set({ user: null, player: null, gameData: null }),
 
   logout: async () => {
-    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    await fetch('/api/auth', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'logout' }) });
     set({ user: null, player: null, gameData: null });
   },
 
@@ -162,11 +162,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     const { player } = get();
     if (!player) return;
     try {
-      await fetch('/api/player/save', {
+      await fetch('/api/player', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerName: name }),
+        body: JSON.stringify({ action: 'save', playerName: name }),
       });
       set(state => ({
         player: state.player ? { ...state.player, playerName: name } : null,
@@ -179,11 +179,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   syncTutorialComplete: async () => {
     try {
       // [DB SAVE] Player.tutorialCompleted = true
-      await fetch('/api/player/save', {
+      await fetch('/api/player', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tutorialCompleted: true }),
+        body: JSON.stringify({ action: 'save', tutorialCompleted: true }),
       });
       set(state => ({
         player: state.player ? { ...state.player, tutorialCompleted: true } : null,
@@ -196,11 +196,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   syncCurrency: async (data) => {
     try {
       // [DB SAVE] Player.gold / diamond / exp / playerRank / stamina
-      await fetch('/api/player/currency', {
+      await fetch('/api/player', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ action: 'currency', ...data }),
       });
     } catch {
       // ネットワークエラーは無視（localStorage が source of truth）
@@ -210,11 +210,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   syncSummonResult: async (poolId, units, diamondSpent) => {
     try {
       // [DB SAVE] OwnedUnit (new のみ) + SummonHistory 全件 + Player.diamond 減算
-      await fetch('/api/summon/save', {
+      await fetch('/api/actions', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ poolId, units, diamondSpent }),
+        body: JSON.stringify({ action: 'summon_save', poolId, units, diamondSpent }),
       });
     } catch {
       // ネットワークエラーは無視（localStorage が source of truth）
@@ -224,11 +224,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   syncUnits: async (units) => {
     try {
       // [DB SAVE] OwnedUnit 全件完全同期（DELETE + INSERT）
-      await fetch('/api/units/sync', {
+      await fetch('/api/actions', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ units }),
+        body: JSON.stringify({ action: 'units_sync', units }),
       });
     } catch {
       // ネットワークエラーは無視（localStorage が source of truth）

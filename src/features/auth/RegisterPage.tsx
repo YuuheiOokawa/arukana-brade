@@ -33,11 +33,11 @@ export const RegisterPage = () => {
     setIsLoading(true);
 
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch('/api/auth', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ action: 'register', email, password }),
       });
 
       const data = await res.json() as {

@@ -1,7 +1,15 @@
 /**
- * POST /api/actions
- * ショップ購入・アリーナ戦績・レイドダメージを1つのエンドポイントで処理する
- * （Vercel Hobby plan: Serverless Function 12本上限のため統合）
+ * /api/actions  — ゲームアクション統合エンドポイント
+ * GET  ?action=guild              → ギルド情報取得
+ * POST action=shop_stamina        → スタミナ購入
+ * POST action=shop_item           → アイテム購入
+ * POST action=arena_battle        → アリーナ戦績
+ * POST action=raid_battle         → レイドダメージ
+ * POST action=summon_save         → ガチャ結果保存
+ * POST action=units_sync          → ユニット全件同期
+ * POST action=guild_create        → ギルド作成
+ * POST action=guild_join          → ギルド参加
+ * POST action=guild_leave         → ギルド脱退
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { prisma } from '../lib/prisma.js';
@@ -40,6 +48,22 @@ const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min)
 
 // ── ハンドラー ──────────────────────────────────────────────
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // ── GET: ギルド情報取得 ───────────────────────────────────
+  if (req.method === 'GET' && req.query.action === 'guild') {
+    const token = getTokenFromRequest(req.headers.cookie);
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+    const payload = verifyToken(token);
+    if (!payload) return res.status(401).json({ error: 'Invalid token' });
+    const gPlayer = await prisma.player.findUnique({ where: { userId: payload.userId } });
+    if (!gPlayer) return res.status(404).json({ error: 'Player not found' });
+    const membership = await prisma.guildMember.findUnique({
+      where: { playerId: gPlayer.playerId },
+      include: { guild: { include: { members: true } } },
+    });
+    if (!membership) return res.json({ guild: null });
+    return res.json({ guild: membership.guild, myRole: membership.role });
+  }
+
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   const token = getTokenFromRequest(req.headers.cookie);
@@ -144,6 +168,87 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const newMiscData: any = JSON.parse(JSON.stringify({ ...miscData, raidStates: updatedRaidStates }));
     await prisma.player.update({ where: { playerId: player.playerId }, data: { miscData: newMiscData } });
     return res.status(200).json({ ok: true, raidState: newState });
+  }
+
+  // ── ガチャ結果保存 ────────────────────────────────────────
+  if (action === 'summon_save') {
+    interface SummonUnit { masterId: string; rarity: string; resultType: string }
+    const poolId = body.poolId as string;
+    const units = (body.units as SummonUnit[]) ?? [];
+    if (!units.length) return res.status(400).json({ error: 'units required' });
+    const now = new Date();
+    await prisma.$transaction(async tx => {
+      const newUnits = units.filter(u => u.resultType === 'new');
+      if (newUnits.length > 0) {
+        const nowMs = BigInt(Date.now());
+        await tx.ownedUnit.createMany({
+          data: newUnits.map((u, i) => ({
+            instanceId: `unit_${Date.now() + i}_${u.masterId}`,
+            playerId: player.playerId, masterId: u.masterId,
+            level: 1, exp: 0, awakenRank: 0, awakeningCount: 0,
+            currentRarity: u.rarity === 'SSR' ? '3' : u.rarity === 'SR' ? '2' : '1',
+            isLocked: false, acquiredAt: nowMs + BigInt(i),
+          })),
+        });
+      }
+      await tx.summonHistory.createMany({
+        data: units.map(u => ({ playerId: player.playerId, poolId, masterId: u.masterId, rarity: u.rarity, resultType: u.resultType, pulledAt: now })),
+      });
+      if (body.diamondSpent && Number(body.diamondSpent) > 0) {
+        await tx.player.update({ where: { playerId: player.playerId }, data: { diamond: { decrement: Number(body.diamondSpent) } } });
+      }
+    });
+    return res.status(200).json({ ok: true, saved: units.length });
+  }
+
+  // ── ユニット全件同期 ───────────────────────────────────────
+  if (action === 'units_sync') {
+    interface UnitRecord { instanceId: string; masterId: string; level?: number; exp?: number; awakenRank?: number; awakeningCount?: number; currentRarity?: string | number; isLocked?: boolean; acquiredAt?: number }
+    const units = (body.units as UnitRecord[]) ?? [];
+    if (!Array.isArray(units)) return res.status(400).json({ error: 'units array required' });
+    await prisma.$transaction([
+      prisma.ownedUnit.deleteMany({ where: { playerId: player.playerId } }),
+      prisma.ownedUnit.createMany({
+        data: units.map(u => ({
+          instanceId: u.instanceId, playerId: player.playerId, masterId: u.masterId,
+          level: u.level ?? 1, exp: u.exp ?? 0, awakenRank: u.awakenRank ?? 0, awakeningCount: u.awakeningCount ?? 0,
+          currentRarity: String(u.currentRarity ?? '1'), isLocked: u.isLocked ?? false,
+          acquiredAt: BigInt(u.acquiredAt ?? Date.now()),
+        })),
+      }),
+    ]);
+    return res.status(200).json({ ok: true, synced: units.length });
+  }
+
+  // ── ギルド作成 ────────────────────────────────────────────
+  if (action === 'guild_create') {
+    const name = (typeof body.name === 'string' ? body.name : '').trim();
+    const emblem = (body.emblem as string) ?? '⚔️';
+    if (!name) return res.status(400).json({ error: 'ギルド名を入力してください' });
+    await prisma.guildMember.deleteMany({ where: { playerId: player.playerId } });
+    const guild = await prisma.guild.create({
+      data: { name, emblem, description: 'ギルドへようこそ！', members: { create: { playerId: player.playerId, role: 'master' } } },
+      include: { members: true },
+    });
+    return res.json({ guild, myRole: 'master' });
+  }
+
+  // ── ギルド参加 ────────────────────────────────────────────
+  if (action === 'guild_join') {
+    const guildId = body.guildId as string;
+    if (!guildId) return res.status(400).json({ error: 'guildId required' });
+    const guild = await prisma.guild.findUnique({ where: { id: guildId } });
+    if (!guild) return res.status(404).json({ error: 'Guild not found' });
+    await prisma.guildMember.deleteMany({ where: { playerId: player.playerId } });
+    await prisma.guildMember.create({ data: { guildId, playerId: player.playerId, role: 'member' } });
+    const updated = await prisma.guild.findUnique({ where: { id: guildId }, include: { members: true } });
+    return res.json({ guild: updated, myRole: 'member' });
+  }
+
+  // ── ギルド脱退 ────────────────────────────────────────────
+  if (action === 'guild_leave') {
+    await prisma.guildMember.deleteMany({ where: { playerId: player.playerId } });
+    return res.json({ success: true });
   }
 
   return res.status(400).json({ error: 'Unknown action' });

@@ -39,7 +39,7 @@ export const GuildPage = () => {
   // 起動時にサーバーからギルド情報を取得してローカルストアに反映
   const fetchGuildFromServer = useCallback(async () => {
     try {
-      const res = await fetch('/api/guild', { credentials: 'include' });
+      const res = await fetch('/api/actions?action=guild', { credentials: 'include' });
       if (!res.ok) return;
       const data = await res.json() as { guild: ApiGuild | null };
       if (data.guild && !guild) {
@@ -78,11 +78,11 @@ export const GuildPage = () => {
     setApiLoading(true);
     setApiError(null);
     try {
-      const res = await fetch('/api/guild', {
+      const res = await fetch('/api/actions', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'create', name, emblem: newGuildEmblem }),
+        body: JSON.stringify({ action: 'guild_create', name, emblem: newGuildEmblem }),
       });
       const data = await res.json() as { guild?: ApiGuild; error?: string };
       if (!res.ok || data.error) {
@@ -106,11 +106,11 @@ export const GuildPage = () => {
     try {
       // プリセットギルドはサーバーにまだ存在しないため create → join の代わりに
       // サーバー側でギルドを作成してから参加する
-      const createRes = await fetch('/api/guild', {
+      const createRes = await fetch('/api/actions', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'create', name: pg.name, emblem: pg.emblem }),
+        body: JSON.stringify({ action: 'guild_create', name: pg.name, emblem: pg.emblem }),
       });
       if (!createRes.ok) {
         // APIエラーでもローカルには参加
@@ -129,11 +129,11 @@ export const GuildPage = () => {
 
   const handleLeaveGuild = async () => {
     try {
-      await fetch('/api/guild', {
+      await fetch('/api/actions', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'leave' }),
+        body: JSON.stringify({ action: 'guild_leave' }),
       });
     } catch { /* offline時はローカルのみ */ }
     leaveGuild();

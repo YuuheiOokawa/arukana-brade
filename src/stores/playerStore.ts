@@ -257,11 +257,12 @@ export const usePlayerStore = create<PlayerStore>()(
       syncCurrencyToServer: async () => {
         const { player } = get();
         try {
-          await fetch('/api/player/currency', {
+          await fetch('/api/player', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({
+              action: 'currency',
               gold: player.gold,
               diamond: player.diamond,
               exp: player.exp,
