@@ -8,6 +8,8 @@ import { formatNumber, calcTotalPower } from '../../utils/format';
 import { getStarColor, getStarDisplay } from '../../data/rarityConfig';
 import type { StarRarity } from '../../types';
 import { TitlePlate, FrameDecoration } from '../../components/ui/game/UIDecorations';
+import { UnitIcon } from '../../components/ui/UnitCard';
+import { resolveUnitImage } from '../../lib/unitImage';
 
 const TITLES = [
   '駆け出しの勇者', '炎の剣士', '水の守護者', '風の疾走者',
@@ -151,14 +153,16 @@ export const ProfilePage = () => {
           <FrameDecoration color="purple">
             {favMaster && favUnit ? (
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl flex-shrink-0"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(67,20,150,0.4))',
-                    border: `1px solid ${getStarColor(favRarity)}44`,
-                    boxShadow: `0 0 16px ${getStarColor(favRarity)}22`,
-                  }}>
-                  {favMaster.emoji}
-                </div>
+                <UnitIcon
+                  src={resolveUnitImage(favUnit.masterId, favRarity)}
+                  masterId={favUnit.masterId}
+                  unitRarity={favRarity}
+                  fallbackEmoji={favMaster.emoji}
+                  element={favMaster.element}
+                  size={64}
+                  height={96}
+                  className="rounded-xl flex-shrink-0"
+                />
                 <div className="flex-1">
                   <RarityBadge rarity={favRarity} size="sm" />
                   <p className="text-white font-bold mt-1">{favMaster.name}</p>
@@ -318,7 +322,15 @@ export const ProfilePage = () => {
                         className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-purple-900/20"
                         style={{ borderBottom: '1px solid rgba(60,40,90,0.2)' }}
                       >
-                        <span className="text-lg">{m.emoji}</span>
+                        <UnitIcon
+                          src={resolveUnitImage(u.masterId, r)}
+                          masterId={u.masterId}
+                          unitRarity={r}
+                          fallbackEmoji={m.emoji}
+                          element={m.element}
+                          size={36}
+                          height={54}
+                        />
                         <div className="flex-1 min-w-0">
                           <span className="text-white text-xs font-bold truncate block">{m.name}</span>
                           <span className="text-gray-500 text-xs">Lv.{u.level}</span>
