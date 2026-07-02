@@ -127,7 +127,7 @@ export const UnitIcon = ({
 
   const fallbackEl = (
     <div
-      className={`rounded-lg flex items-center justify-center flex-shrink-0 ${className}`}
+      className={`rounded-xl flex items-center justify-center flex-shrink-0 ${className}`}
       style={{ width: size, height: h, background: elementGradient(element), fontSize: size * 0.5 }}
     >
       {fallbackEmoji}
@@ -139,17 +139,15 @@ export const UnitIcon = ({
     if (imgError) return fallbackEl;
     return (
       <div
-        className={`rounded-lg overflow-hidden flex-shrink-0 ${className}`}
-        style={{ width: size, height: h, background: elementGradient(element) }}
+        className={`rounded-xl overflow-hidden flex-shrink-0 ${className}`}
+        style={{ width: size, height: h, background: elementGradient(element), WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
       >
-        {/* scale層: 中身を1.5倍ズーム (上中央基点) して外側のoverflowでクリップ */}
         <div style={{
           width: '100%', height: '100%',
           overflow: 'hidden', position: 'relative',
           transform: 'scale(1.5)',
           transformOrigin: 'top center',
         }}>
-          {/* 位置層: スプライトシートを横800%に広げ、cellIndex分だけ左へオフセット */}
           <img
             src={spritesheetSrc}
             alt=""
@@ -174,14 +172,14 @@ export const UnitIcon = ({
 
   return (
     <div
-      className={`rounded-lg overflow-hidden flex-shrink-0 ${className}`}
-      style={{ width: size, height: h, background: elementGradient(element) }}
+      className={`rounded-xl overflow-hidden flex-shrink-0 ${className}`}
+      style={{ width: size, height: h, background: elementGradient(element), WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
     >
       <img
         src={src}
         alt=""
         onError={() => setImgError(true)}
-        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', transform: 'scale(1.5)', transformOrigin: 'top center' }}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
       />
     </div>
   );
@@ -203,7 +201,7 @@ export const UnitSlotImg = ({
   if (spritesheetSrc) {
     const cellIdx = getSpritesheetCellIndex(rarity);
     return (
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}>
         <div style={{
           width: '100%', height: '100%',
           overflow: 'hidden', position: 'relative',
@@ -234,7 +232,6 @@ export const UnitSlotImg = ({
         width: '100%', height: '100%',
         objectFit: 'cover', objectPosition: 'top center',
         position: 'absolute', inset: 0,
-        transform: 'scale(1.5)', transformOrigin: 'top center',
       }}
     />
   );

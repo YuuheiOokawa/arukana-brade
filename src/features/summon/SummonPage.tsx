@@ -248,7 +248,7 @@ const MiniCardImage = ({
   if (spritesheetSrc && cellIdx !== null) {
     if (err) return <div style={{ position: 'absolute', inset: 0, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px' }}>{fallbackEmoji}</div>;
     return (
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}>
         <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', transform: 'scale(1.5)', transformOrigin: 'top center' }}>
           <img src={spritesheetSrc} alt="" onError={() => setErr(true)}
             style={{ position: 'absolute', top: 0, left: 0, width: `${SPRITESHEET_TOTAL_CELLS * 100}%`, height: 'auto', transform: `translateX(-${(cellIdx / SPRITESHEET_TOTAL_CELLS) * 100}%)`, transformOrigin: 'top left' }} />
@@ -266,7 +266,7 @@ const MiniCardImage = ({
   }
   return (
     <img src={src} alt="" onError={() => setErr(true)}
-      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', transform: 'scale(1.5)', transformOrigin: 'top center' }} />
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
   );
 };
 
