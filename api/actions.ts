@@ -1,6 +1,7 @@
 /**
  * /api/actions  — ゲームアクション統合エンドポイント
  * GET  ?action=guild              → ギルド情報取得
+ * GET  ?action=friends            → フレンドリスト・申請一覧取得
  * POST action=shop_stamina        → スタミナ購入
  * POST action=shop_item           → アイテム購入
  * POST action=arena_battle        → アリーナ戦績
@@ -10,6 +11,10 @@
  * POST action=guild_create        → ギルド作成
  * POST action=guild_join          → ギルド参加
  * POST action=guild_leave         → ギルド脱退
+ * POST action=friend_request      → フレンド申請
+ * POST action=friend_accept       → フレンド申請承認
+ * POST action=friend_reject       → フレンド申請拒否
+ * POST action=friend_delete       → フレンド削除
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { prisma } from '../lib/prisma.js';
@@ -48,6 +53,66 @@ const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min)
 
 // ── ハンドラー ──────────────────────────────────────────────
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // ── GET: フレンドリスト取得 ──────────────────────────────
+  if (req.method === 'GET' && req.query.action === 'friends') {
+    const token = getTokenFromRequest(req.headers.cookie);
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+    const payload = verifyToken(token);
+    if (!payload) return res.status(401).json({ error: 'Invalid token' });
+    const me = await prisma.player.findUnique({ where: { userId: payload.userId } });
+    if (!me) return res.status(404).json({ error: 'Player not found' });
+
+    // フレンド一覧
+    const friendRows = await prisma.friend.findMany({ where: { playerId: me.playerId } });
+    const friendPlayerIds = friendRows.map(f => f.friendId);
+    const friendPlayers = friendPlayerIds.length > 0
+      ? await prisma.player.findMany({
+          where: { playerId: { in: friendPlayerIds } },
+          select: { playerId: true, playerName: true, playerRank: true, arcanaPlayerId: true, lastLoginAt: true, parties: { where: { isActive: true }, take: 1 } },
+        })
+      : [];
+
+    const leaderIds = friendPlayers.map(fp => fp.parties[0]?.leaderId).filter((id): id is string => !!id);
+    const leaderUnits = leaderIds.length > 0
+      ? await prisma.ownedUnit.findMany({ where: { instanceId: { in: leaderIds } } })
+      : [];
+
+    const now = Date.now();
+    const fmtLastLogin = (d: Date) => {
+      const m = Math.floor((now - d.getTime()) / 60000);
+      return m < 10 ? 'オンライン' : m < 60 ? `${m}分前` : m < 1440 ? `${Math.floor(m / 60)}時間前` : `${Math.floor(m / 1440)}日前`;
+    };
+
+    const friends = friendPlayers.map(fp => {
+      const lu = fp.parties[0]?.leaderId ? leaderUnits.find(u => u.instanceId === fp.parties[0].leaderId) : null;
+      return {
+        friendPlayerId: fp.playerId,
+        arcanaPlayerId: fp.arcanaPlayerId,
+        playerName: fp.playerName,
+        playerRank: fp.playerRank,
+        leaderUnitMasterId: lu?.masterId ?? null,
+        leaderUnitLevel: lu?.level ?? 1,
+        leaderUnitAwakenRank: lu?.awakenRank ?? 0,
+        lastLogin: fmtLastLogin(fp.lastLoginAt),
+      };
+    });
+
+    // 受信申請
+    const recvReqs = await prisma.friendRequest.findMany({ where: { toPlayerId: me.playerId }, orderBy: { createdAt: 'desc' }, take: 30 });
+    const fromIds = recvReqs.map(r => r.fromPlayerId);
+    const fromPlayers = fromIds.length > 0
+      ? await prisma.player.findMany({ where: { playerId: { in: fromIds } }, select: { playerId: true, playerName: true, playerRank: true, arcanaPlayerId: true } })
+      : [];
+
+    const receivedRequests = recvReqs.map(r => {
+      const fp = fromPlayers.find(p => p.playerId === r.fromPlayerId);
+      return { requestId: r.id, fromPlayerId: r.fromPlayerId, fromArcanaPlayerId: fp?.arcanaPlayerId ?? '', fromPlayerName: fp?.playerName ?? '不明', fromPlayerRank: fp?.playerRank ?? 1, createdAt: r.createdAt.toISOString() };
+    });
+
+    const sentRequestCount = await prisma.friendRequest.count({ where: { fromPlayerId: me.playerId } });
+    return res.json({ friends, receivedRequests, sentRequestCount });
+  }
+
   // ── GET: ギルド情報取得 ───────────────────────────────────
   if (req.method === 'GET' && req.query.action === 'guild') {
     const token = getTokenFromRequest(req.headers.cookie);
@@ -249,6 +314,72 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (action === 'guild_leave') {
     await prisma.guildMember.deleteMany({ where: { playerId: player.playerId } });
     return res.json({ success: true });
+  }
+
+  // ── フレンド申請 ──────────────────────────────────────────
+  if (action === 'friend_request') {
+    const arcanaId = (body.arcanaPlayerId as string | undefined)?.trim().toUpperCase();
+    if (!arcanaId) return res.status(400).json({ error: 'arcanaPlayerId が必要です' });
+    if (!arcanaId.startsWith('ARC-')) return res.status(400).json({ error: 'IDの形式が正しくありません（ARC-xxxxx）' });
+
+    const target = await prisma.player.findFirst({ where: { arcanaPlayerId: arcanaId } });
+    if (!target) return res.status(404).json({ error: 'プレイヤーが見つかりません' });
+    if (target.playerId === player.playerId) return res.status(400).json({ error: '自分自身には申請できません' });
+
+    const alreadyFriend = await prisma.friend.findUnique({ where: { playerId_friendId: { playerId: player.playerId, friendId: target.playerId } } });
+    if (alreadyFriend) return res.status(409).json({ error: '既にフレンドです' });
+
+    const alreadySent = await prisma.friendRequest.findUnique({ where: { fromPlayerId_toPlayerId: { fromPlayerId: player.playerId, toPlayerId: target.playerId } } });
+    if (alreadySent) return res.status(409).json({ error: '既に申請済みです' });
+
+    // 相手から申請が届いていれば自動承認
+    const reverse = await prisma.friendRequest.findUnique({ where: { fromPlayerId_toPlayerId: { fromPlayerId: target.playerId, toPlayerId: player.playerId } } });
+    if (reverse) {
+      await prisma.$transaction([
+        prisma.friendRequest.delete({ where: { id: reverse.id } }),
+        prisma.friend.createMany({ data: [{ playerId: player.playerId, friendId: target.playerId }, { playerId: target.playerId, friendId: player.playerId }] }),
+      ]);
+      return res.json({ ok: true, autoAccepted: true, targetName: target.playerName });
+    }
+
+    await prisma.friendRequest.create({ data: { fromPlayerId: player.playerId, toPlayerId: target.playerId } });
+    return res.json({ ok: true, autoAccepted: false, targetName: target.playerName });
+  }
+
+  // ── フレンド申請承認 ──────────────────────────────────────
+  if (action === 'friend_accept') {
+    const requestId = body.requestId as string | undefined;
+    if (!requestId) return res.status(400).json({ error: 'requestId が必要です' });
+
+    const req2 = await prisma.friendRequest.findFirst({ where: { id: requestId, toPlayerId: player.playerId } });
+    if (!req2) return res.status(404).json({ error: '申請が見つかりません' });
+
+    await prisma.$transaction([
+      prisma.friendRequest.delete({ where: { id: requestId } }),
+      prisma.friend.createMany({
+        data: [{ playerId: player.playerId, friendId: req2.fromPlayerId }, { playerId: req2.fromPlayerId, friendId: player.playerId }],
+        skipDuplicates: true,
+      }),
+    ]);
+    return res.json({ ok: true });
+  }
+
+  // ── フレンド申請拒否 ──────────────────────────────────────
+  if (action === 'friend_reject') {
+    const requestId = body.requestId as string | undefined;
+    if (!requestId) return res.status(400).json({ error: 'requestId が必要です' });
+    await prisma.friendRequest.deleteMany({ where: { id: requestId, toPlayerId: player.playerId } });
+    return res.json({ ok: true });
+  }
+
+  // ── フレンド削除 ─────────────────────────────────────────
+  if (action === 'friend_delete') {
+    const targetArcanaId = body.arcanaPlayerId as string | undefined;
+    if (!targetArcanaId) return res.status(400).json({ error: 'arcanaPlayerId が必要です' });
+    const target = await prisma.player.findFirst({ where: { arcanaPlayerId: targetArcanaId } });
+    if (!target) return res.status(404).json({ error: 'プレイヤーが見つかりません' });
+    await prisma.friend.deleteMany({ where: { OR: [{ playerId: player.playerId, friendId: target.playerId }, { playerId: target.playerId, friendId: player.playerId }] } });
+    return res.json({ ok: true });
   }
 
   return res.status(400).json({ error: 'Unknown action' });

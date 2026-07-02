@@ -1,16 +1,18 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { FriendCandidate } from '../types';
 
 interface QuestProgress {
   clearedStageIds: string[];
-  pendingStageId: string | null;  // フレンド選択前に保持するステージID
+  pendingStageId: string | null;
   pendingFriendId: string | null;
+  pendingFriendCandidate: FriendCandidate | null; // DBフレンド選択時に完全なデータを保持
 }
 
 interface QuestStore extends QuestProgress {
   markCleared: (stageId: string) => void;
   setPendingStage: (stageId: string | null) => void;
-  setPendingFriend: (friendId: string | null) => void;
+  setPendingFriend: (friendId: string | null, candidate?: FriendCandidate | null) => void;
   isCleared: (stageId: string) => boolean;
   clearPending: () => void;
   checkAreaComplete: (stageId: string) => boolean;
@@ -32,6 +34,7 @@ export const useQuestStore = create<QuestStore>()(
       clearedStageIds: [],
       pendingStageId: null,
       pendingFriendId: null,
+      pendingFriendCandidate: null,
       claimedAreaRewards: [],
       lastSelectedWorldId: null,
       setLastSelectedWorldId: (id) => set({ lastSelectedWorldId: id }),
@@ -44,11 +47,11 @@ export const useQuestStore = create<QuestStore>()(
       },
 
       setPendingStage: (stageId) => set({ pendingStageId: stageId }),
-      setPendingFriend: (friendId) => set({ pendingFriendId: friendId }),
+      setPendingFriend: (friendId, candidate = null) => set({ pendingFriendId: friendId, pendingFriendCandidate: candidate }),
 
       isCleared: (stageId) => get().clearedStageIds.includes(stageId),
 
-      clearPending: () => set({ pendingStageId: null, pendingFriendId: null }),
+      clearPending: () => set({ pendingStageId: null, pendingFriendId: null, pendingFriendCandidate: null }),
 
       // エリア内の全5ステージがクリア済みか確認
       checkAreaComplete: (stageId) => {
