@@ -14,7 +14,7 @@ const uid = () => `bid_${Date.now()}_${idCounter++}`;
 
 export const useBattleSetup = () => {
   const navigate = useNavigate();
-  const { pendingStageId, pendingFriendId, clearPending } = useQuestStore();
+  const { pendingStageId, pendingFriendId, pendingFriendCandidate, clearPending } = useQuestStore();
   const { getActiveParty } = usePartyStore();
   const { ownedUnits } = useUnitStore();
   useRef(false);
@@ -25,8 +25,9 @@ export const useBattleSetup = () => {
     if (!stage) return null;
 
     const party = getActiveParty();
+    // DBフレンド（pendingFriendCandidate）を優先し、なければ静的リストから検索
     const friendCandidate = pendingFriendId
-      ? FRIEND_CANDIDATES.find(f => f.friendId === pendingFriendId)
+      ? (pendingFriendCandidate ?? FRIEND_CANDIDATES.find(f => f.friendId === pendingFriendId) ?? null)
       : null;
 
     // 味方ユニット構築

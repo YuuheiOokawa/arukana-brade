@@ -136,3 +136,14 @@ export const IconCrown = ({ size = 24, color = 'currentColor', className }: Icon
     <circle cx="20" cy="9" r="1.5" fill={color} opacity="0.8"/>
   </svg>
 );
+
+export const IconFriends = ({ size = 24, color = 'currentColor', className }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+    <circle cx="9" cy="7" r="3.2" fill={color} opacity="0.9"/>
+    <path d="M2 20c0-3.8 3.1-6.5 7-6.5s7 2.7 7 6.5" stroke={color} strokeWidth="1.6" strokeLinecap="round" fill="none" opacity="0.9"/>
+    <circle cx="18" cy="8" r="2.2" fill={color} opacity="0.6"/>
+    <path d="M18 14c2.5 0.3 4.5 2 4.5 4.5" stroke={color} strokeWidth="1.4" strokeLinecap="round" fill="none" opacity="0.6"/>
+    <line x1="17" y1="4" x2="17" y2="8" stroke={color} strokeWidth="1.4" strokeLinecap="round" opacity="0.5"/>
+    <line x1="15" y1="6" x2="19" y2="6" stroke={color} strokeWidth="1.4" strokeLinecap="round" opacity="0.5"/>
+  </svg>
+);

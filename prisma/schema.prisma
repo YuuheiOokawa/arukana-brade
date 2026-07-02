@@ -54,6 +54,9 @@ model Player {
   loginBonus      PlayerLoginBonus?
   arenaRecord     PlayerArenaRecord?
   guildMembership GuildMember?
+  friends            Friend[]        @relation("PlayerFriends")
+  sentFriendReqs     FriendRequest[] @relation("SentFriendRequests")
+  receivedFriendReqs FriendRequest[] @relation("ReceivedFriendRequests")
 
   @@index([userId])
 }
@@ -210,4 +213,28 @@ model GuildMember {
   joinedAt  DateTime @default(now())
 
   @@index([guildId])
+}
+
+model Friend {
+  id        String   @id @default(cuid())
+  playerId  String
+  player    Player   @relation("PlayerFriends", fields: [playerId], references: [playerId], onDelete: Cascade)
+  friendId  String
+  createdAt DateTime @default(now())
+
+  @@unique([playerId, friendId])
+  @@index([playerId])
+}
+
+model FriendRequest {
+  id           String   @id @default(cuid())
+  fromPlayerId String
+  fromPlayer   Player   @relation("SentFriendRequests", fields: [fromPlayerId], references: [playerId], onDelete: Cascade)
+  toPlayerId   String
+  toPlayer     Player   @relation("ReceivedFriendRequests", fields: [toPlayerId], references: [playerId], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@unique([fromPlayerId, toPlayerId])
+  @@index([toPlayerId])
+  @@index([fromPlayerId])
 }

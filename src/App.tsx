@@ -15,6 +15,7 @@ import { EquipmentPage } from './features/equipment/EquipmentPage';
 import { MissionsPage } from './features/missions/MissionsPage';
 import { RaidPage } from './features/raid/RaidPage';
 import { GuildPage } from './features/guild/GuildPage';
+import { FriendPage } from './features/social/FriendPage';
 import { PvPPage } from './features/pvp/PvPPage';
 import { TitleScreen } from './features/tutorial/TitleScreen';
 import { TutorialIntroScreen } from './features/tutorial/TutorialIntroScreen';
@@ -189,6 +190,7 @@ const AppContent = () => {
         <Route path="/missions" element={<AuthGuard><MainGuard><MissionsPage /></MainGuard></AuthGuard>} />
         <Route path="/raid"     element={<AuthGuard><MainGuard><RaidPage /></MainGuard></AuthGuard>} />
         <Route path="/guild"    element={<AuthGuard><MainGuard><GuildPage /></MainGuard></AuthGuard>} />
+        <Route path="/social"   element={<AuthGuard><MainGuard><FriendPage /></MainGuard></AuthGuard>} />
         <Route path="/pvp"      element={<AuthGuard><MainGuard><PvPPage /></MainGuard></AuthGuard>} />
         <Route path="/profile"  element={<AuthGuard><MainGuard><ProfilePage /></MainGuard></AuthGuard>} />
         <Route path="/shop"     element={<AuthGuard><MainGuard><ShopPage /></MainGuard></AuthGuard>} />
