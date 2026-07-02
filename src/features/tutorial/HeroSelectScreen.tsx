@@ -105,13 +105,14 @@ export const HeroSelectScreen = () => {
                       style={{
                         width: 52, height: 64,
                         background: raceHero ? ELEMENT_GRADIENT[raceHero.element] : '#1a1a35',
+                        WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)',
                       }}>
                       {raceHero && imgSrc && !imgErrors[imgKey] ? (
                         <img
                           src={imgSrc}
                           alt={raceHero.name}
                           onError={() => setImgErrors(prev => ({ ...prev, [imgKey]: true }))}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', transform: 'scale(1.6)', transformOrigin: 'top center' }}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-2xl">
