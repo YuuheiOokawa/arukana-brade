@@ -10,6 +10,7 @@ export interface GiftMaster {
     diamond?: number;
     stamina?: number;
     items?: { itemId: string; quantity: number }[];
+    equipments?: string[]; // 装備マスターID（1個ずつ付与）
   };
   // 期限（epoch ms）。省略時は無期限
   expiresAt?: number;
@@ -22,6 +23,13 @@ export const GIFT_CATALOG: GiftMaster[] = [
     description: 'アルカナブレイドの世界へようこそ！冒険のお供にどうぞ。',
     emoji: '🎉',
     rewards: { diamond: 300, gold: 30000 },
+  },
+  {
+    id: 'gift_starter_equipment',
+    title: '冒険者の装備一式',
+    description: '駆け出しの冒険者に贈る基本装備セット。装備画面からユニットに装備しよう！',
+    emoji: '⚔️',
+    rewards: { equipments: ['equip_sword_iron', 'equip_leather_armor', 'equip_ring_iron'] },
   },
   {
     id: 'gift_release_summon',

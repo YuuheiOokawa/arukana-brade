@@ -483,6 +483,127 @@ export const EVENT_QUESTS: EventQuest[] = [
   },
 ];
 
+// 武具の試練場は常設イベント（実質無期限）
+const PERMANENT = NOW + 3650 * DAY;
+
+export const EQUIPMENT_TRIAL_EVENT: EventQuest = {
+  id: 'event_equipment_forge',
+  name: '武具の試練場',
+  description: '伝説の鍛冶神が守る武具庫。強敵を倒して武器・防具・アクセサリーを手に入れろ！【常設】',
+  startTimestamp: NOW - DAY,
+  endTimestamp: PERMANENT,
+  emoji: '⚒️',
+  bannerColor: 'linear-gradient(135deg, #2a1a05, #8a5510)',
+  stages: [
+    {
+      id: 'event_forge_1',
+      name: '見習いの武具庫',
+      staminaCost: 6,
+      recommendedPower: 3000,
+      rewardGold: 1500,
+      rewardExp: 300,
+      rewardItems: [
+        { itemId: 'item_stone_core', quantity: 1, chance: 0.3 },
+      ],
+      rewardEquipments: [
+        { equipmentId: 'equip_sword_iron', chance: 0.35 },
+        { equipmentId: 'equip_leather_armor', chance: 0.35 },
+        { equipmentId: 'equip_ring_iron', chance: 0.3 },
+        { equipmentId: 'equip_iron_shield', chance: 0.25 },
+        { equipmentId: 'equip_magic_rod', chance: 0.25 },
+      ],
+      waves: [
+        { enemies: [{ enemyId: 'enemy_golem', level: 18 }, { enemyId: 'enemy_knight', level: 18 }] },
+        { enemies: [{ enemyId: 'enemy_golem', level: 22 }], isBoss: true },
+      ],
+    },
+    {
+      id: 'event_forge_2',
+      name: '職人の工房',
+      staminaCost: 10,
+      recommendedPower: 9000,
+      rewardGold: 4000,
+      rewardExp: 800,
+      rewardItems: [
+        { itemId: 'item_magic_crystal', quantity: 1, chance: 0.3 },
+      ],
+      rewardEquipments: [
+        { equipmentId: 'equip_sword_silver', chance: 0.25 },
+        { equipmentId: 'equip_chain_mail', chance: 0.25 },
+        { equipmentId: 'equip_amulet_guardian', chance: 0.2 },
+        { equipmentId: 'equip_wind_dagger', chance: 0.2 },
+        { equipmentId: 'equip_mithril_sword', chance: 0.18 },
+        { equipmentId: 'equip_ring_recovery', chance: 0.18 },
+      ],
+      waves: [
+        { enemies: [{ enemyId: 'enemy_knight', level: 40 }, { enemyId: 'enemy_golem', level: 40 }] },
+        { enemies: [{ enemyId: 'enemy_rock_troll', level: 46 }], isBoss: true },
+      ],
+    },
+    {
+      id: 'event_forge_3',
+      name: '匠の霊廟',
+      staminaCost: 14,
+      recommendedPower: 25000,
+      rewardGold: 9000,
+      rewardExp: 2000,
+      rewardItems: [
+        { itemId: 'item_elemental_core', quantity: 1, chance: 0.25 },
+      ],
+      rewardEquipments: [
+        { equipmentId: 'equip_flame_blade', chance: 0.1 },
+        { equipmentId: 'equip_water_staff', chance: 0.1 },
+        { equipmentId: 'equip_thunder_bow', chance: 0.1 },
+        { equipmentId: 'equip_ice_spear', chance: 0.1 },
+        { equipmentId: 'equip_earth_hammer', chance: 0.1 },
+        { equipmentId: 'equip_dark_lance', chance: 0.1 },
+        { equipmentId: 'equip_plate_armor', chance: 0.1 },
+        { equipmentId: 'equip_mage_robe', chance: 0.1 },
+        { equipmentId: 'equip_pendant_life', chance: 0.08 },
+        { equipmentId: 'equip_ring_power', chance: 0.08 },
+      ],
+      waves: [
+        { enemies: [{ enemyId: 'enemy_knight', level: 60 }, { enemyId: 'enemy_rock_troll', level: 58 }] },
+        { enemies: [{ enemyId: 'enemy_golem', level: 62 }, { enemyId: 'enemy_knight', level: 62 }] },
+        { enemies: [{ enemyId: 'enemy_earth_giant', level: 68 }], isBoss: true },
+      ],
+    },
+    {
+      id: 'event_forge_4',
+      name: '伝説の大武具庫',
+      staminaCost: 20,
+      recommendedPower: 60000,
+      rewardGold: 18000,
+      rewardExp: 4500,
+      rewardItems: [
+        { itemId: 'item_elemental_core', quantity: 2, chance: 0.3 },
+        { itemId: 'item_arcana_shard', quantity: 1, chance: 0.3 },
+      ],
+      rewardEquipments: [
+        { equipmentId: 'equip_arcana_blade', chance: 0.04 },
+        { equipmentId: 'equip_dragon_armor', chance: 0.04 },
+        { equipmentId: 'equip_crown_arcana', chance: 0.04 },
+        { equipmentId: 'equip_light_sword', chance: 0.04 },
+        { equipmentId: 'equip_dark_scythe', chance: 0.04 },
+        { equipmentId: 'equip_earth_shield', chance: 0.04 },
+        { equipmentId: 'equip_brooch_dragon', chance: 0.04 },
+        { equipmentId: 'equip_celestial_robe', chance: 0.04 },
+        { equipmentId: 'equip_shadow_cloak', chance: 0.12 },
+        { equipmentId: 'equip_frost_mail', chance: 0.12 },
+        { equipmentId: 'equip_wind_robe', chance: 0.12 },
+        { equipmentId: 'equip_talisman_thunder', chance: 0.12 },
+      ],
+      waves: [
+        { enemies: [{ enemyId: 'enemy_earth_giant', level: 78 }, { enemyId: 'enemy_knight', level: 76 }] },
+        { enemies: [{ enemyId: 'enemy_rock_troll', level: 80 }, { enemyId: 'enemy_earth_giant', level: 80 }] },
+        { enemies: [{ enemyId: 'enemy_dragon_fire', level: 88 }], isBoss: true },
+      ],
+    },
+  ],
+};
+
+EVENT_QUESTS.push(EQUIPMENT_TRIAL_EVENT);
+
 export const RAID_BOSSES: RaidBossMaster[] = [
   {
     id: 'raid_dark_lord',

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { GIFT_CATALOG, getGift } from '../data/gifts';
 import { usePlayerStore } from './playerStore';
+import { useEquipmentStore } from './equipmentStore';
 
 // プレゼントボックス: 受取状態を管理する
 interface GiftStore {
@@ -34,6 +35,7 @@ const grantRewards = (giftId: string) => {
     }));
   }
   gift.rewards.items?.forEach(it => store.addItem(it.itemId, it.quantity));
+  gift.rewards.equipments?.forEach(eqId => useEquipmentStore.getState().addEquipment(eqId));
 };
 
 export const useGiftStore = create<GiftStore>()(
