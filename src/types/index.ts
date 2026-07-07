@@ -209,6 +209,7 @@ export interface QuestStage {
   rewardGold: number;
   rewardExp: number;
   rewardItems: { itemId: string; quantity: number; chance: number }[];
+  rewardEquipments?: { equipmentId: string; chance: number }[]; // 装備ドロップ
   isCleared?: boolean;
 }
 

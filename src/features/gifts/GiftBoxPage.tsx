@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { GIFT_CATALOG } from '../../data/gifts';
 import { useGiftStore } from '../../stores/giftStore';
 import { getItemMaster } from '../../data/items';
+import { getEquipmentMaster } from '../../data/equipments';
 import { TopBar } from '../../components/layout/TopBar';
 
 export const GiftBoxPage = () => {
@@ -36,6 +37,10 @@ export const GiftBoxPage = () => {
     g.rewards.items?.forEach(it => {
       const m = getItemMaster(it.itemId);
       parts.push(`${m?.emoji ?? '📦'} ${m?.name ?? it.itemId} ×${it.quantity}`);
+    });
+    g.rewards.equipments?.forEach(eqId => {
+      const em = getEquipmentMaster(eqId);
+      parts.push(`${em?.emoji ?? '⚔️'} ${em?.name ?? eqId}`);
     });
     return parts;
   };

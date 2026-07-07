@@ -87,7 +87,8 @@ export const EquipmentPage = () => {
               <div className="text-center py-16">
                 <p className="text-5xl mb-3">🗡️</p>
                 <p className="text-gray-500">装備がありません</p>
-                <p className="text-gray-600 text-sm mt-1">クエストをクリアして入手しよう</p>
+                <p className="text-gray-600 text-sm mt-1">イベント「⚒️ 武具の試練場」やワールドボスから入手しよう</p>
+                <p className="text-gray-600 text-xs mt-1">プレゼントボックスの「冒険者の装備一式」もチェック！</p>
               </div>
             )}
             {filtered.map(eq => {
