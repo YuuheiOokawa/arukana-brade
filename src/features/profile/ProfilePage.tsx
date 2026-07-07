@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useUnitStore } from '../../stores/unitStore';
-import type { PlayerData, OwnedUnit } from '../../types';
+import { useAchievementStore } from '../../stores/achievementStore';
+import { ACHIEVEMENTS } from '../../data/achievements';
 import { getUnitMaster } from '../../data/units';
 import { TopBar } from '../../components/layout/TopBar';
 import { RarityBadge } from '../../components/ui/RarityBadge';
@@ -12,24 +13,6 @@ import { TitlePlate, FrameDecoration } from '../../components/ui/game/UIDecorati
 import { UnitIcon } from '../../components/ui/UnitCard';
 import { resolveUnitImage } from '../../lib/unitImage';
 
-const ACHIEVEMENTS: {
-  id: string; emoji: string; label: string; desc: string; color: string;
-  check: (p: PlayerData, units: OwnedUnit[]) => boolean;
-}[] = [
-  { id: 'first_win',   emoji: '⚔️', label: '初勝利',     desc: 'バトルで1勝',       color: '#ef4444', check: (p) => (p.battleWins ?? 0) >= 1 },
-  { id: 'warrior',     emoji: '🗡️', label: '猛者',       desc: '10勝達成',          color: '#f97316', check: (p) => (p.battleWins ?? 0) >= 10 },
-  { id: 'hero',        emoji: '🔥', label: '英雄',       desc: '100勝達成',         color: '#ef4444', check: (p) => (p.battleWins ?? 0) >= 100 },
-  { id: 'summoner_1',  emoji: '💫', label: '召喚師',     desc: '召喚10回',          color: '#8b5cf6', check: (p) => (p.summonCount ?? 0) >= 10 },
-  { id: 'summoner_2',  emoji: '✨', label: '大召喚師',   desc: '召喚50回',          color: '#a855f7', check: (p) => (p.summonCount ?? 0) >= 50 },
-  { id: 'explorer',    emoji: '🗺️', label: '探検家',     desc: 'クエスト10回',      color: '#f59e0b', check: (p) => (p.questClears ?? 0) >= 10 },
-  { id: 'adventurer',  emoji: '🌟', label: '冒険者',     desc: 'クエスト50回',      color: '#eab308', check: (p) => (p.questClears ?? 0) >= 50 },
-  { id: 'rank_10',     emoji: '🏆', label: '上級者',     desc: 'ランク10到達',      color: '#f0c040', check: (p) => p.rank >= 10 },
-  { id: 'rank_50',     emoji: '👑', label: 'マスター',   desc: 'ランク50到達',      color: '#d97706', check: (p) => p.rank >= 50 },
-  { id: 'collector',   emoji: '👥', label: 'コレクター', desc: '10体獲得',          color: '#3b82f6', check: (_, u) => u.length >= 10 },
-  { id: 'collector_2', emoji: '🏛️', label: '大収集家',  desc: '30体獲得',          color: '#2563eb', check: (_, u) => u.length >= 30 },
-  { id: 'veteran',     emoji: '📅', label: '常連',       desc: '7日間ログイン',     color: '#10b981', check: (p) => (p.loginDays ?? 0) >= 7 },
-];
-
 const TITLES = [
   '駆け出しの勇者', '炎の剣士', '水の守護者', '風の疾走者',
   '大地の盾', '光の聖者', '闇の覇者', '覚醒の先駆者',
@@ -37,8 +20,17 @@ const TITLES = [
 ];
 
 export const ProfilePage = () => {
-  const { player, updateProfile } = usePlayerStore();
+  const { player, updateProfile, addDiamond } = usePlayerStore();
   const { ownedUnits } = useUnitStore();
+  const { isClaimed, claim } = useAchievementStore();
+  const [achToast, setAchToast] = useState('');
+
+  const handleClaimAchievement = (id: string, label: string, reward: number) => {
+    if (!claim(id)) return;
+    addDiamond(reward);
+    setAchToast(`🏅 「${label}」達成報酬 💎${reward} を受け取りました！`);
+    setTimeout(() => setAchToast(''), 2500);
+  };
 
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(player.name);
@@ -74,6 +66,14 @@ export const ProfilePage = () => {
       background: 'radial-gradient(ellipse at 50% -10%, #1a0838 0%, #080818 55%, #020208 100%)',
     }}>
       <TopBar title="プロフィール" />
+
+      {/* 実績受取トースト */}
+      {achToast && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl font-bold text-sm text-white max-w-[90%] text-center"
+          style={{ background: 'rgba(217,119,6,0.95)', boxShadow: '0 4px 20px rgba(240,192,64,0.5)' }}>
+          {achToast}
+        </div>
+      )}
 
       {/* 背景デコレーション */}
       <div className="relative overflow-hidden">
@@ -233,17 +233,33 @@ export const ProfilePage = () => {
           <div className="grid grid-cols-3 gap-2">
             {ACHIEVEMENTS.map(ach => {
               const earned = ach.check(player, ownedUnits);
+              const claimed = isClaimed(ach.id);
+              const canClaim = earned && !claimed;
               return (
-                <div key={ach.id} className={`rounded-xl p-3 text-center transition-all ${earned ? '' : 'opacity-35'}`}
+                <button key={ach.id}
+                  onClick={() => { if (canClaim) handleClaimAchievement(ach.id, ach.label, ach.rewardDiamond); }}
+                  className={`rounded-xl p-3 text-center transition-all ${
+                    canClaim ? 'active:scale-95 animate-pulse' : earned ? '' : 'opacity-35'
+                  }`}
                   style={{
                     background: earned ? `${ach.color}18` : 'rgba(12,8,28,0.6)',
-                    border: `1px solid ${earned ? `${ach.color}44` : 'rgba(255,255,255,0.05)'}`,
-                    boxShadow: earned ? `0 0 12px ${ach.color}22` : 'none',
+                    border: `1px solid ${canClaim ? `${ach.color}99` : earned ? `${ach.color}44` : 'rgba(255,255,255,0.05)'}`,
+                    boxShadow: canClaim ? `0 0 16px ${ach.color}55` : earned ? `0 0 12px ${ach.color}22` : 'none',
                   }}>
                   <p className="text-2xl mb-1" style={{ filter: earned ? 'none' : 'grayscale(1)' }}>{ach.emoji}</p>
                   <p className="text-xs font-bold leading-tight" style={{ color: earned ? ach.color : '#4b5563' }}>{ach.label}</p>
                   <p className="text-[9px] mt-0.5" style={{ color: earned ? '#9ca3af' : '#374151' }}>{ach.desc}</p>
-                </div>
+                  {canClaim ? (
+                    <p className="text-[9px] font-black mt-1 px-1.5 py-0.5 rounded-full inline-block"
+                      style={{ background: 'rgba(240,192,64,0.25)', color: '#fde68a', border: '1px solid rgba(240,192,64,0.5)' }}>
+                      🎁 💎{ach.rewardDiamond} 受取
+                    </p>
+                  ) : claimed ? (
+                    <p className="text-[9px] font-bold mt-1 text-emerald-500">✓ 受取済</p>
+                  ) : (
+                    <p className="text-[9px] mt-1" style={{ color: earned ? '#9ca3af' : '#374151' }}>💎{ach.rewardDiamond}</p>
+                  )}
+                </button>
               );
             })}
           </div>

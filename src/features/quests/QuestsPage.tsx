@@ -6,19 +6,33 @@ import { getScenario } from '../../data/scenarios';
 import { useQuestStore } from '../../stores/questStore';
 import { usePlayerStore } from '../../stores/playerStore';
 import { usePartyStore } from '../../stores/partyStore';
+import { useUnitStore } from '../../stores/unitStore';
+import { useMissionStore } from '../../stores/missionStore';
+import { useGuildStore } from '../../stores/guildStore';
+import { saveImmediately } from '../../lib/syncService';
 import { ENEMY_MASTER } from '../../data/enemies';
+import { getItemMaster } from '../../data/items';
 import { TopBar } from '../../components/layout/TopBar';
 import { StaminaModal } from '../../components/ui/StaminaModal';
 import { GameBadge } from '../../components/ui/game/UIDecorations';
 import type { QuestArea, QuestStage } from '../../types';
+
+interface SweepResult {
+  stageName: string;
+  gold: number;
+  exp: number;
+  items: string[];
+}
 
 type MainTab = 'story' | 'event';
 
 export const QuestsPage = () => {
   const navigate = useNavigate();
   const { isCleared, setPendingStage, lastSelectedWorldId, setLastSelectedWorldId } = useQuestStore();
-  const { player } = usePlayerStore();
+  const { player, recoverStamina, spendStamina, addGold, addExp, addItem, syncCurrencyToServer, recordBattleWin, recordQuestClear } = usePlayerStore();
   const { getActiveParty } = usePartyStore();
+  const { ownedUnits, levelUpUnit } = useUnitStore();
+  const { addDailyProgress, addWeeklyProgress } = useMissionStore();
 
   const [mainTab, setMainTab] = useState<MainTab>('story');
   const [selectedWorldId, setSelectedWorldId] = useState(() =>
@@ -26,6 +40,8 @@ export const QuestsPage = () => {
   );
   const [selectedArea, setSelectedArea] = useState<QuestArea | null>(null);
   const [staminaModal, setStaminaModal] = useState<{ stageId: string; cost: number } | null>(null);
+  const [sweepResult, setSweepResult] = useState<SweepResult | null>(null);
+  const [sweepError, setSweepError] = useState('');
 
   const questWorlds = getQuestWorlds();
 
@@ -70,6 +86,58 @@ export const QuestsPage = () => {
       setStaminaModal(null);
       navigateToStage(stageId);
     }
+  };
+
+  // クリア済みステージの掃討（スキップ）：バトルなしで即時報酬を獲得
+  const handleSweep = (stage: QuestStage) => {
+    recoverStamina();
+    const ok = spendStamina(stage.staminaCost);
+    if (!ok) {
+      setSweepError('スタミナが足りません');
+      setTimeout(() => setSweepError(''), 2500);
+      return;
+    }
+
+    // 報酬計算（通常バトル勝利と同じロジック）
+    const gold = stage.rewardGold;
+    const exp = stage.rewardExp;
+    const items: string[] = [];
+    stage.rewardItems.forEach(ri => {
+      if (Math.random() < ri.chance) {
+        for (let i = 0; i < ri.quantity; i++) items.push(ri.itemId);
+      }
+    });
+
+    addGold(gold);
+    addExp(exp);
+    items.forEach(id => addItem(id, 1));
+
+    // パーティユニットへ経験値分配
+    const party = getActiveParty();
+    const partyUnitIds = party.slots.filter(Boolean) as string[];
+    const partyCount = partyUnitIds.length || 1;
+    partyUnitIds.forEach(instanceId => {
+      if (ownedUnits.some(u => u.instanceId === instanceId)) {
+        levelUpUnit(instanceId, Math.floor(exp / partyCount));
+      }
+    });
+
+    // ミッション・実績・ギルド進捗
+    addDailyProgress('battle_win');
+    addDailyProgress('quest_clear');
+    addWeeklyProgress('battle_win');
+    addWeeklyProgress('quest_clear');
+    recordBattleWin();
+    recordQuestClear();
+    useGuildStore.getState().addGuildExp(Math.floor(exp * 0.1));
+    useGuildStore.getState().updateGuildMissionProgress('battle', 1);
+
+    setTimeout(() => {
+      void syncCurrencyToServer();
+      saveImmediately();
+    }, 500);
+
+    setSweepResult({ stageName: stage.name, gold, exp, items });
   };
 
   // 残り時間計算
@@ -184,6 +252,7 @@ export const QuestsPage = () => {
               title={`${selectedArea.emoji} ${selectedArea.name}`}
               onBack={() => setSelectedArea(null)}
               onSelect={handleStageSelect}
+              onSweep={handleSweep}
               isCleared={isCleared}
               playerStamina={player.stamina}
             />
@@ -220,6 +289,7 @@ export const QuestsPage = () => {
                   title=""
                   onBack={() => {}}
                   onSelect={handleStageSelect}
+                  onSweep={handleSweep}
                   isCleared={isCleared}
                   playerStamina={player.stamina}
                   showBack={false}
@@ -238,18 +308,81 @@ export const QuestsPage = () => {
           onUsed={handleStaminaUsed}
         />
       )}
+
+      {/* 掃討エラートースト */}
+      {sweepError && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl font-bold text-sm text-white"
+          style={{ background: 'rgba(220,38,38,0.95)', boxShadow: '0 4px 16px rgba(0,0,0,0.5)', whiteSpace: 'nowrap' }}>
+          ⚠️ {sweepError}
+        </div>
+      )}
+
+      {/* 掃討結果モーダル */}
+      {sweepResult && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }}
+          onClick={e => { if (e.target === e.currentTarget) setSweepResult(null); }}>
+          <div className="w-full max-w-sm rounded-2xl p-5" style={{
+            background: 'linear-gradient(180deg, #1a0838 0%, #0d0620 100%)',
+            border: '1px solid rgba(240,192,64,0.4)',
+            boxShadow: '0 0 40px rgba(240,192,64,0.15)',
+          }}>
+            <p className="text-center text-3xl mb-2">⏩</p>
+            <h3 className="text-center text-white font-black text-lg mb-1">スキップ完了！</h3>
+            <p className="text-center text-gray-500 text-xs mb-4">{sweepResult.stageName}</p>
+
+            <div className="space-y-2 mb-4">
+              <div className="flex items-center justify-between rounded-xl px-4 py-2.5"
+                style={{ background: 'rgba(240,192,64,0.08)', border: '1px solid rgba(240,192,64,0.2)' }}>
+                <span className="text-gray-400 text-sm">🪙 ゴールド</span>
+                <span className="text-yellow-400 font-black">+{sweepResult.gold.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl px-4 py-2.5"
+                style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.2)' }}>
+                <span className="text-gray-400 text-sm">⭐ EXP</span>
+                <span className="text-blue-300 font-black">+{sweepResult.exp.toLocaleString()}</span>
+              </div>
+              {sweepResult.items.length > 0 && (
+                <div className="rounded-xl px-4 py-2.5"
+                  style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}>
+                  <p className="text-gray-400 text-sm mb-1.5">📦 ドロップアイテム</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {Object.entries(sweepResult.items.reduce<Record<string, number>>((acc, id) => {
+                      acc[id] = (acc[id] ?? 0) + 1;
+                      return acc;
+                    }, {})).map(([itemId, count]) => {
+                      const m = getItemMaster(itemId);
+                      return (
+                        <span key={itemId} className="text-xs bg-gray-800/60 rounded px-2 py-1 text-gray-300 border border-gray-700/40">
+                          {m ? `${m.emoji} ${m.name}` : itemId} ×{count}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button onClick={() => setSweepResult(null)}
+              className="w-full py-3 rounded-xl font-black text-sm text-white active:scale-95 transition-all"
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', boxShadow: '0 4px 16px rgba(124,58,237,0.4)' }}>
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 // ステージリスト（共通コンポーネント）
 const StageList = ({
-  stages, title, onBack, onSelect, isCleared, playerStamina, showBack = true,
+  stages, title, onBack, onSelect, onSweep, isCleared, playerStamina, showBack = true,
 }: {
   stages: QuestStage[];
   title: string;
   onBack: () => void;
   onSelect: (s: QuestStage) => void;
+  onSweep?: (s: QuestStage) => void;
   isCleared: (id: string) => boolean;
   playerStamina: number;
   showBack?: boolean;
@@ -270,9 +403,22 @@ const StageList = ({
       return (
         <button key={stage.id} onClick={() => onSelect(stage)}
           className={`relative w-full card-base p-4 text-left transition-all unit-card-hover ${cleared ? 'border-emerald-700/30' : ''}`}>
-          {/* CLEARバッジ */}
+          {/* CLEARバッジ + スキップボタン */}
           {cleared && (
-            <div className="absolute top-2 right-2 z-10">
+            <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5">
+              {onSweep && (
+                <span
+                  role="button"
+                  onClick={e => { e.stopPropagation(); if (!noStamina) onSweep(stage); }}
+                  className={`text-[10px] font-black px-2.5 py-1 rounded-lg transition-all ${noStamina ? 'opacity-40' : 'active:scale-95'}`}
+                  style={{
+                    background: 'rgba(96,165,250,0.15)',
+                    border: '1px solid rgba(96,165,250,0.4)',
+                    color: '#93c5fd',
+                  }}>
+                  ⏩ スキップ ⚡{stage.staminaCost}
+                </span>
+              )}
               <GameBadge color="teal">CLEAR</GameBadge>
             </div>
           )}

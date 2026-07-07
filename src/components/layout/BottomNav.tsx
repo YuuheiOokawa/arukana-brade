@@ -4,7 +4,7 @@ import { useMissionStore } from '../../stores/missionStore';
 import { useAuthStore } from '../../stores/authStore';
 import {
   IconMenu, IconScroll, IconGear, IconBag,
-  IconArrowUp, IconShield, IconDragon, IconCastle, IconFriends,
+  IconArrowUp, IconShield, IconDragon, IconCastle, IconFriends, IconMap,
 } from '../ui/FantasyIcon';
 import { GameNavIcon } from '../ui/game/GameIcons';
 
@@ -29,6 +29,7 @@ const MENU_FANTASY: FantasyItem[] = [
   { path: '/party',     label: '編成',       type: 'fantasy', Icon: IconShield },
   { path: '/raid',      label: 'レイド',     type: 'fantasy', Icon: IconDragon },
   { path: '/social',    label: 'フレンド',   type: 'fantasy', Icon: IconFriends },
+  { path: '/collection', label: '図鑑',      type: 'fantasy', Icon: IconMap },
 ];
 
 const MENU_SOCIAL: GameItem[] = [

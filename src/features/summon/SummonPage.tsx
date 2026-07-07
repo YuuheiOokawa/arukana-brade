@@ -5,6 +5,7 @@ import { usePlayerStore } from '../../stores/playerStore';
 import { useUnitStore } from '../../stores/unitStore';
 import { useMissionStore } from '../../stores/missionStore';
 import { useAuthStore } from '../../stores/authStore';
+import { useCollectionStore } from '../../stores/collectionStore';
 import { ELEMENT_NAMES } from '../../types';
 import type { SummonPool, RarityType, UnitMaster, GachaApplyResult } from '../../types';
 import type { GachaStar } from '../../types';
@@ -266,6 +267,7 @@ export const SummonPage = () => {
     addDailyProgress('summon');
     useMissionStore.getState().addWeeklyProgress('summon');
     recordSummon(summonedMasters.length);
+    useCollectionStore.getState().registerDiscovered(summonedMasters.map(m => m.id));
 
     void syncSummonResult(
       pool.id,
