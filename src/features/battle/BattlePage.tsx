@@ -43,7 +43,7 @@ const logColor = (line: string) => {
 
 export const BattlePage = () => {
   const navigate = useNavigate();
-  const { pendingStageId, pendingFriendId, clearPending, markCleared, checkAreaComplete, claimAreaReward } = useQuestStore();
+  const { pendingStageId, pendingFriendId, clearPending, markCleared, checkAreaComplete, claimAreaReward, recordStars } = useQuestStore();
   const { getActiveParty } = usePartyStore();
   const { ownedUnits, levelUpUnit } = useUnitStore();
   const { spendStamina, recoverStamina, addGold, addExp, addItem, syncCurrencyToServer, recordBattleWin, recordQuestClear } = usePlayerStore();
@@ -80,18 +80,24 @@ export const BattlePage = () => {
   const [rewardExp, setRewardExp] = useState(0);
   const [rewardItems, setRewardItems] = useState<string[]>([]);
   const [areaClearedKey, setAreaClearedKey] = useState<string | null>(null);
+  const [earnedStars, setEarnedStars] = useState(0);
+  // ハードモード: 敵Lv+10 / スタミナ1.5倍 / 報酬2倍
+  const isHardRef = useRef(false);
+  const [isHardMode, setIsHardMode] = useState(false);
 
   const buildWave = useCallback((s: QuestStage, wIdx: number): BattleEnemy[] => {
     const wave = s.waves[wIdx];
     if (!wave) return [];
+    const hardBonus = isHardRef.current ? 10 : 0;
     return wave.enemies.flatMap(e => {
       const master = getEnemyMaster(e.enemyId);
       if (!master) return [];
-      const lv = 1 + (e.level - 1) * 0.1;
+      const level = e.level + hardBonus;
+      const lv = 1 + (level - 1) * 0.1;
       return [{
         instanceId: uid(),
         masterId: master.id,
-        name: `${master.name}(Lv${e.level})`,
+        name: `${master.name}(Lv${level})`,
         element: master.element,
         currentHp: Math.floor(master.stats.hp * lv),
         maxHp: Math.floor(master.stats.hp * lv),
@@ -114,8 +120,14 @@ export const BattlePage = () => {
     const party = getActiveParty();
     if (!party.slots.some(Boolean)) { navigate('/party'); return; }
 
+    // ハードモード判定（レイドは常にノーマル扱い）
+    const hard = useQuestStore.getState().pendingHard && !pendingStageId.startsWith('raid_');
+    isHardRef.current = hard;
+    setIsHardMode(hard);
+
     recoverStamina();
-    const ok = spendStamina(s.staminaCost);
+    const staminaCost = hard ? Math.ceil(s.staminaCost * 1.5) : s.staminaCost;
+    const ok = spendStamina(staminaCost);
     if (!ok) { navigate('/quests'); return; }
     const friendCandidate = pendingFriendId
       ? FRIEND_CANDIDATES.find(f => f.friendId === pendingFriendId)
@@ -146,7 +158,7 @@ export const BattlePage = () => {
         const eqBonus = equips.reduce((acc, eq) => {
           const em = getEquipmentMaster(eq.masterId);
           if (!em) return acc;
-          const es = calcEquipmentStats(em, eq.level);
+          const es = calcEquipmentStats(em, eq.level, eq.evolveRank ?? 0);
           return {
             hp:  acc.hp  + (es.hp  || 0),
             atk: acc.atk + (es.atk || 0),
@@ -173,7 +185,7 @@ export const BattlePage = () => {
           rec: totalRec,
           bbGauge: 0,
           skillId: master.skillId,
-          bbSkillId: master.bbSkillId,
+          bbSkillId: owned.customBbSkillId ?? master.bbSkillId,
           isFriend: false,
           isAlly: true as const,
           buffs: [],
@@ -386,8 +398,9 @@ export const BattlePage = () => {
                   setAllies(updAllies);
                   addLogs([`━━ Wave ${nextWave + 1} 開始！ ━━━━━━━━━━━━━━`]);
                 } else {
-                  const gold = curStage.rewardGold;
-                  const exp = curStage.rewardExp;
+                  const isHard = isHardRef.current;
+                  const gold = curStage.rewardGold * (isHard ? 2 : 1);
+                  const exp = curStage.rewardExp * (isHard ? 2 : 1);
                   const items: string[] = [];
                   curStage.rewardItems.forEach(ri => {
                     if (Math.random() < ri.chance) {
@@ -397,8 +410,18 @@ export const BattlePage = () => {
                   setRewardGold(gold);
                   setRewardExp(exp);
                   setRewardItems(items);
-                  const isAreaClear = checkAreaComplete(curStage.id);
-                  markCleared(curStage.id);
+
+                  // 星評価: ★1=クリア / ★2=全員生存 / ★3=規定ラウンド以内（ウェーブ数×3）
+                  const noDeaths = updAllies.every(a => a.currentHp > 0);
+                  const fastClear = curRound <= curStage.waves.length * 3;
+                  const stars = 1 + (noDeaths ? 1 : 0) + (fastClear ? 1 : 0);
+                  setEarnedStars(stars);
+                  const starKey = isHard ? `hard_${curStage.id}` : curStage.id;
+                  recordStars(starKey, stars);
+
+                  // ハードは "hard_" プレフィックスで別枠クリア記録（エリア進行には影響しない）
+                  const isAreaClear = !isHard && checkAreaComplete(curStage.id);
+                  markCleared(isHard ? `hard_${curStage.id}` : curStage.id);
                   clearPending();
                   addGold(gold);
                   addExp(exp);
@@ -490,6 +513,8 @@ export const BattlePage = () => {
       gold={rewardGold}
       exp={rewardExp}
       items={rewardItems}
+      stars={earnedStars}
+      hardMode={isHardMode}
       onHome={() => navigate('/')}
       onQuest={() => navigate('/quests')}
       areaClearedKey={areaClearedKey ?? undefined}
@@ -511,7 +536,15 @@ export const BattlePage = () => {
       {/* ヘッダー */}
       <div className="px-3 pt-3 pb-2 flex items-center justify-between border-b border-purple-900/30">
         <div>
-          <p className="text-purple-400 text-xs font-medium tracking-wide">{stage.name}</p>
+          <p className="text-purple-400 text-xs font-medium tracking-wide">
+            {stage.name}
+            {isHardMode && (
+              <span className="ml-1.5 text-[9px] font-black px-1.5 py-0.5 rounded"
+                style={{ background: 'rgba(220,38,38,0.25)', color: '#fca5a5', border: '1px solid rgba(220,38,38,0.5)' }}>
+                HARD
+              </span>
+            )}
+          </p>
           <p className="text-white text-xs font-bold">
             Round <span className="text-purple-300">{round}</span>
             <span className="text-gray-600 mx-1">|</span>
@@ -674,17 +707,41 @@ export const BattlePage = () => {
 
 // ===== 勝利画面 =====
 const VictoryScreen = ({
-  stageName, round, gold, exp, items, onHome, onQuest, areaClearedKey, onAreaScenario,
+  stageName, round, gold, exp, items, stars = 0, hardMode = false, onHome, onQuest, areaClearedKey, onAreaScenario,
 }: {
   stageName: string; round: number; gold: number; exp: number; items: string[];
+  stars?: number; hardMode?: boolean;
   onHome: () => void; onQuest: () => void;
   areaClearedKey?: string; onAreaScenario?: () => void;
 }) => (
   <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center battle-bg">
     <div className="animate-slide-up w-full max-w-sm">
       <div style={{ fontSize: 72, marginBottom: 12, filter: 'drop-shadow(0 0 24px rgba(240,192,64,0.7))' }}>🏆</div>
-      <p className="text-yellow-400 font-black text-3xl tracking-widest mb-1">VICTORY!</p>
+      <p className="text-yellow-400 font-black text-3xl tracking-widest mb-1">
+        VICTORY!
+        {hardMode && <span className="text-red-400 text-sm ml-2 align-middle">HARD</span>}
+      </p>
       <p className="text-gray-500 text-xs mb-1">{stageName}</p>
+
+      {/* 星評価 */}
+      {stars > 0 && (
+        <div className="flex items-center justify-center gap-2 mb-2">
+          {[1, 2, 3].map(i => (
+            <span key={i} style={{
+              fontSize: 30,
+              filter: i <= stars ? 'drop-shadow(0 0 10px rgba(240,192,64,0.9))' : 'grayscale(1) brightness(0.4)',
+            }}>
+              {i <= stars ? '⭐' : '☆'}
+            </span>
+          ))}
+        </div>
+      )}
+      {stars > 0 && stars < 3 && (
+        <p className="text-gray-600 text-[10px] mb-2">
+          {stars < 2 ? '★2: 全員生存でクリア / ' : ''}★3: 規定ラウンド以内にクリア
+        </p>
+      )}
+
       <p className="text-purple-400 text-xs mb-6">クリアラウンド: {round}</p>
 
       {/* エリアクリアバナー */}

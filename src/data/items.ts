@@ -60,6 +60,9 @@ export const ITEM_MASTER: ItemMaster[] = [
   // ===== 進化素材 =====
   { id: 'item_mana_crystal',     name: 'マナクリスタル',     description: '進化に必要な結晶',                 category: 'material',        emoji: '🔷', sellPrice: 500 },
 
+  // ===== スキル書き換え =====
+  { id: 'item_skill_book',       name: 'スキルの書',         description: 'ユニットの必殺技を書き換えられる魔法の書', category: 'material',   emoji: '📜', sellPrice: 2000 },
+
   // ===== 追加バトル素材 =====
   { id: 'item_goblin_ear',       name: 'ゴブリンの耳',       description: '雑魚敵からドロップする素材',       category: 'material',        emoji: '👂', sellPrice: 40 },
   { id: 'item_slime_core',       name: 'スライムコア',       description: 'スライムの核。強化に使用',         category: 'material',        emoji: '🟢', sellPrice: 70 },

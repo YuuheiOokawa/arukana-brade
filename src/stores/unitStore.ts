@@ -15,6 +15,7 @@ interface UnitStore {
   getAwakeningCrystalCount: (masterId: string) => number;
   rarityUp: (instanceId: string) => boolean;
   toggleLock: (instanceId: string) => void;
+  setCustomBbSkill: (instanceId: string, skillId: string | null) => void;
   getUnit: (instanceId: string) => OwnedUnit | undefined;
   calcStats: (unit: OwnedUnit) => UnitStats;
   processSummonResults: (masterIds: string[]) => GachaApplyResult[];
@@ -51,6 +52,7 @@ function migrateUnit(raw: Partial<OwnedUnit> & { instanceId: string; masterId: s
     currentStats,
     isLocked: raw.isLocked ?? false,
     acquiredAt: raw.acquiredAt ?? Date.now(),
+    customBbSkillId: raw.customBbSkillId,
   };
 }
 
@@ -171,6 +173,14 @@ export const useUnitStore = create<UnitStore>()(
         set(s => ({
           ownedUnits: s.ownedUnits.map(u =>
             u.instanceId === instanceId ? { ...u, isLocked: !u.isLocked } : u
+          ),
+        }));
+      },
+
+      setCustomBbSkill: (instanceId, skillId) => {
+        set(s => ({
+          ownedUnits: s.ownedUnits.map(u =>
+            u.instanceId === instanceId ? { ...u, customBbSkillId: skillId ?? undefined } : u
           ),
         }));
       },

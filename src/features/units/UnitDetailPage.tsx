@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useUnitStore } from '../../stores/unitStore';
+import { usePlayerStore } from '../../stores/playerStore';
 import { getUnitMaster } from '../../data/units';
-import { getSkill } from '../../data/skills';
+import { getSkill, SKILL_MASTER } from '../../data/skills';
+import { getItemMaster } from '../../data/items';
 import { ElementBadge } from '../../components/ui/ElementBadge';
 import { RarityBadge } from '../../components/ui/RarityBadge';
 import { UnitIcon } from '../../components/ui/UnitCard';
@@ -15,7 +18,10 @@ import { resolveUnitImage } from '../../lib/unitImage';
 export const UnitDetailPage = () => {
   const { instanceId } = useParams<{ instanceId: string }>();
   const navigate = useNavigate();
-  const { ownedUnits, toggleLock } = useUnitStore();
+  const { ownedUnits, toggleLock, setCustomBbSkill } = useUnitStore();
+  const { items, useItem } = usePlayerStore();
+  const [skillModal, setSkillModal] = useState(false);
+  const [skillToast, setSkillToast] = useState('');
 
   const unit = ownedUnits.find(u => u.instanceId === instanceId);
   if (!unit) return <div className="p-8 text-center text-gray-400">ユニットが見つかりません</div>;
@@ -24,7 +30,38 @@ export const UnitDetailPage = () => {
   if (!master) return null;
 
   const skill = getSkill(master.skillId);
-  const bbSkill = getSkill(master.bbSkillId);
+  const activeBbSkillId = unit.customBbSkillId ?? master.bbSkillId;
+  const bbSkill = getSkill(activeBbSkillId);
+  const isCustomSkill = !!unit.customBbSkillId && unit.customBbSkillId !== master.bbSkillId;
+  const skillBookCount = items.find(i => i.itemId === 'item_skill_book')?.quantity ?? 0;
+
+  // 書き換え候補: 同属性 or 無属性のBBスキル（現在のスキルは除外）
+  const rewriteCandidates = SKILL_MASTER.filter(s =>
+    s.id.startsWith('bb_') &&
+    (s.element === master.element || !s.element) &&
+    s.id !== activeBbSkillId
+  );
+
+  const showSkillToast = (msg: string) => {
+    setSkillToast(msg);
+    setTimeout(() => setSkillToast(''), 2500);
+  };
+
+  const handleRewrite = (skillId: string) => {
+    if (skillBookCount < 1) { showSkillToast('スキルの書が足りません'); return; }
+    const ok = useItem('item_skill_book', 1);
+    if (!ok) { showSkillToast('スキルの書が足りません'); return; }
+    setCustomBbSkill(unit.instanceId, skillId);
+    const newSkill = getSkill(skillId);
+    showSkillToast(`📜 必殺技を「${newSkill?.name ?? ''}」に書き換えました！`);
+    setSkillModal(false);
+  };
+
+  const handleResetSkill = () => {
+    setCustomBbSkill(unit.instanceId, null);
+    showSkillToast('必殺技を元に戻しました');
+    setSkillModal(false);
+  };
   const power = calcTotalPower(unit.currentStats);
   const expNeeded = getExpForLevel(unit.level);
 
@@ -209,10 +246,31 @@ export const UnitDetailPage = () => {
 
       {/* スキル */}
       <div className="px-4 mb-4">
-        <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 px-1">スキル</h3>
+        <div className="flex items-center justify-between mb-2 px-1">
+          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider">スキル</h3>
+          <button onClick={() => setSkillModal(true)}
+            className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all active:scale-95"
+            style={{
+              background: 'rgba(139,92,246,0.15)',
+              border: '1px solid rgba(139,92,246,0.4)',
+              color: '#c4b5fd',
+            }}>
+            📜 必殺技書き換え
+          </button>
+        </div>
         <div className="space-y-2">
           {skill && <SkillCard skill={skill} type="skill" />}
-          {bbSkill && <SkillCard skill={bbSkill} type="bb" />}
+          {bbSkill && (
+            <div className="relative">
+              {isCustomSkill && (
+                <span className="absolute -top-1.5 right-2 z-10 text-[9px] font-black px-1.5 py-0.5 rounded-full"
+                  style={{ background: 'rgba(139,92,246,0.9)', color: '#fff' }}>
+                  書き換え済
+                </span>
+              )}
+              <SkillCard skill={bbSkill} type="bb" />
+            </div>
+          )}
         </div>
       </div>
 
@@ -240,6 +298,85 @@ export const UnitDetailPage = () => {
           </button>
         )}
       </div>
+
+      {/* スキル書き換えトースト */}
+      {skillToast && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[70] px-4 py-2 rounded-xl font-bold text-sm text-white max-w-[90%] text-center"
+          style={{ background: 'rgba(124,58,237,0.95)', boxShadow: '0 4px 20px rgba(139,92,246,0.5)' }}>
+          {skillToast}
+        </div>
+      )}
+
+      {/* スキル書き換えモーダル */}
+      {skillModal && (
+        <div className="fixed inset-0 z-[60] flex items-end" style={{ background: 'rgba(0,0,0,0.75)' }}
+          onClick={e => { if (e.target === e.currentTarget) setSkillModal(false); }}>
+          <div className="w-full max-w-lg mx-auto rounded-t-3xl flex flex-col" style={{
+            background: 'linear-gradient(180deg, #1a0838 0%, #0d0620 100%)',
+            border: '1px solid rgba(139,92,246,0.4)',
+            maxHeight: '85vh',
+          }}>
+            <div className="px-5 pt-5 pb-3 flex-shrink-0">
+              <div className="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-4" />
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white font-black">📜 必殺技書き換え</p>
+                  <p className="text-gray-500 text-xs mt-0.5">現在: {bbSkill?.name ?? '---'}</p>
+                </div>
+                <span className="text-xs font-bold px-2.5 py-1.5 rounded-lg"
+                  style={{
+                    background: skillBookCount > 0 ? 'rgba(52,211,153,0.12)' : 'rgba(220,38,38,0.12)',
+                    border: `1px solid ${skillBookCount > 0 ? 'rgba(52,211,153,0.35)' : 'rgba(220,38,38,0.35)'}`,
+                    color: skillBookCount > 0 ? '#6ee7b7' : '#fca5a5',
+                  }}>
+                  {getItemMaster('item_skill_book')?.emoji} スキルの書 ×{skillBookCount}
+                </span>
+              </div>
+              <p className="text-gray-600 text-xs mt-2">
+                同属性または無属性の必殺技に書き換えられます（スキルの書 ×1 消費）
+              </p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-5 pb-4 space-y-2">
+              {isCustomSkill && (
+                <button onClick={handleResetSkill}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all active:scale-98"
+                  style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)' }}>
+                  <span className="text-xl">↩️</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-yellow-300 font-bold text-sm">元の必殺技に戻す（無料）</p>
+                    <p className="text-gray-500 text-xs truncate">{getSkill(master.bbSkillId)?.name}</p>
+                  </div>
+                </button>
+              )}
+              {rewriteCandidates.map(s => (
+                <button key={s.id}
+                  onClick={() => handleRewrite(s.id)}
+                  disabled={skillBookCount < 1}
+                  className={`w-full px-4 py-3 rounded-xl text-left transition-all ${skillBookCount >= 1 ? 'active:scale-98' : 'opacity-50'}`}
+                  style={{ background: 'rgba(40,20,80,0.6)', border: '1px solid rgba(139,92,246,0.2)' }}>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="bg-orange-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded flex-shrink-0">必殺技</span>
+                    <p className="text-white font-bold text-sm truncate">{s.name}</p>
+                  </div>
+                  <p className="text-gray-500 text-xs">{s.description}</p>
+                </button>
+              ))}
+              {rewriteCandidates.length === 0 && (
+                <p className="text-center text-gray-600 text-sm py-8">書き換え可能なスキルがありません</p>
+              )}
+            </div>
+
+            <div className="px-5 py-4 flex-shrink-0" style={{ borderTop: '1px solid rgba(100,80,140,0.2)' }}>
+              <button onClick={() => setSkillModal(false)}
+                className="w-full py-3 rounded-xl text-sm font-bold text-gray-400"
+                style={{ background: 'rgba(40,30,60,0.6)', border: '1px solid rgba(100,80,140,0.3)' }}>
+                閉じる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -28,13 +28,14 @@ type MainTab = 'story' | 'event';
 
 export const QuestsPage = () => {
   const navigate = useNavigate();
-  const { isCleared, setPendingStage, lastSelectedWorldId, setLastSelectedWorldId } = useQuestStore();
+  const { isCleared, setPendingStage, setPendingHard, getStars, lastSelectedWorldId, setLastSelectedWorldId } = useQuestStore();
   const { player, recoverStamina, spendStamina, addGold, addExp, addItem, syncCurrencyToServer, recordBattleWin, recordQuestClear } = usePlayerStore();
   const { getActiveParty } = usePartyStore();
   const { ownedUnits, levelUpUnit } = useUnitStore();
   const { addDailyProgress, addWeeklyProgress } = useMissionStore();
 
   const [mainTab, setMainTab] = useState<MainTab>('story');
+  const [difficulty, setDifficulty] = useState<'normal' | 'hard'>('normal');
   const [selectedWorldId, setSelectedWorldId] = useState(() =>
     lastSelectedWorldId ?? getQuestWorlds()[0].id
   );
@@ -42,6 +43,9 @@ export const QuestsPage = () => {
   const [staminaModal, setStaminaModal] = useState<{ stageId: string; cost: number } | null>(null);
   const [sweepResult, setSweepResult] = useState<SweepResult | null>(null);
   const [sweepError, setSweepError] = useState('');
+
+  const isHard = difficulty === 'hard';
+  const stageCostOf = (stage: QuestStage) => isHard ? Math.ceil(stage.staminaCost * 1.5) : stage.staminaCost;
 
   const questWorlds = getQuestWorlds();
 
@@ -66,14 +70,18 @@ export const QuestsPage = () => {
 
   const navigateToStage = (stageId: string) => {
     setPendingStage(stageId);
+    // ハードモードはストーリータブでのみ選択可能
+    setPendingHard(isHard && mainTab === 'story');
     const hasScenario = !!getScenario(stageId);
-    navigate(hasScenario ? `/scenario/${stageId}` : '/friends');
+    // ハード周回時はシナリオをスキップして直接フレンド選択へ
+    navigate(hasScenario && !isHard ? `/scenario/${stageId}` : '/friends');
   };
 
   const handleStageSelect = (stage: QuestStage) => {
     if (!hasParty) { navigate('/party'); return; }
-    if (player.stamina < stage.staminaCost) {
-      setStaminaModal({ stageId: stage.id, cost: stage.staminaCost });
+    const cost = mainTab === 'story' ? stageCostOf(stage) : stage.staminaCost;
+    if (player.stamina < cost) {
+      setStaminaModal({ stageId: stage.id, cost });
       return;
     }
     navigateToStage(stage.id);
@@ -90,17 +98,18 @@ export const QuestsPage = () => {
 
   // クリア済みステージの掃討（スキップ）：バトルなしで即時報酬を獲得
   const handleSweep = (stage: QuestStage) => {
+    const sweepHard = isHard && mainTab === 'story';
     recoverStamina();
-    const ok = spendStamina(stage.staminaCost);
+    const ok = spendStamina(sweepHard ? Math.ceil(stage.staminaCost * 1.5) : stage.staminaCost);
     if (!ok) {
       setSweepError('スタミナが足りません');
       setTimeout(() => setSweepError(''), 2500);
       return;
     }
 
-    // 報酬計算（通常バトル勝利と同じロジック）
-    const gold = stage.rewardGold;
-    const exp = stage.rewardExp;
+    // 報酬計算（通常バトル勝利と同じロジック。ハードは2倍）
+    const gold = stage.rewardGold * (sweepHard ? 2 : 1);
+    const exp = stage.rewardExp * (sweepHard ? 2 : 1);
     const items: string[] = [];
     stage.rewardItems.forEach(ri => {
       if (Math.random() < ri.chance) {
@@ -189,7 +198,7 @@ export const QuestsPage = () => {
       {mainTab === 'story' && (
         <>
           {/* ワールドタブ（解放済みワールドのみ表示） */}
-          <div className="px-4 mb-4">
+          <div className="px-4 mb-3">
             <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
               {accessibleWorlds.map(w => (
                 <button key={w.id} onClick={() => { setSelectedWorldId(w.id); setLastSelectedWorldId(w.id); setSelectedArea(null); }}
@@ -200,6 +209,33 @@ export const QuestsPage = () => {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* 難易度切替 */}
+          <div className="px-4 mb-4">
+            <div className="flex gap-1.5 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <button onClick={() => setDifficulty('normal')}
+                className="flex-1 py-2 rounded-lg text-xs font-black transition-all"
+                style={{
+                  background: !isHard ? 'linear-gradient(135deg, #7c3aed, #4f46e5)' : 'transparent',
+                  color: !isHard ? '#fff' : '#6b7280',
+                }}>
+                ノーマル
+              </button>
+              <button onClick={() => setDifficulty('hard')}
+                className="flex-1 py-2 rounded-lg text-xs font-black transition-all"
+                style={{
+                  background: isHard ? 'linear-gradient(135deg, #dc2626, #991b1b)' : 'transparent',
+                  color: isHard ? '#fff' : '#6b7280',
+                }}>
+                🔥 ハード
+              </button>
+            </div>
+            {isHard && (
+              <p className="text-xs mt-1.5 px-1" style={{ color: '#f87171' }}>
+                敵Lv+10 / スタミナ1.5倍 / 報酬2倍（ノーマルクリア済みステージのみ挑戦可）
+              </p>
+            )}
           </div>
 
           {!selectedArea ? (
@@ -249,12 +285,14 @@ export const QuestsPage = () => {
           ) : (
             <StageList
               stages={selectedArea.stages}
-              title={`${selectedArea.emoji} ${selectedArea.name}`}
+              title={`${selectedArea.emoji} ${selectedArea.name}${isHard ? ' 🔥' : ''}`}
               onBack={() => setSelectedArea(null)}
               onSelect={handleStageSelect}
               onSweep={handleSweep}
               isCleared={isCleared}
               playerStamina={player.stamina}
+              mode={difficulty}
+              getStars={getStars}
             />
           )}
         </>
@@ -293,6 +331,8 @@ export const QuestsPage = () => {
                   isCleared={isCleared}
                   playerStamina={player.stamina}
                   showBack={false}
+                  mode="normal"
+                  getStars={getStars}
                 />
               </div>
             ))
@@ -377,6 +417,7 @@ export const QuestsPage = () => {
 // ステージリスト（共通コンポーネント）
 const StageList = ({
   stages, title, onBack, onSelect, onSweep, isCleared, playerStamina, showBack = true,
+  mode = 'normal', getStars,
 }: {
   stages: QuestStage[];
   title: string;
@@ -386,7 +427,17 @@ const StageList = ({
   isCleared: (id: string) => boolean;
   playerStamina: number;
   showBack?: boolean;
-}) => (
+  mode?: 'normal' | 'hard';
+  getStars?: (key: string) => number;
+}) => {
+  const hard = mode === 'hard';
+  const clearKey = (id: string) => hard ? `hard_${id}` : id;
+  // ノーマル: 前ステージクリアで解放 / ハード: ノーマルクリア済みステージのみ表示
+  const visibleStages = hard
+    ? stages.filter(s => isCleared(s.id))
+    : stages.filter((_, idx) => idx === 0 || isCleared(stages[idx - 1].id));
+
+  return (
   <div className="px-4 space-y-3">
     {showBack && (
       <div className="flex items-center gap-3 mb-3">
@@ -396,13 +447,23 @@ const StageList = ({
         <p className="text-white font-bold">{title}</p>
       </div>
     )}
-    {/* 前ステージクリアで次ステージが解放される（idx=0は常に表示）*/}
-    {stages.filter((_, idx) => idx === 0 || isCleared(stages[idx - 1].id)).map((stage, idx) => {
-      const cleared = isCleared(stage.id);
-      const noStamina = playerStamina < stage.staminaCost;
+    {hard && visibleStages.length === 0 && (
+      <div className="card-base p-8 text-center">
+        <p className="text-4xl mb-3">🔒</p>
+        <p className="text-gray-400 text-sm font-bold">挑戦できるハードステージがありません</p>
+        <p className="text-gray-600 text-xs mt-1">ノーマルをクリアするとハードに挑戦できます</p>
+      </div>
+    )}
+    {visibleStages.map((stage, idx) => {
+      const cleared = isCleared(clearKey(stage.id));
+      const cost = hard ? Math.ceil(stage.staminaCost * 1.5) : stage.staminaCost;
+      const rewardMul = hard ? 2 : 1;
+      const noStamina = playerStamina < cost;
+      const stars = getStars ? getStars(clearKey(stage.id)) : 0;
       return (
         <button key={stage.id} onClick={() => onSelect(stage)}
-          className={`relative w-full card-base p-4 text-left transition-all unit-card-hover ${cleared ? 'border-emerald-700/30' : ''}`}>
+          className={`relative w-full card-base p-4 text-left transition-all unit-card-hover ${
+            cleared ? 'border-emerald-700/30' : ''} ${hard ? 'border-red-900/40' : ''}`}>
           {/* CLEARバッジ + スキップボタン */}
           {cleared && (
             <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5">
@@ -416,7 +477,7 @@ const StageList = ({
                     border: '1px solid rgba(96,165,250,0.4)',
                     color: '#93c5fd',
                   }}>
-                  ⏩ スキップ ⚡{stage.staminaCost}
+                  ⏩ スキップ ⚡{cost}
                 </span>
               )}
               <GameBadge color="teal">CLEAR</GameBadge>
@@ -424,17 +485,27 @@ const StageList = ({
           )}
           <div className="flex items-start gap-3">
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5 ${
-              cleared ? 'bg-emerald-700/40 text-emerald-400' : 'bg-gray-800 text-gray-500'
+              cleared ? 'bg-emerald-700/40 text-emerald-400' : hard ? 'bg-red-950/60 text-red-400' : 'bg-gray-800 text-gray-500'
             }`}>
               {cleared ? '✓' : idx + 1}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white font-bold text-sm mb-1">{stage.name}</p>
+              <div className="flex items-center gap-1.5 mb-1">
+                <p className="text-white font-bold text-sm">{stage.name}</p>
+                {/* 星評価 (クリア済みのみ) */}
+                {cleared && (
+                  <span className="text-[11px] tracking-tight">
+                    {[1, 2, 3].map(i => (
+                      <span key={i} style={{ opacity: i <= stars ? 1 : 0.25 }}>⭐</span>
+                    ))}
+                  </span>
+                )}
+              </div>
               <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-500 mb-2">
-                <span className={noStamina ? 'text-red-400 font-bold' : ''}>スタミナ {stage.staminaCost}</span>
-                <span>推奨 {stage.recommendedPower.toLocaleString()}</span>
-                <span className="text-yellow-600">{stage.rewardGold.toLocaleString()}G</span>
-                <span className="text-blue-400">EXP {stage.rewardExp}</span>
+                <span className={noStamina ? 'text-red-400 font-bold' : ''}>スタミナ {cost}</span>
+                <span>推奨 {(stage.recommendedPower * (hard ? 2 : 1)).toLocaleString()}</span>
+                <span className="text-yellow-600">{(stage.rewardGold * rewardMul).toLocaleString()}G</span>
+                <span className="text-blue-400">EXP {stage.rewardExp * rewardMul}</span>
               </div>
               <div className="flex flex-wrap gap-1">
                 {stage.waves.map((wave, i) => (
@@ -444,8 +515,8 @@ const StageList = ({
                       const em = ENEMY_MASTER.find(m => m.id === e.enemyId);
                       return (
                         <span key={j} className="text-xs bg-gray-800/60 border border-gray-700/40 rounded px-1.5 py-0.5 flex items-center gap-0.5"
-                          style={{ color: wave.isBoss ? '#f87171' : '#9ca3af' }}>
-                          {em ? `${em.emoji} ${em.name}` : e.enemyId} Lv{e.level}
+                          style={{ color: wave.isBoss || hard ? '#f87171' : '#9ca3af' }}>
+                          {em ? `${em.emoji} ${em.name}` : e.enemyId} Lv{e.level + (hard ? 10 : 0)}
                         </span>
                       );
                     })}
@@ -463,4 +534,5 @@ const StageList = ({
       );
     })}
   </div>
-);
+  );
+};
