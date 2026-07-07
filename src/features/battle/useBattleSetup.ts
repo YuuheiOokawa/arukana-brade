@@ -52,7 +52,7 @@ export const useBattleSetup = () => {
           rec: stats.rec,
           bbGauge: 0,
           skillId: master.skillId,
-          bbSkillId: master.bbSkillId,
+          bbSkillId: owned.customBbSkillId ?? master.bbSkillId,
           isFriend: false,
           isAlly: true as const,
           buffs: [],

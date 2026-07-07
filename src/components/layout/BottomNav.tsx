@@ -4,8 +4,9 @@ import { useMissionStore } from '../../stores/missionStore';
 import { useAuthStore } from '../../stores/authStore';
 import {
   IconMenu, IconScroll, IconGear, IconBag,
-  IconArrowUp, IconShield, IconDragon, IconCastle, IconFriends, IconMap,
+  IconArrowUp, IconShield, IconDragon, IconCastle, IconFriends, IconMap, IconStar,
 } from '../ui/FantasyIcon';
+import { useGiftStore } from '../../stores/giftStore';
 import { GameNavIcon } from '../ui/game/GameIcons';
 
 type NavIconKey = 'home' | 'quest' | 'unit' | 'summon' | 'profile' | 'guild' | 'arena';
@@ -17,7 +18,7 @@ const MAIN_NAV: { path: string; navType: NavIconKey }[] = [
   { path: '/summon', navType: 'summon' },
 ];
 
-type FantasyItem = { path: string; label: string; badge?: true; type: 'fantasy'; Icon: React.ComponentType<{ size: number; color: string }> };
+type FantasyItem = { path: string; label: string; badge?: true; giftBadge?: true; type: 'fantasy'; Icon: React.ComponentType<{ size: number; color: string }> };
 type GameItem   = { path: string; label: string; badge?: true; type: 'game'; navType: NavIconKey };
 
 const MENU_FANTASY: FantasyItem[] = [
@@ -30,6 +31,7 @@ const MENU_FANTASY: FantasyItem[] = [
   { path: '/raid',      label: 'レイド',     type: 'fantasy', Icon: IconDragon },
   { path: '/social',    label: 'フレンド',   type: 'fantasy', Icon: IconFriends },
   { path: '/collection', label: '図鑑',      type: 'fantasy', Icon: IconMap },
+  { path: '/gifts',     label: 'プレゼント', type: 'fantasy', Icon: IconStar, giftBadge: true },
 ];
 
 const MENU_SOCIAL: GameItem[] = [
@@ -42,10 +44,12 @@ export const BottomNav = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { getCompletedCount, getClaimedCount } = useMissionStore();
+  const { getUnclaimedCount } = useGiftStore();
   const { logout } = useAuthStore();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const missionBadge = getCompletedCount() > getClaimedCount();
+  const giftBadge = getUnclaimedCount() > 0;
   const isActive = (path: string) => path === '/' ? pathname === '/' : pathname.startsWith(path);
 
   const handleNav = (path: string) => { setMenuOpen(false); navigate(path); };
@@ -96,7 +100,7 @@ export const BottomNav = () => {
                           {item.label}
                         </span>
                       </button>
-                      {item.badge && missionBadge && (
+                      {((item.badge && missionBadge) || (item.giftBadge && giftBadge)) && (
                         <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full pointer-events-none" />
                       )}
                     </div>

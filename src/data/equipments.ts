@@ -309,9 +309,32 @@ export const getEquipmentMaster = (id: string): EquipmentMaster | undefined => {
   return EQUIPMENT_MASTER.find(e => e.id === id);
 };
 
-export const calcEquipmentStats = (master: EquipmentMaster, level: number): { atk: number; def: number; hp: number; rec: number } => {
-  const ratio = (level - 1) / (master.maxLevel - 1);
-  const lerp = (base: number = 0, max: number = 0) => Math.floor(base + (max - base) * ratio);
+// ===== 装備進化 =====
+export const MAX_EVOLVE_RANK = 3;
+export const EVOLVE_STAT_BONUS = 0.3;   // 1ランクごとに +30%
+export const EVOLVE_LEVEL_BONUS = 10;   // 1ランクごとにレベル上限 +10
+
+export const EVOLVE_MATERIALS: Record<string, { itemId: string; quantity: number }[]> = {
+  N:   [{ itemId: 'item_stone_core', quantity: 3 }],
+  R:   [{ itemId: 'item_stone_core', quantity: 5 }, { itemId: 'item_magic_crystal', quantity: 2 }],
+  SR:  [{ itemId: 'item_magic_crystal', quantity: 5 }, { itemId: 'item_elemental_core', quantity: 1 }],
+  SSR: [{ itemId: 'item_elemental_core', quantity: 3 }],
+};
+
+export const EVOLVE_GOLD_COST: Record<string, number> = {
+  N: 5000, R: 15000, SR: 40000, SSR: 100000,
+};
+
+// 進化ランクを加味した実効レベル上限
+export const getEffectiveMaxLevel = (master: EquipmentMaster, evolveRank = 0): number =>
+  master.maxLevel + evolveRank * EVOLVE_LEVEL_BONUS;
+
+export const calcEquipmentStats = (master: EquipmentMaster, level: number, evolveRank = 0): { atk: number; def: number; hp: number; rec: number } => {
+  const effectiveMax = getEffectiveMaxLevel(master, evolveRank);
+  const ratio = Math.min(1, (level - 1) / (effectiveMax - 1));
+  const evolveMul = 1 + evolveRank * EVOLVE_STAT_BONUS;
+  const lerp = (base: number = 0, max: number = 0) =>
+    Math.floor((base + (max - base) * ratio) * evolveMul);
   return {
     hp:  lerp(master.baseStats.hp,  master.maxStats.hp),
     atk: lerp(master.baseStats.atk, master.maxStats.atk),

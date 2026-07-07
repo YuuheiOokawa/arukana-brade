@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useMissionStore } from '../../stores/missionStore';
 import { useLoginBonusStore } from '../../stores/loginBonusStore';
+import { useGiftStore } from '../../stores/giftStore';
 import { getActiveEvents, getActiveRaids } from '../../data/events';
 import { formatCompact } from '../../utils/format';
 import { RANK_EXP_TABLE } from '../../stores/playerStore';
@@ -54,6 +55,7 @@ export const HomePage = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recoverStamina, checkDailyReset, updateCd]);
 
+  const giftCount = useGiftStore(s => s.getUnclaimedCount());
   const activeEvents = getActiveEvents();
   const activeRaids = getActiveRaids();
   const missionCompleted = getCompletedCount();
@@ -211,6 +213,24 @@ export const HomePage = () => {
 
       {/* お知らせ */}
       <div className="px-4 space-y-2 mb-4" style={{ position: 'relative', zIndex: 2 }}>
+        {giftCount > 0 && (
+          <button onClick={() => navigate('/gifts')}
+            className="w-full rounded-xl p-3 flex items-center gap-3 text-left transition-all active:scale-98"
+            style={{
+              background: 'linear-gradient(145deg, #5c3d00, #2e1e00)',
+              border: '2px solid #f0c040',
+              boxShadow: '0 0 20px rgba(240,192,64,0.8), 0 4px 12px rgba(0,0,0,0.6)',
+            }}>
+            <span className="text-xl">🎁</span>
+            <div className="flex-1">
+              <p className="text-sm font-bold" style={{ color: '#fde68a' }}>プレゼントが届いています！</p>
+              <p className="text-xs" style={{ color: '#fcd34d' }}>{giftCount} 件の未受取プレゼント</p>
+            </div>
+            <span className="w-6 h-6 rounded-full bg-red-500 text-white text-xs font-black flex items-center justify-center">
+              {giftCount}
+            </span>
+          </button>
+        )}
         {missionPending > 0 && (
           <button onClick={() => navigate('/missions')}
             className="w-full rounded-xl p-3 flex items-center gap-3 text-left transition-all active:scale-98"

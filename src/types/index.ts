@@ -177,6 +177,7 @@ export interface OwnedUnit {
   currentStats: UnitStats;
   isLocked: boolean;
   acquiredAt: number;
+  customBbSkillId?: string; // スキルの書で書き換えたBBスキル（未設定ならマスターのBBスキル）
 }
 
 // ===== ガチャ結果タイプ =====
@@ -410,6 +411,7 @@ export interface OwnedEquipment {
   level: number;
   exp: number;
   equippedTo?: string;
+  evolveRank?: number; // 進化ランク (0〜3)。1ランクごとにステータス+30%・レベル上限+10
 }
 
 // ===== デイリーミッション =====
