@@ -50,10 +50,12 @@ export const QuestsPage = () => {
   const questWorlds = getQuestWorlds();
 
   // 前ワールドの最終ステージをクリアしないと次ワールドは非表示
+  // （EXエリアはワールド解放条件に含めない: 通常エリアの最終ステージで判定）
   const isWorldAccessible = (worldIdx: number): boolean => {
     if (worldIdx === 0) return true;
     const prevWorld = questWorlds[worldIdx - 1];
-    const prevLastArea = prevWorld.areas[prevWorld.areas.length - 1];
+    const prevCoreAreas = prevWorld.areas.filter(a => !a.isExtra);
+    const prevLastArea = prevCoreAreas[prevCoreAreas.length - 1];
     const prevLastStage = prevLastArea?.stages[prevLastArea.stages.length - 1];
     return prevLastStage ? isCleared(prevLastStage.id) : false;
   };
@@ -242,8 +244,14 @@ export const QuestsPage = () => {
             <div className="px-4 space-y-3">
               <p className="text-gray-600 text-xs font-bold uppercase tracking-widest mb-3">エリア選択</p>
               {/* 前エリアの最終ステージをクリアしないと次エリアは非表示（ステージと同様） */}
+              {/* EXエリアは通常エリアを全制覇すると解放される */}
               {selectedWorld.areas
-                .filter((_, areaIdx) => {
+                .filter((area, areaIdx) => {
+                  if (area.isExtra) {
+                    return selectedWorld.areas
+                      .filter(a => !a.isExtra)
+                      .every(a => a.stages.every(s => isCleared(s.id)));
+                  }
                   if (areaIdx === 0) return true;
                   const prevArea = selectedWorld.areas[areaIdx - 1];
                   const prevLastStage = prevArea.stages[prevArea.stages.length - 1];
@@ -255,16 +263,24 @@ export const QuestsPage = () => {
                   const isComplete = cleared === totalStages;
                   return (
                     <button key={area.id} onClick={() => setSelectedArea(area)}
-                      className="w-full card-base p-4 text-left unit-card-hover">
+                      className="w-full card-base p-4 text-left unit-card-hover"
+                      style={area.isExtra ? { border: '1px solid rgba(240,192,64,0.35)' } : undefined}>
                       <div className="flex items-center gap-3">
                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 ${
-                          isComplete ? 'bg-emerald-900/50 border border-emerald-700/40' : 'bg-purple-900/40 border border-purple-700/30'
+                          isComplete ? 'bg-emerald-900/50 border border-emerald-700/40' :
+                          area.isExtra ? 'bg-yellow-900/40 border border-yellow-700/40' : 'bg-purple-900/40 border border-purple-700/30'
                         }`}>
                           {area.emoji}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-0.5">
-                            <p className="text-white font-bold text-sm">{area.name}</p>
+                            {area.isExtra && (
+                              <span className="text-[9px] font-black px-1.5 py-0.5 rounded flex-shrink-0"
+                                style={{ background: 'rgba(240,192,64,0.2)', color: '#fde68a', border: '1px solid rgba(240,192,64,0.45)' }}>
+                                EX
+                              </span>
+                            )}
+                            <p className="text-white font-bold text-sm truncate">{area.name}</p>
                             {isComplete && <span className="text-emerald-400 text-xs">✓</span>}
                           </div>
                           <p className="text-gray-500 text-xs mb-2">{area.description}</p>

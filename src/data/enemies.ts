@@ -394,7 +394,6 @@ export const ENEMY_MASTER: EnemyMaster[] = [
 ];
 
 export const getEnemyMaster = (id: string): EnemyMaster | undefined => {
-  const cached = getMasterEnemies();
-  if (cached) return cached.find(e => e.id === id);
-  return ENEMY_MASTER.find(e => e.id === id);
+  // DBキャッシュ優先、見つからない場合は静的データにフォールバック
+  return getMasterEnemies()?.find(e => e.id === id) ?? ENEMY_MASTER.find(e => e.id === id);
 };
