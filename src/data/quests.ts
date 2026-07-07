@@ -1304,6 +1304,30 @@ export const QUEST_WORLDS: QuestWorld[] = [
           },
         ],
       },
+      {
+        id: 'area_6_3',
+        name: 'EX 天使長の聖廷',
+        description: '神殿の全域を制した者だけが招かれる、天使長の御前。スキルの書が眠るという。',
+        emoji: '👼',
+        isExtra: true,
+        stages: [
+          { id: 'stage_6_3_1', name: '6-11 誓いの回廊', staminaCost: 36, recommendedPower: 270000, rewardGold: 44000, rewardExp: 31000,
+            rewardItems: [{ itemId: 'item_holy_stone', quantity: 3, chance: 0.7 }, { itemId: 'item_magic_crystal', quantity: 2, chance: 0.5 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.05 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_angel', level: 102 }, { enemyId: 'enemy_guardian_angel', level: 102 }] }, { enemies: [{ enemyId: 'enemy_divine_paladin', level: 103 }], isBoss: true }] },
+          { id: 'stage_6_3_2', name: '6-12 聖歌の広間', staminaCost: 37, recommendedPower: 295000, rewardGold: 48000, rewardExp: 34000,
+            rewardItems: [{ itemId: 'item_angel_feather', quantity: 3, chance: 0.7 }, { itemId: 'item_arcana_shard', quantity: 4, chance: 0.6 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.05 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_guardian_angel', level: 104 }, { enemyId: 'enemy_guardian_angel', level: 104 }] }, { enemies: [{ enemyId: 'enemy_angel', level: 105 }, { enemyId: 'enemy_divine_paladin', level: 104 }] }] },
+          { id: 'stage_6_3_3', name: '6-13 熾天使の試練', staminaCost: 38, recommendedPower: 320000, rewardGold: 53000, rewardExp: 38000,
+            rewardItems: [{ itemId: 'item_light_gem', quantity: 4, chance: 0.7 }, { itemId: 'item_elemental_core', quantity: 1, chance: 0.35 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.06 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_divine_paladin', level: 106 }, { enemyId: 'enemy_angel', level: 105 }] }, { enemies: [{ enemyId: 'enemy_divine_paladin', level: 107 }], isBoss: true }] },
+          { id: 'stage_6_3_4', name: '6-14 光の玉座前', staminaCost: 39, recommendedPower: 350000, rewardGold: 58000, rewardExp: 42000,
+            rewardItems: [{ itemId: 'item_holy_stone', quantity: 4, chance: 0.75 }, { itemId: 'item_magic_crystal', quantity: 3, chance: 0.55 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.06 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_angel', level: 108 }, { enemyId: 'enemy_angel', level: 108 }, { enemyId: 'enemy_guardian_angel', level: 107 }] }, { enemies: [{ enemyId: 'enemy_divine_paladin', level: 109 }, { enemyId: 'enemy_angel', level: 108 }] }] },
+          { id: 'stage_6_3_5', name: '6-15 天使長セラフィム【EX BOSS】', staminaCost: 40, recommendedPower: 380000, rewardGold: 65000, rewardExp: 47000,
+            rewardItems: [{ itemId: 'item_arcana_orb', quantity: 1, chance: 0.45 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.15 }, { itemId: 'item_elemental_core', quantity: 2, chance: 0.4 }, { itemId: 'item_exp_xl', quantity: 1, chance: 0.7 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_divine_paladin', level: 109 }, { enemyId: 'enemy_guardian_angel', level: 109 }] }, { enemies: [{ enemyId: 'enemy_angel', level: 110 }, { enemyId: 'enemy_divine_paladin', level: 110 }] }, { enemies: [{ enemyId: 'enemy_divine_paladin', level: 112 }], isBoss: true }] },
+        ],
+      },
     ],
   },
 
@@ -1460,6 +1484,30 @@ export const QUEST_WORLDS: QuestWorld[] = [
               { enemies: [{ enemyId: 'enemy_boss_lich', level: 130 }], isBoss: true },
             ],
           },
+        ],
+      },
+      {
+        id: 'area_7_3',
+        name: 'EX 奈落の最深層',
+        description: '深淵のさらに底。光が一度も届いたことのない、影の王が眠る領域。',
+        emoji: '🕸️',
+        isExtra: true,
+        stages: [
+          { id: 'stage_7_3_1', name: '7-11 忘れられた牢獄', staminaCost: 41, recommendedPower: 410000, rewardGold: 70000, rewardExp: 54000,
+            rewardItems: [{ itemId: 'item_dark_gem', quantity: 3, chance: 0.7 }, { itemId: 'item_magic_crystal', quantity: 3, chance: 0.5 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.05 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_dark_knight', level: 132 }, { enemyId: 'enemy_dark_mage', level: 132 }] }, { enemies: [{ enemyId: 'enemy_lich', level: 133 }], isBoss: true }] },
+          { id: 'stage_7_3_2', name: '7-12 亡者の回廊', staminaCost: 42, recommendedPower: 450000, rewardGold: 76000, rewardExp: 59000,
+            rewardItems: [{ itemId: 'item_shadow_essence', quantity: 2, chance: 0.6 }, { itemId: 'item_arcana_shard', quantity: 5, chance: 0.6 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.05 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_lich', level: 134 }, { enemyId: 'enemy_dark_knight', level: 134 }] }, { enemies: [{ enemyId: 'enemy_dragon_dark', level: 135 }], isBoss: true }] },
+          { id: 'stage_7_3_3', name: '7-13 影の王庭', staminaCost: 43, recommendedPower: 495000, rewardGold: 83000, rewardExp: 65000,
+            rewardItems: [{ itemId: 'item_dark_gem', quantity: 4, chance: 0.75 }, { itemId: 'item_elemental_core', quantity: 1, chance: 0.4 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.06 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_dragon_dark', level: 135 }, { enemyId: 'enemy_dark_mage', level: 135 }] }, { enemies: [{ enemyId: 'enemy_boss_lich', level: 136 }], isBoss: true }] },
+          { id: 'stage_7_3_4', name: '7-14 深淵の裂け目', staminaCost: 44, recommendedPower: 545000, rewardGold: 91000, rewardExp: 71000,
+            rewardItems: [{ itemId: 'item_shadow_essence', quantity: 3, chance: 0.65 }, { itemId: 'item_awakening_crystal', quantity: 1, chance: 0.45 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.06 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_dark_dragon', level: 137 }, { enemyId: 'enemy_lich', level: 136 }] }, { enemies: [{ enemyId: 'enemy_dragon_dark', level: 137 }, { enemyId: 'enemy_boss_lich', level: 137 }] }] },
+          { id: 'stage_7_3_5', name: '7-15 奈落の支配者【EX BOSS】', staminaCost: 45, recommendedPower: 600000, rewardGold: 100000, rewardExp: 78000,
+            rewardItems: [{ itemId: 'item_arcana_orb', quantity: 1, chance: 0.55 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.15 }, { itemId: 'item_awakening_crystal', quantity: 1, chance: 0.55 }, { itemId: 'item_exp_xl', quantity: 2, chance: 0.75 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_boss_lich', level: 138 }, { enemyId: 'enemy_dragon_dark', level: 138 }] }, { enemies: [{ enemyId: 'enemy_dark_dragon', level: 139 }, { enemyId: 'enemy_boss_lich', level: 139 }] }, { enemies: [{ enemyId: 'enemy_boss_lich', level: 140 }], isBoss: true }] },
         ],
       },
     ],
@@ -1620,6 +1668,30 @@ export const QUEST_WORLDS: QuestWorld[] = [
           },
         ],
       },
+      {
+        id: 'area_8_3',
+        name: 'EX 星界の彼方',
+        description: '創世の頂を超えた先に広がる星々の海。観測者が世界の行く末を見つめている。',
+        emoji: '🌌',
+        isExtra: true,
+        stages: [
+          { id: 'stage_8_3_1', name: '8-11 星屑の橋', staminaCost: 46, recommendedPower: 650000, rewardGold: 110000, rewardExp: 86000,
+            rewardItems: [{ itemId: 'item_celestial_dust', quantity: 2, chance: 0.6 }, { itemId: 'item_magic_crystal', quantity: 4, chance: 0.55 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.05 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_thunder_dragon', level: 162 }, { enemyId: 'enemy_dark_dragon', level: 162 }] }, { enemies: [{ enemyId: 'enemy_boss_lich', level: 163 }], isBoss: true }] },
+          { id: 'stage_8_3_2', name: '8-12 銀河の回廊', staminaCost: 47, recommendedPower: 720000, rewardGold: 121000, rewardExp: 94000,
+            rewardItems: [{ itemId: 'item_arcana_shard', quantity: 6, chance: 0.7 }, { itemId: 'item_elemental_core', quantity: 2, chance: 0.45 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.05 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_boss_lich', level: 164 }, { enemyId: 'enemy_thunder_dragon', level: 163 }] }, { enemies: [{ enemyId: 'enemy_dark_dragon', level: 165 }], isBoss: true }] },
+          { id: 'stage_8_3_3', name: '8-13 超新星の間', staminaCost: 48, recommendedPower: 790000, rewardGold: 133000, rewardExp: 103000,
+            rewardItems: [{ itemId: 'item_celestial_dust', quantity: 3, chance: 0.65 }, { itemId: 'item_awakening_crystal', quantity: 1, chance: 0.5 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.06 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_dark_dragon', level: 165 }, { enemyId: 'enemy_thunder_dragon', level: 165 }] }, { enemies: [{ enemyId: 'enemy_boss_lich', level: 166 }], isBoss: true }] },
+          { id: 'stage_8_3_4', name: '8-14 創世の残響', staminaCost: 49, recommendedPower: 870000, rewardGold: 146000, rewardExp: 113000,
+            rewardItems: [{ itemId: 'item_arcana_orb', quantity: 1, chance: 0.45 }, { itemId: 'item_elemental_core', quantity: 2, chance: 0.5 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.06 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_thunder_dragon', level: 167 }, { enemyId: 'enemy_boss_lich', level: 166 }] }, { enemies: [{ enemyId: 'enemy_dark_dragon', level: 167 }, { enemyId: 'enemy_thunder_dragon', level: 167 }] }] },
+          { id: 'stage_8_3_5', name: '8-15 星界の観測者【EX BOSS】', staminaCost: 50, recommendedPower: 950000, rewardGold: 160000, rewardExp: 125000,
+            rewardItems: [{ itemId: 'item_arcana_orb', quantity: 2, chance: 0.55 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.15 }, { itemId: 'item_awakening_crystal', quantity: 2, chance: 0.5 }, { itemId: 'item_exp_xl', quantity: 2, chance: 0.8 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_boss_lich', level: 168 }, { enemyId: 'enemy_dark_dragon', level: 168 }] }, { enemies: [{ enemyId: 'enemy_thunder_dragon', level: 169 }, { enemyId: 'enemy_boss_lich', level: 169 }] }, { enemies: [{ enemyId: 'enemy_boss_lich', level: 170 }], isBoss: true }] },
+        ],
+      },
     ],
   },
 
@@ -1776,6 +1848,30 @@ export const QUEST_WORLDS: QuestWorld[] = [
               { enemies: [{ enemyId: 'enemy_boss_lich', level: 195 }], isBoss: true },
             ],
           },
+        ],
+      },
+      {
+        id: 'area_9_3',
+        name: 'EX 王者の凱旋路',
+        description: '永劫の勝者だけが歩ける栄光の道。無敗の剣聖が最後の壁として立ちはだかる。',
+        emoji: '🏆',
+        isExtra: true,
+        stages: [
+          { id: 'stage_9_3_1', name: '9-11 挑戦者の門', staminaCost: 51, recommendedPower: 1100000, rewardGold: 220000, rewardExp: 160000,
+            rewardItems: [{ itemId: 'item_boss_essence', quantity: 2, chance: 0.6 }, { itemId: 'item_magic_crystal', quantity: 5, chance: 0.6 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.05 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_dark_dragon', level: 197 }, { enemyId: 'enemy_thunder_dragon', level: 197 }] }, { enemies: [{ enemyId: 'enemy_boss_lich', level: 198 }], isBoss: true }] },
+          { id: 'stage_9_3_2', name: '9-12 百戦の広場', staminaCost: 52, recommendedPower: 1220000, rewardGold: 242000, rewardExp: 176000,
+            rewardItems: [{ itemId: 'item_arcana_shard', quantity: 7, chance: 0.7 }, { itemId: 'item_elemental_core', quantity: 2, chance: 0.55 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.05 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_boss_lich', level: 199 }, { enemyId: 'enemy_dark_dragon', level: 198 }] }, { enemies: [{ enemyId: 'enemy_thunder_dragon', level: 200 }], isBoss: true }] },
+          { id: 'stage_9_3_3', name: '9-13 王者の階段', staminaCost: 53, recommendedPower: 1340000, rewardGold: 266000, rewardExp: 194000,
+            rewardItems: [{ itemId: 'item_boss_essence', quantity: 3, chance: 0.65 }, { itemId: 'item_awakening_crystal', quantity: 2, chance: 0.5 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.06 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_thunder_dragon', level: 200 }, { enemyId: 'enemy_boss_lich', level: 200 }] }, { enemies: [{ enemyId: 'enemy_dark_dragon', level: 201 }], isBoss: true }] },
+          { id: 'stage_9_3_4', name: '9-14 栄光の回廊', staminaCost: 54, recommendedPower: 1470000, rewardGold: 292000, rewardExp: 213000,
+            rewardItems: [{ itemId: 'item_arcana_orb', quantity: 1, chance: 0.55 }, { itemId: 'item_elemental_core', quantity: 3, chance: 0.5 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.06 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_dark_dragon', level: 202 }, { enemyId: 'enemy_thunder_dragon', level: 202 }] }, { enemies: [{ enemyId: 'enemy_boss_lich', level: 203 }, { enemyId: 'enemy_dark_dragon', level: 202 }] }] },
+          { id: 'stage_9_3_5', name: '9-15 無敗の剣聖【EX BOSS】', staminaCost: 55, recommendedPower: 1600000, rewardGold: 320000, rewardExp: 235000,
+            rewardItems: [{ itemId: 'item_arcana_orb', quantity: 2, chance: 0.65 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.18 }, { itemId: 'item_awakening_crystal', quantity: 2, chance: 0.6 }, { itemId: 'item_exp_xl', quantity: 3, chance: 0.8 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_boss_lich', level: 204 }, { enemyId: 'enemy_thunder_dragon', level: 204 }] }, { enemies: [{ enemyId: 'enemy_dark_dragon', level: 205 }, { enemyId: 'enemy_boss_lich', level: 205 }] }, { enemies: [{ enemyId: 'enemy_boss_lich', level: 206 }], isBoss: true }] },
         ],
       },
     ],
@@ -1935,6 +2031,30 @@ export const QUEST_WORLDS: QuestWorld[] = [
               { enemies: [{ enemyId: 'enemy_boss_lich', level: 255 }], isBoss: true },
             ],
           },
+        ],
+      },
+      {
+        id: 'area_10_3',
+        name: 'EX 終焉の狭間',
+        description: '神話の果てのさらに外側。世界と虚無の境目に、神話を喰らう者が潜む。',
+        emoji: '💫',
+        isExtra: true,
+        stages: [
+          { id: 'stage_10_3_1', name: '10-11 世界の果ての岸', staminaCost: 52, recommendedPower: 2200000, rewardGold: 550000, rewardExp: 330000,
+            rewardItems: [{ itemId: 'item_boss_essence', quantity: 3, chance: 0.65 }, { itemId: 'item_elemental_core', quantity: 2, chance: 0.6 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.06 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_thunder_dragon', level: 258 }, { enemyId: 'enemy_dark_dragon', level: 258 }] }, { enemies: [{ enemyId: 'enemy_boss_lich', level: 259 }], isBoss: true }] },
+          { id: 'stage_10_3_2', name: '10-12 時の残骸', staminaCost: 53, recommendedPower: 2400000, rewardGold: 600000, rewardExp: 360000,
+            rewardItems: [{ itemId: 'item_celestial_dust', quantity: 4, chance: 0.65 }, { itemId: 'item_arcana_shard', quantity: 8, chance: 0.75 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.06 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_boss_lich', level: 260 }, { enemyId: 'enemy_dark_dragon', level: 259 }] }, { enemies: [{ enemyId: 'enemy_thunder_dragon', level: 261 }], isBoss: true }] },
+          { id: 'stage_10_3_3', name: '10-13 無限回廊', staminaCost: 54, recommendedPower: 2650000, rewardGold: 650000, rewardExp: 395000,
+            rewardItems: [{ itemId: 'item_arcana_orb', quantity: 2, chance: 0.6 }, { itemId: 'item_awakening_crystal', quantity: 3, chance: 0.55 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.07 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_dark_dragon', level: 262 }, { enemyId: 'enemy_thunder_dragon', level: 262 }] }, { enemies: [{ enemyId: 'enemy_boss_lich', level: 263 }], isBoss: true }] },
+          { id: 'stage_10_3_4', name: '10-14 終焉の前庭', staminaCost: 56, recommendedPower: 2900000, rewardGold: 720000, rewardExp: 435000,
+            rewardItems: [{ itemId: 'item_arcana_orb', quantity: 2, chance: 0.65 }, { itemId: 'item_elemental_core', quantity: 3, chance: 0.6 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.07 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_thunder_dragon', level: 264 }, { enemyId: 'enemy_boss_lich', level: 263 }] }, { enemies: [{ enemyId: 'enemy_dark_dragon', level: 265 }, { enemyId: 'enemy_thunder_dragon', level: 264 }] }] },
+          { id: 'stage_10_3_5', name: '10-15 神話喰らい【EX BOSS】', staminaCost: 58, recommendedPower: 3200000, rewardGold: 800000, rewardExp: 480000,
+            rewardItems: [{ itemId: 'item_arcana_orb', quantity: 3, chance: 0.75 }, { itemId: 'item_skill_book', quantity: 1, chance: 0.2 }, { itemId: 'item_summon_ticket_sr', quantity: 1, chance: 0.1 }, { itemId: 'item_awakening_crystal', quantity: 3, chance: 0.65 }],
+            waves: [{ enemies: [{ enemyId: 'enemy_boss_lich', level: 266 }, { enemyId: 'enemy_dark_dragon', level: 266 }] }, { enemies: [{ enemyId: 'enemy_thunder_dragon', level: 267 }, { enemyId: 'enemy_boss_lich', level: 267 }] }, { enemies: [{ enemyId: 'enemy_dark_dragon', level: 268 }, { enemyId: 'enemy_boss_lich', level: 268 }] }, { enemies: [{ enemyId: 'enemy_boss_lich', level: 270 }], isBoss: true }] },
         ],
       },
     ],
@@ -3294,8 +3414,28 @@ export const QUEST_WORLDS: QuestWorld[] = [
   },
 ];
 
-/** DBキャッシュ優先でクエストワールド一覧を返す（未取得時はTypeScriptデータにフォールバック）*/
-export const getQuestWorlds = (): QuestWorld[] => getMasterQuests() ?? QUEST_WORLDS;
+/**
+ * クエストワールド一覧を返す。
+ * 静的データを構造のベースとし、DBキャッシュに同じエリアがあればDB値を優先する。
+ * （静的データにのみ存在する新ワールド・新エリアはDB再シード前でも表示される）
+ */
+export const getQuestWorlds = (): QuestWorld[] => {
+  const db = getMasterQuests();
+  if (!db) return QUEST_WORLDS;
+  return QUEST_WORLDS.map(sw => {
+    const dw = db.find(w => w.id === sw.id);
+    if (!dw) return sw;
+    return {
+      ...dw,
+      name: sw.name,
+      areas: sw.areas.map(sa => {
+        const da = dw.areas.find(a => a.id === sa.id);
+        // isExtra 等の新フィールドは静的データから補完する
+        return da ? { ...sa, ...da, isExtra: sa.isExtra } : sa;
+      }),
+    };
+  });
+};
 
 export const getAllStages = () =>
   getQuestWorlds().flatMap(w => w.areas.flatMap(a => a.stages));
