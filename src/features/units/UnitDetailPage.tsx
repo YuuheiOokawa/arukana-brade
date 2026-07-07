@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useUnitStore } from '../../stores/unitStore';
 import { usePlayerStore } from '../../stores/playerStore';
+import { useEquipmentStore } from '../../stores/equipmentStore';
 import { getUnitMaster } from '../../data/units';
 import { getSkill, SKILL_MASTER } from '../../data/skills';
 import { getItemMaster } from '../../data/items';
+import { getEquipmentMaster, calcEquipmentStats } from '../../data/equipments';
+import type { EquipmentSlot } from '../../types';
 import { ElementBadge } from '../../components/ui/ElementBadge';
 import { RarityBadge } from '../../components/ui/RarityBadge';
 import { UnitIcon } from '../../components/ui/UnitCard';
@@ -20,6 +23,7 @@ export const UnitDetailPage = () => {
   const navigate = useNavigate();
   const { ownedUnits, toggleLock, setCustomBbSkill } = useUnitStore();
   const { items, useItem } = usePlayerStore();
+  const { getEquippedByUnit } = useEquipmentStore();
   const [skillModal, setSkillModal] = useState(false);
   const [skillToast, setSkillToast] = useState('');
 
@@ -243,6 +247,72 @@ export const UnitDetailPage = () => {
           <StatItem label="回復力" value={unit.currentStats.rec} color="text-emerald-400" barColor="#10b981" />
         </div>
       </div>
+
+      {/* 装備 */}
+      {(() => {
+        const equips = getEquippedByUnit(unit.instanceId);
+        const SLOT_INFO: { slot: EquipmentSlot; label: string; emoji: string }[] = [
+          { slot: 'weapon', label: '武器', emoji: '⚔️' },
+          { slot: 'armor', label: '防具', emoji: '🛡️' },
+          { slot: 'accessory', label: 'アクセ', emoji: '💍' },
+        ];
+        const totalBonus = equips.reduce((acc, eq) => {
+          const em = getEquipmentMaster(eq.masterId);
+          if (!em) return acc;
+          const es = calcEquipmentStats(em, eq.level, eq.evolveRank ?? 0);
+          return { hp: acc.hp + es.hp, atk: acc.atk + es.atk, def: acc.def + es.def, rec: acc.rec + es.rec };
+        }, { hp: 0, atk: 0, def: 0, rec: 0 });
+        const hasBonus = totalBonus.hp + totalBonus.atk + totalBonus.def + totalBonus.rec > 0;
+        return (
+          <div className="px-4 mb-4">
+            <div className="flex items-center justify-between mb-2 px-1">
+              <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider">装備</h3>
+              <button onClick={() => navigate('/equipment')}
+                className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all active:scale-95"
+                style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.35)', color: '#fbbf24' }}>
+                ⚒️ 装備を変更
+              </button>
+            </div>
+            <div className="card-base p-3">
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                {SLOT_INFO.map(({ slot, label, emoji }) => {
+                  const equipped = equips.find(eq => getEquipmentMaster(eq.masterId)?.slot === slot);
+                  const em = equipped ? getEquipmentMaster(equipped.masterId) : null;
+                  return (
+                    <div key={slot} className="rounded-xl p-2.5 text-center"
+                      style={{
+                        background: em ? 'rgba(245,158,11,0.06)' : 'rgba(0,0,0,0.3)',
+                        border: em ? '1px solid rgba(245,158,11,0.25)' : '1px dashed rgba(107,114,128,0.3)',
+                      }}>
+                      <p className="text-gray-600 text-[9px] mb-1">{emoji} {label}</p>
+                      {em && equipped ? (
+                        <>
+                          <p className="text-xl">{em.emoji}</p>
+                          <p className="text-gray-200 text-[10px] font-bold truncate">
+                            {em.name}{(equipped.evolveRank ?? 0) > 0 && <span className="text-yellow-400">+{equipped.evolveRank}</span>}
+                          </p>
+                          <p className="text-gray-500 text-[9px]">Lv{equipped.level}</p>
+                        </>
+                      ) : (
+                        <p className="text-gray-700 text-xs mt-2 mb-1.5">なし</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              {hasBonus && (
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs px-1">
+                  <span className="text-gray-500 font-bold">装備ボーナス:</span>
+                  {totalBonus.hp > 0 && <span className="text-green-400">HP +{totalBonus.hp.toLocaleString()}</span>}
+                  {totalBonus.atk > 0 && <span className="text-red-400">ATK +{totalBonus.atk.toLocaleString()}</span>}
+                  {totalBonus.def > 0 && <span className="text-blue-400">DEF +{totalBonus.def.toLocaleString()}</span>}
+                  {totalBonus.rec > 0 && <span className="text-teal-400">REC +{totalBonus.rec.toLocaleString()}</span>}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* スキル */}
       <div className="px-4 mb-4">
