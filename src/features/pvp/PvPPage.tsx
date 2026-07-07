@@ -222,7 +222,8 @@ export const PvPPage = () => {
           <div className="flex items-center justify-between mb-3">
             <p className="text-gray-500 text-xs font-bold uppercase tracking-wider">対戦相手を選択</p>
             <button onClick={() => { try { setOpponents(getMatchOpponents()); } catch { /* ignore */ } }}
-              className="text-purple-400 text-xs">更新</button>
+              className="text-purple-400 text-xs px-3 py-1.5 rounded-lg active:scale-95 transition-all"
+              style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)' }}>更新</button>
           </div>
           <div className="space-y-2 mb-6">
             {opponents.map(opp => {
@@ -235,9 +236,9 @@ export const PvPPage = () => {
                     {master?.emoji ?? '👤'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <p className="text-white font-bold text-sm">{opp.playerName}</p>
-                      <span className="text-[10px] font-bold" style={{ color: oppTitle.color }}>{oppTitle.label}</span>
+                    <div className="flex items-center gap-1.5 mb-0.5 min-w-0">
+                      <p className="text-white font-bold text-sm truncate">{opp.playerName}</p>
+                      <span className="text-[10px] font-bold flex-shrink-0" style={{ color: oppTitle.color }}>{oppTitle.label}</span>
                     </div>
                     <p className="text-gray-500 text-xs">Rank {opp.playerRank} · {opp.arenaPoints} pt · 戦力 {opp.power.toLocaleString()}</p>
                     {master && <p className="text-gray-600 text-xs mt-0.5">リーダー: {master.name} Lv{opp.leaderUnitLevel}</p>}
@@ -255,7 +256,7 @@ export const PvPPage = () => {
                 {battleHistory.slice(0, 5).map((h, i) => (
                   <div key={i} className="flex items-center gap-3 bg-gray-800/30 rounded-xl px-3 py-2">
                     <span className={`text-xs font-black w-8 text-center ${h.won ? 'text-emerald-400' : 'text-red-400'}`}>{h.won ? '勝' : '敗'}</span>
-                    <span className="text-gray-400 text-xs flex-1">{h.opponentName}</span>
+                    <span className="text-gray-400 text-xs flex-1 min-w-0 truncate">{h.opponentName}</span>
                     <span className={`text-xs font-bold ${h.points >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{h.points >= 0 ? '+' : ''}{h.points} pt</span>
                   </div>
                 ))}

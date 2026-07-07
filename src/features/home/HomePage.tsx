@@ -115,7 +115,7 @@ export const HomePage = () => {
               <div>
                 <p className="text-[10px] font-bold tracking-widest mb-0.5" style={{ color: '#6b7280' }}>SUMMONER</p>
                 <p className="text-xl font-black text-white leading-none">{player.name}</p>
-                {player.title && <p className="text-xs mt-0.5" style={{ color: '#a78bfa' }}>{player.title}</p>}
+                {player.title && <p className="text-xs mt-0.5 truncate max-w-[180px]" style={{ color: '#a78bfa' }}>{player.title}</p>}
               </div>
               <div className="text-center">
                 <div className="rounded-xl px-3 py-1.5" style={{ background: 'linear-gradient(135deg, rgba(240,192,64,0.15), rgba(217,119,6,0.1))', border: '1px solid rgba(240,192,64,0.3)' }}>
