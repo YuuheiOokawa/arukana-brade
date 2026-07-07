@@ -328,6 +328,15 @@ export const EVOLVE_GOLD_COST: Record<string, number> = {
 export const getEffectiveMaxLevel = (master: EquipmentMaster, evolveRank = 0): number =>
   master.maxLevel + evolveRank * EVOLVE_LEVEL_BONUS;
 
+// ===== 装備売却 =====
+export const EQUIP_SELL_BASE: Record<string, number> = {
+  N: 300, R: 1000, SR: 5000, SSR: 20000,
+};
+
+// 売却額 = 基本額 × (1 + レベル補正5%/Lv + 進化補正50%/ランク)
+export const calcEquipSellPrice = (master: EquipmentMaster, level: number, evolveRank = 0): number =>
+  Math.floor((EQUIP_SELL_BASE[master.rarity] ?? 300) * (1 + (level - 1) * 0.05 + evolveRank * 0.5));
+
 export const calcEquipmentStats = (master: EquipmentMaster, level: number, evolveRank = 0): { atk: number; def: number; hp: number; rec: number } => {
   const effectiveMax = getEffectiveMaxLevel(master, evolveRank);
   const ratio = Math.min(1, (level - 1) / (effectiveMax - 1));
