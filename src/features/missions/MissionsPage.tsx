@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMissionStore } from '../../stores/missionStore';
 import { DAILY_MISSIONS, WEEKLY_MISSIONS } from '../../data/missions';
+import { getItemMaster } from '../../data/items';
 import { TopBar } from '../../components/layout/TopBar';
 import type { MissionProgress } from '../../types';
 import { GaugeBar } from '../../components/ui/game/GaugeBar';
@@ -74,6 +75,7 @@ export const MissionsPage = () => {
                   {r.type === 'gold' ? `🪙 ${r.amount.toLocaleString()}` :
                    r.type === 'diamond' ? `💎 ${r.amount}` :
                    r.type === 'stamina' ? `⚡ ${r.amount}` :
+                   r.itemId ? `${getItemMaster(r.itemId)?.emoji ?? '📦'} ${getItemMaster(r.itemId)?.name ?? ''} ×${r.amount}` :
                    `📦 ×${r.amount}`}
                 </span>
               ))}
