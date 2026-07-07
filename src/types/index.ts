@@ -98,7 +98,8 @@ export interface ScenarioMaster {
   scenarioId: string;
   questId: string;
   stageId: string;
-  backgroundKey: 'forest' | 'ruins' | 'temple' | 'cave' | 'castle' | 'sky' | 'darkness';
+  backgroundKey: 'forest' | 'ruins' | 'temple' | 'cave' | 'castle' | 'sky' | 'darkness'
+    | 'lava' | 'ocean' | 'storm' | 'holy' | 'void' | 'cosmos' | 'arena';
   bgmKey?: string;
   displayMode?: 'dialogue' | 'credits'; // 'credits' = エンドクレジット風スクロール
   lines: ScenarioLine[];
@@ -223,6 +224,7 @@ export interface QuestArea {
   stages: QuestStage[];
   requiredClearStageId?: string;
   emoji: string;
+  isExtra?: boolean; // EXエリア: ワールドの通常エリア全制覇で解放される高難度エリア（ワールド解放条件には含まれない）
 }
 
 export interface QuestWorld {

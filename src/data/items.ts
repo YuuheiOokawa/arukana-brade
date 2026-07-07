@@ -103,7 +103,7 @@ export const ITEM_MASTER: ItemMaster[] = [
 ];
 
 export const getItemMaster = (id: string): ItemMaster | undefined => {
-  const cached = getMasterItems();
-  if (cached) return cached.find(i => i.id === id);
-  return ITEM_MASTER.find(i => i.id === id);
+  // DBキャッシュ優先、見つからない場合は静的データにフォールバック
+  // （デプロイ直後にDB再シード前でも新規アイテムが解決できるように）
+  return getMasterItems()?.find(i => i.id === id) ?? ITEM_MASTER.find(i => i.id === id);
 };

@@ -304,9 +304,8 @@ export const EQUIPMENT_MASTER: EquipmentMaster[] = [
 ];
 
 export const getEquipmentMaster = (id: string): EquipmentMaster | undefined => {
-  const cached = getMasterEquipment();
-  if (cached) return cached.find(e => e.id === id);
-  return EQUIPMENT_MASTER.find(e => e.id === id);
+  // DBキャッシュ優先、見つからない場合は静的データにフォールバック
+  return getMasterEquipment()?.find(e => e.id === id) ?? EQUIPMENT_MASTER.find(e => e.id === id);
 };
 
 // ===== 装備進化 =====
