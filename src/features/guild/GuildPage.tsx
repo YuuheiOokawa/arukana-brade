@@ -166,9 +166,9 @@ export const GuildPage = () => {
                     <div className="w-12 h-12 bg-purple-900/40 rounded-xl flex items-center justify-center text-2xl">
                       {pg.emblem}
                     </div>
-                    <div className="flex-1">
-                      <p className="text-white font-bold">{pg.name}</p>
-                      <p className="text-gray-500 text-xs">{pg.description}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-bold truncate">{pg.name}</p>
+                      <p className="text-gray-500 text-xs truncate">{pg.description}</p>
                       <p className="text-purple-400 text-xs mt-0.5">ギルドLv {pg.level}</p>
                     </div>
                     <GameButton variant="primary" size="sm"
@@ -232,11 +232,11 @@ export const GuildPage = () => {
       <div className="mx-4 mb-4 rounded-2xl p-4 border border-purple-800/40"
         style={{ background: 'linear-gradient(135deg, #12052a, #1a0a40)' }}>
         <div className="flex items-center gap-3">
-          <div className="w-14 h-14 bg-purple-900/60 rounded-2xl flex items-center justify-center text-3xl">
+          <div className="w-14 h-14 bg-purple-900/60 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0">
             {guild.emblem}
           </div>
-          <div className="flex-1">
-            <p className="text-white font-black text-lg">{guild.name}</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-black text-lg truncate">{guild.name}</p>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-purple-400 text-xs font-bold">Lv {guildLevel}</span>
               <div className="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden">
@@ -295,12 +295,12 @@ export const GuildPage = () => {
               <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center text-lg">
                 {m.isPlayer ? '🧑' : m.role === 'master' ? '👑' : m.role === 'officer' ? '⭐' : '👤'}
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-1.5">
-                  <p className={`font-bold text-sm ${m.isPlayer ? 'text-yellow-400' : 'text-white'}`}>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <p className={`font-bold text-sm truncate ${m.isPlayer ? 'text-yellow-400' : 'text-white'}`}>
                     {m.name} {m.isPlayer ? '(自分)' : ''}
                   </p>
-                  <span className="text-[10px] text-gray-500">
+                  <span className="text-[10px] text-gray-500 flex-shrink-0">
                     {m.role === 'master' ? '👑ギルドマスター' : m.role === 'officer' ? '⭐幹部' : 'メンバー'}
                   </span>
                 </div>

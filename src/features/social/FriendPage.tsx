@@ -223,7 +223,8 @@ export const FriendPage = () => {
                   </div>
                   <button
                     onClick={() => void handleDelete(f.arcanaPlayerId, f.playerName)}
-                    className="text-gray-600 hover:text-red-400 text-xs px-2 py-1 rounded-lg transition-colors">
+                    className="text-gray-500 hover:text-red-400 text-xs px-3 py-2 rounded-lg transition-colors active:scale-95 flex-shrink-0"
+                    style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
                     削除
                   </button>
                 </div>

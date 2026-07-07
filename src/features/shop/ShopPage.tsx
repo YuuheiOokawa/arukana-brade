@@ -122,47 +122,69 @@ export const ShopPage = () => {
               <p className="text-emerald-400 font-bold text-sm">⚡ 現在のスタミナ</p>
               <p className="text-white font-black text-2xl">{player.stamina} <span className="text-gray-500 text-base">/ {player.maxStamina}</span></p>
             </div>
-            {STAMINA_PACKS.map(pack => (
-              <button key={pack.id} onClick={() => buyStamina(pack)}
-                className="w-full flex items-center gap-3 p-4 rounded-xl text-left transition-all active:scale-98"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <span className="text-2xl">{pack.emoji}</span>
-                <div className="flex-1">
-                  <p className="text-white font-bold text-sm">{pack.label}</p>
-                  <p className="text-emerald-400 text-xs">{pack.amount === -1 ? '全回復' : `+${pack.amount} スタミナ`}</p>
-                </div>
-                <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg"
-                  style={{ background: 'rgba(96,165,250,0.2)', border: '1px solid rgba(96,165,250,0.4)' }}>
-                  <span className="text-blue-300 text-xs font-black">💎 {pack.diamondCost}</span>
-                </div>
-              </button>
-            ))}
+            {STAMINA_PACKS.map(pack => {
+              const canAfford = player.diamond >= pack.diamondCost;
+              return (
+                <button key={pack.id} onClick={() => buyStamina(pack)}
+                  className={`w-full flex items-center gap-3 p-4 rounded-xl text-left transition-all ${canAfford ? 'active:scale-98' : 'opacity-50'}`}
+                  style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${canAfford ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)'}` }}>
+                  <span className="text-2xl">{pack.emoji}</span>
+                  <div className="flex-1">
+                    <p className="text-white font-bold text-sm">{pack.label}</p>
+                    <p className="text-emerald-400 text-xs">{pack.amount === -1 ? '全回復' : `+${pack.amount} スタミナ`}</p>
+                  </div>
+                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg"
+                    style={{ background: 'rgba(96,165,250,0.2)', border: '1px solid rgba(96,165,250,0.4)' }}>
+                    <span className="text-blue-300 text-xs font-black">💎 {pack.diamondCost}</span>
+                  </div>
+                </button>
+              );
+            })}
           </>
         )}
 
         {/* アイテムタブ */}
         {tab === 'items' && (
-          <div className="grid grid-cols-2 gap-2">
-            {ITEM_SHOP.map(shop => (
-              <button key={shop.id} onClick={() => buyItem(shop)}
-                className="flex flex-col items-center gap-2 p-3 rounded-xl transition-all active:scale-95"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <span className="text-3xl">{shop.emoji}</span>
-                <div className="text-center">
-                  <p className="text-white text-xs font-bold leading-tight">{shop.label}</p>
-                  <p className="text-gray-500 text-[10px]">×{shop.quantity}</p>
-                </div>
-                <div className="px-2.5 py-1 rounded-lg text-xs font-black"
-                  style={{
-                    background: shop.diamondCost > 0 ? 'rgba(96,165,250,0.2)' : 'rgba(245,158,11,0.2)',
-                    border: shop.diamondCost > 0 ? '1px solid rgba(96,165,250,0.4)' : '1px solid rgba(245,158,11,0.4)',
-                    color: shop.diamondCost > 0 ? '#93c5fd' : '#fbbf24',
-                  }}>
-                  {shop.diamondCost > 0 ? `💎 ${shop.diamondCost}` : `🪙 ${(shop.goldCost / 1000).toFixed(0)}K`}
-                </div>
-              </button>
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 gap-2 mb-1">
+              <div className="rounded-xl px-3 py-2 flex items-center gap-2"
+                style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.2)' }}>
+                <span className="text-base">💎</span>
+                <div><p className="text-[9px] text-gray-500 font-bold">所持ダイヤ</p>
+                  <p className="text-sm font-black text-blue-300">{player.diamond.toLocaleString()}</p></div>
+              </div>
+              <div className="rounded-xl px-3 py-2 flex items-center gap-2"
+                style={{ background: 'rgba(240,192,64,0.08)', border: '1px solid rgba(240,192,64,0.2)' }}>
+                <span className="text-base">🪙</span>
+                <div><p className="text-[9px] text-gray-500 font-bold">所持ゴールド</p>
+                  <p className="text-sm font-black text-yellow-400">{player.gold.toLocaleString()}</p></div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {ITEM_SHOP.map(shop => {
+                const canAfford = shop.diamondCost > 0 ? player.diamond >= shop.diamondCost : player.gold >= shop.goldCost;
+                return (
+                  <button key={shop.id} onClick={() => buyItem(shop)}
+                    className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${canAfford ? 'active:scale-95' : 'opacity-50'}`}
+                    style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${canAfford ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)'}` }}>
+                    <span className="text-3xl">{shop.emoji}</span>
+                    <div className="text-center">
+                      <p className="text-white text-xs font-bold leading-tight">{shop.label}</p>
+                      <p className="text-gray-500 text-[10px]">×{shop.quantity}</p>
+                    </div>
+                    <div className="px-2.5 py-1 rounded-lg text-xs font-black"
+                      style={{
+                        background: shop.diamondCost > 0 ? 'rgba(96,165,250,0.2)' : 'rgba(245,158,11,0.2)',
+                        border: shop.diamondCost > 0 ? '1px solid rgba(96,165,250,0.4)' : '1px solid rgba(245,158,11,0.4)',
+                        color: shop.diamondCost > 0 ? '#93c5fd' : '#fbbf24',
+                      }}>
+                      {shop.diamondCost > 0 ? `💎 ${shop.diamondCost}` : `🪙 ${(shop.goldCost / 1000).toFixed(0)}K`}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </>
         )}
 
         {/* ダイヤタブ */}
