@@ -27,6 +27,7 @@ import { TutorialGachaScreen } from './features/tutorial/TutorialGachaScreen';
 import { ScenarioScreen } from './features/scenario/ScenarioScreen';
 import { ProfilePage } from './features/profile/ProfilePage';
 import { CollectionPage } from './features/collection/CollectionPage';
+import { GiftBoxPage } from './features/gifts/GiftBoxPage';
 import { ShopPage } from './features/shop/ShopPage';
 import { LoginPage } from './features/auth/LoginPage';
 import { RegisterPage } from './features/auth/RegisterPage';
@@ -195,6 +196,7 @@ const AppContent = () => {
         <Route path="/pvp"      element={<AuthGuard><MainGuard><PvPPage /></MainGuard></AuthGuard>} />
         <Route path="/profile"  element={<AuthGuard><MainGuard><ProfilePage /></MainGuard></AuthGuard>} />
         <Route path="/collection" element={<AuthGuard><MainGuard><CollectionPage /></MainGuard></AuthGuard>} />
+        <Route path="/gifts"    element={<AuthGuard><MainGuard><GiftBoxPage /></MainGuard></AuthGuard>} />
         <Route path="/shop"     element={<AuthGuard><MainGuard><ShopPage /></MainGuard></AuthGuard>} />
         <Route path="/scenario/:stageId" element={<AuthGuard><MainGuard><ScenarioScreen /></MainGuard></AuthGuard>} />
         {import.meta.env.DEV && <Route path="/ui-showcase" element={<UIShowcasePage />} />}

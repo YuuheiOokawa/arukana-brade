@@ -20,6 +20,15 @@ interface QuestStore extends QuestProgress {
   claimAreaReward: (areaKey: string) => void;
   lastSelectedWorldId: string | null;
   setLastSelectedWorldId: (id: string) => void;
+
+  // ハードモード: 選択中の難易度（バトル開始時にBattlePageが参照）
+  pendingHard: boolean;
+  setPendingHard: (hard: boolean) => void;
+
+  // 星評価: ステージごとの最高星数 (1〜3)。ハードは "hard_" プレフィックスキーで記録
+  stageStars: Record<string, number>;
+  recordStars: (stageKey: string, stars: number) => void;
+  getStars: (stageKey: string) => number;
 }
 
 // stageId フォーマット: stage_{world}_{area}_{stage}
@@ -37,7 +46,22 @@ export const useQuestStore = create<QuestStore>()(
       pendingFriendCandidate: null,
       claimedAreaRewards: [],
       lastSelectedWorldId: null,
+      pendingHard: false,
+      stageStars: {},
       setLastSelectedWorldId: (id) => set({ lastSelectedWorldId: id }),
+
+      setPendingHard: (hard) => set({ pendingHard: hard }),
+
+      recordStars: (stageKey, stars) => {
+        set(s => ({
+          stageStars: {
+            ...s.stageStars,
+            [stageKey]: Math.max(s.stageStars[stageKey] ?? 0, stars),
+          },
+        }));
+      },
+
+      getStars: (stageKey) => get().stageStars[stageKey] ?? 0,
 
       markCleared: (stageId) => {
         const { clearedStageIds } = get();
@@ -51,7 +75,7 @@ export const useQuestStore = create<QuestStore>()(
 
       isCleared: (stageId) => get().clearedStageIds.includes(stageId),
 
-      clearPending: () => set({ pendingStageId: null, pendingFriendId: null, pendingFriendCandidate: null }),
+      clearPending: () => set({ pendingStageId: null, pendingFriendId: null, pendingFriendCandidate: null, pendingHard: false }),
 
       // エリア内の全5ステージがクリア済みか確認
       checkAreaComplete: (stageId) => {

@@ -4,7 +4,11 @@ import { useEquipmentStore, EXP_PER_LEVEL } from '../../stores/equipmentStore';
 import { useUnitStore } from '../../stores/unitStore';
 import { usePlayerStore } from '../../stores/playerStore';
 import { UNIT_MASTER } from '../../data/units';
-import { calcEquipmentStats, getEquipmentMaster } from '../../data/equipments';
+import {
+  calcEquipmentStats, getEquipmentMaster,
+  getEffectiveMaxLevel, EVOLVE_MATERIALS, EVOLVE_GOLD_COST, MAX_EVOLVE_RANK,
+} from '../../data/equipments';
+import { getItemMaster } from '../../data/items';
 import { TopBar } from '../../components/layout/TopBar';
 import { elementGradient } from '../../utils/elementUtils';
 import type { EquipmentSlot, EquipmentRarity, OwnedEquipment } from '../../types';
@@ -23,9 +27,9 @@ const SLOT_LABEL: Record<EquipmentSlot, string> = {
 type TabType = 'list' | 'equip';
 
 export const EquipmentPage = () => {
-  const { ownedEquipments, sellEquipment, equipToUnit, unequipEquipment, levelUpEquipment } = useEquipmentStore();
+  const { ownedEquipments, sellEquipment, equipToUnit, unequipEquipment, levelUpEquipment, evolveEquipment } = useEquipmentStore();
   const { ownedUnits } = useUnitStore();
-  const { player, spendGold } = usePlayerStore();
+  const { player, spendGold, items, useItem } = usePlayerStore();
   const [tab, setTab] = useState<TabType>('list');
   const [selectedEq, setSelectedEq] = useState<OwnedEquipment | null>(null);
   const [filterSlot, setFilterSlot] = useState<EquipmentSlot | 'all'>('all');
@@ -89,7 +93,9 @@ export const EquipmentPage = () => {
             {filtered.map(eq => {
               const master = getEquipmentMaster(eq.masterId);
               if (!master) return null;
-              const stats = calcEquipmentStats(master, eq.level);
+              const evolveRank = eq.evolveRank ?? 0;
+              const stats = calcEquipmentStats(master, eq.level, evolveRank);
+              const effectiveMax = getEffectiveMaxLevel(master, evolveRank);
               const equippedUnit = eq.equippedTo ? ownedUnits.find(u => u.instanceId === eq.equippedTo) : null;
               const equippedMaster = equippedUnit ? UNIT_MASTER.find(m => m.id === equippedUnit.masterId) : null;
 
@@ -108,9 +114,12 @@ export const EquipmentPage = () => {
                           style={{ background: `${RARITY_COLOR[master.rarity]}33`, color: RARITY_COLOR[master.rarity] }}>
                           {master.rarity}
                         </span>
-                        <p className="text-white font-bold text-sm">{master.name}</p>
+                        <p className="text-white font-bold text-sm">
+                          {master.name}
+                          {evolveRank > 0 && <span className="text-yellow-400 ml-1">+{evolveRank}</span>}
+                        </p>
                       </div>
-                      <p className="text-gray-500 text-xs">{SLOT_LABEL[master.slot]} · Lv{eq.level}</p>
+                      <p className="text-gray-500 text-xs">{SLOT_LABEL[master.slot]} · Lv{eq.level}/{effectiveMax}</p>
                       <div className="flex gap-2 mt-1 text-xs">
                         {stats.atk > 0 && <span className="text-red-400">ATK +{stats.atk}</span>}
                         {stats.def > 0 && <span className="text-blue-400">DEF +{stats.def}</span>}
@@ -133,8 +142,24 @@ export const EquipmentPage = () => {
                   {/* 展開メニュー */}
                   {selectedEq?.instanceId === eq.instanceId && (() => {
                     const enhanceCost = eq.level * 150;
-                    const isMaxLevel = eq.level >= (master.maxLevel ?? 80);
+                    const isMaxLevel = eq.level >= effectiveMax;
                     const canAfford = player.gold >= enhanceCost;
+                    const canEvolveMore = evolveRank < MAX_EVOLVE_RANK;
+                    const evolveMats = EVOLVE_MATERIALS[master.rarity] ?? [];
+                    const evolveGold = EVOLVE_GOLD_COST[master.rarity] ?? 0;
+                    const hasMats = evolveMats.every(mat =>
+                      (items.find(i => i.itemId === mat.itemId)?.quantity ?? 0) >= mat.quantity);
+                    const hasEvolveGold = player.gold >= evolveGold;
+                    const handleEvolve = () => {
+                      if (!isMaxLevel || !canEvolveMore || !hasMats || !hasEvolveGold) return;
+                      // evolveEquipment 成功後に素材・ゴールドを消費（失敗時の素材消滅を防ぐ）
+                      const ok = evolveEquipment(eq.instanceId);
+                      if (!ok) { showToast('進化できませんでした'); return; }
+                      evolveMats.forEach(mat => useItem(mat.itemId, mat.quantity));
+                      spendGold(evolveGold);
+                      showToast(`✨ ${master.name} +${evolveRank + 1} に進化！`);
+                      setSelectedEq(null);
+                    };
                     return (
                       <div className="mt-3 pt-3 border-t border-gray-700/40 space-y-2" onClick={e => e.stopPropagation()}>
                         <div className="flex gap-2">
@@ -187,9 +212,59 @@ export const EquipmentPage = () => {
                             color: isMaxLevel ? '#6b7280' : canAfford ? '#fbbf24' : '#6b7280',
                           }}>
                           {isMaxLevel
-                            ? '最大Lvです'
+                            ? canEvolveMore ? '最大Lv到達！進化できます' : '最大Lvです'
                             : `⬆️ 強化 (🪙 ${enhanceCost.toLocaleString()} / 所持: ${player.gold.toLocaleString()})`}
                         </button>
+                        {/* 進化ボタン: 最大レベル到達で解放 */}
+                        {isMaxLevel && canEvolveMore && (
+                          <div className="rounded-xl p-3 space-y-2"
+                            style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.25)' }}>
+                            <p className="text-purple-300 text-xs font-bold">
+                              ✨ 進化 +{evolveRank + 1}（ステータス+30% / Lv上限+10）
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {evolveMats.map(mat => {
+                                const owned = items.find(i => i.itemId === mat.itemId)?.quantity ?? 0;
+                                const im = getItemMaster(mat.itemId);
+                                const enough = owned >= mat.quantity;
+                                return (
+                                  <span key={mat.itemId} className="text-[10px] px-2 py-1 rounded-lg font-bold"
+                                    style={{
+                                      background: enough ? 'rgba(52,211,153,0.12)' : 'rgba(220,38,38,0.12)',
+                                      border: `1px solid ${enough ? 'rgba(52,211,153,0.35)' : 'rgba(220,38,38,0.35)'}`,
+                                      color: enough ? '#6ee7b7' : '#fca5a5',
+                                    }}>
+                                    {im?.emoji} {im?.name} {owned}/{mat.quantity}
+                                  </span>
+                                );
+                              })}
+                              <span className="text-[10px] px-2 py-1 rounded-lg font-bold"
+                                style={{
+                                  background: hasEvolveGold ? 'rgba(240,192,64,0.12)' : 'rgba(220,38,38,0.12)',
+                                  border: `1px solid ${hasEvolveGold ? 'rgba(240,192,64,0.35)' : 'rgba(220,38,38,0.35)'}`,
+                                  color: hasEvolveGold ? '#fbbf24' : '#fca5a5',
+                                }}>
+                                🪙 {evolveGold.toLocaleString()}
+                              </span>
+                            </div>
+                            <button
+                              disabled={!hasMats || !hasEvolveGold}
+                              onClick={handleEvolve}
+                              className="w-full py-2.5 rounded-xl text-xs font-black transition-all active:scale-95"
+                              style={{
+                                background: hasMats && hasEvolveGold
+                                  ? 'linear-gradient(135deg, #7c3aed, #4f46e5)'
+                                  : 'rgba(55,65,81,0.3)',
+                                border: hasMats && hasEvolveGold
+                                  ? '1px solid rgba(167,139,250,0.6)'
+                                  : '1px solid rgba(75,85,99,0.3)',
+                                color: hasMats && hasEvolveGold ? '#fff' : '#6b7280',
+                                boxShadow: hasMats && hasEvolveGold ? '0 0 16px rgba(124,58,237,0.4)' : 'none',
+                              }}>
+                              {hasMats && hasEvolveGold ? `✨ 進化する（+${evolveRank} → +${evolveRank + 1}）` : '素材またはゴールドが不足'}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     );
                   })()}
