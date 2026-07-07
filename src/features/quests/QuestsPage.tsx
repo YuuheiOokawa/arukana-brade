@@ -12,6 +12,8 @@ import { useGuildStore } from '../../stores/guildStore';
 import { saveImmediately } from '../../lib/syncService';
 import { ENEMY_MASTER } from '../../data/enemies';
 import { getItemMaster } from '../../data/items';
+import { getEquipmentMaster } from '../../data/equipments';
+import { useEquipmentStore } from '../../stores/equipmentStore';
 import { TopBar } from '../../components/layout/TopBar';
 import { StaminaModal } from '../../components/ui/StaminaModal';
 import { GameBadge } from '../../components/ui/game/UIDecorations';
@@ -22,6 +24,7 @@ interface SweepResult {
   gold: number;
   exp: number;
   items: string[];
+  equips: string[];
 }
 
 type MainTab = 'story' | 'event';
@@ -118,6 +121,12 @@ export const QuestsPage = () => {
         for (let i = 0; i < ri.quantity; i++) items.push(ri.itemId);
       }
     });
+    // 装備ドロップ抽選（ハードはドロップ率1.5倍）
+    const equips: string[] = [];
+    stage.rewardEquipments?.forEach(re => {
+      if (Math.random() < Math.min(1, re.chance * (sweepHard ? 1.5 : 1))) equips.push(re.equipmentId);
+    });
+    equips.forEach(id => useEquipmentStore.getState().addEquipment(id));
 
     addGold(gold);
     addExp(exp);
@@ -148,7 +157,7 @@ export const QuestsPage = () => {
       saveImmediately();
     }, 500);
 
-    setSweepResult({ stageName: stage.name, gold, exp, items });
+    setSweepResult({ stageName: stage.name, gold, exp, items, equips });
   };
 
   // 残り時間計算
@@ -416,6 +425,23 @@ export const QuestsPage = () => {
                   </div>
                 </div>
               )}
+              {sweepResult.equips.length > 0 && (
+                <div className="rounded-xl px-4 py-2.5"
+                  style={{ background: 'rgba(240,192,64,0.08)', border: '1px solid rgba(240,192,64,0.25)' }}>
+                  <p className="text-yellow-300 text-sm mb-1.5">⚔️ ドロップ装備</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {sweepResult.equips.map((eqId, i) => {
+                      const em = getEquipmentMaster(eqId);
+                      return (
+                        <span key={i} className="text-xs rounded px-2 py-1 font-bold"
+                          style={{ background: 'rgba(240,192,64,0.12)', border: '1px solid rgba(240,192,64,0.35)', color: '#fde68a' }}>
+                          {em ? `${em.emoji} [${em.rarity}] ${em.name}` : eqId}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             <button onClick={() => setSweepResult(null)}
@@ -523,6 +549,20 @@ const StageList = ({
                 <span className="text-yellow-600">{(stage.rewardGold * rewardMul).toLocaleString()}G</span>
                 <span className="text-blue-400">EXP {stage.rewardExp * rewardMul}</span>
               </div>
+              {/* 装備ドロップのプレビュー */}
+              {stage.rewardEquipments && stage.rewardEquipments.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-1.5">
+                  {stage.rewardEquipments.map((re, i) => {
+                    const em = getEquipmentMaster(re.equipmentId);
+                    return em ? (
+                      <span key={i} className="text-[10px] rounded px-1.5 py-0.5 font-bold"
+                        style={{ background: 'rgba(240,192,64,0.1)', border: '1px solid rgba(240,192,64,0.3)', color: '#fde68a' }}>
+                        ⚔️ {em.emoji} {em.name}
+                      </span>
+                    ) : null;
+                  })}
+                </div>
+              )}
               <div className="flex flex-wrap gap-1">
                 {stage.waves.map((wave, i) => (
                   <div key={i} className="flex gap-1 flex-wrap">

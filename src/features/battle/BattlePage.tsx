@@ -79,6 +79,7 @@ export const BattlePage = () => {
   const [rewardGold, setRewardGold] = useState(0);
   const [rewardExp, setRewardExp] = useState(0);
   const [rewardItems, setRewardItems] = useState<string[]>([]);
+  const [rewardEquips, setRewardEquips] = useState<string[]>([]);
   const [areaClearedKey, setAreaClearedKey] = useState<string | null>(null);
   const [earnedStars, setEarnedStars] = useState(0);
   // ハードモード: 敵Lv+10 / スタミナ1.5倍 / 報酬2倍
@@ -407,9 +408,16 @@ export const BattlePage = () => {
                       for (let i = 0; i < ri.quantity; i++) items.push(ri.itemId);
                     }
                   });
+                  // 装備ドロップ抽選（ハードはドロップ率1.5倍）
+                  const equips: string[] = [];
+                  curStage.rewardEquipments?.forEach(re => {
+                    if (Math.random() < Math.min(1, re.chance * (isHard ? 1.5 : 1))) equips.push(re.equipmentId);
+                  });
+                  equips.forEach(id => useEquipmentStore.getState().addEquipment(id));
                   setRewardGold(gold);
                   setRewardExp(exp);
                   setRewardItems(items);
+                  setRewardEquips(equips);
 
                   // 星評価: ★1=クリア / ★2=全員生存 / ★3=規定ラウンド以内（ウェーブ数×3）
                   const noDeaths = updAllies.every(a => a.currentHp > 0);
@@ -513,6 +521,7 @@ export const BattlePage = () => {
       gold={rewardGold}
       exp={rewardExp}
       items={rewardItems}
+      equips={rewardEquips}
       stars={earnedStars}
       hardMode={isHardMode}
       onHome={() => navigate('/')}
@@ -707,10 +716,10 @@ export const BattlePage = () => {
 
 // ===== 勝利画面 =====
 const VictoryScreen = ({
-  stageName, round, gold, exp, items, stars = 0, hardMode = false, onHome, onQuest, areaClearedKey, onAreaScenario,
+  stageName, round, gold, exp, items, equips = [], stars = 0, hardMode = false, onHome, onQuest, areaClearedKey, onAreaScenario,
 }: {
   stageName: string; round: number; gold: number; exp: number; items: string[];
-  stars?: number; hardMode?: boolean;
+  equips?: string[]; stars?: number; hardMode?: boolean;
   onHome: () => void; onQuest: () => void;
   areaClearedKey?: string; onAreaScenario?: () => void;
 }) => (
@@ -773,6 +782,31 @@ const VictoryScreen = ({
                   <span className="text-lg">{m.emoji}</span>
                   <span className="text-gray-200 text-sm">{m.name}</span>
                   <span className="text-green-400 text-xs font-bold ml-auto">GET</span>
+                </div>
+              ) : null;
+            })}
+          </>
+        )}
+        {equips.length > 0 && (
+          <>
+            <p className="text-gray-500 text-xs font-bold mb-2 mt-3 tracking-wide">━━ ドロップ装備 ━━━━━━━━━━</p>
+            {equips.map((id, i) => {
+              const em = getEquipmentMaster(id);
+              return em ? (
+                <div key={i} className="flex items-center gap-2 mb-1 rounded-lg px-2 py-1.5"
+                  style={{ background: 'rgba(240,192,64,0.08)', border: '1px solid rgba(240,192,64,0.25)' }}>
+                  <span className="text-lg">{em.emoji}</span>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-[9px] font-black px-1 rounded flex-shrink-0"
+                      style={{
+                        background: em.rarity === 'SSR' ? 'rgba(245,158,11,0.3)' : em.rarity === 'SR' ? 'rgba(124,58,237,0.3)' : em.rarity === 'R' ? 'rgba(59,130,246,0.3)' : 'rgba(107,114,128,0.3)',
+                        color: em.rarity === 'SSR' ? '#fbbf24' : em.rarity === 'SR' ? '#c4b5fd' : em.rarity === 'R' ? '#93c5fd' : '#9ca3af',
+                      }}>
+                      {em.rarity}
+                    </span>
+                    <span className="text-gray-100 text-sm font-bold truncate">{em.name}</span>
+                  </div>
+                  <span className="text-yellow-400 text-xs font-black ml-auto flex-shrink-0">GET!</span>
                 </div>
               ) : null;
             })}
