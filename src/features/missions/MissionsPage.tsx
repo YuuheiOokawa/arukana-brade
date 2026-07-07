@@ -16,8 +16,18 @@ export const MissionsPage = () => {
     claimDailyReward, claimWeeklyReward,
     getCompletedCount, getClaimedCount,
     getWeeklyCompletedCount, getWeeklyClaimedCount,
+    claimAllDaily, claimAllWeekly,
   } = useMissionStore();
   const [tab, setTab] = useState<Tab>('daily');
+  const [claimToast, setClaimToast] = useState('');
+
+  const handleClaimAll = (kind: Tab) => {
+    const count = kind === 'daily' ? claimAllDaily() : claimAllWeekly();
+    if (count > 0) {
+      setClaimToast(`🎁 ${count}件の報酬を受け取りました！`);
+      setTimeout(() => setClaimToast(''), 2500);
+    }
+  };
 
   useEffect(() => {
     checkDailyReset();
@@ -102,6 +112,13 @@ export const MissionsPage = () => {
     <div className="min-h-screen pb-28">
       <TopBar title="ミッション" />
 
+      {claimToast && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl font-bold text-sm text-white"
+          style={{ background: 'rgba(217,119,6,0.95)', boxShadow: '0 4px 20px rgba(240,192,64,0.5)', whiteSpace: 'nowrap' }}>
+          {claimToast}
+        </div>
+      )}
+
       {/* タブ */}
       <div className="px-4 mb-4 flex gap-2">
         <button onClick={() => setTab('daily')}
@@ -129,6 +146,17 @@ export const MissionsPage = () => {
             {dailyClaimed === dailyTotal && (
               <p className="text-emerald-400 text-xs font-bold mt-1">🎉 本日の全報酬を受け取りました！</p>
             )}
+            {dailyCompleted > dailyClaimed && (
+              <button onClick={() => handleClaimAll('daily')}
+                className="w-full mt-3 py-2.5 rounded-xl text-sm font-black text-white active:scale-98 transition-all"
+                style={{
+                  background: 'linear-gradient(135deg, #d97706, #b45309)',
+                  border: '1px solid rgba(240,192,64,0.5)',
+                  boxShadow: '0 0 16px rgba(240,192,64,0.3)',
+                }}>
+                🎁 まとめて受取（{dailyCompleted - dailyClaimed}件）
+              </button>
+            )}
           </div>
           <div className="px-4 space-y-2">
             {renderMissions(DAILY_MISSIONS, daily.progresses, claimDailyReward)}
@@ -151,6 +179,17 @@ export const MissionsPage = () => {
             )}
             {weeklyClaimed === weeklyTotal && weeklyCompleted > 0 && (
               <p className="text-emerald-400 text-xs font-bold mt-1">🎉 今週の全報酬を受け取りました！</p>
+            )}
+            {weeklyCompleted > weeklyClaimed && (
+              <button onClick={() => handleClaimAll('weekly')}
+                className="w-full mt-3 py-2.5 rounded-xl text-sm font-black text-white active:scale-98 transition-all"
+                style={{
+                  background: 'linear-gradient(135deg, #d97706, #b45309)',
+                  border: '1px solid rgba(240,192,64,0.5)',
+                  boxShadow: '0 0 16px rgba(240,192,64,0.3)',
+                }}>
+                🎁 まとめて受取（{weeklyCompleted - weeklyClaimed}件）
+              </button>
             )}
           </div>
           <div className="px-4 space-y-2">

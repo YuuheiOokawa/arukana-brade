@@ -40,6 +40,9 @@ interface MissionStore {
   checkWeeklyReset: () => void;
   getWeeklyCompletedCount: () => number;
   getWeeklyClaimedCount: () => number;
+
+  claimAllDaily: () => number;
+  claimAllWeekly: () => number;
 }
 
 export const useMissionStore = create<MissionStore>()(
@@ -158,6 +161,20 @@ export const useMissionStore = create<MissionStore>()(
           ),
         }));
         return true;
+      },
+
+      claimAllDaily: () => {
+        const claimable = get().daily.progresses.filter(p => p.completed && !p.claimed);
+        let count = 0;
+        claimable.forEach(p => { if (get().claimDailyReward(p.missionId)) count++; });
+        return count;
+      },
+
+      claimAllWeekly: () => {
+        const claimable = get().weeklyProgresses.filter(p => p.completed && !p.claimed);
+        let count = 0;
+        claimable.forEach(p => { if (get().claimWeeklyReward(p.missionId)) count++; });
+        return count;
       },
 
       getCompletedCount: () =>
