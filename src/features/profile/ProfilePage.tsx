@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useUnitStore } from '../../stores/unitStore';
+import type { PlayerData, OwnedUnit } from '../../types';
 import { getUnitMaster } from '../../data/units';
 import { TopBar } from '../../components/layout/TopBar';
 import { RarityBadge } from '../../components/ui/RarityBadge';
@@ -10,6 +11,24 @@ import type { StarRarity } from '../../types';
 import { TitlePlate, FrameDecoration } from '../../components/ui/game/UIDecorations';
 import { UnitIcon } from '../../components/ui/UnitCard';
 import { resolveUnitImage } from '../../lib/unitImage';
+
+const ACHIEVEMENTS: {
+  id: string; emoji: string; label: string; desc: string; color: string;
+  check: (p: PlayerData, units: OwnedUnit[]) => boolean;
+}[] = [
+  { id: 'first_win',   emoji: '⚔️', label: '初勝利',     desc: 'バトルで1勝',       color: '#ef4444', check: (p) => (p.battleWins ?? 0) >= 1 },
+  { id: 'warrior',     emoji: '🗡️', label: '猛者',       desc: '10勝達成',          color: '#f97316', check: (p) => (p.battleWins ?? 0) >= 10 },
+  { id: 'hero',        emoji: '🔥', label: '英雄',       desc: '100勝達成',         color: '#ef4444', check: (p) => (p.battleWins ?? 0) >= 100 },
+  { id: 'summoner_1',  emoji: '💫', label: '召喚師',     desc: '召喚10回',          color: '#8b5cf6', check: (p) => (p.summonCount ?? 0) >= 10 },
+  { id: 'summoner_2',  emoji: '✨', label: '大召喚師',   desc: '召喚50回',          color: '#a855f7', check: (p) => (p.summonCount ?? 0) >= 50 },
+  { id: 'explorer',    emoji: '🗺️', label: '探検家',     desc: 'クエスト10回',      color: '#f59e0b', check: (p) => (p.questClears ?? 0) >= 10 },
+  { id: 'adventurer',  emoji: '🌟', label: '冒険者',     desc: 'クエスト50回',      color: '#eab308', check: (p) => (p.questClears ?? 0) >= 50 },
+  { id: 'rank_10',     emoji: '🏆', label: '上級者',     desc: 'ランク10到達',      color: '#f0c040', check: (p) => p.rank >= 10 },
+  { id: 'rank_50',     emoji: '👑', label: 'マスター',   desc: 'ランク50到達',      color: '#d97706', check: (p) => p.rank >= 50 },
+  { id: 'collector',   emoji: '👥', label: 'コレクター', desc: '10体獲得',          color: '#3b82f6', check: (_, u) => u.length >= 10 },
+  { id: 'collector_2', emoji: '🏛️', label: '大収集家',  desc: '30体獲得',          color: '#2563eb', check: (_, u) => u.length >= 30 },
+  { id: 'veteran',     emoji: '📅', label: '常連',       desc: '7日間ログイン',     color: '#10b981', check: (p) => (p.loginDays ?? 0) >= 7 },
+];
 
 const TITLES = [
   '駆け出しの勇者', '炎の剣士', '水の守護者', '風の疾走者',
@@ -205,6 +224,28 @@ export const ProfilePage = () => {
           <div className="grid grid-cols-2 gap-3 mt-3">
             <StatCard label="プレイヤーランク" value={`Rank ${player.rank}`} accent="#f97316" />
             <StatCard label="所持ゴールド" value={formatNumber(player.gold)} accent="#eab308" />
+          </div>
+        </div>
+
+        {/* ===== アチーブメント ===== */}
+        <div className="px-4 mb-4">
+          <div className="mb-2"><TitlePlate color="gold">実績</TitlePlate></div>
+          <div className="grid grid-cols-3 gap-2">
+            {ACHIEVEMENTS.map(ach => {
+              const earned = ach.check(player, ownedUnits);
+              return (
+                <div key={ach.id} className={`rounded-xl p-3 text-center transition-all ${earned ? '' : 'opacity-35'}`}
+                  style={{
+                    background: earned ? `${ach.color}18` : 'rgba(12,8,28,0.6)',
+                    border: `1px solid ${earned ? `${ach.color}44` : 'rgba(255,255,255,0.05)'}`,
+                    boxShadow: earned ? `0 0 12px ${ach.color}22` : 'none',
+                  }}>
+                  <p className="text-2xl mb-1" style={{ filter: earned ? 'none' : 'grayscale(1)' }}>{ach.emoji}</p>
+                  <p className="text-xs font-bold leading-tight" style={{ color: earned ? ach.color : '#4b5563' }}>{ach.label}</p>
+                  <p className="text-[9px] mt-0.5" style={{ color: earned ? '#9ca3af' : '#374151' }}>{ach.desc}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
 

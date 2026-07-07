@@ -6,6 +6,7 @@ import { getScenario } from '../../data/scenarios';
 import { useQuestStore } from '../../stores/questStore';
 import { usePlayerStore } from '../../stores/playerStore';
 import { usePartyStore } from '../../stores/partyStore';
+import { ENEMY_MASTER } from '../../data/enemies';
 import { TopBar } from '../../components/layout/TopBar';
 import { StaminaModal } from '../../components/ui/StaminaModal';
 import { GameBadge } from '../../components/ui/game/UIDecorations';
@@ -291,13 +292,17 @@ const StageList = ({
               </div>
               <div className="flex flex-wrap gap-1">
                 {stage.waves.map((wave, i) => (
-                  <div key={i} className="flex gap-1">
-                    {wave.isBoss && <span className="text-red-400 text-xs font-bold">BOSS</span>}
-                    {wave.enemies.map((e, j) => (
-                      <span key={j} className="text-xs bg-gray-800/60 border border-gray-700/40 rounded px-1.5 py-0.5 text-gray-400">
-                        {e.enemyId.includes('dragon') ? 'Dragon' : e.enemyId.includes('boss') || e.enemyId.includes('lich') ? 'Boss' : 'Enemy'} Lv{e.level}
-                      </span>
-                    ))}
+                  <div key={i} className="flex gap-1 flex-wrap">
+                    {wave.isBoss && <span className="text-red-400 text-xs font-bold mr-0.5">BOSS</span>}
+                    {wave.enemies.map((e, j) => {
+                      const em = ENEMY_MASTER.find(m => m.id === e.enemyId);
+                      return (
+                        <span key={j} className="text-xs bg-gray-800/60 border border-gray-700/40 rounded px-1.5 py-0.5 flex items-center gap-0.5"
+                          style={{ color: wave.isBoss ? '#f87171' : '#9ca3af' }}>
+                          {em ? `${em.emoji} ${em.name}` : e.enemyId} Lv{e.level}
+                        </span>
+                      );
+                    })}
                   </div>
                 ))}
               </div>

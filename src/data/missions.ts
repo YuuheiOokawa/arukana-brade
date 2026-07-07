@@ -67,4 +67,32 @@ export const WEEKLY_MISSIONS: MissionMaster[] = [
     type: 'summon', target: 5, emoji: '✨',
     rewards: [{ type: 'diamond', amount: 50 }, { type: 'gold', amount: 10000 }],
   },
+  {
+    id: 'weekly_quest_clear_5',
+    title: '週間クエスト5回',
+    description: '1週間でクエストを5回クリアする',
+    type: 'quest_clear', target: 5, emoji: '🗺️',
+    rewards: [{ type: 'diamond', amount: 80 }, { type: 'gold', amount: 20000 }],
+  },
+  {
+    id: 'weekly_enhance_10',
+    title: '週間強化10回',
+    description: '1週間でユニットを10回強化する',
+    type: 'enhance', target: 10, emoji: '⬆️',
+    rewards: [{ type: 'diamond', amount: 60 }, { type: 'item', amount: 1, itemId: 'item_exp_l' }],
+  },
+  {
+    id: 'weekly_friend_battle_3',
+    title: 'フレンドと3回出撃',
+    description: '1週間でフレンドのユニットと3回クエストをクリアする',
+    type: 'friend_battle', target: 3, emoji: '🤝',
+    rewards: [{ type: 'diamond', amount: 40 }, { type: 'item', amount: 1, itemId: 'item_summon_ticket' }],
+  },
+  {
+    id: 'weekly_login_7',
+    title: '7日間ログイン',
+    description: '1週間毎日ゲームにログインする',
+    type: 'login', target: 7, emoji: '📅',
+    rewards: [{ type: 'diamond', amount: 150 }, { type: 'item', amount: 1, itemId: 'item_summon_ticket_sr' }],
+  },
 ];

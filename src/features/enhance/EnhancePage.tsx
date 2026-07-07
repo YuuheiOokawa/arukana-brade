@@ -21,7 +21,7 @@ export const EnhancePage = () => {
 
   const { ownedUnits, levelUpUnit, awakenUnit, incrementAwakeningCount, getAwakeningCrystalCount, rarityUp } = useUnitStore();
   const { items, useItem, player, spendGold } = usePlayerStore();
-  const { addDailyProgress } = useMissionStore();
+  const { addDailyProgress, addWeeklyProgress } = useMissionStore();
   const [selectedId, setSelectedId] = useState<string | null>(initUnit);
   const [tab, setTab] = useState<'level' | 'awaken'>(initTab);
   const [selectingUnit, setSelectingUnit] = useState(false);
@@ -56,8 +56,9 @@ export const EnhancePage = () => {
     if (!ok) { stopLongPress(); if (!silent) setMessage('アイテムが足りません'); return; }
     levelUpUnit(freshUnit.instanceId, exp);
     addDailyProgress('enhance');
+    addWeeklyProgress('enhance');
     if (!silent) { setMessage(`EXP +${exp.toLocaleString()} 獲得！`); setTimeout(() => setMessage(''), 2000); }
-  }, [selectedId, levelUpUnit, addDailyProgress, stopLongPress]);
+  }, [selectedId, levelUpUnit, addDailyProgress, addWeeklyProgress, stopLongPress]);
 
   const startLongPress = useCallback((itemId: string, exp: number) => {
     handleUseExpItem(itemId, exp, false);
@@ -79,6 +80,7 @@ export const EnhancePage = () => {
     mats.forEach(mat => useItem(mat.itemId, mat.quantity));
     awakenUnit(unit.instanceId);
     addDailyProgress('enhance');
+    addWeeklyProgress('enhance');
     setMessage('覚醒成功！');
     setTimeout(() => setMessage(''), 2000);
   };
@@ -91,6 +93,7 @@ export const EnhancePage = () => {
     const ok = incrementAwakeningCount(unit.instanceId);
     if (!ok) { setMessage('覚醒できませんでした'); return; }
     addDailyProgress('enhance');
+    addWeeklyProgress('enhance');
     setMessage('💠 覚醒結晶で覚醒！');
     setTimeout(() => setMessage(''), 2000);
   };
@@ -123,6 +126,7 @@ export const EnhancePage = () => {
     spendGold(goldCost);
     saveImmediately();
     addDailyProgress('enhance');
+    addWeeklyProgress('enhance');
     setMessage(`✨ ${getStarDisplay(nextR!)} に進化！`);
     setTimeout(() => setMessage(''), 2500);
   };
