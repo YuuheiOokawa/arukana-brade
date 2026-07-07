@@ -32,7 +32,7 @@ const releaseGold = (unit: OwnedUnit): number => {
 
 export const UnitsPage = () => {
   const navigate = useNavigate();
-  const { ownedUnits } = useUnitStore();
+  const { ownedUnits, toggleLock } = useUnitStore();
   const { addGold } = usePlayerStore();
   const [filterElement, setFilterElement] = useState<ElementType | 'all'>('all');
   const [filterStar, setFilterStar] = useState<StarFilter>('all');
@@ -202,6 +202,8 @@ export const UnitsPage = () => {
         const master = getUnitMaster(actionUnit.masterId);
         const inParty = isInParty(actionUnit.instanceId);
         const partyFull = activeParty.slots.filter(Boolean).length >= 5;
+        // toggleLock後も最新のロック状態を表示するためstoreから取り直す
+        const isLocked = ownedUnits.find(u => u.instanceId === actionUnit.instanceId)?.isLocked ?? false;
         return (
           <div className="fixed inset-0 z-[60] flex items-end"
             style={{ background: 'rgba(0,0,0,0.7)' }}
@@ -221,12 +223,15 @@ export const UnitsPage = () => {
                     <p className="text-white font-bold">{master.name}</p>
                     <p className="text-gray-400 text-xs">Lv.{actionUnit.level} · {master.title}</p>
                   </div>
-                  {inParty && (
-                    <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-bold"
-                      style={{ background: 'rgba(124,58,237,0.4)', color: '#c4b5fd' }}>
-                      編成中
-                    </span>
-                  )}
+                  <div className="ml-auto flex items-center gap-1.5">
+                    {isLocked && <span className="text-sm">🔒</span>}
+                    {inParty && (
+                      <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                        style={{ background: 'rgba(124,58,237,0.4)', color: '#c4b5fd' }}>
+                        編成中
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
               <div className="space-y-2">
@@ -246,6 +251,16 @@ export const UnitsPage = () => {
                     color: inParty ? '#fca5a5' : partyFull ? '#6b7280' : '#c4b5fd',
                   }}>
                   {inParty ? '⚔️ パーティから外す' : partyFull ? 'パーティが満員です' : '⚔️ パーティに追加'}
+                </button>
+                <button
+                  onClick={() => toggleLock(actionUnit.instanceId)}
+                  className="w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-95"
+                  style={{
+                    background: isLocked ? 'rgba(245,158,11,0.15)' : 'rgba(40,30,60,0.6)',
+                    border: isLocked ? '1px solid rgba(245,158,11,0.4)' : '1px solid rgba(100,80,140,0.3)',
+                    color: isLocked ? '#fbbf24' : '#d1d5db',
+                  }}>
+                  {isLocked ? '🔓 ロックを解除する' : '🔒 ロックする（解放から保護）'}
                 </button>
                 <button
                   onClick={() => { navigate(`/units/${actionUnit.instanceId}`); setActionUnit(null); }}
