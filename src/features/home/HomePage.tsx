@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useMissionStore } from '../../stores/missionStore';
@@ -9,17 +9,20 @@ import { RANK_EXP_TABLE } from '../../stores/playerStore';
 import {
   IconSword, IconTeam, IconCrystal, IconArrowUp,
   IconGear, IconShield, IconDragon, IconScroll,
-  IconTrophy, IconCastle,
+  IconTrophy, IconCastle, IconBag, IconFriends,
 } from '../../components/ui/FantasyIcon';
 import { LoginBonusModal } from '../login/LoginBonusModal';
 
 const QUICK_ACTIONS = [
-  { label: 'クエスト',  Icon: IconSword,   path: '/quests',   bg: 'linear-gradient(145deg,#6b0e0e,#3d0808)', accent: '#ef4444' },
-  { label: 'ユニット',  Icon: IconTeam,    path: '/units',    bg: 'linear-gradient(145deg,#0e3a6b,#081e3d)', accent: '#3b82f6' },
-  { label: '召喚',     Icon: IconCrystal, path: '/summon',   bg: 'linear-gradient(145deg,#4a1080,#260850)', accent: '#8b5cf6' },
-  { label: '強化',     Icon: IconArrowUp, path: '/enhance',  bg: 'linear-gradient(145deg,#7a5200,#3d2900)', accent: '#f59e0b' },
-  { label: '装備',     Icon: IconGear,    path: '/equipment',bg: 'linear-gradient(145deg,#334155,#1e2a3a)', accent: '#94a3b8' },
-  { label: '編成',     Icon: IconShield,  path: '/party',    bg: 'linear-gradient(145deg,#064030,#021e17)', accent: '#10b981' },
+  { label: 'クエスト',  Icon: IconSword,    path: '/quests',   bg: 'linear-gradient(145deg,#6b0e0e,#3d0808)', accent: '#ef4444' },
+  { label: 'ユニット',  Icon: IconTeam,     path: '/units',    bg: 'linear-gradient(145deg,#0e3a6b,#081e3d)', accent: '#3b82f6' },
+  { label: '召喚',     Icon: IconCrystal,  path: '/summon',   bg: 'linear-gradient(145deg,#4a1080,#260850)', accent: '#8b5cf6' },
+  { label: '強化',     Icon: IconArrowUp,  path: '/enhance',  bg: 'linear-gradient(145deg,#7a5200,#3d2900)', accent: '#f59e0b' },
+  { label: '装備',     Icon: IconGear,     path: '/equipment',bg: 'linear-gradient(145deg,#334155,#1e2a3a)', accent: '#94a3b8' },
+  { label: '編成',     Icon: IconShield,   path: '/party',    bg: 'linear-gradient(145deg,#064030,#021e17)', accent: '#10b981' },
+  { label: 'アリーナ', Icon: IconTrophy,   path: '/pvp',      bg: 'linear-gradient(145deg,#3d2800,#1e1000)', accent: '#f59e0b' },
+  { label: 'ショップ', Icon: IconBag,      path: '/shop',     bg: 'linear-gradient(145deg,#063040,#021820)', accent: '#22d3ee' },
+  { label: 'フレンド', Icon: IconFriends,  path: '/social',   bg: 'linear-gradient(145deg,#2d1460,#120a30)', accent: '#a855f7' },
 ];
 
 export const HomePage = () => {
@@ -28,16 +31,28 @@ export const HomePage = () => {
   const { checkDailyReset, getCompletedCount, getClaimedCount } = useMissionStore();
   const { canClaim, markLoggedInToday } = useLoginBonusStore();
   const [showLoginBonus, setShowLoginBonus] = useState(false);
+  const [staminaCd, setStaminaCd] = useState('');
+
+  const updateCd = useCallback(() => {
+    const { player: p } = usePlayerStore.getState();
+    if (p.stamina >= p.maxStamina) { setStaminaCd(''); return; }
+    const left = Math.max(0, p.staminaRecoveryTime - Date.now());
+    const m = Math.floor(left / 60000);
+    const s = Math.floor((left % 60000) / 1000);
+    setStaminaCd(`${m}:${String(s).padStart(2, '0')}`);
+  }, []);
 
   useEffect(() => {
     recoverStamina();
     checkDailyReset();
+    updateCd();
     const interval = setInterval(recoverStamina, 60000);
+    const cdInterval = setInterval(updateCd, 1000);
     // ログインボーナスを自動表示（当日初回ログイン時のみ）
     if (markLoggedInToday() && canClaim()) setTimeout(() => setShowLoginBonus(true), 800);
-    return () => clearInterval(interval);
+    return () => { clearInterval(interval); clearInterval(cdInterval); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recoverStamina, checkDailyReset]);
+  }, [recoverStamina, checkDailyReset, updateCd]);
 
   const activeEvents = getActiveEvents();
   const activeRaids = getActiveRaids();
@@ -151,9 +166,14 @@ export const HomePage = () => {
             <div className="mb-3">
               <div className="flex justify-between mb-1">
                 <span className="text-[10px] font-bold" style={{ color: '#4b5563' }}>⚡ スタミナ</span>
-                <span className="text-[10px] font-bold" style={{ color: player.stamina >= player.maxStamina ? '#34d399' : '#f59e0b' }}>
-                  {player.stamina} / {player.maxStamina}
-                </span>
+                <div className="flex items-center gap-2">
+                  {player.stamina < player.maxStamina && staminaCd && (
+                    <span className="text-[9px]" style={{ color: '#6b7280' }}>次の回復まで {staminaCd}</span>
+                  )}
+                  <span className="text-[10px] font-bold" style={{ color: player.stamina >= player.maxStamina ? '#34d399' : '#f59e0b' }}>
+                    {player.stamina} / {player.maxStamina}
+                  </span>
+                </div>
               </div>
               <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
                 <div className="h-full rounded-full transition-all duration-300"
@@ -246,7 +266,7 @@ export const HomePage = () => {
       {/* クイックアクション */}
       <div className="px-4 mb-4" style={{ position: 'relative', zIndex: 2 }}>
         <p className="text-xs font-bold tracking-widest mb-3" style={{ color: '#4b5563' }}>— メニュー —</p>
-        <div className="grid grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-3 gap-2">
           {QUICK_ACTIONS.map(btn => {
             const IconComp = btn.Icon;
             return (

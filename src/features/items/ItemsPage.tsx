@@ -1,8 +1,23 @@
 import { useState } from 'react';
 import { usePlayerStore } from '../../stores/playerStore';
+import { useUnitStore } from '../../stores/unitStore';
+import { useMissionStore } from '../../stores/missionStore';
+import { getUnitMaster } from '../../data/units';
 import { ITEM_MASTER, getItemMaster } from '../../data/items';
 import { TopBar } from '../../components/layout/TopBar';
+import { getLevelCap } from '../../data/rarityConfig';
 import type { ItemMaster } from '../../types';
+
+const EXP_MAP: Record<string, number> = {
+  item_exp_s: 500,
+  item_exp_m: 2000,
+  item_exp_l: 8000,
+  item_exp_xl: 30000,
+  item_exp_medal: 10000,
+  item_star_of_wisdom: 50000,
+  item_exp_xxl: 100000,
+  item_exp_tome: 20000,
+};
 
 type Category = 'all' | 'stamina' | 'exp_potion' | 'material' | 'awaken_material' | 'summon_ticket';
 
@@ -17,8 +32,11 @@ const CATEGORIES: { id: Category; label: string; emoji: string }[] = [
 
 export const ItemsPage = () => {
   const { player, items, useItem } = usePlayerStore();
+  const { ownedUnits, levelUpUnit } = useUnitStore();
+  const { addDailyProgress } = useMissionStore();
   const [activeCategory, setActiveCategory] = useState<Category>('all');
   const [toast, setToast] = useState<string | null>(null);
+  const [expModal, setExpModal] = useState<{ itemId: string; exp: number; name: string } | null>(null);
 
   const ownedItems = items
     .filter(i => i.quantity > 0)
@@ -56,12 +74,39 @@ export const ItemsPage = () => {
         }));
         showToast(`${master.emoji} スタミナ +30 回復！`);
       }
+    } else if (master.category === 'exp_potion') {
+      const exp = EXP_MAP[itemId];
+      if (exp && ownedUnits.length > 0) {
+        setExpModal({ itemId, exp, name: master.name });
+      } else if (ownedUnits.length === 0) {
+        showToast('ユニットを召喚してから使用してください');
+      } else {
+        showToast(`${master.emoji} このアイテムはここでは使用できません`);
+      }
     } else {
       showToast(`${master.emoji} このアイテムはここでは使用できません`);
     }
   };
 
-  const canUseHere = (category: string) => category === 'stamina';
+  const handleApplyExp = (unitInstanceId: string) => {
+    if (!expModal) return;
+    const unit = ownedUnits.find(u => u.instanceId === unitInstanceId);
+    if (!unit) return;
+    const cap = getLevelCap(unit.currentRarity);
+    if (unit.level >= cap) {
+      showToast('このユニットはレベルが上限です。進化させましょう');
+      return;
+    }
+    const ok = useItem(expModal.itemId, 1);
+    if (!ok) { showToast('アイテムが足りません'); setExpModal(null); return; }
+    levelUpUnit(unitInstanceId, expModal.exp);
+    addDailyProgress('enhance');
+    const m = getUnitMaster(unit.masterId);
+    showToast(`${m?.emoji ?? '✨'} ${m?.name ?? 'ユニット'} に EXP +${expModal.exp.toLocaleString()}！`);
+    setExpModal(null);
+  };
+
+  const canUseHere = (category: string) => category === 'stamina' || (category === 'exp_potion' && ownedUnits.length > 0);
 
   return (
     <div className="min-h-screen pb-28">
@@ -171,6 +216,52 @@ export const ItemsPage = () => {
         <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-50 animate-slide-up">
           <div className="card-glass px-5 py-3 border-purple-700/40 whitespace-nowrap">
             <p className="text-white text-sm font-medium">{toast}</p>
+          </div>
+        </div>
+      )}
+
+      {/* 経験値使用：ユニット選択モーダル */}
+      {expModal && (
+        <div className="fixed inset-0 z-[60] flex items-end" style={{ background: 'rgba(0,0,0,0.75)' }}
+          onClick={e => { if (e.target === e.currentTarget) setExpModal(null); }}>
+          <div className="w-full rounded-t-3xl flex flex-col" style={{
+            background: 'linear-gradient(180deg, #1a0838 0%, #0d0620 100%)',
+            border: '1px solid rgba(139,92,246,0.4)',
+            maxHeight: '80vh',
+          }}>
+            <div className="px-5 pt-5 pb-3 flex-shrink-0">
+              <div className="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-4" />
+              <p className="text-white font-bold text-base">{expModal.name}</p>
+              <p className="text-gray-400 text-xs mt-0.5">EXP +{expModal.exp.toLocaleString()} を与えるユニットを選択</p>
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 pb-4 space-y-2">
+              {ownedUnits.map(u => {
+                const m = getUnitMaster(u.masterId);
+                if (!m) return null;
+                const cap = getLevelCap(u.currentRarity);
+                const isMax = u.level >= cap;
+                return (
+                  <button key={u.instanceId} onClick={() => handleApplyExp(u.instanceId)}
+                    disabled={isMax}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${isMax ? 'opacity-40' : 'active:scale-98'}`}
+                    style={{ background: 'rgba(40,20,80,0.6)', border: '1px solid rgba(139,92,246,0.2)' }}>
+                    <span className="text-2xl flex-shrink-0">{m.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-bold text-sm truncate">{m.name}</p>
+                      <p className="text-gray-500 text-xs">Lv.{u.level} / {cap}{isMax ? ' (MAX)' : ''}</p>
+                    </div>
+                    {!isMax && <span className="text-purple-400 text-xs font-bold flex-shrink-0">+{expModal.exp.toLocaleString()} EXP</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="px-5 py-4 flex-shrink-0" style={{ borderTop: '1px solid rgba(100,80,140,0.2)' }}>
+              <button onClick={() => setExpModal(null)}
+                className="w-full py-3 rounded-xl text-sm font-bold text-gray-400"
+                style={{ background: 'rgba(40,30,60,0.6)', border: '1px solid rgba(100,80,140,0.3)' }}>
+                キャンセル
+              </button>
+            </div>
           </div>
         </div>
       )}
