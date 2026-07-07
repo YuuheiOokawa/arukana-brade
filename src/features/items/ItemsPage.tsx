@@ -31,12 +31,14 @@ const CATEGORIES: { id: Category; label: string; emoji: string }[] = [
 ];
 
 export const ItemsPage = () => {
-  const { player, items, useItem } = usePlayerStore();
+  const { player, items, useItem, addGold } = usePlayerStore();
   const { ownedUnits, levelUpUnit } = useUnitStore();
   const { addDailyProgress } = useMissionStore();
   const [activeCategory, setActiveCategory] = useState<Category>('all');
   const [toast, setToast] = useState<string | null>(null);
   const [expModal, setExpModal] = useState<{ itemId: string; exp: number; name: string } | null>(null);
+  const [sellModal, setSellModal] = useState<{ master: ItemMaster; owned: number } | null>(null);
+  const [sellQty, setSellQty] = useState(1);
 
   const ownedItems = items
     .filter(i => i.quantity > 0)
@@ -107,6 +109,22 @@ export const ItemsPage = () => {
   };
 
   const canUseHere = (category: string) => category === 'stamina' || (category === 'exp_potion' && ownedUnits.length > 0);
+
+  const openSellModal = (master: ItemMaster, owned: number) => {
+    setSellQty(1);
+    setSellModal({ master, owned });
+  };
+
+  const handleSell = () => {
+    if (!sellModal) return;
+    const { master } = sellModal;
+    const ok = useItem(master.id, sellQty);
+    if (!ok) { showToast('アイテムが足りません'); setSellModal(null); return; }
+    const gold = (master.sellPrice ?? 0) * sellQty;
+    addGold(gold);
+    showToast(`🪙 ${master.name} ×${sellQty} を ${gold.toLocaleString()} G で売却！`);
+    setSellModal(null);
+  };
 
   return (
     <div className="min-h-screen pb-28">
@@ -181,25 +199,40 @@ export const ItemsPage = () => {
                 <p className="text-gray-500 text-xs truncate">{master.description}</p>
               </div>
 
-              {/* 数量 + 使用ボタン */}
+              {/* 数量 + 使用/売却ボタン */}
               <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
                 <span className="text-white font-black text-lg tabular-nums">
                   ×{ownedItem.quantity}
                 </span>
-                {canUseHere(master.category) && (
-                  <button
-                    onClick={() => handleUseItem(ownedItem.itemId)}
-                    className="text-xs px-3 py-1.5 rounded-lg font-bold transition-all active:scale-95"
-                    style={{
-                      background: 'linear-gradient(135deg, #6d28d9, #7c3aed)',
-                      border: '1px solid rgba(124,58,237,0.5)',
-                      boxShadow: '0 2px 8px rgba(124,58,237,0.3)',
-                      color: 'white',
-                    }}
-                  >
-                    使用
-                  </button>
-                )}
+                <div className="flex gap-1.5">
+                  {(master.sellPrice ?? 0) > 0 && (
+                    <button
+                      onClick={() => openSellModal(master, ownedItem.quantity)}
+                      className="text-xs px-3 py-1.5 rounded-lg font-bold transition-all active:scale-95"
+                      style={{
+                        background: 'rgba(245,158,11,0.12)',
+                        border: '1px solid rgba(245,158,11,0.35)',
+                        color: '#fbbf24',
+                      }}
+                    >
+                      売却
+                    </button>
+                  )}
+                  {canUseHere(master.category) && (
+                    <button
+                      onClick={() => handleUseItem(ownedItem.itemId)}
+                      className="text-xs px-3 py-1.5 rounded-lg font-bold transition-all active:scale-95"
+                      style={{
+                        background: 'linear-gradient(135deg, #6d28d9, #7c3aed)',
+                        border: '1px solid rgba(124,58,237,0.5)',
+                        boxShadow: '0 2px 8px rgba(124,58,237,0.3)',
+                        color: 'white',
+                      }}
+                    >
+                      使用
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -216,6 +249,60 @@ export const ItemsPage = () => {
         <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-50 animate-slide-up">
           <div className="card-glass px-5 py-3 border-purple-700/40 whitespace-nowrap">
             <p className="text-white text-sm font-medium">{toast}</p>
+          </div>
+        </div>
+      )}
+
+      {/* 売却モーダル */}
+      {sellModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)' }}
+          onClick={e => { if (e.target === e.currentTarget) setSellModal(null); }}>
+          <div className="w-full max-w-sm rounded-2xl p-5" style={{
+            background: 'linear-gradient(180deg, #1a0838 0%, #0d0620 100%)',
+            border: '1px solid rgba(245,158,11,0.4)',
+          }}>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-3xl">{sellModal.master.emoji}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-bold truncate">{sellModal.master.name}</p>
+                <p className="text-gray-500 text-xs">所持 ×{sellModal.owned} · 単価 🪙 {(sellModal.master.sellPrice ?? 0).toLocaleString()}</p>
+              </div>
+            </div>
+
+            {/* 数量セレクタ */}
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <button onClick={() => setSellQty(q => Math.max(1, q - 1))}
+                className="w-10 h-10 rounded-xl text-white font-black text-lg active:scale-95 transition-all"
+                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>−</button>
+              <span className="text-white font-black text-2xl w-16 text-center tabular-nums">{sellQty}</span>
+              <button onClick={() => setSellQty(q => Math.min(sellModal.owned, q + 1))}
+                className="w-10 h-10 rounded-xl text-white font-black text-lg active:scale-95 transition-all"
+                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>＋</button>
+              <button onClick={() => setSellQty(sellModal.owned)}
+                className="px-3 py-2 rounded-xl text-xs font-bold active:scale-95 transition-all"
+                style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)', color: '#fbbf24' }}>
+                MAX
+              </button>
+            </div>
+
+            <div className="rounded-xl p-3 mb-4 text-center"
+              style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
+              <p className="text-gray-500 text-xs mb-0.5">売却額</p>
+              <p className="text-yellow-400 font-black text-xl">🪙 {((sellModal.master.sellPrice ?? 0) * sellQty).toLocaleString()} G</p>
+            </div>
+
+            <div className="flex gap-3">
+              <button onClick={() => setSellModal(null)}
+                className="flex-1 py-3 rounded-xl text-sm font-bold text-gray-400"
+                style={{ background: 'rgba(40,30,60,0.6)', border: '1px solid rgba(100,80,140,0.3)' }}>
+                キャンセル
+              </button>
+              <button onClick={handleSell}
+                className="flex-1 py-3 rounded-xl text-sm font-black text-white active:scale-95 transition-all"
+                style={{ background: 'linear-gradient(135deg, #d97706, #b45309)', boxShadow: '0 4px 16px rgba(245,158,11,0.3)' }}>
+                売却する
+              </button>
+            </div>
           </div>
         </div>
       )}

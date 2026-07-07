@@ -63,6 +63,19 @@ export const BattlePage = () => {
   const [phase, setPhase] = useState<Phase>('battle');
   const [leaderBbGauge, setLeaderBbGauge] = useState(0);
   const [isAutoMode, setIsAutoMode] = useState(false);
+  const [battleSpeed, setBattleSpeed] = useState<1 | 2>(() =>
+    localStorage.getItem('arcana-battle-speed') === '2' ? 2 : 1
+  );
+  const battleSpeedRef = useRef(battleSpeed);
+  battleSpeedRef.current = battleSpeed;
+
+  const toggleSpeed = () => {
+    setBattleSpeed(prev => {
+      const next = prev === 1 ? 2 : 1;
+      localStorage.setItem('arcana-battle-speed', String(next));
+      return next;
+    });
+  };
   const [rewardGold, setRewardGold] = useState(0);
   const [rewardExp, setRewardExp] = useState(0);
   const [rewardItems, setRewardItems] = useState<string[]>([]);
@@ -223,6 +236,7 @@ export const BattlePage = () => {
   }, []);
 
   // 80ms ごとに1行ずつ表示（refで排他制御: wave遷移の再レンダリングでフラグが詰まらないように）
+  // 倍速時は表示間隔も半分にする
   useEffect(() => {
     if (logQueue.length === 0 || isLogAnimatingRef.current) return;
     isLogAnimatingRef.current = true;
@@ -233,7 +247,7 @@ export const BattlePage = () => {
         return rest;
       });
       isLogAnimatingRef.current = false;
-    }, 80);
+    }, 80 / battleSpeedRef.current);
     return () => {
       clearTimeout(timer);
       isLogAnimatingRef.current = false; // タイマーキャンセル時もフラグをリセット
@@ -454,12 +468,12 @@ export const BattlePage = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, waveIndex, addLogs, buildWave]);
 
-  // オートモード
+  // オートモード（倍速時はラウンド間隔を短縮）
   useEffect(() => {
     if (!isAutoMode || phase !== 'battle') return;
-    const timer = setTimeout(() => processRound(true), 1000);
+    const timer = setTimeout(() => processRound(true), 1000 / battleSpeed);
     return () => clearTimeout(timer);
-  }, [isAutoMode, phase, round, processRound]);
+  }, [isAutoMode, phase, round, processRound, battleSpeed]);
 
   if (!stage) return (
     <div className="min-h-screen flex items-center justify-center battle-bg">
@@ -506,6 +520,16 @@ export const BattlePage = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={toggleSpeed}
+            className={`text-xs font-bold px-2.5 py-1.5 rounded-lg border transition-all ${
+              battleSpeed === 2
+                ? 'bg-blue-600/30 border-blue-500/60 text-blue-300'
+                : 'border-gray-700/50 text-gray-500'
+            }`}
+          >
+            ⏩ ×{battleSpeed}
+          </button>
           <button
             onClick={() => setIsAutoMode(p => !p)}
             className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${
