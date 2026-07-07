@@ -64,6 +64,7 @@ export const useMissionStore = create<MissionStore>()(
               ),
             },
           }));
+          get().addWeeklyProgress('login');
         }
       },
 

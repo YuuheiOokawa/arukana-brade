@@ -33,6 +33,7 @@ export const ShopPage = () => {
   const [tab, setTab] = useState<ShopTab>('stamina');
   const [message, setMessage] = useState('');
   const [buying, setBuying] = useState(false);
+  const [goldQty, setGoldQty] = useState<1 | 5 | 10>(1);
 
   const showMsg = (msg: string) => { setMessage(msg); setTimeout(() => setMessage(''), 2500); };
 
@@ -60,25 +61,29 @@ export const ShopPage = () => {
     }
   };
 
-  const buyItem = async (shop: typeof ITEM_SHOP[0]) => {
+  const buyItem = async (shop: typeof ITEM_SHOP[0], qty = 1) => {
     if (buying) return;
-    const hasEnough = shop.diamondCost > 0 ? player.diamond >= shop.diamondCost : player.gold >= shop.goldCost;
+    const totalCost = shop.diamondCost > 0 ? shop.diamondCost * qty : shop.goldCost * qty;
+    const hasEnough = shop.diamondCost > 0 ? player.diamond >= totalCost : player.gold >= totalCost;
     if (!hasEnough) { showMsg(shop.diamondCost > 0 ? 'ダイヤが不足しています' : 'ゴールドが不足しています'); return; }
     setBuying(true);
+    let totalQty = 0;
     try {
-      const res = await fetch('/api/actions', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'shop_item', packId: shop.id }),
-      });
-      const data = await res.json() as { ok?: boolean; error?: string; diamond?: number; gold?: number; itemId?: string; quantityAdded?: number };
-      if (!res.ok || !data.ok) { showMsg(data.error ?? '購入に失敗しました'); return; }
-      usePlayerStore.setState(s => ({
-        player: { ...s.player, diamond: data.diamond ?? s.player.diamond, gold: data.gold ?? s.player.gold },
-      }));
-      if (data.itemId && data.quantityAdded) addItem(data.itemId, data.quantityAdded);
-      showMsg(`${shop.emoji} ${shop.label} ×${data.quantityAdded} 獲得！`);
+      for (let i = 0; i < qty; i++) {
+        const res = await fetch('/api/actions', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'shop_item', packId: shop.id }),
+        });
+        const data = await res.json() as { ok?: boolean; error?: string; diamond?: number; gold?: number; itemId?: string; quantityAdded?: number };
+        if (!res.ok || !data.ok) { showMsg(data.error ?? '購入に失敗しました'); return; }
+        usePlayerStore.setState(s => ({
+          player: { ...s.player, diamond: data.diamond ?? s.player.diamond, gold: data.gold ?? s.player.gold },
+        }));
+        if (data.itemId && data.quantityAdded) { addItem(data.itemId, data.quantityAdded); totalQty += data.quantityAdded; }
+      }
+      showMsg(`${shop.emoji} ${shop.label} ×${totalQty} 獲得！`);
     } catch {
       showMsg('通信エラーが発生しました');
     } finally {
@@ -160,17 +165,37 @@ export const ShopPage = () => {
                   <p className="text-sm font-black text-yellow-400">{player.gold.toLocaleString()}</p></div>
               </div>
             </div>
+            {/* ゴールドアイテム用：数量選択 */}
+            {ITEM_SHOP.some(s => s.goldCost > 0) && (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-gray-500 text-xs">数量:</span>
+                {([1, 5, 10] as const).map(q => (
+                  <button key={q} onClick={() => setGoldQty(q)}
+                    className="px-3 py-1 rounded-lg text-xs font-bold transition-all"
+                    style={{
+                      background: goldQty === q ? 'linear-gradient(135deg,#7c3aed,#4f46e5)' : 'rgba(255,255,255,0.05)',
+                      color: goldQty === q ? '#fff' : '#6b7280',
+                      border: goldQty === q ? '1px solid rgba(167,139,250,0.5)' : '1px solid rgba(255,255,255,0.07)',
+                    }}>
+                    ×{q}
+                  </button>
+                ))}
+                <span className="text-gray-600 text-[10px] ml-1">※ゴールド購入のみ対応</span>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-2">
               {ITEM_SHOP.map(shop => {
-                const canAfford = shop.diamondCost > 0 ? player.diamond >= shop.diamondCost : player.gold >= shop.goldCost;
+                const qty = shop.goldCost > 0 ? goldQty : 1;
+                const totalCost = shop.diamondCost > 0 ? shop.diamondCost : shop.goldCost * qty;
+                const canAfford = shop.diamondCost > 0 ? player.diamond >= shop.diamondCost : player.gold >= totalCost;
                 return (
-                  <button key={shop.id} onClick={() => buyItem(shop)}
+                  <button key={shop.id} onClick={() => buyItem(shop, qty)}
                     className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${canAfford ? 'active:scale-95' : 'opacity-50'}`}
                     style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${canAfford ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)'}` }}>
                     <span className="text-3xl">{shop.emoji}</span>
                     <div className="text-center">
                       <p className="text-white text-xs font-bold leading-tight">{shop.label}</p>
-                      <p className="text-gray-500 text-[10px]">×{shop.quantity}</p>
+                      <p className="text-gray-500 text-[10px]">×{shop.goldCost > 0 && qty > 1 ? `${shop.quantity * qty} (×${qty})` : shop.quantity}</p>
                     </div>
                     <div className="px-2.5 py-1 rounded-lg text-xs font-black"
                       style={{
@@ -178,7 +203,7 @@ export const ShopPage = () => {
                         border: shop.diamondCost > 0 ? '1px solid rgba(96,165,250,0.4)' : '1px solid rgba(245,158,11,0.4)',
                         color: shop.diamondCost > 0 ? '#93c5fd' : '#fbbf24',
                       }}>
-                      {shop.diamondCost > 0 ? `💎 ${shop.diamondCost}` : `🪙 ${(shop.goldCost / 1000).toFixed(0)}K`}
+                      {shop.diamondCost > 0 ? `💎 ${shop.diamondCost}` : `🪙 ${((shop.goldCost * qty) / 1000).toFixed(0)}K`}
                     </div>
                   </button>
                 );

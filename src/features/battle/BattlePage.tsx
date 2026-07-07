@@ -404,8 +404,10 @@ export const BattlePage = () => {
                   addDailyProgress('battle_win');
                   addDailyProgress('quest_clear');
                   addWeeklyProgress('battle_win');
+                  addWeeklyProgress('quest_clear');
                   if (updAllies.some(a => a.isFriend && a.currentHp > 0)) {
                     addDailyProgress('friend_battle');
+                    addWeeklyProgress('friend_battle');
                   }
                   recordBattleWin();
                   recordQuestClear();
