@@ -115,6 +115,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     type E = { instanceId: string; masterId: string; level?: number; exp?: number; equippedTo?: string | null };
     type Party = { id: string; name?: string; slots?: (string | null)[]; leaderId?: string | null };
 
+    // miscData 用サニタイズヘルパー
+    const strArray = (v: unknown, max = 2000): string[] =>
+      Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').slice(0, max) : [];
+    const starsRecord = (v: unknown): Record<string, number> => {
+      if (!v || typeof v !== 'object' || Array.isArray(v)) return {};
+      const out: Record<string, number> = {};
+      for (const [k, val] of Object.entries(v as Record<string, unknown>).slice(0, 3000)) {
+        const n = Number(val);
+        if (Number.isFinite(n)) out[k] = Math.max(0, Math.min(3, Math.round(n)));
+      }
+      return out;
+    };
+
+    const prevMisc = (player.miscData ?? {}) as Record<string, unknown>;
     const p = state.player as P | undefined;
     const units = (Array.isArray(state.ownedUnits) ? state.ownedUnits : []) as U[];
     const items = (Array.isArray(state.items) ? state.items : []) as I[];
@@ -140,7 +154,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           arcanaPlayerId: typeof p?.playerId === 'string' ? p.playerId : undefined,
           tutorialCompleted: state.tutorialCompleted === true ? true : undefined,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          miscData: JSON.parse(JSON.stringify({ awakeningCrystals: (state.awakeningCrystals as Record<string, number>) ?? {}, raidStates: (state.raidStates as unknown[]) ?? [] })) as any,
+          miscData: JSON.parse(JSON.stringify({
+            awakeningCrystals: (state.awakeningCrystals as Record<string, number>) ?? {},
+            raidStates: (state.raidStates as unknown[]) ?? [],
+            // 旧バージョンのクライアントがキーを送らない場合は既存のDB値を保持する
+            achievementsClaimed: state.achievementsClaimed !== undefined ? strArray(state.achievementsClaimed) : strArray(prevMisc.achievementsClaimed),
+            collectionDiscovered: state.collectionDiscovered !== undefined ? strArray(state.collectionDiscovered) : strArray(prevMisc.collectionDiscovered),
+            collectionDiscoveredEquips: state.collectionDiscoveredEquips !== undefined ? strArray(state.collectionDiscoveredEquips) : strArray(prevMisc.collectionDiscoveredEquips),
+            giftClaimedIds: state.giftClaimedIds !== undefined ? strArray(state.giftClaimedIds) : strArray(prevMisc.giftClaimedIds),
+            stageStars: state.stageStars !== undefined ? starsRecord(state.stageStars) : starsRecord(prevMisc.stageStars),
+          })) as any,
           updatedAt: new Date(),
         },
       });

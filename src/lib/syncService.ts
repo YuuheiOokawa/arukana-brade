@@ -16,6 +16,9 @@ import { useLoginBonusStore } from '../stores/loginBonusStore';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { useArenaStore } from '../stores/arenaStore';
 import { useRaidStore } from '../stores/raidStore';
+import { useAchievementStore } from '../stores/achievementStore';
+import { useCollectionStore } from '../stores/collectionStore';
+import { useGiftStore } from '../stores/giftStore';
 import type { PlayerData, OwnedItem, OwnedUnit, OwnedEquipment } from '../types';
 import type { GameDataResponse } from '../stores/authStore';
 import { getUnitMaster, calcUnitStats } from '../data/units';
@@ -50,6 +53,9 @@ export const collectGameState = () => {
   const ts = useTutorialStore.getState();
   const as = useArenaStore.getState();
   const rs = useRaidStore.getState();
+  const ach = useAchievementStore.getState();
+  const col = useCollectionStore.getState();
+  const gift = useGiftStore.getState();
 
   return {
     // playerStore
@@ -62,6 +68,7 @@ export const collectGameState = () => {
     clearedStageIds: qs.clearedStageIds,
     claimedAreaRewards: qs.claimedAreaRewards,
     lastSelectedWorldId: qs.lastSelectedWorldId,
+    stageStars: qs.stageStars,
     // partyStore
     parties: party.parties,
     activePartyId: party.activePartyId,
@@ -83,6 +90,13 @@ export const collectGameState = () => {
     arenaBattleHistory: as.battleHistory,
     // raidStore
     raidStates: rs.raidStates,
+    // achievementStore（実績報酬の受取記録）
+    achievementsClaimed: ach.claimed,
+    // collectionStore（図鑑の発見記録）
+    collectionDiscovered: col.discovered,
+    collectionDiscoveredEquips: col.discoveredEquips,
+    // giftStore（プレゼント受取記録）
+    giftClaimedIds: gift.claimedIds,
     // メタ
     savedAt: Date.now(),
   };
@@ -292,6 +306,24 @@ export const hydrateFromGameState = (
       if (Array.isArray(playerMiscData.raidStates)) {
         useRaidStore.setState({ raidStates: playerMiscData.raidStates as ReturnType<typeof useRaidStore.getState>['raidStates'] });
       }
+      // キーが存在する場合のみ復元（未保存の既存ユーザーの localStorage 値を消さないため）
+      if (Array.isArray(playerMiscData.achievementsClaimed)) {
+        useAchievementStore.setState({ claimed: playerMiscData.achievementsClaimed as string[] });
+      }
+      if (Array.isArray(playerMiscData.collectionDiscovered)) {
+        useCollectionStore.setState({
+          discovered: playerMiscData.collectionDiscovered as string[],
+          discoveredEquips: Array.isArray(playerMiscData.collectionDiscoveredEquips)
+            ? playerMiscData.collectionDiscoveredEquips as string[]
+            : [],
+        });
+      }
+      if (Array.isArray(playerMiscData.giftClaimedIds)) {
+        useGiftStore.setState({ claimedIds: playerMiscData.giftClaimedIds as string[] });
+      }
+      if (playerMiscData.stageStars && typeof playerMiscData.stageStars === 'object' && !Array.isArray(playerMiscData.stageStars)) {
+        useQuestStore.setState({ stageStars: playerMiscData.stageStars as Record<string, number> });
+      }
     }
 
   } else {
@@ -401,7 +433,7 @@ export const resetAllStores = () => {
     lastUsedFriendId: null,
   });
   useUnitStore.setState({ ownedUnits: [], awakeningCrystals: {} });
-  useQuestStore.setState({ clearedStageIds: [], claimedAreaRewards: [], pendingStageId: null, pendingFriendId: null, lastSelectedWorldId: null });
+  useQuestStore.setState({ clearedStageIds: [], claimedAreaRewards: [], pendingStageId: null, pendingFriendId: null, lastSelectedWorldId: null, stageStars: {}, pendingHard: false });
   usePartyStore.setState({
     parties: [{ id: 'party_default', name: 'パーティ1', slots: [null, null, null, null, null], leaderId: null }],
     activePartyId: 'party_default',
@@ -411,6 +443,9 @@ export const resetAllStores = () => {
   useLoginBonusStore.setState({ lastClaimedDate: null, claimedDays: [], currentDay: 1, lastLoginDate: null });
   useArenaStore.setState({ record: { wins: 0, losses: 0, rank: 999, points: 1000, season: 1 }, battleHistory: [] });
   useTutorialStore.setState({ completed: false, phase: 'title', playerName: '', selectedHeroId: null, selectedGender: null, selectedRace: null });
+  useAchievementStore.setState({ claimed: [] });
+  useCollectionStore.setState({ discovered: [], discoveredEquips: [] });
+  useGiftStore.setState({ claimedIds: [] });
   setTimeout(() => { isHydrating = false; }, 300);
 };
 
@@ -426,6 +461,9 @@ export const initAutoSave = () => {
     useLoginBonusStore.subscribe(() => scheduleSave(500)),   // ログインボーナス取得は早めに保存
     useArenaStore.subscribe(() => scheduleSave(1000)),
     useTutorialStore.subscribe(() => scheduleSave(500)),     // チュートリアル完了は早めに保存
+    useAchievementStore.subscribe(() => scheduleSave(500)),  // 報酬受取は早めに保存（二重受取防止）
+    useCollectionStore.subscribe(() => scheduleSave(2000)),
+    useGiftStore.subscribe(() => scheduleSave(500)),         // 報酬受取は早めに保存（二重受取防止）
   ];
   return () => unsubs.forEach(u => u());
 };
