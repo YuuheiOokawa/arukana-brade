@@ -38,7 +38,7 @@ export const useBattleSetup = () => {
         if (!owned) return null;
         const master = UNIT_MASTER.find(m => m.id === owned.masterId);
         if (!master) return null;
-        const stats = calcUnitStats(master, owned.level, owned.awakenRank);
+        const stats = calcUnitStats(master, owned.level, owned.awakenRank, owned.awakeningCount ?? 0);
         return {
           instanceId: owned.instanceId,
           masterId: master.id,

@@ -6,6 +6,7 @@ import { UNIT_MASTER } from '../../data/units';
 import { useQuestStore } from '../../stores/questStore';
 import { usePlayerStore } from '../../stores/playerStore';
 import { getStage } from '../../data/quests';
+import { getEventStage, getRaidStage } from '../../data/events';
 import { ElementBadge } from '../../components/ui/ElementBadge';
 import { TopBar } from '../../components/layout/TopBar';
 import type { FriendCandidate } from '../../types';
@@ -30,7 +31,12 @@ export const FriendSelectPage = () => {
   const [dbFriends, setDbFriends] = useState<FriendCandidate[]>([]);
   const [loadingDb, setLoadingDb] = useState(true);
 
-  const stage = pendingStageId ? getStage(pendingStageId) : null;
+  // 通常クエストに加え、イベントクエスト/レイドのステージIDも解決する
+  // (以前は getStage のみだったため、イベントクエストを選ぶと該当ステージが
+  //  見つからず即座にクエスト画面へ戻されてしまっていた)
+  const stage = pendingStageId
+    ? getStage(pendingStageId) ?? getEventStage(pendingStageId) ?? getRaidStage(pendingStageId)
+    : null;
 
   // DBフレンドを取得してFriendCandidate形式に変換
   useEffect(() => {
@@ -57,6 +63,12 @@ export const FriendSelectPage = () => {
     void load();
   }, []);
 
+  // レンダー中に navigate() を呼ぶとReactの警告や不安定な挙動の原因になるため、
+  // 副作用として useEffect 内で行う
+  useEffect(() => {
+    if (!stage) navigate('/quests', { replace: true });
+  }, [stage, navigate]);
+
   const handleConfirm = () => {
     if (!selected) {
       setNoSelectionError(true);
@@ -79,7 +91,7 @@ export const FriendSelectPage = () => {
   };
 
   if (!stage) {
-    navigate('/quests');
+    // 実際の遷移は上の useEffect が行う。ここでは何も描画しないだけ。
     return null;
   }
 

@@ -1,5 +1,6 @@
 import type { UnitMaster } from '../types';
 import { HERO_UNIT_MASTERS } from './heroes';
+import { getLevelCap } from './rarityConfig';
 
 export const UNIT_MASTER: UnitMaster[] = [
   // ========================================
@@ -1527,8 +1528,16 @@ export const getUnitMaster = (id: string): UnitMaster | undefined => {
 };
 
 // awakeningCount: ガチャ被り覚醒 (0〜4)。1回ごとに +5% 全ステータス上昇
+// master.maxLevel は個体ごとの固定値だが、進化(rarityUp)を重ねると
+// RARITY_LEVEL_CAPS の上限(最大200=CROWN)まで実際にレベルを上げられる。
+// 除数にそのまま master.maxLevel を使うと、それを超えてレベルを上げても
+// 成長率が1で頭打ちになり、以降どれだけレベルを上げてもステータスが
+// 全く変化しなくなるバグがあった。除数は常に「進化で到達しうる絶対上限」で
+// 固定し(進化のタイミングで除数が変わらないようにする)、レベルが上がる限り
+// 常にステータスが単調増加するようにする。
 export const calcUnitStats = (master: UnitMaster, level: number, awakenRank: number, awakeningCount = 0) => {
-  const ratio = Math.min(1, (level - 1) / (master.maxLevel - 1));
+  const effectiveMaxLevel = Math.max(master.maxLevel, getLevelCap('CROWN'));
+  const ratio = Math.min(1, (level - 1) / (effectiveMaxLevel - 1));
   const bonus = master.awakenBonus?.slice(0, awakenRank).reduce(
     (acc, b) => ({ hp: acc.hp + b.hp, atk: acc.atk + b.atk, def: acc.def + b.def, rec: acc.rec + b.rec }),
     { hp: 0, atk: 0, def: 0, rec: 0 }
