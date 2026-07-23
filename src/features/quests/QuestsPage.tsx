@@ -17,6 +17,7 @@ import { useEquipmentStore } from '../../stores/equipmentStore';
 import { TopBar } from '../../components/layout/TopBar';
 import { StaminaModal } from '../../components/ui/StaminaModal';
 import { GameBadge } from '../../components/ui/game/UIDecorations';
+import { getWorldBgStyle, getWorldAccent } from '../../utils/worldTheme';
 import type { QuestArea, QuestStage } from '../../types';
 
 interface SweepResult {
@@ -169,8 +170,21 @@ export const QuestsPage = () => {
     return d > 0 ? `残り${d}日${h}時間` : `残り${h}時間`;
   };
 
+  const worldBg = getWorldBgStyle(mainTab === 'story' ? selectedWorld.id : null);
+  const worldAccent = getWorldAccent(mainTab === 'story' ? selectedWorld.id : null);
+
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen pb-24 relative">
+      {/* ワールドテーマ背景 */}
+      <div className="fixed inset-0 -z-10 pointer-events-none" style={{ background: worldBg }}>
+        <div className="absolute inset-0" style={{
+          background: `radial-gradient(ellipse at 50% 0%, ${worldAccent}1a 0%, transparent 55%)`,
+        }} />
+        {/* 高級感ビネット */}
+        <div className="absolute inset-0" style={{
+          boxShadow: 'inset 0 0 140px rgba(0,0,0,.55), inset 0 0 40px rgba(0,0,0,.35)',
+        }} />
+      </div>
       <TopBar title="クエスト" />
 
       {/* メインタブ */}

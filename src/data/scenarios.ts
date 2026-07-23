@@ -334,6 +334,49 @@ export const SCENARIOS: ScenarioMaster[] = [
     ],
   },
 
+  // ===== 第四世界「雷嵐の高原」エリアクリアシナリオ =====
+  // 進行順: 雷鳴の平野(4_1) → 雷霆の聖域(4_3, 雷帝) → 天雷の頂(4_2, 真の最終area)
+  {
+    scenarioId: 'area_clear_4_1',
+    questId: 'area_4_1',
+    stageId: 'area_clear_4_1',
+    backgroundKey: 'storm',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '雷鳴轟く「雷鳴の平野」を抜けた一行。紫電の中、行く手に古い祭壇の輪郭が見えてくる。' },
+      { lineId: '2', type: 'dialogue', speakerName: 'ルナ', text: 'この先が「雷霆の聖域」……雷精霊たちの気配が、さっきよりずっと濃いわ。', position: 'left' },
+      { lineId: '3', type: 'dialogue', speakerName: 'ゼファー', text: '気を抜くな。ここから先は聖域そのものの守り。生半可な魔物ではないぞ。', position: 'right' },
+      { lineId: '4', type: 'dialogue', speakerName: '???', text: '分かってる。——欠片まで、あと一歩だ。', position: 'center', effect: 'flash' },
+    ],
+  },
+  {
+    scenarioId: 'area_clear_4_3',
+    questId: 'area_4_3',
+    stageId: 'area_clear_4_3',
+    backgroundKey: 'storm',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '雷神の間に静寂が戻る。雷帝は最後に小さく笑い、雷光となって消えていった。' },
+      { lineId: '2', type: 'dialogue', speakerName: 'ゼファー', text: '雷帝は……我々に敗れることを、どこかで望んでいたようだな。', position: 'right' },
+      { lineId: '3', type: 'dialogue', speakerName: 'ルナ', text: '「祭壇はもう穢された」って言ってた……。欠片は聖域の奥、天雷の頂に運ばれたのかもしれない。', position: 'left' },
+      { lineId: '4', type: 'dialogue', speakerName: '???', text: 'なら、追うしかない。欠片を——穢れごと取り戻す。', position: 'center', effect: 'shake' },
+    ],
+  },
+  {
+    scenarioId: 'area_clear_4_2',
+    questId: 'area_4_2',
+    stageId: 'area_clear_4_2',
+    backgroundKey: 'storm',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '天雷の頂。紫電を纏う巨躯「雷覇王サンダロス」を打ち倒すと、その体は崩れ、奥に眠っていた「雷の欠片」が姿を現した。' },
+      { lineId: '2', type: 'dialogue', speakerName: 'ルナ', text: 'これが……雷の欠片！炎と水、二つの欠片と同じ光を放ってる。', position: 'left' },
+      { lineId: '3', type: 'narration', text: 'サンダロスは元々、雷帝に仕える清廉な守護獣だったという。だが奈落の穢れに蝕まれ、暴走していたのだ。' },
+      { lineId: '4', type: 'dialogue', speakerName: 'ゼファー', text: '三つの欠片、揃ったな。だがここまで導かれたということは——ニルスも、我々の動きを読んでいる。', position: 'right' },
+      { lineId: '5', type: 'dialogue', speakerName: '???', text: '上等だ。欠片を胸に——次は闇滅の魔城、正面から叩き潰す！', position: 'center', effect: 'flash' },
+    ],
+  },
+
   // ===== 第五世界「闇滅の魔城」=====
   {
     scenarioId: 'scenario_w5s1',
@@ -362,6 +405,49 @@ export const SCENARIOS: ScenarioMaster[] = [
       { lineId: '4', type: 'dialogue', speakerName: '闇の将軍ヴァルド', text: '頼む……我ごと、この虚無を斬ってくれ。それが唯一の解放だ——来い！', position: 'left', effect: 'shake' },
       { lineId: '5', type: 'narration', text: 'ヴァルドの身体から漆黒の靄が噴き上がり、巨大な虚無の化身へと変貌していく。' },
       { lineId: '6', type: 'dialogue', speakerName: '???', text: '……分かった。せめて、一太刀で終わらせる！', position: 'center', effect: 'flash' },
+    ],
+  },
+
+  // ===== 第五世界「闇滅の魔城」エリアクリアシナリオ =====
+  // 進行順: 絶望の城門(5_1) → 虚無の回廊(5_3, ヴァルド) → 魔王の間(5_2, 真の最終area)
+  {
+    scenarioId: 'area_clear_5_1',
+    questId: 'area_5_1',
+    stageId: 'area_clear_5_1',
+    backgroundKey: 'castle',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '絶望の城門を突破した一行。魔城の廊下には、朽ちた騎士の像が延々と並んでいた。' },
+      { lineId: '2', type: 'dialogue', speakerName: 'ルナ', text: '空気が重い……。ここが本当に、魔王が眠る城なのね。', position: 'right' },
+      { lineId: '3', type: 'dialogue', speakerName: 'ゼファー', text: '核はまだ奥だ。だが妙だな——この城、まるで我々を招いているかのような静けさだ。', position: 'left' },
+      { lineId: '4', type: 'dialogue', speakerName: '???', text: '罠でも構わない。核を取り戻すまで、俺たちは止まらない。', position: 'center', effect: 'shake' },
+    ],
+  },
+  {
+    scenarioId: 'area_clear_5_3',
+    questId: 'area_5_3',
+    stageId: 'area_clear_5_3',
+    backgroundKey: 'darkness',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: 'ヴァルドの身体は虚無の靄となって消えていった。その表情は、最後まで苦しげだった。' },
+      { lineId: '2', type: 'dialogue', speakerName: 'ルナ', text: 'ヴァルド……安らかに眠って。あなたも、奈落に利用された一人だったのね。', position: 'right' },
+      { lineId: '3', type: 'dialogue', speakerName: 'ゼファー', text: '……哀れな男だ。だが彼が守っていた「核」の気配はここにはない。もっと深く——魔王の間か。', position: 'left' },
+      { lineId: '4', type: 'dialogue', speakerName: '???', text: '魔王の間……。ヴァルドの言う「奈落の王への供物」の意味、そこで分かるかもしれない。', position: 'center', effect: 'flash' },
+    ],
+  },
+  {
+    scenarioId: 'area_clear_5_2',
+    questId: 'area_5_2',
+    stageId: 'area_clear_5_2',
+    backgroundKey: 'darkness',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '魔王の間、玉座の影から現れたのは真の支配者——「魔王ヴォイドレックス」。壮絶な戦いの果て、その巨体は光の粒子となって崩れ去った。' },
+      { lineId: '2', type: 'narration', text: '玉座の中心に残されていたのは、漆黒に輝く「核」——三つの欠片を繋ぐ、聖剣再生の鍵だった。' },
+      { lineId: '3', type: 'dialogue', speakerName: 'ゼファー', text: 'ヴォイドレックスは歴代の魔王の力を吸収した、いわば「奈落の門番」。よくぞ、ここまで辿り着いた。', position: 'right' },
+      { lineId: '4', type: 'dialogue', speakerName: 'ルナ', text: '核を手に入れた……！これで、聖剣を鍛え直せるのね。', position: 'left' },
+      { lineId: '5', type: 'dialogue', speakerName: '???', text: 'ああ。あとは——欠片と核を繋ぐ場所、「聖域の神殿」へ向かうだけだ。', position: 'center', effect: 'flash' },
     ],
   },
 
@@ -395,6 +481,35 @@ export const SCENARIOS: ScenarioMaster[] = [
     ],
   },
 
+  // ===== 第六世界「聖域の神殿」エリアクリアシナリオ =====
+  {
+    scenarioId: 'area_clear_6_1',
+    questId: 'area_6_1',
+    stageId: 'area_clear_6_1',
+    backgroundKey: 'holy',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '神殿の回廊を抜けると、堕天使たちの怨嗟の声も静まった。奥へ続く階段が、淡い光を放っている。' },
+      { lineId: '2', type: 'dialogue', speakerName: 'ルナ', text: '堕天使たちも……昔は聖なる守護者だったのかもしれない。何だか、切ないわね。', position: 'left' },
+      { lineId: '3', type: 'dialogue', speakerName: '老賢者クロン', text: 'この階段の先が「天上の聖域」。再鍛造の祭壇はそこにある。心して進むがいい。', position: 'right' },
+      { lineId: '4', type: 'dialogue', speakerName: '???', text: 'ああ。欠片と核を——今度こそ聖剣に戻す。', position: 'center', effect: 'flash' },
+    ],
+  },
+  {
+    scenarioId: 'area_clear_6_2',
+    questId: 'area_6_2',
+    stageId: 'area_clear_6_2',
+    backgroundKey: 'holy',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '天上の主の光が静かに収まる。祭壇の中心で、蘇った聖剣が淡く輝いていた。' },
+      { lineId: '2', type: 'dialogue', speakerName: '老賢者クロン', text: 'ついに……アルカナブレイドが蘇った……！百年の時を経て、また剣の姿を取り戻したのじゃ。', position: 'right' },
+      { lineId: '3', type: 'dialogue', speakerName: 'ルナ', text: 'すごい……。この光、なんだか懐かしい気がする。', position: 'left' },
+      { lineId: '4', type: 'narration', text: '主人公が剣を手にした瞬間、脳裏に一瞬、見知らぬ光景がよぎった。だがそれが何かは、まだ思い出せない。' },
+      { lineId: '5', type: 'dialogue', speakerName: '???', text: 'これで……ニルスの元へ辿り着ける。行くぞ、深淵の迷宮へ。', position: 'center', effect: 'shake' },
+    ],
+  },
+
   // ===== 第七世界「深淵の迷宮」=====
   {
     scenarioId: 'scenario_w7s1',
@@ -422,6 +537,36 @@ export const SCENARIOS: ScenarioMaster[] = [
       { lineId: '3', type: 'dialogue', speakerName: 'ルナ', text: 'ニルスが、弟……！？じゃああなたは百年間、ずっと一人で扉を見張って……。', position: 'left' },
       { lineId: '4', type: 'dialogue', speakerName: 'ゼファー', text: '弟を止められなかった私の、これは贖罪だ。……来るぞ、「深淵の覇者」——奴を越えねば門は開かん！', position: 'right' },
       { lineId: '5', type: 'dialogue', speakerName: '???', text: 'ゼファー、あんたの百年に懸けて——この戦い、絶対に負けられない！', position: 'center', effect: 'flash' },
+    ],
+  },
+
+  // ===== 第七世界「深淵の迷宮」エリアクリアシナリオ =====
+  {
+    scenarioId: 'area_clear_7_1',
+    questId: 'area_7_1',
+    stageId: 'area_clear_7_1',
+    backgroundKey: 'void',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '奈落の入口を抜けると、視界が奇妙に歪んだ。ここでは時間の流れさえ定かではない。' },
+      { lineId: '2', type: 'dialogue', speakerName: 'ゼファー', text: 'この先が「深淵の核心」。ニルスへ続く門は、もう目前だ。', position: 'right' },
+      { lineId: '3', type: 'dialogue', speakerName: 'ルナ', text: 'ゼファー、顔色が悪いわ……。大丈夫?', position: 'left' },
+      { lineId: '4', type: 'dialogue', speakerName: 'ゼファー', text: '……問題ない。ただ、少し昔を思い出しただけだ。', position: 'right' },
+      { lineId: '5', type: 'dialogue', speakerName: '???', text: '無理するな。だが——お前が話す時が来たら、ちゃんと聞く。', position: 'center', effect: 'shake' },
+    ],
+  },
+  {
+    scenarioId: 'area_clear_7_2',
+    questId: 'area_7_2',
+    stageId: 'area_clear_7_2',
+    backgroundKey: 'void',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '深淵の覇者を退けた先に、深淵の門が静かに姿を現した。ここを抜ければ、ニルスの元へ辿り着く。' },
+      { lineId: '2', type: 'dialogue', speakerName: 'ゼファー', text: '……本当にすまない、黙っていて。ここまで来て、ようやく話せた。', position: 'right' },
+      { lineId: '3', type: 'dialogue', speakerName: 'ルナ', text: '謝らないで。あなたが、ずっと独りで抱えてきたものが、少しだけ分かった気がする。', position: 'left' },
+      { lineId: '4', type: 'dialogue', speakerName: '???', text: '家族のことは家族で片付けろ、なんて言わない。俺たちも——一緒に行く。', position: 'center' },
+      { lineId: '5', type: 'narration', text: '深淵の門がゆっくりと開き始める。世界の始まりの地へと続く道が、今開かれた。', effect: 'flash' },
     ],
   },
 
@@ -457,6 +602,36 @@ export const SCENARIOS: ScenarioMaster[] = [
     ],
   },
 
+  // ===== 第八世界「創世の頂」エリアクリアシナリオ =====
+  {
+    scenarioId: 'area_clear_8_1',
+    questId: 'area_8_1',
+    stageId: 'area_clear_8_1',
+    backgroundKey: 'cosmos',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '星辰の架け橋を渡り切ると、視界いっぱいに輝く創世神の玉座が見えてきた。' },
+      { lineId: '2', type: 'dialogue', speakerName: 'ルナ', text: '綺麗……。でも、なんだか胸がざわつく。この先に何があるのかしら。', position: 'left' },
+      { lineId: '3', type: 'dialogue', speakerName: '???', text: '俺も同じだ。……この景色、なぜか知っている気がする。', position: 'center' },
+      { lineId: '4', type: 'dialogue', speakerName: 'ゼファー', text: '（……いよいよ、か）', position: 'right' },
+      { lineId: '5', type: 'narration', text: '得体の知れない予感を抱えたまま、一行は玉座への最後の道を進む。', effect: 'shake' },
+    ],
+  },
+  {
+    scenarioId: 'area_clear_8_2',
+    questId: 'area_8_2',
+    stageId: 'area_clear_8_2',
+    backgroundKey: 'cosmos',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '創世神との激闘を制した一行。静寂の中、アルスは自らの過去とようやく向き合っていた。' },
+      { lineId: '2', type: 'dialogue', speakerName: 'アルス', text: '百年前……俺は聖剣と共に砕けて、時の狭間を彷徨っていたのか。長い夢を見ていた気分だ。', position: 'center' },
+      { lineId: '3', type: 'dialogue', speakerName: 'ゼファー', text: 'おかえり、アルス。……今度こそ、隣で戦える。', position: 'right' },
+      { lineId: '4', type: 'dialogue', speakerName: 'ルナ', text: 'アルス……いい名前ね。これからは、ちゃんとその名前で呼ばせて。', position: 'left' },
+      { lineId: '5', type: 'dialogue', speakerName: 'アルス', text: 'ああ。——さあ、行こう。永劫の闘技場で、最後の力試しだ。', position: 'center', effect: 'flash' },
+    ],
+  },
+
   // ===== 第九世界「永劫の闘技場」=====
   {
     scenarioId: 'scenario_w9s1',
@@ -482,6 +657,34 @@ export const SCENARIOS: ScenarioMaster[] = [
       { lineId: '2', type: 'dialogue', speakerName: '永劫の覇者', text: '我は千年守護の魂。お前の剣、お前の絆、その全てをぶつけてこい。手加減は……できんぞ。', position: 'left', effect: 'shake' },
       { lineId: '3', type: 'dialogue', speakerName: 'ゼファー', text: 'この方を超えれば、アルカナブレイドは真の力——「神話の輝き」に至る。', position: 'right' },
       { lineId: '4', type: 'dialogue', speakerName: 'アルス', text: '仲間と歩いた旅の全部が、俺の力だ。——最終試練、真っ向から超えてみせる！', position: 'center', effect: 'flash' },
+    ],
+  },
+
+  // ===== 第九世界「永劫の闘技場」エリアクリアシナリオ =====
+  {
+    scenarioId: 'area_clear_9_1',
+    questId: 'area_9_1',
+    stageId: 'area_clear_9_1',
+    backgroundKey: 'arena',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '試練の門を突破した一行。観衆のいない闘技場に、割れんばかりの歓声の幻聴が響く。' },
+      { lineId: '2', type: 'dialogue', speakerName: 'アルス', text: '歴代の守護者たちが見ている……そんな気がするな。', position: 'center' },
+      { lineId: '3', type: 'dialogue', speakerName: 'ルナ', text: 'きっと、あなたを歓迎してくれているのよ。百年ぶりの挑戦者を。', position: 'right' },
+      { lineId: '4', type: 'dialogue', speakerName: 'ゼファー', text: '気を引き締めろ。次は、その中でも最強と謳われた者が待っている。', position: 'left', effect: 'flash' },
+    ],
+  },
+  {
+    scenarioId: 'area_clear_9_2',
+    questId: 'area_9_2',
+    stageId: 'area_clear_9_2',
+    backgroundKey: 'arena',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '永劫の覇者は最後に静かに頷き、光の粒子となって消えていった。その魂は、確かに祝福を残していった。' },
+      { lineId: '2', type: 'dialogue', speakerName: '闘技場の声', text: '……見事。「神話の輝き」への資格、確かに見届けた。行くがいい、最後の挑戦者よ。', position: 'left' },
+      { lineId: '3', type: 'narration', text: 'アルカナブレイドが、かつてない輝きを放ち始める。聖剣は今、真の力に至ろうとしていた。' },
+      { lineId: '4', type: 'dialogue', speakerName: 'アルス', text: '神話の輝き……。ニルス、待っていろ。決着をつけに行く。', position: 'center', effect: 'flash' },
     ],
   },
 
@@ -514,6 +717,41 @@ export const SCENARIOS: ScenarioMaster[] = [
       { lineId: '5', type: 'dialogue', speakerName: 'ルナ', text: 'アルス……！みんなの力、ひとつに束ねて……！', position: 'right' },
       { lineId: '6', type: 'dialogue', speakerName: 'アルス', text: 'アルカナブレイドよ、応えてくれ——これが最後の戦いだ！', position: 'center', effect: 'flash' },
       { lineId: '7', type: 'narration', text: '聖剣が神話の輝きを放ち、玉座の間を白く染め上げる。百年越しの決戦が、今——始まる。', effect: 'shake' },
+    ],
+  },
+
+  // ===== 第十世界「神話の果て」エリアクリアシナリオ =====
+  {
+    scenarioId: 'area_clear_10_1',
+    questId: 'area_10_1',
+    stageId: 'area_clear_10_1',
+    backgroundKey: 'cosmos',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '神話の戦場を駆け抜けた一行。神と魔が刻んだ古戦場の跡が、静かに二人を見送るようだった。' },
+      { lineId: '2', type: 'dialogue', speakerName: '老賢者クロン', text: 'ここまで来たか……。全世界の想いが、君たちの後ろについておる。', position: 'left' },
+      { lineId: '3', type: 'dialogue', speakerName: 'ルナ', text: '次でいよいよ最後ね。……アルス、絶対に無理しないで。', position: 'right' },
+      { lineId: '4', type: 'dialogue', speakerName: 'アルス', text: '約束する。——みんなで、笑って帰ろう。', position: 'center', effect: 'flash' },
+    ],
+  },
+  // ===== 真の終焉（真エンディング） =====
+  {
+    scenarioId: 'area_clear_10_2',
+    questId: 'area_10_2',
+    stageId: 'area_clear_10_2',
+    backgroundKey: 'holy',
+    displayMode: 'credits',
+    lines: [
+      { lineId: '1', type: 'narration', text: '聖剣「アルカナブレイド」が神話の輝きを解き放つ。渾身の一撃が、ニルスの虚無を打ち砕いた。' },
+      { lineId: '2', type: 'dialogue', speakerName: '奈落の王ニルス', text: '……ぐ、あ……。こんな、力が……。兄さん、僕は——', position: 'left', effect: 'shake' },
+      { lineId: '3', type: 'dialogue', speakerName: 'ゼファー', text: 'ニルス！もう、虚無に呑まれるな……！', position: 'right' },
+      { lineId: '4', type: 'narration', text: 'ニルスの体を覆っていた漆黒の靄が、ゆっくりと晴れていく。虚無に蝕まれる前の、あの頃の顔が戻っていた。' },
+      { lineId: '5', type: 'dialogue', speakerName: '奈落の王ニルス', text: '……悪かったよ、兄さん。ずっと、独りにして。今度こそ、本当に……帰るよ。', position: 'left' },
+      { lineId: '6', type: 'narration', text: '「奈落の扉」が静かに閉じていく。世界を蝕んでいた虚無の力が、少しずつ薄れていった。' },
+      { lineId: '7', type: 'dialogue', speakerName: 'ルナ', text: '終わった……。本当に、終わったのね……！', position: 'right' },
+      { lineId: '8', type: 'dialogue', speakerName: '老賢者クロン', text: 'よくぞ成し遂げた。百年、いや——それ以上の時をかけて紡がれた祈りが、今日実を結んだのじゃ。', position: 'left' },
+      { lineId: '9', type: 'dialogue', speakerName: 'アルス', text: 'みんなの力があったから、ここまで来れた。……ありがとう、ルナ。ゼファー。そして——ここまで見守ってくれた、全ての召喚士たちに。', position: 'center' },
+      { lineId: '10', type: 'narration', text: '世界に静かな朝が訪れる。アルカナの光は、これからも新たな召喚士たちを照らし続けるだろう——物語は、まだ終わらない。', effect: 'flash' },
     ],
   },
 ];

@@ -77,8 +77,11 @@ export const EnhancePage = () => {
         return;
       }
     }
+    // awakenUnit を先に試みて、成功後に素材を消費する
+    // (逆順だと二重タップ等で awakenRank が上限を超えられないのに素材だけ2重に消費されるバグを防ぐ)
+    const ok = awakenUnit(unit.instanceId);
+    if (!ok) { setMessage('覚醒できませんでした'); return; }
     mats.forEach(mat => useItem(mat.itemId, mat.quantity));
-    awakenUnit(unit.instanceId);
     addDailyProgress('enhance');
     addWeeklyProgress('enhance');
     setMessage('覚醒成功！');

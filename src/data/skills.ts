@@ -139,6 +139,31 @@ export const SKILL_MASTER: SkillMaster[] = [
   { id: 'bb_arcana_blast',     name: 'アルカナブラスト',       description: 'アルカナの力で敵全体に大ダメージ',   bbCost: 100, target: 'all_enemies', effects: [{ type: 'damage', power: 3.0 }], animationType: 'explosion' },
   { id: 'bb_guardian_spirit',  name: '守護精霊',               description: '精霊の加護で全体大回復+防御強化',     bbCost: 100, target: 'all_allies', effects: [{ type: 'heal', power: 2.5 }, { type: 'buff_def', power: 1.8, duration: 3 }], animationType: 'heal' },
   { id: 'bb_berserker_soul',   name: '狂戦士の魂',             description: '狂戦士化で全体攻撃力を大幅強化',       bbCost: 100, target: 'all_allies', effects: [{ type: 'buff_atk', power: 2.0, duration: 3 }], animationType: 'magic' },
+
+  // 通常スキル・必殺技 - 追加補完（後発ユニットが参照していたが未定義だったスキル群）
+  { id: 'skill_earth_pulse',  name: '大地の鼓動', description: '敵全体に土属性の波動を放つ',                 bbCost: 0, target: 'all_enemies',  effects: [{ type: 'damage', power: 1.2 }], animationType: 'explosion' },
+  { id: 'skill_dark_drain',   name: '闇の吸収',   description: '敵単体から生命力を吸収し自身を回復',         bbCost: 0, target: 'single_enemy', effects: [{ type: 'damage', power: 2.0 }, { type: 'heal', power: 0.5 }], animationType: 'magic' },
+  { id: 'skill_coral_storm',  name: '珊瑚嵐',     description: '敵全体に水属性の嵐を叩きつける',             bbCost: 0, target: 'all_enemies',  effects: [{ type: 'damage', power: 1.5 }], animationType: 'magic' },
+  { id: 'skill_ice_lance',    name: '氷槍',       description: '氷の槍で敵単体を貫き攻撃力を下げる',         bbCost: 0, target: 'single_enemy', effects: [{ type: 'damage', power: 1.8 }, { type: 'debuff_atk', power: 0.75, duration: 2 }], animationType: 'magic' },
+  { id: 'skill_wave_dance',   name: '波の舞',     description: '波と舞い味方全体の攻撃力と回復力を上昇',     bbCost: 0, target: 'all_allies',   effects: [{ type: 'buff_atk', power: 1.3, duration: 2 }, { type: 'buff_rec', power: 1.2, duration: 2 }], animationType: 'magic' },
+  { id: 'skill_sea_storm',    name: '海嵐',       description: '敵全体に猛烈な海の嵐を放つ',                 bbCost: 0, target: 'all_enemies',  effects: [{ type: 'damage', power: 1.6 }], animationType: 'magic' },
+  { id: 'skill_wind_fury',    name: '疾風の怒り', description: '敵単体に超強力な風属性攻撃',                 bbCost: 0, target: 'single_enemy', effects: [{ type: 'damage', power: 2.5 }], animationType: 'slash' },
+  { id: 'skill_dragon_wind',  name: '竜風',       description: '竜の咆哮のような風で敵全体を攻撃',           bbCost: 0, target: 'all_enemies',  effects: [{ type: 'damage', power: 1.5 }], animationType: 'magic' },
+  { id: 'skill_nature_heal',  name: '自然の癒し', description: '自然の力で味方全体を回復する',               bbCost: 0, target: 'all_allies',   effects: [{ type: 'heal', power: 1.3 }], animationType: 'heal' },
+  { id: 'skill_wind_blade',   name: '風刃',       description: '鋭い風の刃で敵単体を斬りつける',             bbCost: 0, target: 'single_enemy', effects: [{ type: 'damage', power: 1.8 }], animationType: 'slash' },
+  { id: 'skill_leaf_blade',   name: '葉隠れ斬',   description: '木の葉を纏った刃で敵単体を斬る',             bbCost: 0, target: 'single_enemy', effects: [{ type: 'damage', power: 1.6 }], animationType: 'slash' },
+  { id: 'skill_solar_burst',  name: '太陽爆光',   description: '太陽の光で敵全体を焼き払う',                 bbCost: 0, target: 'all_enemies',  effects: [{ type: 'damage', power: 1.6 }], animationType: 'magic' },
+  { id: 'skill_fox_fire',     name: '狐火',       description: '妖しい炎で敵単体の防御力を下げつつ攻撃',     bbCost: 0, target: 'single_enemy', effects: [{ type: 'damage', power: 1.8 }, { type: 'debuff_def', power: 0.8, duration: 2 }], animationType: 'magic' },
+  { id: 'skill_earth_crush',  name: '大地の圧砕', description: '敵単体に強力な土属性攻撃',                   bbCost: 0, target: 'single_enemy', effects: [{ type: 'damage', power: 2.0 }], animationType: 'slash' },
+  { id: 'skill_holy_light',   name: '聖光の癒し', description: '聖なる光で味方全体を回復する',               bbCost: 0, target: 'all_allies',   effects: [{ type: 'heal', power: 1.2 }], animationType: 'heal' },
+  { id: 'skill_dark_strike',  name: '暗黒撃',     description: '敵単体に強力な闇属性攻撃',                   bbCost: 0, target: 'single_enemy', effects: [{ type: 'damage', power: 2.0 }], animationType: 'slash' },
+  { id: 'skill_wind_gale',    name: '疾風怒濤',   description: '敵全体に強風を叩きつける',                   bbCost: 0, target: 'all_enemies',  effects: [{ type: 'damage', power: 1.4 }], animationType: 'magic' },
+
+  { id: 'bb_deep_sea_blast',  name: '深海爆砕',   description: '深海の圧力で敵全体に超大ダメージ',                 bbCost: 100, target: 'all_enemies', effects: [{ type: 'damage', power: 3.8 }], element: 'water', animationType: 'magic' },
+  { id: 'bb_absolute_zero',   name: '絶対零度',   description: '全てを凍てつかせ敵全体に大ダメージ+大幅弱体',     bbCost: 100, target: 'all_enemies', effects: [{ type: 'damage', power: 3.6 }, { type: 'debuff_atk', power: 0.55, duration: 3 }], element: 'water', animationType: 'magic' },
+  { id: 'bb_hurricane_blast', name: '大暴風',     description: '大暴風で敵全体に超大ダメージ',                     bbCost: 100, target: 'all_enemies', effects: [{ type: 'damage', power: 4.0 }], element: 'wind',  animationType: 'explosion' },
+  { id: 'bb_divine_light',    name: '神々の加護', description: '神々しい光で全体を大回復し攻撃力上昇',           bbCost: 100, target: 'all_allies',  effects: [{ type: 'heal', power: 2.8 }, { type: 'buff_atk', power: 1.5, duration: 3 }], element: 'light', animationType: 'heal' },
+  { id: 'bb_shadow_void',     name: '影の虚無',   description: '虚無に呑み込み敵全体に超大ダメージ',               bbCost: 100, target: 'all_enemies', effects: [{ type: 'damage', power: 4.2 }], element: 'dark',  animationType: 'explosion' },
 ];
 
 export const getSkill = (id: string): SkillMaster | undefined =>

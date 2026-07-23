@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { localDateStr } from '../utils/dateUtils';
 
 export interface LoginBonusDay {
   day: number;
@@ -52,7 +53,7 @@ interface LoginBonusStore {
   getNextReward: () => LoginBonusDay | null;
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => localDateStr();
 
 export const useLoginBonusStore = create<LoginBonusStore>()(
   persist(

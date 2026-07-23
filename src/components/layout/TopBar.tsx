@@ -47,13 +47,17 @@ export const TopBar = ({ title, onBack }: Props) => {
 
   return (
     <header className="sticky top-0 z-40 px-3 py-2 flex items-center gap-2"
-      style={{ background: 'linear-gradient(180deg, #0a0a1a 0%, transparent 100%)', backdropFilter: 'blur(8px)' }}>
+      style={{
+        background: 'linear-gradient(180deg, #0a0a1a 0%, transparent 100%)',
+        backdropFilter: 'blur(8px)',
+        borderBottom: '1px solid rgba(240,192,64,0.08)',
+      }}>
       {/* 左: 戻るボタン or ブランド名 */}
       <div className="flex items-center gap-1 flex-shrink-0" style={{ maxWidth: '45%' }}>
         {onBack ? (
           <button onClick={onBack} className="text-gray-400 hover:text-white text-xl flex-shrink-0">←</button>
         ) : (
-          <span className="text-yellow-400 font-black text-sm tracking-wider flex-shrink-0">ARCANA</span>
+          <span className="text-luxe-gold font-black text-sm tracking-wider flex-shrink-0">ARCANA</span>
         )}
         {title && <h1 className="text-white font-bold truncate" style={{ fontSize: 13 }}>{title}</h1>}
       </div>

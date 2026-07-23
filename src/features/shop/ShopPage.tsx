@@ -130,7 +130,7 @@ export const ShopPage = () => {
             {STAMINA_PACKS.map(pack => {
               const canAfford = player.diamond >= pack.diamondCost;
               return (
-                <button key={pack.id} onClick={() => buyStamina(pack)}
+                <button key={pack.id} onClick={() => buyStamina(pack)} disabled={buying}
                   className={`w-full flex items-center gap-3 p-4 rounded-xl text-left transition-all ${canAfford ? 'active:scale-98' : 'opacity-50'}`}
                   style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${canAfford ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)'}` }}>
                   <span className="text-2xl">{pack.emoji}</span>
@@ -189,7 +189,7 @@ export const ShopPage = () => {
                 const totalCost = shop.diamondCost > 0 ? shop.diamondCost : shop.goldCost * qty;
                 const canAfford = shop.diamondCost > 0 ? player.diamond >= shop.diamondCost : player.gold >= totalCost;
                 return (
-                  <button key={shop.id} onClick={() => buyItem(shop, qty)}
+                  <button key={shop.id} onClick={() => buyItem(shop, qty)} disabled={buying}
                     className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${canAfford ? 'active:scale-95' : 'opacity-50'}`}
                     style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${canAfford ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)'}` }}>
                     <span className="text-3xl">{shop.emoji}</span>

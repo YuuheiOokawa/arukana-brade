@@ -151,7 +151,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           bio: typeof p?.bio === 'string' ? p.bio.slice(0, 200) : undefined,
           favoriteUnitId: p?.favoriteUnitInstanceId ?? null,
           loginDays: typeof p?.loginDays === 'number' ? p.loginDays : undefined,
-          arcanaPlayerId: typeof p?.playerId === 'string' ? p.playerId : undefined,
+          // arcanaPlayerId はここで更新しない: 登録時(/api/auth)にサーバー側で一度だけ発行される
+          // 不変の識別子であり、フレンド申請/削除がこれを検索キーに使う。
+          // 以前はクライアントの player.playerId をそのまま書き戻していたため、
+          // 端末上でアカウントを切り替えた直後(resetAllStores 直後)に
+          // ローカルで新規生成されたダミーIDでサーバーの本物のIDを上書きしてしまい、
+          // フレンド申請の宛先解決が壊れる不具合があった。
           tutorialCompleted: state.tutorialCompleted === true ? true : undefined,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           miscData: JSON.parse(JSON.stringify({

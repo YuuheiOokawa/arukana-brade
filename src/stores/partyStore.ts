@@ -10,6 +10,8 @@ interface PartyStore {
   createParty: (name: string) => void;
   setActiveParty: (partyId: string) => void;
   getActiveParty: () => PartyComposition;
+  // ユニット解放(売却)時に、全パーティのスロット・リーダー指定から当該ユニットを取り除く
+  removeUnitFromParties: (instanceId: string) => void;
 }
 
 const DEFAULT_PARTY: PartyComposition = {
@@ -64,6 +66,19 @@ export const usePartyStore = create<PartyStore>()(
       },
 
       setActiveParty: (partyId) => set({ activePartyId: partyId }),
+
+      removeUnitFromParties: (instanceId) => {
+        set(s => ({
+          parties: s.parties.map(p => {
+            if (!p.slots.includes(instanceId) && p.leaderId !== instanceId) return p;
+            const slots = p.slots.map(s2 => (s2 === instanceId ? null : s2));
+            const leaderId = p.leaderId === instanceId
+              ? (slots.find(s2 => s2 !== null) ?? null)
+              : p.leaderId;
+            return { ...p, slots, leaderId };
+          }),
+        }));
+      },
 
       getActiveParty: () => {
         const { parties, activePartyId } = get();

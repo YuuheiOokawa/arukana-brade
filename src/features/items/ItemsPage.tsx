@@ -75,6 +75,11 @@ export const ItemsPage = () => {
           player: { ...s.player, stamina: Math.min(s.player.stamina + 30, s.player.maxStamina) },
         }));
         showToast(`${master.emoji} スタミナ +30 回復！`);
+      } else if (itemId === 'item_stamina_plus') {
+        usePlayerStore.setState(s => ({
+          player: { ...s.player, stamina: Math.min(s.player.stamina + 50, s.player.maxStamina) },
+        }));
+        showToast(`${master.emoji} スタミナ +50 回復！`);
       }
     } else if (master.category === 'exp_potion') {
       const exp = EXP_MAP[itemId];

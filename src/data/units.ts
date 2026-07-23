@@ -1528,7 +1528,7 @@ export const getUnitMaster = (id: string): UnitMaster | undefined => {
 
 // awakeningCount: ガチャ被り覚醒 (0〜4)。1回ごとに +5% 全ステータス上昇
 export const calcUnitStats = (master: UnitMaster, level: number, awakenRank: number, awakeningCount = 0) => {
-  const ratio = (level - 1) / (master.maxLevel - 1);
+  const ratio = Math.min(1, (level - 1) / (master.maxLevel - 1));
   const bonus = master.awakenBonus?.slice(0, awakenRank).reduce(
     (acc, b) => ({ hp: acc.hp + b.hp, atk: acc.atk + b.atk, def: acc.def + b.def, rec: acc.rec + b.rec }),
     { hp: 0, atk: 0, def: 0, rec: 0 }

@@ -102,9 +102,17 @@ export const collectGameState = () => {
   };
 };
 
+// 保存中に追加の保存要求が来た場合、取りこぼさず完了後に再実行するためのフラグ
+// （以前は isSaving のガードで単純に return していたため、保存中に発生した
+//   別の保存要求＝その時点の最新の状態がそのまま失われることがあった）
+let saveAgainRequested = false;
+
 // DBへ保存（失敗時はリトライキューに積む）
 export const saveAllToServer = async () => {
-  if (isSaving) return;
+  if (isSaving) {
+    saveAgainRequested = true;
+    return;
+  }
   isSaving = true;
   try {
     const state = failedSaveState ?? collectGameState();
@@ -125,6 +133,10 @@ export const saveAllToServer = async () => {
     onSaveError?.('データの保存に失敗しました。ネットワークを確認してください。');
   } finally {
     isSaving = false;
+    if (saveAgainRequested) {
+      saveAgainRequested = false;
+      void saveAllToServer();
+    }
   }
 };
 
@@ -143,6 +155,28 @@ export const saveBeforeUnload = () => {
       keepalive: true,
     });
   } catch { /* ignore */ }
+};
+
+// クロスタブ同期: ミッション/ギフト/実績/ログインボーナスの受け取り(claim)状態は
+// タブごとのメモリ上のZustand状態でのみ判定されており、DBへの同期もなかったため、
+// 同じアカウントを2タブで開いて片方で受け取った直後にもう片方でも受け取れてしまう
+// (通貨・アイテムの二重付与)ことがあった。他タブがlocalStorageを更新したら
+// このタブのストアも re-hydrate して追従させることで、その窓を塞ぐ。
+export const initCrossTabClaimSync = () => {
+  if (typeof window === 'undefined') return () => {};
+  const targets: { key: string; store: { persist: { rehydrate: () => unknown } } }[] = [
+    { key: 'arcana-missions', store: useMissionStore },
+    { key: 'arcana-gifts', store: useGiftStore },
+    { key: 'arcana-achievements', store: useAchievementStore },
+    { key: 'arcana-login-bonus', store: useLoginBonusStore },
+  ];
+  const handler = (e: StorageEvent) => {
+    if (!e.key) return;
+    const match = targets.find(t => t.key === e.key);
+    if (match) void match.store.persist.rehydrate();
+  };
+  window.addEventListener('storage', handler);
+  return () => window.removeEventListener('storage', handler);
 };
 
 // オンライン復帰時に自動リトライ
@@ -179,7 +213,8 @@ export const saveImmediately = () => {
  */
 export const hydrateFromGameState = (
   gameStateOrData: Record<string, unknown> | GameDataResponse,
-  playerMiscData?: Record<string, unknown>
+  playerMiscData?: Record<string, unknown>,
+  tutorialCompleted?: boolean,
 ) => {
   if (!gameStateOrData || typeof gameStateOrData !== 'object') return;
 
@@ -403,6 +438,14 @@ export const hydrateFromGameState = (
     }
   }
 
+  // 新フォーマット(GameDataResponse)には tutorialCompleted が含まれておらず、
+  // 上の isNewFormat 分岐では tutorialStore が一切復元されていなかった
+  // （旧フォーマット互換パスの gameState.tutorialCompleted チェックでしか復元されない不具合）。
+  // 呼び出し側(authPlayer.tutorialCompleted)から明示的に渡された場合はここで確実に反映する。
+  if (tutorialCompleted === true) {
+    useTutorialStore.setState({ completed: true, phase: 'complete' });
+  }
+
   // 復元完了後、少し待ってからフラグを解除（setState の subscribe が全部発火するまで待つ）
   setTimeout(() => { isHydrating = false; }, 300);
 };
@@ -442,7 +485,7 @@ export const resetAllStores = () => {
   useMissionStore.setState({ daily: { date: '', progresses: [] }, weeklyProgresses: [], weekStr: '' });
   useLoginBonusStore.setState({ lastClaimedDate: null, claimedDays: [], currentDay: 1, lastLoginDate: null });
   useArenaStore.setState({ record: { wins: 0, losses: 0, rank: 999, points: 1000, season: 1 }, battleHistory: [] });
-  useTutorialStore.setState({ completed: false, phase: 'title', playerName: '', selectedHeroId: null, selectedGender: null, selectedRace: null });
+  useTutorialStore.setState({ completed: false, phase: 'title', playerName: '', selectedHeroId: null, selectedGender: null, selectedRace: null, initialGachaDone: false });
   useAchievementStore.setState({ claimed: [] });
   useCollectionStore.setState({ discovered: [], discoveredEquips: [] });
   useGiftStore.setState({ claimedIds: [] });

@@ -16,6 +16,7 @@ interface AuthPlayerSnapshot {
   title: string | null;
   bio: string | null;
   loginDays: number;
+  staminaRecoveryTime?: number;
 }
 
 interface PlayerStore {
@@ -91,6 +92,14 @@ export const usePlayerStore = create<PlayerStore>()(
         set(s => {
           const needsRecovery = p.stamina < p.maxStamina;
           const localTimerValid = s.player.staminaRecoveryTime > now;
+          // サーバーが回復タイマーを返している場合はそれを正とする。
+          // 以前はここで常に破棄してローカルで新規タイマーを作り直していたため、
+          // 別端末・再ログイン時にサーバー側で既に経過していた回復進捗が失われていた。
+          const staminaRecoveryTime = p.staminaRecoveryTime !== undefined
+            ? p.staminaRecoveryTime
+            : needsRecovery && !localTimerValid
+              ? now + STAMINA_RECOVERY_INTERVAL
+              : s.player.staminaRecoveryTime;
           return {
             player: {
               ...s.player,
@@ -104,9 +113,7 @@ export const usePlayerStore = create<PlayerStore>()(
               title: p.title ?? s.player.title,
               bio: p.bio ?? s.player.bio,
               loginDays: p.loginDays,
-              staminaRecoveryTime: needsRecovery && !localTimerValid
-                ? now + STAMINA_RECOVERY_INTERVAL
-                : s.player.staminaRecoveryTime,
+              staminaRecoveryTime,
             },
           };
         });

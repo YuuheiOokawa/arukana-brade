@@ -481,6 +481,90 @@ export const EVENT_QUESTS: EventQuest[] = [
       },
     ],
   },
+  {
+    id: 'event_arcana_festival',
+    name: 'アルカナ祝祭',
+    description: '聖域の天使たちが悪ふざけで大暴れ！？祝祭の贈り物を求めて、光の悪戯者たちを打ち払え。',
+    startTimestamp: NOW - DAY,
+    endTimestamp: NOW + 14 * DAY,
+    emoji: '🎉',
+    bannerColor: 'linear-gradient(135deg, #3d0a2a, #f0c040)',
+    stages: [
+      {
+        id: 'event_festival_1',
+        name: '祝祭の広場',
+        staminaCost: 7,
+        recommendedPower: 8000,
+        rewardGold: 3200,
+        rewardExp: 700,
+        rewardItems: [
+          { itemId: 'item_holy_stone', quantity: 2, chance: 0.8 },
+          { itemId: 'item_light_gem', quantity: 2, chance: 0.6 },
+        ],
+        waves: [
+          { enemies: [{ enemyId: 'enemy_guardian_angel', level: 40 }, { enemyId: 'enemy_guardian_angel', level: 40 }] },
+          { enemies: [{ enemyId: 'enemy_angel', level: 43 }], isBoss: true },
+        ],
+      },
+      {
+        id: 'event_festival_2',
+        name: '天使たちの饗宴',
+        staminaCost: 11,
+        recommendedPower: 18000,
+        rewardGold: 6500,
+        rewardExp: 1400,
+        rewardItems: [
+          { itemId: 'item_angel_feather', quantity: 2, chance: 0.6 },
+          { itemId: 'item_holy_stone', quantity: 3, chance: 0.6 },
+          { itemId: 'item_magic_crystal', quantity: 1, chance: 0.3 },
+        ],
+        waves: [
+          { enemies: [{ enemyId: 'enemy_angel', level: 55 }, { enemyId: 'enemy_guardian_angel', level: 55 }] },
+          { enemies: [{ enemyId: 'enemy_divine_paladin', level: 60 }], isBoss: true },
+        ],
+      },
+      {
+        id: 'event_festival_3',
+        name: '聖歌隊の試練',
+        staminaCost: 15,
+        recommendedPower: 35000,
+        rewardGold: 12000,
+        rewardExp: 2600,
+        rewardItems: [
+          { itemId: 'item_angel_feather', quantity: 3, chance: 0.6 },
+          { itemId: 'item_arcana_shard', quantity: 1, chance: 0.4 },
+          { itemId: 'item_summon_ticket', quantity: 1, chance: 0.25 },
+        ],
+        waves: [
+          { enemies: [{ enemyId: 'enemy_divine_paladin', level: 72 }, { enemyId: 'enemy_angel', level: 70 }] },
+          { enemies: [{ enemyId: 'enemy_guardian_angel', level: 75 }, { enemyId: 'enemy_guardian_angel', level: 75 }] },
+          { enemies: [{ enemyId: 'enemy_divine_paladin', level: 80 }], isBoss: true },
+        ],
+      },
+      {
+        id: 'event_festival_4',
+        name: '大天使の祝福【BOSS】',
+        staminaCost: 20,
+        recommendedPower: 68000,
+        rewardGold: 22000,
+        rewardExp: 5000,
+        rewardItems: [
+          { itemId: 'item_arcana_shard', quantity: 2, chance: 0.45 },
+          { itemId: 'item_exp_xl', quantity: 1, chance: 0.5 },
+          { itemId: 'item_summon_ticket_sr', quantity: 1, chance: 0.12 },
+        ],
+        rewardEquipments: [
+          { equipmentId: 'equip_celestial_robe', chance: 0.1 },
+          { equipmentId: 'equip_light_sword', chance: 0.06 },
+        ],
+        waves: [
+          { enemies: [{ enemyId: 'enemy_angel', level: 88 }, { enemyId: 'enemy_angel', level: 88 }] },
+          { enemies: [{ enemyId: 'enemy_divine_paladin', level: 90 }, { enemyId: 'enemy_guardian_angel', level: 88 }] },
+          { enemies: [{ enemyId: 'enemy_divine_paladin', level: 95 }], isBoss: true },
+        ],
+      },
+    ],
+  },
 ];
 
 // 武具の試練場は常設イベント（実質無期限）
@@ -696,6 +780,30 @@ export const RAID_BOSSES: RaidBossMaster[] = [
       {
         enemies: [
           { enemyId: 'enemy_dark_dragon', level: 85 },
+        ],
+        isBoss: true,
+      },
+    ],
+  },
+  {
+    id: 'raid_light_seraph',
+    name: '光帝セラフィオン',
+    element: 'light',
+    totalHp: 8800000,
+    emoji: '👼',
+    bannerColor: 'linear-gradient(135deg, #3d2a00, #f0c040)',
+    entryStaminaCost: 4,
+    endTimestamp: NOW + 11 * DAY,
+    rewards: [
+      { minDamage: 0,       items: ['item_light_gem'] },
+      { minDamage: 45000,   items: ['item_light_gem', 'item_holy_stone'] },
+      { minDamage: 200000,  items: ['item_arcana_shard', 'item_angel_feather'] },
+      { minDamage: 1000000, items: ['item_summon_ticket', 'item_arcana_shard'] },
+    ],
+    waves: [
+      {
+        enemies: [
+          { enemyId: 'enemy_divine_paladin', level: 90 },
         ],
         isBoss: true,
       },

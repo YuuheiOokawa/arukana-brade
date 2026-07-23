@@ -16,7 +16,7 @@ const getElementMultiplier = (atkElement: ElementType, defElement: ElementType):
   return ELEMENT_ADVANTAGE[atkElement]?.[defElement] ?? 1.0;
 };
 
-const applyBuffs = (stat: number, buffs: StatusEffect[], type: 'buff_atk' | 'buff_def' | 'debuff_atk' | 'debuff_def'): number => {
+const applyBuffs = (stat: number, buffs: StatusEffect[], type: StatusEffect['type']): number => {
   const buff = buffs.find(b => b.type === type);
   return buff ? Math.floor(stat * buff.power) : stat;
 };
@@ -44,8 +44,9 @@ export const calcDamage = (
   return { damage: finalDamage, elementBonus };
 };
 
-export const calcHeal = (rec: number, power: number): number => {
-  return Math.floor(rec * power * (0.9 + Math.random() * 0.2));
+export const calcHeal = (rec: number, power: number, buffs: StatusEffect[] = []): number => {
+  const buffedRec = applyBuffs(rec, buffs, 'buff_rec');
+  return Math.floor(buffedRec * power * (0.9 + Math.random() * 0.2));
 };
 
 export const executeSkillOnTargets = (
@@ -93,8 +94,10 @@ export const executeSkillOnTargets = (
         effectLogs.targetNames = [...effectLogs.targetNames, target.name];
       }
     } else if (effect.type === 'heal') {
-      const healAmount = calcHeal(actorRec, effect.power);
-      const targets = skill.target === 'single_ally'
+      const healAmount = calcHeal(actorRec, effect.power, actorBuffs);
+      const targets = skill.target === 'self'
+        ? [allies.find(a => a.instanceId === actor.instanceId && a.currentHp > 0)].filter(Boolean) as BattleUnit[]
+        : skill.target === 'single_ally'
         ? [allies.find(a => a.currentHp > 0 && a.currentHp < a.maxHp)].filter(Boolean) as BattleUnit[]
         : allies.filter(a => a.currentHp > 0);
 
@@ -112,12 +115,16 @@ export const executeSkillOnTargets = (
       const isDebuff = effect.type.startsWith('debuff');
       const targets = isDebuff
         ? enemies.filter(e => e.currentHp > 0)
+        : skill.target === 'self'
+        ? allies.filter(a => a.instanceId === actor.instanceId && a.currentHp > 0)
         : allies.filter(a => a.currentHp > 0);
 
+      // ラウンド終了時に毎回1ずつ減算されるため、+1しておくことで「Nラウンド分、丸々効果が持続する」を保証する
+      // (そうしないと付与された直後のラウンド終了処理で即座に1消費され、実質 duration-1 ラウンドしか続かない)
       const newEffect: StatusEffect = {
         type: effect.type as StatusEffect['type'],
         power: effect.power,
-        remainingTurns: effect.duration ?? 2,
+        remainingTurns: (effect.duration ?? 2) + 1,
       };
 
       if (isDebuff) {
@@ -193,33 +200,50 @@ export const executeEnemyTurn = (
 
   // 敵スキル: プレイヤー側ユニット(allies)を直接ターゲット
   // executeSkillOnTargets は BattleEnemy[] を攻撃対象とするため敵には転用不可
-  if (skill && skill.effects.some(e => e.type === 'damage')) {
+  if (skill && skill.effects.length > 0) {
     const isAoe = skill.target === 'all_enemies' || skill.target === 'all_allies';
     const targets = isAoe
       ? livingAllies
       : [livingAllies[Math.floor(Math.random() * livingAllies.length)]];
 
     let updatedAllies = [...allies];
+    let updatedSelf = enemy;
     let totalDamage = 0;
     let hasElementBonus = false;
     const targetNames: string[] = [];
 
-    for (const effect of skill.effects.filter(e => e.type === 'damage')) {
-      for (const t of targets) {
-        const { damage, elementBonus } = calcDamage(
-          enemy.atk, t.def, effect.power, enemy.element, t.element, enemy.buffs, t.buffs
-        );
+    for (const effect of skill.effects) {
+      if (effect.type === 'damage') {
+        for (const t of targets) {
+          const { damage, elementBonus } = calcDamage(
+            enemy.atk, t.def, effect.power, enemy.element, t.element, updatedSelf.buffs, t.buffs
+          );
+          updatedAllies = updatedAllies.map(a =>
+            a.instanceId === t.instanceId
+              ? { ...a, currentHp: Math.max(0, a.currentHp - damage), bbGauge: Math.min(100, a.bbGauge + 10) }
+              : a
+          );
+          totalDamage += damage;
+          hasElementBonus = hasElementBonus || elementBonus;
+          if (!targetNames.includes(t.name)) targetNames.push(t.name);
+        }
+      } else if (effect.type === 'debuff_atk' || effect.type === 'debuff_def') {
+        // プレイヤー側ユニットを弱体化（duration+1 は executeSkillOnTargets と同じ理由）
+        const newEffect: StatusEffect = { type: effect.type, power: effect.power, remainingTurns: (effect.duration ?? 2) + 1 };
         updatedAllies = updatedAllies.map(a =>
-          a.instanceId === t.instanceId
-            ? { ...a, currentHp: Math.max(0, a.currentHp - damage), bbGauge: Math.min(100, a.bbGauge + 10) }
+          targets.some(t => t.instanceId === a.instanceId)
+            ? { ...a, buffs: [...a.buffs.filter(b => b.type !== effect.type), newEffect] }
             : a
         );
-        totalDamage += damage;
-        hasElementBonus = hasElementBonus || elementBonus;
-        if (!targetNames.includes(t.name)) targetNames.push(t.name);
+        targets.forEach(t => { if (!targetNames.includes(t.name)) targetNames.push(t.name); });
+      } else if (effect.type === 'buff_atk' || effect.type === 'buff_def' || effect.type === 'buff_rec') {
+        // 敵自身を強化（このゲームには敵チーム全体バフの概念がないため自己バフとして扱う）
+        const newEffect: StatusEffect = { type: effect.type, power: effect.power, remainingTurns: (effect.duration ?? 2) + 1 };
+        updatedSelf = { ...updatedSelf, buffs: [...updatedSelf.buffs.filter(b => b.type !== effect.type), newEffect] };
       }
     }
 
+    const updatedEnemies = enemies.map(e => e.instanceId === enemy.instanceId ? updatedSelf : e);
     const log: BattleLog = {
       turn,
       actorName: enemy.name,
@@ -228,7 +252,7 @@ export const executeEnemyTurn = (
       damage: totalDamage,
       elementBonus: hasElementBonus,
     };
-    return { updatedAllies, updatedEnemies: enemies, logs: [log] };
+    return { updatedAllies, updatedEnemies, logs: [log] };
   }
 
   // 通常攻撃

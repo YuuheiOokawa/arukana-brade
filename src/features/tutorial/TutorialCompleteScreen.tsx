@@ -38,6 +38,12 @@ export const TutorialCompleteScreen = () => {
   ) ?? null;
 
   useEffect(() => {
+    // 既にこの画面の処理(主人公付与)が完了済み（戻る/リロード等での再訪問）なら、
+    // 演出・付与をやり直さず次の画面へ即座に遷移する（主人公ユニットの二重付与を防ぐ）
+    if (useTutorialStore.getState().phase !== 'tutorial_battle') {
+      navigate('/tutorial/gacha', { replace: true });
+      return;
+    }
     const timers: ReturnType<typeof setTimeout>[] = [];
     TUTORIAL_REWARDS.forEach((_, i) => {
       timers.push(setTimeout(() => setRewardIndex(i + 1), 400 + i * 600));
@@ -45,10 +51,16 @@ export const TutorialCompleteScreen = () => {
     timers.push(setTimeout(() => setScreenPhase('hero'), 400 + TUTORIAL_REWARDS.length * 600 + 200));
     timers.push(setTimeout(() => setScreenPhase('ready'), 400 + TUTORIAL_REWARDS.length * 600 + 1400));
     return () => timers.forEach(clearTimeout);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleComplete = () => {
     if (done) return;
+    // 二重付与防止の最終防衛ライン（通常は上の useEffect が先に画面遷移させる）
+    if (useTutorialStore.getState().phase !== 'tutorial_battle') {
+      navigate('/tutorial/gacha', { replace: true });
+      return;
+    }
     setDone(true);
 
     setupFromTutorial(playerName || '勇者');

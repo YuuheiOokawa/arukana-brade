@@ -14,28 +14,52 @@ import { ELEMENT_ADVANTAGE } from '../../types';
 
 type Phase = 'list' | 'confirm' | 'battle' | 'result';
 
-const NUM = ['Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ⅵ','Ⅶ','Ⅷ','Ⅸ','Ⅹ'];
-const RANK_TIERS: { name: string; color: string; step: number; count: number }[] = [
-  { name: 'ルーキー',         color: '#9ca3af', step: 100,  count: 1  },
-  { name: 'ブロンズ',         color: '#b45309', step: 200,  count: 10 },
-  { name: 'シルバー',         color: '#94a3b8', step: 300,  count: 10 },
-  { name: 'ゴールド',         color: '#f59e0b', step: 400,  count: 10 },
-  { name: 'プラチナ',         color: '#e2e8f0', step: 500,  count: 10 },
-  { name: 'ダイヤ',           color: '#60a5fa', step: 600,  count: 10 },
-  { name: 'マスター',         color: '#a855f7', step: 700,  count: 10 },
-  { name: 'グランドマスター', color: '#c4b5fd', step: 1000, count: 10 },
-  { name: '覇王',             color: '#f97316', step: 1500, count: 10 },
-  { name: '伝説',             color: '#ef4444', step: 2000, count: 10 },
-  { name: '神話',             color: '#ec4899', step: 3000, count: 8  },
-  { name: '至高の覇者',       color: '#fff8e0', step: 0,    count: 1  },
+// アリーナ階級名 (No.1〜100、下位→上位の順)
+const RANK_NAMES: string[] = [
+  '名もなき挑戦者', '駆け出しの闘士', '見習い剣士', '若き戦士', '戦場の新星',
+  '鉄刃の戦士', '鋼刃の戦士', '疾風の戦士', '猛炎の戦士', '百戦の闘士',
+  '青銅の剣士', '白銀の剣士', '黄金の剣士', '紅蓮の剣士', '蒼天の剣士',
+  '烈火の闘士', '疾風の闘士', '雷鳴の闘士', '氷刃の闘士', '歴戦の猛者',
+  '剣豪', '剣鬼', '剣聖', '武豪', '武神の候補者',
+  '紅蓮の騎士', '蒼穹の騎士', '雷光の騎士', '黒炎の騎士', '白銀の騎士王',
+  '戦場の英雄', '千刃の英雄', '万軍の英雄', '不敗の英雄', '救世の英雄',
+  '覇道の将', '天翔の将', '破軍の将', '無双の将', '天下無双',
+  '覇王の剣', '覇王の盾', '覇王の翼', '覇王の魂', '覇王',
+  '皇剣の覇者', '皇天の覇者', '皇龍の覇者', '皇帝', '天上の覇者',
+  '天剣の闘将', '天槍の闘将', '天翼の闘将', '天雷の闘将', '天焔の闘将',
+  '聖域の守護者', '聖剣の継承者', '聖戦の覇者', '聖天の英雄', '神域への挑戦者',
+  '神剣の使徒', '神槍の使徒', '神翼の使徒', '神雷の使徒', '神焔の使徒',
+  '六星の守護者', '七星の守護者', '八星の守護者', '九星の守護者', '十星の覇者',
+  '星界の騎士', '星界の将軍', '星界の王', '星界の皇帝', '星界の覇帝',
+  '天界の征服者', '神界の征服者', '魔界の征服者', '三界の征服者', '世界の覇者',
+  '運命を斬る者', '因果を断つ者', '時を超える者', '次元を裂く者', '理を超える者',
+  '神殺し', '神々の天敵', '神域の破壊者', '神話の超越者', '終焉を超えし者',
+  '原初の戦神', '永劫の戦神', '無限の戦神', '創世の戦神', '終焉の戦神',
+  'アルカナの超越者', 'アルカナの支配者', 'アルカナの覇神', '唯一無二の神話', 'ARCANA BLADE',
+];
+// 10ランクごとのブロック単位で必要ポイントの増分(step)を上げていく（最終ランクのみ単独）
+const RANK_BLOCKS: { color: string; step: number; count: number }[] = [
+  { color: '#9ca3af', step: 100,  count: 10 }, // 1-10
+  { color: '#b45309', step: 150,  count: 10 }, // 11-20
+  { color: '#94a3b8', step: 200,  count: 10 }, // 21-30
+  { color: '#f59e0b', step: 300,  count: 10 }, // 31-40
+  { color: '#e2e8f0', step: 400,  count: 10 }, // 41-50
+  { color: '#60a5fa', step: 500,  count: 10 }, // 51-60
+  { color: '#a855f7', step: 700,  count: 10 }, // 61-70
+  { color: '#c4b5fd', step: 900,  count: 10 }, // 71-80
+  { color: '#f97316', step: 1200, count: 10 }, // 81-90
+  { color: '#ec4899', step: 2000, count: 9  }, // 91-99
+  { color: '#fff8e0', step: 0,    count: 1  }, // 100 (ARCANA BLADE)
 ];
 const RANK_TITLES: { min: number; label: string; color: string }[] = (() => {
   const result: { min: number; label: string; color: string }[] = [];
   let cur = 0;
-  for (const t of RANK_TIERS) {
-    for (let i = 0; i < t.count; i++) {
-      result.push({ min: cur, label: t.count === 1 ? t.name : `${t.name} ${NUM[i] ?? i+1}`, color: t.color });
-      cur += t.step;
+  let idx = 0;
+  for (const block of RANK_BLOCKS) {
+    for (let i = 0; i < block.count; i++) {
+      result.push({ min: cur, label: RANK_NAMES[idx] ?? `階級${idx + 1}`, color: block.color });
+      idx++;
+      cur += block.step;
     }
   }
   return result.sort((a, b) => b.min - a.min);
