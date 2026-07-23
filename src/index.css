@@ -381,6 +381,25 @@
   box-shadow: inset 0 0 140px rgba(0,0,0,.86);
 }
 
+/* ===== レアリティ別カラーフラッシュ ===== */
+.summon-color-flash {
+  position:fixed; inset:0; opacity:0; z-index:29; pointer-events:none;
+  background: radial-gradient(ellipse at 50% 46%, var(--flash-color,rgba(255,228,141,.9)) 0%, transparent 70%);
+}
+.summon-color-flash.active { animation:colorFlash .5s ease-out forwards; }
+@keyframes colorFlash { 20%{opacity:.9;} 100%{opacity:0;} }
+
+/* ===== ★3確定 光条 ===== */
+.summon-rays {
+  position:absolute; top:49%; left:50%; width:min(760px,120vw); height:min(760px,120vw);
+  transform:translate(-50%,-50%);
+  background: repeating-conic-gradient(from 0deg, rgba(255,228,141,.22) 0deg 4deg, transparent 4deg 20deg);
+  opacity:0; transition:opacity .6s; animation:raysSpin 14s linear infinite; z-index:2;
+  mix-blend-mode:screen; pointer-events:none;
+}
+.summon-rays.active { opacity:1; }
+@keyframes raysSpin { to { transform:translate(-50%,-50%) rotate(360deg); } }
+
 /* ===== ヘッダー ===== */
 .summon-header {
   position:relative; z-index:8;
@@ -695,6 +714,18 @@
 .summon-mini-card.star-2 { border-color:#bd59ff; box-shadow:0 0 20px rgba(189,89,255,.32); }
 .summon-mini-card.star-1 { border-color:#44c8ff; box-shadow:0 0 16px rgba(68,200,255,.26); }
 @keyframes popIn { from{transform:scale(.6) translateY(28px);opacity:0;} to{transform:scale(1);opacity:1;} }
+@keyframes cardFlipOpen { from{transform:rotateY(90deg) scale(.9);opacity:.3;} to{transform:rotateY(0deg) scale(1.05);opacity:1;} }
+@keyframes rainbowRingSpin { to { transform:rotate(360deg); } }
+.summon-rainbow-border { position:relative; }
+.summon-rainbow-border::before {
+  content:''; position:absolute; inset:-3px; border-radius:inherit; z-index:0; pointer-events:none;
+  padding:3px;
+  background: conic-gradient(from 0deg, #ffe48d, #ff8ddc, #8ddcff, #b8ff8d, #ffe48d);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: rainbowRingSpin 2.4s linear infinite;
+}
 .mini-card-inner { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:flex-end; padding:10px 8px; }
 .mini-card-stars { font-size:14px; font-weight:900; text-shadow:0 0 8px currentColor; margin-bottom:2px; }
 .mini-card-name { font-size:12px; font-weight:900; color:#fff; text-shadow:0 1px 4px rgba(0,0,0,.9); }

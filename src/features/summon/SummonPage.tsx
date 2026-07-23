@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { SUMMON_POOLS } from '../../data/summons';
 import { UNIT_MASTER } from '../../data/units';
 import { usePlayerStore } from '../../stores/playerStore';
@@ -69,6 +70,8 @@ const performSummon = (pool: SummonPool, count: number): UnitMaster[] => {
 ============================================================ */
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
+type CSSPropertiesWithVars = CSSProperties & Record<`--${string}`, string>;
+
 const starBorder = (star: GachaStar) => {
   if (star === 3) return 'rgba(255,228,141,.88)';
   if (star === 2) return 'rgba(183,115,255,.72)';
@@ -132,6 +135,8 @@ export const SummonPage = () => {
   const [openedCards, setOpenedCards] = useState<Set<number>>(new Set());
   const [shakePage, setShakePage] = useState(false);
   const [whiteFlash, setWhiteFlash] = useState(false);
+  const [colorFlash, setColorFlash] = useState<string | null>(null);
+  const [raysActive, setRaysActive] = useState(false);
   const [currentStar, setCurrentStar] = useState<GachaStar>(1);
   const skipRef = useRef(false);
 
@@ -282,6 +287,7 @@ export const SummonPage = () => {
     const pColor = maxStar === 3 ? 'rgba(255,228,141,.8)' : maxStar === 2 ? 'rgba(183,115,255,.8)' : 'rgba(123,200,255,.8)';
 
     setPhase('summon');
+    setRaysActive(maxStar === 3);
     spawnBurst(120, pColor, 0.45);
     if (skipRef.current) { setPhase('results'); return; }
     await sleep(1200);
@@ -290,7 +296,12 @@ export const SummonPage = () => {
     spawnBurst(200, 'rgba(255,244,190,.85)', 0.6);
     setShakePage(true);
     spawnBurst(220, pColor, 1.0);
-    await sleep(400);
+    if (maxStar === 3) {
+      setColorFlash('rgba(255,228,141,.55)');
+      await sleep(160);
+      setColorFlash(null);
+    }
+    await sleep(240);
     setShakePage(false);
 
     if (skipRef.current) { setPhase('results'); return; }
@@ -309,6 +320,8 @@ export const SummonPage = () => {
     skipRef.current = true;
     setShakePage(false);
     setWhiteFlash(false);
+    setColorFlash(null);
+    setRaysActive(false);
     if (phase === 'reveal') {
       setOpenedCards(new Set(summonResults.map((_, i) => i)));
       setTimeout(() => setPhase('results'), 80);
@@ -353,6 +366,8 @@ export const SummonPage = () => {
     setRevealIndex(0);
     setOpenedCards(new Set());
     setCurrentStar(1);
+    setRaysActive(false);
+    setColorFlash(null);
     particlesRef.current = [];
   };
 
@@ -398,8 +413,11 @@ export const SummonPage = () => {
         <div className="summon-floor" />
       </div>
 
-      {/* 白フラッシュ */}
+      {/* 白フラッシュ / レアリティカラーフラッシュ */}
       {whiteFlash && <div className="summon-white-flash active" />}
+      {colorFlash && (
+        <div className="summon-color-flash active" style={{ '--flash-color': colorFlash } as CSSPropertiesWithVars} />
+      )}
       <div className="summon-vignette" />
 
       {/* ヘッダー */}
@@ -429,6 +447,7 @@ export const SummonPage = () => {
       {/* メインステージ (idle / summon) */}
       {showStage && (
         <div className="summon-stage" style={{ opacity: showReveal ? 0 : 1, transition: 'opacity 0.6s' }}>
+          <div className={`summon-rays ${raysActive ? 'active' : ''}`} />
           <div className={`summon-light-column ${isAnimating ? 'active' : ''}`} />
           <MagicCircle active={isAnimating} star={currentStar} />
         </div>
@@ -507,7 +526,9 @@ export const SummonPage = () => {
       {showReveal && currentUnit && (
         <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
           <div
-            className="w-48 rounded-2xl p-4 text-center cursor-pointer active:scale-95 transition-all duration-200"
+            className={`w-48 rounded-2xl p-4 text-center cursor-pointer active:scale-95 transition-all duration-200 ${
+              openedCards.has(revealIndex) && currentStar_ === 3 ? 'summon-rainbow-border' : ''
+            }`}
             onClick={() => void openCard()}
             style={{
               background: openedCards.has(revealIndex)
@@ -518,7 +539,8 @@ export const SummonPage = () => {
                 ? `0 0 30px ${STAR_COLORS[currentStar_]}`
                 : '0 4px 20px rgba(0,0,0,0.8)',
               transform: openedCards.has(revealIndex) ? 'scale(1.05)' : 'scale(1)',
-              transition: 'all 0.5s ease',
+              transition: 'transform 0.5s ease, background 0.5s ease, box-shadow 0.5s ease',
+              animation: openedCards.has(revealIndex) ? 'cardFlipOpen 0.5s ease' : 'none',
             }}>
             {openedCards.has(revealIndex) ? (
               <>
@@ -613,7 +635,11 @@ export const SummonPage = () => {
                   style={{
                     background: 'linear-gradient(145deg, rgba(20,10,40,0.9), rgba(10,5,20,0.95))',
                     border: `1.5px solid ${STAR_COLORS[star]}`,
-                    boxShadow: `0 0 8px ${STAR_COLORS[star]}44`,
+                    boxShadow: star === 3
+                      ? `0 0 14px ${STAR_COLORS[star]}, 0 0 28px rgba(214,152,255,.35)`
+                      : `0 0 8px ${STAR_COLORS[star]}44`,
+                    animation: `popIn .45s ease backwards`,
+                    animationDelay: `${i * 0.05}s`,
                   }}>
                   <div className="flex justify-center mb-1">
                     <UnitIcon

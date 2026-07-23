@@ -12,6 +12,7 @@ import { getStage } from '../../data/quests';
 import { getEventStage, getRaidStage } from '../../data/events';
 import { useRaidStore } from '../../stores/raidStore';
 import { getScenario } from '../../data/scenarios';
+import { getWorldBgStyle, getWorldIdFromStageId } from '../../utils/worldTheme';
 import { getEnemyMaster } from '../../data/enemies';
 import { UNIT_MASTER, calcUnitStats } from '../../data/units';
 import { FRIEND_CANDIDATES } from '../../data/friends';
@@ -539,9 +540,10 @@ export const BattlePage = () => {
   const liveAllies = allies.filter(a => a.currentHp > 0);
   const liveEnemies = enemies.filter(e => e.currentHp > 0);
   const isSkillReady = leaderBbGauge >= 100;
+  const worldBg = getWorldBgStyle(getWorldIdFromStageId(stage.id));
 
   return (
-    <div className="min-h-screen flex flex-col battle-bg select-none text-sm">
+    <div className="min-h-screen flex flex-col battle-bg select-none text-sm" style={{ background: worldBg }}>
       {/* ヘッダー */}
       <div className="px-3 pt-3 pb-2 flex items-center justify-between border-b border-purple-900/30">
         <div>
