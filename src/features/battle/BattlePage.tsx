@@ -543,7 +543,8 @@ export const BattlePage = () => {
   const worldBg = getWorldBgStyle(getWorldIdFromStageId(stage.id));
 
   return (
-    <div className="min-h-screen flex flex-col battle-bg select-none text-sm" style={{ background: worldBg }}>
+    <div className="min-h-screen flex flex-col battle-bg select-none text-sm"
+      style={{ background: worldBg, boxShadow: 'inset 0 0 160px rgba(0,0,0,.55)' }}>
       {/* ヘッダー */}
       <div className="px-3 pt-3 pb-2 flex items-center justify-between border-b border-purple-900/30">
         <div>

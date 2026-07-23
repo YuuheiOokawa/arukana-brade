@@ -422,7 +422,7 @@ export const SummonPage = () => {
 
       {/* ヘッダー */}
       <header className="summon-header">
-        <h1 className="summon-title">召喚神殿</h1>
+        <h1 className="summon-title text-luxe-gold">召喚神殿</h1>
         <div className="flex items-center gap-2 flex-shrink-0">
           {(phase === 'summon' || phase === 'reveal') && (
             <button

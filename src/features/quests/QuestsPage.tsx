@@ -180,6 +180,10 @@ export const QuestsPage = () => {
         <div className="absolute inset-0" style={{
           background: `radial-gradient(ellipse at 50% 0%, ${worldAccent}1a 0%, transparent 55%)`,
         }} />
+        {/* 高級感ビネット */}
+        <div className="absolute inset-0" style={{
+          boxShadow: 'inset 0 0 140px rgba(0,0,0,.55), inset 0 0 40px rgba(0,0,0,.35)',
+        }} />
       </div>
       <TopBar title="クエスト" />
 
