@@ -8,6 +8,8 @@ import { useCollectionStore } from '../../stores/collectionStore';
 import { TopBar } from '../../components/layout/TopBar';
 import { RARITY_TO_STAR, STAR_COLORS, ELEMENT_NAMES } from '../../types';
 import type { ElementType, EquipmentRarity, EquipmentSlot } from '../../types';
+import { UnitIcon } from '../../components/ui/UnitCard';
+import { resolveUnitImage } from '../../lib/unitImage';
 
 const ELEMENT_FILTERS: (ElementType | 'all')[] = ['all', 'fire', 'water', 'wind', 'earth', 'thunder', 'light', 'dark'];
 const ELEMENT_LABELS: Record<string, string> = {
@@ -141,6 +143,9 @@ export const CollectionPage = () => {
             const star = RARITY_TO_STAR[m.rarity];
             const starColor = STAR_COLORS[star];
             const ownedInstance = ownedUnits.find(u => u.masterId === m.id);
+            // 所持中なら現在のレアリティ(進化後含む)の見た目、手放し済みでも図鑑には
+            // 初期排出レアリティの見た目を表示する
+            const displayRarity = ownedInstance?.currentRarity ?? star;
             return (
               <button key={m.id}
                 onClick={() => { if (ownedInstance) navigate(`/units/${ownedInstance.instanceId}`); }}
@@ -152,10 +157,22 @@ export const CollectionPage = () => {
                   border: `1px solid ${isDiscovered ? `${starColor}55` : 'rgba(255,255,255,0.05)'}`,
                   boxShadow: isDiscovered ? `0 0 10px ${starColor}22` : 'none',
                 }}>
-                <p className="text-3xl mb-1.5"
-                  style={{ filter: isDiscovered ? 'none' : 'grayscale(1) brightness(0.25)' }}>
-                  {m.emoji}
-                </p>
+                {isDiscovered ? (
+                  <div className="mx-auto mb-1.5" style={{ width: 56 }}>
+                    <UnitIcon
+                      src={resolveUnitImage(m.id, displayRarity)}
+                      masterId={m.id}
+                      unitRarity={displayRarity}
+                      fallbackEmoji={m.emoji}
+                      element={m.element}
+                      size={56}
+                      height={72}
+                    />
+                  </div>
+                ) : (
+                  // 未発見はネタバレ防止のため実画像を出さず、シルエット代わりに絵文字をグレー表示
+                  <p className="text-3xl mb-1.5" style={{ filter: 'grayscale(1) brightness(0.25)' }}>{m.emoji}</p>
+                )}
                 {isDiscovered ? (
                   <>
                     <p className="text-white text-[10px] font-bold leading-tight truncate">{m.name}</p>

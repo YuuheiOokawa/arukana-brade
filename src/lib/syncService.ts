@@ -57,6 +57,7 @@ export const collectGameState = () => {
   const ach = useAchievementStore.getState();
   const col = useCollectionStore.getState();
   const gift = useGiftStore.getState();
+  const guild = useGuildStore.getState();
 
   return {
     // playerStore
@@ -98,6 +99,12 @@ export const collectGameState = () => {
     collectionDiscoveredEquips: col.discoveredEquips,
     // giftStore（プレゼント受取記録）
     giftClaimedIds: gift.claimedIds,
+    // guildStore（ギルドミッション進捗・チャットは今までサーバーに一切保存されず
+    //  端末のlocalStorageのみに存在していたため、機種変更やストレージ消去で
+    //  未受取のミッション進捗が完全に失われてしまっていた）
+    guildMissions: guild.guildMissions,
+    guildChatMessages: guild.guildChatMessages,
+    guildLastMissionReset: guild.lastGuildMissionReset,
     // メタ
     savedAt: Date.now(),
   };
@@ -360,6 +367,15 @@ export const hydrateFromGameState = (
       if (playerMiscData.stageStars && typeof playerMiscData.stageStars === 'object' && !Array.isArray(playerMiscData.stageStars)) {
         useQuestStore.setState({ stageStars: playerMiscData.stageStars as Record<string, number> });
       }
+      if (Array.isArray(playerMiscData.guildMissions)) {
+        useGuildStore.setState({
+          guildMissions: playerMiscData.guildMissions as ReturnType<typeof useGuildStore.getState>['guildMissions'],
+          guildChatMessages: Array.isArray(playerMiscData.guildChatMessages)
+            ? playerMiscData.guildChatMessages as ReturnType<typeof useGuildStore.getState>['guildChatMessages']
+            : [],
+          lastGuildMissionReset: typeof playerMiscData.guildLastMissionReset === 'string' ? playerMiscData.guildLastMissionReset : '',
+        });
+      }
     }
 
   } else {
@@ -513,6 +529,11 @@ export const initAutoSave = () => {
     useAchievementStore.subscribe(() => scheduleSave(500)),  // 報酬受取は早めに保存（二重受取防止）
     useCollectionStore.subscribe(() => scheduleSave(2000)),
     useGiftStore.subscribe(() => scheduleSave(500)),         // 報酬受取は早めに保存（二重受取防止）
+    // 以前は raidStore/guildStore の変化を購読しておらず、他ストアの変化に
+    // 便乗してたまたま保存されるかに依存していた（レイドダメージ直後に他の
+    // ストアが一切変化しないケースでは未保存のまま取り残される）。明示的に購読する。
+    useRaidStore.subscribe(() => scheduleSave(1000)),
+    useGuildStore.subscribe(() => scheduleSave(2000)),
   ];
   return () => unsubs.forEach(u => u());
 };

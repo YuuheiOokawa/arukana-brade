@@ -127,6 +127,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       return out;
     };
+    // ギルドミッション進捗の報酬定義(reward/rewardData)はクライアントの
+    // GUILD_MISSIONS定数を信頼する(非マネタイズのローカル主導設計のため)。
+    // ここでは型・上限のみサニタイズする。
+    const guildMissionsArray = (v: unknown): Array<Record<string, unknown>> => {
+      if (!Array.isArray(v)) return [];
+      return v.slice(0, 20).map(m => {
+        const mm = (m && typeof m === 'object' ? m : {}) as Record<string, unknown>;
+        const target = Number(mm.target);
+        const progress = Number(mm.progress);
+        return {
+          id: typeof mm.id === 'string' ? mm.id.slice(0, 40) : '',
+          type: typeof mm.type === 'string' ? mm.type.slice(0, 20) : '',
+          title: typeof mm.title === 'string' ? mm.title.slice(0, 60) : '',
+          target: Number.isFinite(target) ? Math.max(0, Math.min(1_000_000, target)) : 0,
+          progress: Number.isFinite(progress) ? Math.max(0, Math.min(1_000_000, progress)) : 0,
+          reward: typeof mm.reward === 'string' ? mm.reward.slice(0, 40) : '',
+          claimed: mm.claimed === true,
+          rewardData: mm.rewardData && typeof mm.rewardData === 'object' ? mm.rewardData : null,
+        };
+      }).filter(m => m.id);
+    };
+    const guildChatArray = (v: unknown): Array<Record<string, unknown>> => {
+      if (!Array.isArray(v)) return [];
+      return v.slice(-50).map(m => {
+        const mm = (m && typeof m === 'object' ? m : {}) as Record<string, unknown>;
+        const ts = Number(mm.timestamp);
+        return {
+          sender: typeof mm.sender === 'string' ? mm.sender.slice(0, 20) : '???',
+          text: typeof mm.text === 'string' ? mm.text.slice(0, 200) : '',
+          timestamp: Number.isFinite(ts) ? ts : Date.now(),
+        };
+      });
+    };
 
     const prevMisc = (player.miscData ?? {}) as Record<string, unknown>;
     const p = state.player as P | undefined;
@@ -168,6 +201,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             collectionDiscoveredEquips: state.collectionDiscoveredEquips !== undefined ? strArray(state.collectionDiscoveredEquips) : strArray(prevMisc.collectionDiscoveredEquips),
             giftClaimedIds: state.giftClaimedIds !== undefined ? strArray(state.giftClaimedIds) : strArray(prevMisc.giftClaimedIds),
             stageStars: state.stageStars !== undefined ? starsRecord(state.stageStars) : starsRecord(prevMisc.stageStars),
+            guildMissions: state.guildMissions !== undefined ? guildMissionsArray(state.guildMissions) : (prevMisc.guildMissions ?? []),
+            guildChatMessages: state.guildChatMessages !== undefined ? guildChatArray(state.guildChatMessages) : (prevMisc.guildChatMessages ?? []),
+            guildLastMissionReset: typeof state.guildLastMissionReset === 'string' ? state.guildLastMissionReset.slice(0, 20) : (prevMisc.guildLastMissionReset ?? ''),
           })) as any,
           updatedAt: new Date(),
         },

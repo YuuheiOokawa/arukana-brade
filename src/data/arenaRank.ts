@@ -73,6 +73,14 @@ export const getRankProgressPct = (pts: number): number => {
   return Math.min(100, Math.max(0, ((pts - current.min) / span) * 100));
 };
 
+// 次ランクまで残り何ポイント必要か。最上位ランク(ARCANA BLADE)なら null
+export const getPointsToNextRank = (pts: number): number | null => {
+  const idx = RANK_TITLES.findIndex(r => pts >= r.min);
+  if (idx <= 0) return null;
+  const next = RANK_TITLES[idx - 1];
+  return Math.max(0, next.min - pts);
+};
+
 // ホーム画面/プロフィール画面のプロフィール枠を、アリーナ階級(blockIndex 0〜10)が
 // 上がるほど段階的に豪華にするためのスタイルを返す。
 export interface ArenaFrameStyle {
