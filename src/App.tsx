@@ -142,6 +142,15 @@ const AppContent = () => {
     window.addEventListener('blur', saveImmediately);
     // ページ離脱時は keepalive 付き専用関数で保存
     window.addEventListener('beforeunload', saveBeforeUnload);
+    // beforeunload はモバイル(特にiOS Safari・ホーム画面追加のPWA)では
+    // ほぼ発火しないため、それだけに頼るとアプリをホームボタン/スワイプで
+    // 閉じた際にデータが保存されないことがあった。visibilitychange(hidden)
+    // と pagehide はモバイルでも確実に発火し、ページ終了直後に打ち切られても
+    // 送信を継続する keepalive fetch(saveBeforeUnload)と組み合わせることで、
+    // 「操作が終わってアプリを離れる瞬間」に確実に保存できるようにする。
+    const handleHidden = () => { if (document.visibilityState === 'hidden') saveBeforeUnload(); };
+    document.addEventListener('visibilitychange', handleHidden);
+    window.addEventListener('pagehide', saveBeforeUnload);
 
     // スタミナ回復タイマー
     recoverStamina();
@@ -152,6 +161,8 @@ const AppContent = () => {
       stopCrossTabSync();
       window.removeEventListener('blur', saveImmediately);
       window.removeEventListener('beforeunload', saveBeforeUnload);
+      document.removeEventListener('visibilitychange', handleHidden);
+      window.removeEventListener('pagehide', saveBeforeUnload);
       clearInterval(staminaInterval);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
