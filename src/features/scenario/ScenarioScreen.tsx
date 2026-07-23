@@ -223,6 +223,12 @@ export const ScenarioScreen = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoPlay, textDone, lineIndex]);
 
+  // 不正な stageId の場合はレンダー中ではなくエフェクト内で遷移する
+  // (レンダー中の navigate() 呼び出しはReactの警告や不安定な挙動の原因になる)
+  useEffect(() => {
+    if (!scenario) navigate('/friends', { replace: true });
+  }, [scenario, navigate]);
+
   const advance = useCallback(() => {
     if (typeTimer.current) clearTimeout(typeTimer.current);
     if (!textDone) {
@@ -245,7 +251,7 @@ export const ScenarioScreen = () => {
   }
 
   if (!scenario) {
-    navigate('/friends', { replace: true });
+    // 実際の遷移は上の useEffect が行う。ここでは何も描画しないだけ。
     return null;
   }
 

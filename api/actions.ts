@@ -399,16 +399,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const requestId = body.requestId as string | undefined;
     if (!requestId) return res.status(400).json({ error: 'requestId が必要です' });
 
-    const req2 = await prisma.friendRequest.findFirst({ where: { id: requestId, toPlayerId: player.playerId } });
-    if (!req2) return res.status(404).json({ error: '申請が見つかりません' });
-
-    await prisma.$transaction([
-      prisma.friendRequest.delete({ where: { id: requestId } }),
-      prisma.friend.createMany({
+    // 承認ボタンの連打等で同じ requestId に対する承認リクエストが同時に届くと、
+    // 事前の findFirst 通過後に片方が friendRequest.delete(存在しないと例外を投げる)で
+    // 500になっていた。deleteMany は対象が既に削除済みでも例外を投げず件数0を返すため、
+    // それを見て「既に処理済み」として穏当に扱えるようにする。
+    const result = await prisma.$transaction(async tx => {
+      const req2 = await tx.friendRequest.findFirst({ where: { id: requestId, toPlayerId: player.playerId } });
+      if (!req2) return null;
+      const deleted = await tx.friendRequest.deleteMany({ where: { id: requestId, toPlayerId: player.playerId } });
+      if (deleted.count === 0) return null;
+      await tx.friend.createMany({
         data: [{ playerId: player.playerId, friendId: req2.fromPlayerId }, { playerId: req2.fromPlayerId, friendId: player.playerId }],
         skipDuplicates: true,
-      }),
-    ]);
+      });
+      return true;
+    });
+    if (!result) return res.status(404).json({ error: '申請が見つかりません（既に処理済みの可能性があります）' });
     return res.json({ ok: true });
   }
 
