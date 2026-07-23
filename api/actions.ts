@@ -49,7 +49,16 @@ const MAX_RAID_DAMAGE = 2_000_000;
 const DEFAULT_BOSS_HP: Record<string, number> = { raid_dark_lord: 10_000_000 };
 const FALLBACK_BOSS_HP = 10_000_000;
 
-const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
+// ── 同期系リクエストのサイズ上限 ────────────────────────────
+const MAX_UNITS_SYNC_COUNT = 1000;
+const MAX_SUMMON_UNITS_PER_CALL = 20; // 実際の最大ガチャ枠(10連)より余裕を持たせた上限
+
+// v が数値でない/NaN な場合は min にフォールバックする（未検証な外部入力を渡しても安全）
+const clamp = (v: unknown, min: number, max: number): number => {
+  const n = typeof v === 'number' ? v : Number(v);
+  if (!isFinite(n)) return min;
+  return Math.min(Math.max(n, min), max);
+};
 
 // ── ハンドラー ──────────────────────────────────────────────
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -143,21 +152,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const action = body.action as string | undefined;
 
   // ── ショップ: スタミナ購入 ─────────────────────────────
+  // 残高チェックと更新をトランザクション内で「直前に再取得した値」に対して行うことで、
+  // 連打等による同時リクエストが同じ古い残高を見て両方通ってしまう二重付与レースを防ぐ
+  // (以前はハンドラー冒頭で1回だけ取得した player を使い回して絶対値で上書きしていた)
   if (action === 'shop_stamina') {
     const packId = body.packId as string;
     const pack = STAMINA_PACKS.find(p => p.id === packId);
     if (!pack) return res.status(400).json({ error: 'Invalid pack' });
-    if (player.diamond < pack.diamondCost) return res.status(400).json({ error: 'ダイヤが不足しています' });
 
-    const staminaAdd = pack.amount === -1
-      ? Math.max(0, player.maxStamina - player.stamina)
-      : pack.amount;
-    const newStamina = clamp(player.stamina + staminaAdd, 0, player.maxStamina);
-    const updated = await prisma.player.update({
-      where: { playerId: player.playerId },
-      data: { diamond: player.diamond - pack.diamondCost, stamina: newStamina },
-    });
-    return res.status(200).json({ ok: true, diamond: updated.diamond, stamina: updated.stamina, staminaAdded: staminaAdd });
+    try {
+      const updated = await prisma.$transaction(async tx => {
+        const fresh = await tx.player.findUniqueOrThrow({ where: { playerId: player.playerId } });
+        if (fresh.diamond < pack.diamondCost) throw new Error('INSUFFICIENT_DIAMOND');
+        const staminaAdd = pack.amount === -1
+          ? Math.max(0, fresh.maxStamina - fresh.stamina)
+          : pack.amount;
+        const newStamina = clamp(fresh.stamina + staminaAdd, 0, fresh.maxStamina);
+        const result = await tx.player.update({
+          where: { playerId: player.playerId },
+          data: { diamond: { decrement: pack.diamondCost }, stamina: newStamina },
+        });
+        return { ...result, staminaAdded: staminaAdd };
+      });
+      return res.status(200).json({ ok: true, diamond: updated.diamond, stamina: updated.stamina, staminaAdded: updated.staminaAdded });
+    } catch (e) {
+      if (e instanceof Error && e.message === 'INSUFFICIENT_DIAMOND') return res.status(400).json({ error: 'ダイヤが不足しています' });
+      throw e;
+    }
   }
 
   // ── ショップ: アイテム購入 ─────────────────────────────
@@ -166,25 +187,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const shop = ITEM_SHOP.find(s => s.id === packId);
     if (!shop) return res.status(400).json({ error: 'Invalid pack' });
 
-    let newDiamond = player.diamond;
-    let newGold = player.gold;
-    if (shop.diamondCost > 0) {
-      if (player.diamond < shop.diamondCost) return res.status(400).json({ error: 'ダイヤが不足しています' });
-      newDiamond -= shop.diamondCost;
-    } else if (shop.goldCost > 0) {
-      if (player.gold < shop.goldCost) return res.status(400).json({ error: 'ゴールドが不足しています' });
-      newGold -= shop.goldCost;
-    }
-
-    await prisma.$transaction(async tx => {
-      await tx.player.update({ where: { playerId: player.playerId }, data: { diamond: newDiamond, gold: newGold } });
-      await tx.playerItem.upsert({
-        where: { playerId_itemId: { playerId: player.playerId, itemId: shop.itemId } },
-        update: { quantity: { increment: shop.quantity } },
-        create: { playerId: player.playerId, itemId: shop.itemId, quantity: shop.quantity },
+    try {
+      const result = await prisma.$transaction(async tx => {
+        const fresh = await tx.player.findUniqueOrThrow({ where: { playerId: player.playerId } });
+        if (shop.diamondCost > 0) {
+          if (fresh.diamond < shop.diamondCost) throw new Error('INSUFFICIENT_DIAMOND');
+        } else if (shop.goldCost > 0) {
+          if (fresh.gold < shop.goldCost) throw new Error('INSUFFICIENT_GOLD');
+        }
+        const updated = await tx.player.update({
+          where: { playerId: player.playerId },
+          data: {
+            diamond: shop.diamondCost > 0 ? { decrement: shop.diamondCost } : undefined,
+            gold: shop.goldCost > 0 ? { decrement: shop.goldCost } : undefined,
+          },
+        });
+        await tx.playerItem.upsert({
+          where: { playerId_itemId: { playerId: player.playerId, itemId: shop.itemId } },
+          update: { quantity: { increment: shop.quantity } },
+          create: { playerId: player.playerId, itemId: shop.itemId, quantity: shop.quantity },
+        });
+        return updated;
       });
-    });
-    return res.status(200).json({ ok: true, diamond: newDiamond, gold: newGold, itemId: shop.itemId, quantityAdded: shop.quantity });
+      return res.status(200).json({ ok: true, diamond: result.diamond, gold: result.gold, itemId: shop.itemId, quantityAdded: shop.quantity });
+    } catch (e) {
+      if (e instanceof Error && e.message === 'INSUFFICIENT_DIAMOND') return res.status(400).json({ error: 'ダイヤが不足しています' });
+      if (e instanceof Error && e.message === 'INSUFFICIENT_GOLD') return res.status(400).json({ error: 'ゴールドが不足しています' });
+      throw e;
+    }
   }
 
   // ── アリーナ: 戦績記録 ────────────────────────────────
@@ -213,25 +243,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // ── レイド: ダメージ記録 ───────────────────────────────
+  // miscData(JSONカラム)を丸ごと読んで丸ごと書き戻す方式のため、素朴にやると
+  // 同時発生した2件のリクエストが同じ古い raidStates を基に計算し、後勝ちで
+  // 片方のダメージが消えるレースが起きる。トランザクション内で書き込み直前に
+  // 再取得することで、その窓を大幅に狭める。
   if (action === 'raid_battle') {
     const bossId = typeof body.bossId === 'string' ? body.bossId : null;
     if (!bossId) return res.status(400).json({ error: 'Missing bossId' });
     const damage = clamp(Number(body.damageDealt) || 0, 0, MAX_RAID_DAMAGE);
 
     interface RaidState { bossId: string; currentHp: number; totalDamageDealt: number; entryCount: number }
-    const miscData = (player.miscData ?? {}) as Record<string, unknown>;
-    const raidStates: RaidState[] = Array.isArray(miscData.raidStates) ? (miscData.raidStates as RaidState[]) : [];
+    const newState = await prisma.$transaction(async tx => {
+      const fresh = await tx.player.findUniqueOrThrow({ where: { playerId: player.playerId } });
+      const miscData = (fresh.miscData ?? {}) as Record<string, unknown>;
+      const raidStates: RaidState[] = Array.isArray(miscData.raidStates) ? (miscData.raidStates as RaidState[]) : [];
 
-    const existing = raidStates.find(s => s.bossId === bossId);
-    const bossMaxHp = DEFAULT_BOSS_HP[bossId] ?? FALLBACK_BOSS_HP;
-    const newState: RaidState = existing
-      ? { ...existing, currentHp: Math.max(0, existing.currentHp - damage), totalDamageDealt: existing.totalDamageDealt + damage, entryCount: existing.entryCount + 1 }
-      : { bossId, currentHp: Math.max(0, bossMaxHp - damage), totalDamageDealt: damage, entryCount: 1 };
-    const updatedRaidStates = existing ? raidStates.map(s => s.bossId === bossId ? newState : s) : [...raidStates, newState];
+      const existing = raidStates.find(s => s.bossId === bossId);
+      const bossMaxHp = DEFAULT_BOSS_HP[bossId] ?? FALLBACK_BOSS_HP;
+      const computed: RaidState = existing
+        ? { ...existing, currentHp: Math.max(0, existing.currentHp - damage), totalDamageDealt: existing.totalDamageDealt + damage, entryCount: existing.entryCount + 1 }
+        : { bossId, currentHp: Math.max(0, bossMaxHp - damage), totalDamageDealt: damage, entryCount: 1 };
+      const updatedRaidStates = existing ? raidStates.map(s => s.bossId === bossId ? computed : s) : [...raidStates, computed];
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const newMiscData: any = JSON.parse(JSON.stringify({ ...miscData, raidStates: updatedRaidStates }));
-    await prisma.player.update({ where: { playerId: player.playerId }, data: { miscData: newMiscData } });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const newMiscData: any = JSON.parse(JSON.stringify({ ...miscData, raidStates: updatedRaidStates }));
+      await tx.player.update({ where: { playerId: player.playerId }, data: { miscData: newMiscData } });
+      return computed;
+    });
     return res.status(200).json({ ok: true, raidState: newState });
   }
 
@@ -241,6 +279,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const poolId = body.poolId as string;
     const units = (body.units as SummonUnit[]) ?? [];
     if (!units.length) return res.status(400).json({ error: 'units required' });
+    if (units.length > MAX_SUMMON_UNITS_PER_CALL) return res.status(400).json({ error: 'too many units' });
     const now = new Date();
     await prisma.$transaction(async tx => {
       const newUnits = units.filter(u => u.resultType === 'new');
@@ -267,22 +306,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // ── ユニット全件同期 ───────────────────────────────────────
+  // saveAll と異なりここでは値のクランプも instanceId/masterId の存在チェックも
+  // 行われていなかったため、異常な level/awakenRank 等がそのまま保存されたり、
+  // instanceId 欠落エントリで createMany が例外(500)になることがあった。
+  // saveAll と同じ検証・クランプをここにも適用する。
   if (action === 'units_sync') {
     interface UnitRecord { instanceId: string; masterId: string; level?: number; exp?: number; awakenRank?: number; awakeningCount?: number; currentRarity?: string | number; isLocked?: boolean; acquiredAt?: number }
     const units = (body.units as UnitRecord[]) ?? [];
     if (!Array.isArray(units)) return res.status(400).json({ error: 'units array required' });
+    if (units.length > MAX_UNITS_SYNC_COUNT) return res.status(400).json({ error: 'too many units' });
+    const validUnits = units.filter(u => typeof u?.instanceId === 'string' && u.instanceId && typeof u?.masterId === 'string' && u.masterId);
     await prisma.$transaction([
       prisma.ownedUnit.deleteMany({ where: { playerId: player.playerId } }),
       prisma.ownedUnit.createMany({
-        data: units.map(u => ({
+        data: validUnits.map(u => ({
           instanceId: u.instanceId, playerId: player.playerId, masterId: u.masterId,
-          level: u.level ?? 1, exp: u.exp ?? 0, awakenRank: u.awakenRank ?? 0, awakeningCount: u.awakeningCount ?? 0,
-          currentRarity: String(u.currentRarity ?? '1'), isLocked: u.isLocked ?? false,
+          level: clamp(u.level ?? 1, 1, 999), exp: clamp(u.exp ?? 0, 0, 999_999_999),
+          awakenRank: clamp(u.awakenRank ?? 0, 0, 10), awakeningCount: clamp(u.awakeningCount ?? 0, 0, 10),
+          currentRarity: (() => { const r = u.currentRarity; if (r === 'CROWN' || r === 'crown' || r === 8 || r === '8') return 'CROWN'; const n = Number(r); return (n >= 1 && n <= 7) ? String(n) : '1'; })(),
+          isLocked: u.isLocked ?? false,
           acquiredAt: BigInt(u.acquiredAt ?? Date.now()),
         })),
+        skipDuplicates: true,
       }),
     ]);
-    return res.status(200).json({ ok: true, synced: units.length });
+    return res.status(200).json({ ok: true, synced: validUnits.length });
   }
 
   // ── ギルド作成 ────────────────────────────────────────────

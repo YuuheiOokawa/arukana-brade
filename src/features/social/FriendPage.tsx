@@ -319,7 +319,6 @@ export const FriendPage = () => {
             <ul className="text-gray-600 text-xs space-y-1">
               <li>・フレンドのリーダーユニットをクエストで借りられます</li>
               <li>・相互申請の場合は自動でフレンドになります</li>
-              <li>・フレンドは最大50人まで登録できます</li>
             </ul>
           </div>
         </div>
