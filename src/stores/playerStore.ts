@@ -120,13 +120,16 @@ export const usePlayerStore = create<PlayerStore>()(
       },
 
       setAdminMode: () => {
+        // プレイヤーレベル(rank)は管理用でも通常どおり1からスタートさせる
+        // (レベルアップ時のスタミナ上限アップ・全回復は addExp() 側で通常通り行われる)。
+        // 以前は rank を強制的に100までブーストしていたが、通常のレベル進行を
+        // そのまま検証したいという要望のため撤去した。
         set(s => ({
           player: {
             ...s.player,
             gold: 9_999_999,
             diamond: 99_999,
             stamina: s.player.maxStamina,
-            rank: Math.max(s.player.rank, 100),
           },
           items: ITEM_MASTER.map(item => ({ itemId: item.id, quantity: 999 })),
         }));

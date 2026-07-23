@@ -12,6 +12,8 @@ import { calcTotalPower } from '../../utils/format';
 import type { ArenaOpponent } from '../../types';
 import { ELEMENT_ADVANTAGE } from '../../types';
 import { getRankTitle, getRankProgressPct, getPointsToNextRank, RANK_TITLES } from '../../data/arenaRank';
+import { useAuthStore } from '../../stores/authStore';
+import { isAdminEmail } from '../../utils/admin';
 
 type Phase = 'list' | 'confirm' | 'battle' | 'result';
 
@@ -21,6 +23,7 @@ export const PvPPage = () => {
   const { ownedUnits } = useUnitStore();
   const { addGold, addDiamond } = usePlayerStore();
   const { addDailyProgress, addWeeklyProgress } = useMissionStore();
+  const isAdmin = isAdminEmail(useAuthStore(s => s.user?.email));
 
   const [phase, setPhase] = useState<Phase>('list');
   const [opponents, setOpponents] = useState<ArenaOpponent[]>([]);
@@ -123,7 +126,7 @@ export const PvPPage = () => {
       setBattleLog(logs);
       setPhase('battle');
 
-      const battleResult = won ? recordWin(currentOpponent.id) : recordLoss(currentOpponent.id);
+      const battleResult = won ? recordWin(currentOpponent.id, isAdmin) : recordLoss(currentOpponent.id);
       if (battleResult.goldReward > 0) addGold(battleResult.goldReward);
       if (battleResult.diamondReward > 0) addDiamond(battleResult.diamondReward);
       if (won) {
