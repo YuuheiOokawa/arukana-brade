@@ -12,7 +12,7 @@ import { getRankTitle, getArenaFrameStyle } from '../../data/arenaRank';
 import {
   IconSword, IconTeam, IconCrystal, IconArrowUp,
   IconGear, IconShield, IconDragon, IconScroll,
-  IconTrophy, IconCastle, IconBag, IconFriends,
+  IconTrophy, IconCastle, IconBag, IconFriends, IconMap,
 } from '../../components/ui/FantasyIcon';
 import { LoginBonusModal } from '../login/LoginBonusModal';
 
@@ -323,7 +323,7 @@ export const HomePage = () => {
       {/* コンテンツ一覧 */}
       <div className="px-4 grid grid-cols-2 gap-2.5 mb-4" style={{ position: 'relative', zIndex: 2 }}>
         {[
-          { path: '/pvp',      label: 'アリーナ',   sub: 'PvP対戦',     Icon: IconTrophy,  accent: '#f59e0b', bg: 'linear-gradient(145deg,#3d2800,#1e1000)' },
+          { path: '/collection', label: '図鑑',      sub: 'コレクション', Icon: IconMap,     accent: '#a78bfa', bg: 'linear-gradient(145deg,#2a1050,#150828)' },
           { path: '/guild',    label: 'ギルド',     sub: '仲間と協力',   Icon: IconCastle,  accent: '#8b5cf6', bg: 'linear-gradient(145deg,#2d1460,#120a30)' },
           { path: '/missions', label: 'ミッション', sub: 'デイリー報酬', Icon: IconScroll,  accent: '#10b981', bg: 'linear-gradient(145deg,#053828,#021c15)', badge: missionPending > 0 },
           { path: '/raid',     label: 'レイドボス', sub: '協力討伐',     Icon: IconDragon,  accent: '#ef4444', bg: 'linear-gradient(145deg,#3d0a0a,#1e0505)' },
