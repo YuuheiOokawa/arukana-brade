@@ -102,7 +102,7 @@ export const PvPPage = () => {
           if (!unit) return sum;
           const master = UNIT_MASTER.find(m => m.id === unit.masterId);
           if (!master) return sum;
-          return sum + calcTotalPower(calcUnitStats(master, unit.level, unit.awakenRank));
+          return sum + calcTotalPower(calcUnitStats(master, unit.level, unit.awakenRank, unit.awakeningCount ?? 0));
         }, 0);
     } catch { return 0; }
   };
@@ -133,7 +133,7 @@ export const PvPPage = () => {
     partyUnits.forEach(unit => {
       const master = UNIT_MASTER.find(m => m.id === unit.masterId);
       if (!master) return;
-      const stats = calcUnitStats(master, unit.level, unit.awakenRank);
+      const stats = calcUnitStats(master, unit.level, unit.awakenRank, unit.awakeningCount ?? 0);
       const elemMult = ELEMENT_ADVANTAGE[master.element]?.[oppMaster?.element ?? 'none' as never] ?? 1.0;
       const baseDmg = Math.max(1, stats.atk * (0.85 + Math.random() * 0.3) - oppStats.def * 0.3);
       const dmg = Math.floor(baseDmg * elemMult);
