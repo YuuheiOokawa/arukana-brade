@@ -76,9 +76,19 @@ type Phase = 'pre' | 'summon' | 'reveal' | 'results';
 
 export const TutorialGachaScreen = () => {
   const navigate = useNavigate();
-  const { completeTutorial } = useTutorialStore();
+  const { completeTutorial, setInitialGachaDone } = useTutorialStore();
   const { processSummonResults } = useUnitStore();
   const { syncSummonResult } = useAuthStore();
+
+  // 既に初回無料ガチャを実行済み（戻る/リロード等での再訪問）なら、
+  // 再ロールさせず完了扱いにしてホームへ送る（無限に無料ガチャを farming されるのを防ぐ）
+  useEffect(() => {
+    if (useTutorialStore.getState().initialGachaDone) {
+      if (!useTutorialStore.getState().completed) completeTutorial();
+      navigate('/', { replace: true });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [phase, setPhase] = useState<Phase>('pre');
   const [results, setResults] = useState<UnitMaster[]>([]);
@@ -152,6 +162,10 @@ export const TutorialGachaScreen = () => {
   }, []);
 
   const startGacha = async () => {
+    // 既に実行済みなら再ロールしない（連打やStrictMode二重実行等への防御）
+    if (useTutorialStore.getState().initialGachaDone) return;
+    setInitialGachaDone(true);
+
     skipRef.current = false;
     const summonedMasters = performTutorialSummon();
     const maxStar = Math.max(...summonedMasters.map(u => RARITY_TO_STAR[u.rarity])) as GachaStar;

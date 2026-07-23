@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { BottomNav } from './components/layout/BottomNav';
 import { HomePage } from './features/home/HomePage';
@@ -85,23 +85,29 @@ const AppContent = () => {
     void checkAuth();
   }, [checkAuth]);
 
-  // gameData が変化するたびに（ログイン・ページ初期化時）ストアを復元
-  useEffect(() => {
-    if (!user || !gameData) return;
-    hydrateFromGameState(gameData, authPlayer?.miscData ?? undefined);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameData]);
-
-  // user が確定したとき一度だけ実行: ユーザー切り替え検出・自動保存・スタミナ回復
-  useEffect(() => {
+  // ユーザー切り替え検出・リセット・復元(hydrate)を1つの useLayoutEffect にまとめ、
+  // 「別ユーザーへの切り替え検出→リセット→復元」を必ずこの順でペイント前に完了させる。
+  // （以前は reset を [user]、hydrate を [gameData] の別々の useEffect に分けていたため、
+  //   同一コミットで両方の依存が変化すると宣言順に実行され、hydrate の直後に reset が
+  //   復元済みデータを上書きしてしまう競合があった。また useEffect は次のペイント後に
+  //   実行されるため、その間ログイン直後の画面が一瞬リセット後の空データで描画され、
+  //   MainGuard がチュートリアル未完了と誤判定してリダイレクトする恐れもあった）
+  useLayoutEffect(() => {
     if (!user) return;
-
-    // 別ユーザーへ切り替わった場合は全ストアをリセット
     const storedUserId = localStorage.getItem(LAST_USER_KEY);
     if (storedUserId && storedUserId !== user.id) {
       resetAllStores();
     }
     localStorage.setItem(LAST_USER_KEY, user.id);
+    if (gameData) {
+      hydrateFromGameState(gameData, authPlayer?.miscData ?? undefined, authPlayer?.tutorialCompleted);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, gameData]);
+
+  // user が確定したとき一度だけ実行: 自動保存・スタミナ回復のセットアップ
+  useEffect(() => {
+    if (!user) return;
 
     // マスタデータをDBから取得してキャッシュに投入（失敗時はTypeScriptデータにフォールバック）
     void fetchAndPopulateMasterData();

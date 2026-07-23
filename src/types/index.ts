@@ -34,7 +34,7 @@ export const ELEMENT_BG: Record<ElementType, string> = {
 // 属性相性テーブル: [攻撃側][防御側] = 倍率
 export const ELEMENT_ADVANTAGE: Record<ElementType, Partial<Record<ElementType, number>>> = {
   fire:    { wind: 1.5, water: 0.75 },
-  water:   { fire: 1.5, wind: 0.75 },
+  water:   { fire: 1.5, wind: 0.75, earth: 0.75, thunder: 0.75 },
   wind:    { earth: 1.5, fire: 0.75, thunder: 1.5 },
   earth:   { water: 1.5, wind: 0.75 },
   light:   { dark: 1.5 },
@@ -480,6 +480,7 @@ export interface RaidBossState {
   currentHp: number;
   totalDamageDealt: number;
   entryCount: number;
+  highestClaimedTier: number; // rewards[0](参加報酬)を除く、累計ダメージ報酬段階のうち既に付与済みの最高インデックス（-1=未達成）
 }
 
 // ===== ギルド =====

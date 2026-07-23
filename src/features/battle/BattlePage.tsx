@@ -44,7 +44,7 @@ const logColor = (line: string) => {
 
 export const BattlePage = () => {
   const navigate = useNavigate();
-  const { pendingStageId, pendingFriendId, clearPending, markCleared, checkAreaComplete, claimAreaReward, recordStars } = useQuestStore();
+  const { pendingStageId, pendingFriendId, pendingFriendCandidate, clearPending, markCleared, checkAreaComplete, claimAreaReward, recordStars } = useQuestStore();
   const { getActiveParty } = usePartyStore();
   const { ownedUnits, levelUpUnit } = useUnitStore();
   const { spendStamina, recoverStamina, addGold, addExp, addItem, syncCurrencyToServer, recordBattleWin, recordQuestClear } = usePlayerStore();
@@ -61,6 +61,7 @@ export const BattlePage = () => {
   const [logQueue, setLogQueue] = useState<string[]>([]);
   const isLogAnimatingRef = useRef(false);
   const totalDamageRef = useRef(0);
+  const leaderInstanceIdRef = useRef<string | null>(null);
   const [phase, setPhase] = useState<Phase>('battle');
   const [leaderBbGauge, setLeaderBbGauge] = useState(0);
   const [isAutoMode, setIsAutoMode] = useState(false);
@@ -131,13 +132,18 @@ export const BattlePage = () => {
     const staminaCost = hard ? Math.ceil(s.staminaCost * 1.5) : s.staminaCost;
     const ok = spendStamina(staminaCost);
     if (!ok) { navigate('/quests'); return; }
+    // DBフレンド選択時は完全なデータ(pendingFriendCandidate)を優先し、なければ静的リストから検索
     const friendCandidate = pendingFriendId
-      ? FRIEND_CANDIDATES.find(f => f.friendId === pendingFriendId)
+      ? (pendingFriendCandidate ?? FRIEND_CANDIDATES.find(f => f.friendId === pendingFriendId))
       : null;
 
     // リーダースキルを収集（自軍リーダー + フレンドリーダー）
     const leaderEffects: LeaderSkillEffect[] = [];
-    const leaderSlotId = party.slots.find(Boolean);
+    // パーティ編成で指定されたリーダー（party.leaderId）を優先。無効な場合のみ先頭スロットにフォールバック
+    const leaderSlotId = (party.leaderId && party.slots.includes(party.leaderId))
+      ? party.leaderId
+      : party.slots.find(Boolean);
+    leaderInstanceIdRef.current = leaderSlotId ?? null;
     if (leaderSlotId) {
       const ownedLeader = ownedUnits.find(u => u.instanceId === leaderSlotId);
       if (ownedLeader) {
@@ -287,7 +293,8 @@ export const BattlePage = () => {
 
             if (liveAllies.length === 0 || liveEnemies.length === 0) return curBb;
 
-            const leader = liveAllies[0];
+            // パーティで指定したリーダーを優先。戦闘不能なら先頭の生存ユニットにフォールバック
+            const leader = liveAllies.find(a => a.instanceId === leaderInstanceIdRef.current) ?? liveAllies[0];
             const isSkillTurn = useSkill && curBb >= 100;
 
             // ===== 味方フェーズ =====
@@ -371,6 +378,8 @@ export const BattlePage = () => {
                 const u = result.updatedAllies.find(ua => ua.instanceId === a.instanceId);
                 return u ? { ...u, bbGauge: a.bbGauge } : a;
               });
+              // 敵の自己バフ（updatedEnemies）も反映する（以前は取りこぼしていた）
+              updEnemies = updEnemies.map(e => result.updatedEnemies.find(ue => ue.instanceId === e.instanceId) ?? e);
               result.logs.forEach(log => {
                 const prefix = (log.action === 'skill' || log.action === 'bb_skill') ? '💥' : '🔴';
                 newLines.push(`${prefix} ${enemy.emoji} ${log.actorName} → ${log.targetNames.join('・')} に ${(log.damage ?? 0).toLocaleString()} ダメージ！`);
@@ -398,6 +407,7 @@ export const BattlePage = () => {
                   setWaveIndex(nextWave);
                   setEnemies(newWaveEnemies);
                   setAllies(updAllies);
+                  setRound(r => r + 1);
                   addLogs([`━━ Wave ${nextWave + 1} 開始！ ━━━━━━━━━━━━━━`]);
                 } else {
                   const isHard = isHardRef.current;
@@ -409,6 +419,22 @@ export const BattlePage = () => {
                       for (let i = 0; i < ri.quantity; i++) items.push(ri.itemId);
                     }
                   });
+
+                  // レイド: ダメージを反映し、今回新たに到達した累計報酬段階のアイテムも加算
+                  let raidBossId: string | null = null;
+                  if (curStage.id.startsWith('raid_')) {
+                    raidBossId = curStage.id.replace(/^raid_/, '').replace(/_stage$/, '');
+                    const dmg = totalDamageRef.current;
+                    totalDamageRef.current = 0;
+                    const newlyUnlockedItems = dealRaidDamage(raidBossId, dmg);
+                    items.push(...newlyUnlockedItems);
+                    useGuildStore.getState().updateGuildMissionProgress('raid', 1);
+                    void fetch('/api/actions', {
+                      method: 'POST', credentials: 'include',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ action: 'raid_battle', bossId: raidBossId, damageDealt: dmg }),
+                    }).catch(() => { /* saveAll でフォールバック */ });
+                  }
                   // 装備ドロップ抽選（ハードはドロップ率1.5倍）
                   const equips: string[] = [];
                   curStage.rewardEquipments?.forEach(re => {
@@ -459,17 +485,6 @@ export const BattlePage = () => {
                   recordQuestClear();
                   useGuildStore.getState().addGuildExp(Math.floor(exp * 0.1));
                   useGuildStore.getState().updateGuildMissionProgress('battle', 1);
-                  if (curStage.id.startsWith('raid_')) {
-                    const raidBossId = curStage.id.replace(/^raid_/, '').replace(/_stage$/, '');
-                    const dmg = totalDamageRef.current;
-                    totalDamageRef.current = 0;
-                    dealRaidDamage(raidBossId, dmg);
-                    void fetch('/api/actions', {
-                      method: 'POST', credentials: 'include',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ action: 'raid_battle', bossId: raidBossId, damageDealt: dmg }),
-                    }).catch(() => { /* saveAll でフォールバック */ });
-                  }
                   setTimeout(() => {
                     void syncCurrencyToServer();
                     saveImmediately();
@@ -479,6 +494,22 @@ export const BattlePage = () => {
                 return curStage;
               });
             } else if (updAllies.every(a => a.currentHp <= 0)) {
+              // レイドは敗北しても、そこまでに与えたダメージ・報酬段階は記録する
+              setStage(curStage => {
+                if (curStage?.id.startsWith('raid_')) {
+                  const raidBossId = curStage.id.replace(/^raid_/, '').replace(/_stage$/, '');
+                  const dmg = totalDamageRef.current;
+                  totalDamageRef.current = 0;
+                  const newlyUnlockedItems = dealRaidDamage(raidBossId, dmg);
+                  newlyUnlockedItems.forEach(id => addItem(id, 1));
+                  void fetch('/api/actions', {
+                    method: 'POST', credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'raid_battle', bossId: raidBossId, damageDealt: dmg }),
+                  }).catch(() => { /* saveAll でフォールバック */ });
+                }
+                return curStage;
+              });
               clearPending();
               setPhase('defeat');
               setAllies(updAllies);

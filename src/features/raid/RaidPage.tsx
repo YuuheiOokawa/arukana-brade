@@ -5,7 +5,6 @@ import { useRaidStore } from '../../stores/raidStore';
 import { useQuestStore } from '../../stores/questStore';
 import { usePlayerStore } from '../../stores/playerStore';
 import { usePartyStore } from '../../stores/partyStore';
-import { useGuildStore } from '../../stores/guildStore';
 import { getActiveRaids } from '../../data/events';
 import { getItemMaster } from '../../data/items';
 import { TopBar } from '../../components/layout/TopBar';
@@ -76,6 +75,11 @@ const RaidBossDetail = ({ boss, navigate }: { boss: RaidBossMaster; navigate: Re
   };
 
   const handleChallenge = () => {
+    if (Date.now() > boss.endTimestamp) {
+      // 画面を開いたままの間にレイドが終了した場合は挑戦させない
+      navigate('/raid', { replace: true });
+      return;
+    }
     const party = getActiveParty();
     if (!party.slots.some(Boolean)) {
       navigate('/party');
@@ -93,7 +97,8 @@ const RaidBossDetail = ({ boss, navigate }: { boss: RaidBossMaster; navigate: Re
     setPendingStage(pseudoStageId);
     // フレンドなしでバトルへ
     setPendingFriend('');
-    useGuildStore.getState().updateGuildMissionProgress('raid', 1);
+    // ギルドミッションの「raid」進捗は、実際に戦闘が成立(勝利)した時にBattlePage側で加算する
+    // (以前はここで即時加算していたため、スタミナ不足等でバトルに入れなかった場合も進捗が付与されていた)
     navigate('/battle', { state: { isRaid: true, raidBossId: boss.id, raidWaves: boss.waves } });
   };
 

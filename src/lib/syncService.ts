@@ -179,7 +179,8 @@ export const saveImmediately = () => {
  */
 export const hydrateFromGameState = (
   gameStateOrData: Record<string, unknown> | GameDataResponse,
-  playerMiscData?: Record<string, unknown>
+  playerMiscData?: Record<string, unknown>,
+  tutorialCompleted?: boolean,
 ) => {
   if (!gameStateOrData || typeof gameStateOrData !== 'object') return;
 
@@ -403,6 +404,14 @@ export const hydrateFromGameState = (
     }
   }
 
+  // 新フォーマット(GameDataResponse)には tutorialCompleted が含まれておらず、
+  // 上の isNewFormat 分岐では tutorialStore が一切復元されていなかった
+  // （旧フォーマット互換パスの gameState.tutorialCompleted チェックでしか復元されない不具合）。
+  // 呼び出し側(authPlayer.tutorialCompleted)から明示的に渡された場合はここで確実に反映する。
+  if (tutorialCompleted === true) {
+    useTutorialStore.setState({ completed: true, phase: 'complete' });
+  }
+
   // 復元完了後、少し待ってからフラグを解除（setState の subscribe が全部発火するまで待つ）
   setTimeout(() => { isHydrating = false; }, 300);
 };
@@ -442,7 +451,7 @@ export const resetAllStores = () => {
   useMissionStore.setState({ daily: { date: '', progresses: [] }, weeklyProgresses: [], weekStr: '' });
   useLoginBonusStore.setState({ lastClaimedDate: null, claimedDays: [], currentDay: 1, lastLoginDate: null });
   useArenaStore.setState({ record: { wins: 0, losses: 0, rank: 999, points: 1000, season: 1 }, battleHistory: [] });
-  useTutorialStore.setState({ completed: false, phase: 'title', playerName: '', selectedHeroId: null, selectedGender: null, selectedRace: null });
+  useTutorialStore.setState({ completed: false, phase: 'title', playerName: '', selectedHeroId: null, selectedGender: null, selectedRace: null, initialGachaDone: false });
   useAchievementStore.setState({ claimed: [] });
   useCollectionStore.setState({ discovered: [], discoveredEquips: [] });
   useGiftStore.setState({ claimedIds: [] });
