@@ -17,6 +17,9 @@ const initState = (bossId: string): RaidBossState => {
   return { bossId, currentHp: boss?.totalHp ?? 1000000, totalDamageDealt: 0, entryCount: 0, highestClaimedTier: -1 };
 };
 
+// アカウント切り替え時のリセット用（syncService.resetAllStores から呼ぶ）
+export const getDefaultRaidStates = (): RaidBossState[] => RAID_BOSSES.map(b => initState(b.id));
+
 export const useRaidStore = create<RaidStore>()(
   persist(
     (set, get) => ({

@@ -18,7 +18,7 @@ interface ApiGuild {
 
 export const GuildPage = () => {
   const {
-    guild, createGuild, leaveGuild,
+    guild, createGuild, hydrateGuildFromServer, leaveGuild,
     claimGuildMission, guildMissions, guildChatMessages,
     sendChatMessage, checkAndResetGuildMissions,
   } = useGuildStore();
@@ -44,10 +44,12 @@ export const GuildPage = () => {
       const data = await res.json() as { guild: ApiGuild | null };
       if (data.guild && !guild) {
         // サーバー側にギルドがあるのにローカルにない場合は同期
-        createGuild(data.guild.name, data.guild.emblem, player.name);
+        // (createGuild だと level/exp が毎回 1/0 にリセットされてしまうため、
+        //  既存ギルドの復元には hydrateGuildFromServer を使う)
+        hydrateGuildFromServer(data.guild, player.name);
       }
     } catch { /* offline時はlocalStorage継続 */ }
-  }, [guild, createGuild, player.name]);
+  }, [guild, hydrateGuildFromServer, player.name]);
 
   useEffect(() => {
     void fetchGuildFromServer();

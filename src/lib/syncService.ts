@@ -15,10 +15,11 @@ import { useMissionStore } from '../stores/missionStore';
 import { useLoginBonusStore } from '../stores/loginBonusStore';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { useArenaStore } from '../stores/arenaStore';
-import { useRaidStore } from '../stores/raidStore';
+import { useRaidStore, getDefaultRaidStates } from '../stores/raidStore';
 import { useAchievementStore } from '../stores/achievementStore';
 import { useCollectionStore } from '../stores/collectionStore';
 import { useGiftStore } from '../stores/giftStore';
+import { useGuildStore, GUILD_MISSIONS } from '../stores/guildStore';
 import type { PlayerData, OwnedItem, OwnedUnit, OwnedEquipment } from '../types';
 import type { GameDataResponse } from '../stores/authStore';
 import { getUnitMaster, calcUnitStats } from '../data/units';
@@ -489,6 +490,11 @@ export const resetAllStores = () => {
   useAchievementStore.setState({ claimed: [] });
   useCollectionStore.setState({ discovered: [], discoveredEquips: [] });
   useGiftStore.setState({ claimedIds: [] });
+  // guild/raid は他ストアと違い resetAllStores から漏れていたため、共有端末で
+  // 別アカウントに切り替えても前のアカウントのギルド(未受取ミッション報酬・チャット含む)や
+  // レイドボスの被ダメージ状態がそのまま残ってしまうバグがあった。
+  useRaidStore.setState({ raidStates: getDefaultRaidStates() });
+  useGuildStore.setState({ guild: null, guildMissions: GUILD_MISSIONS, lastGuildMissionReset: '', guildChatMessages: [] });
   setTimeout(() => { isHydrating = false; }, 300);
 };
 
