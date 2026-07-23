@@ -67,6 +67,20 @@ const RANK_TITLES: { min: number; label: string; color: string }[] = (() => {
 
 const getRankTitle = (pts: number) => RANK_TITLES.find(r => pts >= r.min) ?? RANK_TITLES[RANK_TITLES.length - 1];
 
+// 次ランクまでの進捗率(%)。RANK_BLOCKS導入前は全ランク一律500ptの固定刻みだった名残で
+// `points % 500` を使っていたため、ブロックごとに異なる実際の必要ポイント(100〜2000)と
+// 無関係な進捗バーが表示されるバグがあった。RANK_TITLES(降順ソート済み)から
+// 現在ランクと直上のランクを引いて実際の必要ポイントで計算し直す。
+const getRankProgressPct = (pts: number): number => {
+  const idx = RANK_TITLES.findIndex(r => pts >= r.min);
+  if (idx <= 0) return 100; // 最上位ランク、またはテーブル未取得
+  const current = RANK_TITLES[idx];
+  const next = RANK_TITLES[idx - 1];
+  const span = next.min - current.min;
+  if (span <= 0) return 100;
+  return Math.min(100, Math.max(0, ((pts - current.min) / span) * 100));
+};
+
 export const PvPPage = () => {
   const { record, getMatchOpponents, recordWin, recordLoss, battleHistory, checkDailyRefresh } = useArenaStore();
   const { getActiveParty } = usePartyStore();
@@ -232,7 +246,7 @@ export const PvPPage = () => {
           </div>
           <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
             <div className="h-full rounded-full transition-all"
-              style={{ width: `${Math.min(100, ((record.points % 500) / 500) * 100)}%`, background: `linear-gradient(90deg, ${rankTitle.color}88, ${rankTitle.color})` }} />
+              style={{ width: `${getRankProgressPct(record.points)}%`, background: `linear-gradient(90deg, ${rankTitle.color}88, ${rankTitle.color})` }} />
           </div>
         </div>
       )}
