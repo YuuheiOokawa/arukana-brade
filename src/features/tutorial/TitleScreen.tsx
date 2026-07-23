@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { useTutorialStore } from '../../stores/tutorialStore';
 import { usePlayerStore } from '../../stores/playerStore';
-
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL ?? 'yuuheiookawa@gmail.com';
+import { ADMIN_EMAIL } from '../../utils/admin';
 
 type TitlePhase = 'loading' | 'tap' | 'menu';
 

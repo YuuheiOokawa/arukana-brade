@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { ArenaRecord, ArenaOpponent } from '../types';
 import { UNIT_MASTER } from '../data/units';
 import { localDateStr } from '../utils/dateUtils';
+import { RANK_TITLES } from '../data/arenaRank';
 
 const ARENA_OPPONENTS: ArenaOpponent[] = [
   { id: 'ao_1', playerName: '紅蓮の剣士',   playerRank: 15, power: 25000, leaderUnitMasterId: 'unit_001', leaderUnitLevel: 40, leaderUnitAwakenRank: 2, arenaPoints: 1850 },
@@ -31,7 +32,9 @@ interface ArenaStore {
   battleHistory: { timestamp: number; opponentName: string; won: boolean; points: number }[];
   refreshOpponents: () => void;
   checkDailyRefresh: () => void;
-  recordWin: (opponentId: string) => ArenaBattleResult;
+  // isAdmin: 管理用アカウントでは勝利ごとに階級(RANK_TITLES)を必ず1段階だけ進める
+  // (全100階級のデザイン/表示確認を素早く行うためのQA用ショートカット)
+  recordWin: (opponentId: string, isAdmin?: boolean) => ArenaBattleResult;
   recordLoss: (opponentId: string) => ArenaBattleResult;
   getMatchOpponents: () => ArenaOpponent[];
 }
@@ -74,15 +77,26 @@ export const useArenaStore = create<ArenaStore>()(
           .slice(0, 3);
       },
 
-      recordWin: (opponentId) => {
+      recordWin: (opponentId, isAdmin = false) => {
         const opponent = get().opponents.find(o => o.id === opponentId);
         const pointsGained = opponent ? Math.floor(20 + (opponent.arenaPoints - get().record.points) * 0.1) : 20;
         const safePtsGain = Math.max(10, Math.min(50, pointsGained));
         const goldReward = 500 + safePtsGain * 10;
         const diamondReward = safePtsGain > 30 ? 5 : 0;
 
+        let actualPointsGained = safePtsGain;
         set(s => {
-          const newPoints = s.record.points + safePtsGain;
+          let newPoints: number;
+          if (isAdmin) {
+            // RANK_TITLES は min 降順ソート済み。直上の階級(1つ小さいindex)の
+            // 閾値まで一気に引き上げることで、勝利1回=階級1つ分の前進にする
+            const idx = RANK_TITLES.findIndex(r => s.record.points >= r.min);
+            const nextTier = idx > 0 ? RANK_TITLES[idx - 1] : null;
+            newPoints = nextTier ? nextTier.min : s.record.points;
+          } else {
+            newPoints = s.record.points + safePtsGain;
+          }
+          actualPointsGained = newPoints - s.record.points;
           const newRank = Math.max(1, s.record.rank - 1);
           return {
             record: { ...s.record, wins: s.record.wins + 1, points: newPoints, rank: newRank },
@@ -91,13 +105,13 @@ export const useArenaStore = create<ArenaStore>()(
                 timestamp: Date.now(),
                 opponentName: opponent?.playerName ?? '???',
                 won: true,
-                points: safePtsGain,
+                points: actualPointsGained,
               },
               ...s.battleHistory,
             ].slice(0, 20),
           };
         });
-        return { won: true, pointsGained: safePtsGain, goldReward, diamondReward };
+        return { won: true, pointsGained: actualPointsGained, goldReward, diamondReward };
       },
 
       recordLoss: (opponentId) => {
