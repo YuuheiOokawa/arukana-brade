@@ -127,9 +127,12 @@ export const EnhancePage = () => {
     if (!ok) { setMessage('進化できません'); return; }
     for (const mat of mats) useItem(mat.itemId, mat.quantity);
     spendGold(goldCost);
-    saveImmediately();
     addDailyProgress('enhance');
     addWeeklyProgress('enhance');
+    // この操作に関わる状態更新がすべて終わってから保存する
+    // (以前は addDailyProgress/addWeeklyProgress より前に呼んでいたため、
+    //  即時保存に間に合わずミッション進捗がデバウンス保存待ちになっていた)
+    saveImmediately();
     setMessage(`✨ ${getStarDisplay(nextR!)} に進化！`);
     setTimeout(() => setMessage(''), 2500);
   };
