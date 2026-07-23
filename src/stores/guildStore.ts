@@ -45,6 +45,7 @@ interface GuildStore {
   lastGuildMissionReset: string;
   guildChatMessages: { sender: string; text: string; timestamp: number }[];
   createGuild: (name: string, emblem: string, playerName: string) => void;
+  hydrateGuildFromServer: (apiGuild: { id: string; name: string; emblem: string; description: string; level: number; exp: number }, playerName: string) => void;
   leaveGuild: () => void;
   addGuildExp: (amount: number) => void;
   updateGuildMissionProgress: (type: 'battle' | 'exp' | 'raid', count?: number) => void;
@@ -94,6 +95,34 @@ export const useGuildStore = create<GuildStore>()(
         });
       },
 
+      // サーバーに既存のギルドがある場合の同期用。createGuild は常に level:1/exp:0 の
+      // 新規ギルドとして作ってしまうため、既存ギルドの再読み込み時にこれを使うと
+      // サーバー側で積み上げたレベル・経験値が毎回1/0にリセットされて見えるバグがあった
+      // (メンバーの実名/戦力はサーバーAPIが持っていないため引き続きダミーで補完する)
+      hydrateGuildFromServer: (apiGuild, playerName) => {
+        const playerMember: GuildMember = {
+          id: 'player',
+          name: playerName,
+          rank: 1,
+          power: 0,
+          role: 'master',
+          joinedAt: Date.now(),
+          isPlayer: true,
+        };
+        set({
+          guild: {
+            id: apiGuild.id,
+            name: apiGuild.name,
+            emblem: apiGuild.emblem,
+            description: apiGuild.description,
+            level: apiGuild.level,
+            exp: apiGuild.exp,
+            members: [playerMember, ...DUMMY_MEMBERS.slice(0, 4)],
+            createdAt: Date.now(),
+          },
+        });
+      },
+
       leaveGuild: () => set({ guild: null }),
 
       addGuildExp: (amount) => {
@@ -115,13 +144,20 @@ export const useGuildStore = create<GuildStore>()(
       },
 
       updateGuildMissionProgress: (type, count = 1) => {
-        set(s => ({
-          guildMissions: s.guildMissions.map(m =>
-            m.type === type && !m.claimed && m.progress < m.target
-              ? { ...m, progress: Math.min(m.target, m.progress + count) }
-              : m
-          ),
-        }));
+        set(s => {
+          // addGuildExp 同様、ギルド未所属なら進捗を進めない
+          // (以前はガードがなく、ギルドに入る前に達成したクエスト/バトル回数が
+          //  そのままギルドミッションの進捗としてカウントされ、加入直後に
+          //  未貢献のミッション報酬を受け取れてしまっていた)
+          if (!s.guild) return {};
+          return {
+            guildMissions: s.guildMissions.map(m =>
+              m.type === type && !m.claimed && m.progress < m.target
+                ? { ...m, progress: Math.min(m.target, m.progress + count) }
+                : m
+            ),
+          };
+        });
       },
 
       checkAndResetGuildMissions: () => {

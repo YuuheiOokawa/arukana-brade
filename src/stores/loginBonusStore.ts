@@ -79,10 +79,14 @@ export const useLoginBonusStore = create<LoginBonusStore>()(
         const { canClaim, currentDay, claimedDays } = get();
         if (!canClaim()) return null;
         const reward = LOGIN_BONUS_SCHEDULE.find(d => d.day === currentDay) ?? LOGIN_BONUS_SCHEDULE[0];
-        const nextDay = currentDay >= 30 ? 1 : currentDay + 1;
+        const cycleEnds = currentDay >= 30;
+        const nextDay = cycleEnds ? 1 : currentDay + 1;
         set({
           lastClaimedDate: today(),
-          claimedDays: [...claimedDays, currentDay],
+          // 30日サイクルが終わったら claimedDays をリセットする。
+          // リセットしないと2周目以降、カレンダーの1〜30日目が(前周期分の記録のせいで)
+          // 常に「受取済み」表示になり、当日マスも含めて全マス済マークが付いてしまっていた。
+          claimedDays: cycleEnds ? [] : [...claimedDays, currentDay],
           currentDay: nextDay,
         });
         return reward;

@@ -4,9 +4,11 @@ import { usePlayerStore } from '../../stores/playerStore';
 import { useMissionStore } from '../../stores/missionStore';
 import { useLoginBonusStore } from '../../stores/loginBonusStore';
 import { useGiftStore } from '../../stores/giftStore';
+import { useArenaStore } from '../../stores/arenaStore';
 import { getActiveEvents, getActiveRaids } from '../../data/events';
 import { formatCompact } from '../../utils/format';
 import { RANK_EXP_TABLE } from '../../stores/playerStore';
+import { getRankTitle, getArenaFrameStyle } from '../../data/arenaRank';
 import {
   IconSword, IconTeam, IconCrystal, IconArrowUp,
   IconGear, IconShield, IconDragon, IconScroll,
@@ -63,6 +65,9 @@ export const HomePage = () => {
   const missionPending   = missionCompleted - missionClaimed;
   const rankExpNeeded = RANK_EXP_TABLE[player.rank - 1] ?? 9999;
   const expPercent = Math.min(100, (player.exp / rankExpNeeded) * 100);
+  const arenaPoints = useArenaStore(s => s.record.points);
+  const arenaTitle = getRankTitle(arenaPoints);
+  const arenaFrame = getArenaFrameStyle(arenaPoints);
 
   return (
     <div className="min-h-screen pb-28 relative overflow-hidden">
@@ -116,13 +121,14 @@ export const HomePage = () => {
         }}>ARCANA BLADE</h1>
       </div>
 
-      {/* プレイヤー情報パネル */}
+      {/* プレイヤー情報パネル (アリーナ階級が上がるほど枠が豪華になる) */}
       <div className="px-4 mb-3">
-        <div className="rounded-2xl overflow-hidden relative"
+        <div className={`rounded-2xl overflow-hidden relative ${arenaFrame.rainbow ? 'summon-rainbow-border' : ''}`}
           style={{
-            background: 'linear-gradient(145deg, rgba(22,12,55,0.96) 0%, rgba(14,8,36,0.98) 100%)',
-            border: '1px solid rgba(139,92,246,0.35)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)',
+            background: arenaFrame.background ?? 'linear-gradient(145deg, rgba(22,12,55,0.96) 0%, rgba(14,8,36,0.98) 100%)',
+            border: arenaFrame.border,
+            boxShadow: arenaFrame.boxShadow,
+            transition: 'border-color 0.4s, box-shadow 0.4s',
           }}>
           {/* 装飾ライン */}
           <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, transparent, #7c3aed, #a855f7, transparent)' }} />
@@ -133,6 +139,12 @@ export const HomePage = () => {
                 <p className="text-[10px] font-bold tracking-widest mb-0.5" style={{ color: '#6b7280' }}>SUMMONER</p>
                 <p className="text-xl font-black text-white leading-none">{player.name}</p>
                 {player.title && <p className="text-xs mt-0.5 truncate max-w-[180px]" style={{ color: '#a78bfa' }}>{player.title}</p>}
+                <button onClick={() => navigate('/pvp')}
+                  className="mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 active:scale-95 transition-all"
+                  style={{ background: `${arenaTitle.color}22`, border: `1px solid ${arenaTitle.color}55` }}>
+                  <span className="text-[10px]">🏆</span>
+                  <span className="text-[10px] font-bold truncate max-w-[150px]" style={{ color: arenaTitle.color }}>{arenaTitle.label}</span>
+                </button>
               </div>
               <div className="text-center">
                 <div className="rounded-xl px-3 py-1.5" style={{ background: 'linear-gradient(135deg, rgba(240,192,64,0.15), rgba(217,119,6,0.1))', border: '1px solid rgba(240,192,64,0.3)' }}>

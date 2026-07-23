@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useUnitStore } from '../../stores/unitStore';
 import { useAchievementStore } from '../../stores/achievementStore';
+import { useArenaStore } from '../../stores/arenaStore';
 import { ACHIEVEMENTS } from '../../data/achievements';
 import { getUnitMaster } from '../../data/units';
 import { TopBar } from '../../components/layout/TopBar';
@@ -12,6 +14,7 @@ import type { StarRarity } from '../../types';
 import { TitlePlate, FrameDecoration } from '../../components/ui/game/UIDecorations';
 import { UnitIcon } from '../../components/ui/UnitCard';
 import { resolveUnitImage } from '../../lib/unitImage';
+import { getRankTitle, getArenaFrameStyle } from '../../data/arenaRank';
 
 const TITLES = [
   '駆け出しの勇者', '炎の剣士', '水の守護者', '風の疾走者',
@@ -20,9 +23,13 @@ const TITLES = [
 ];
 
 export const ProfilePage = () => {
+  const navigate = useNavigate();
   const { player, updateProfile, addDiamond } = usePlayerStore();
   const { ownedUnits } = useUnitStore();
   const { isClaimed, claim } = useAchievementStore();
+  const arenaPoints = useArenaStore(s => s.record.points);
+  const arenaTitle = getRankTitle(arenaPoints);
+  const arenaFrame = getArenaFrameStyle(arenaPoints);
   const [achToast, setAchToast] = useState('');
 
   const handleClaimAchievement = (id: string, label: string, reward: number) => {
@@ -81,12 +88,13 @@ export const ProfilePage = () => {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 h-48 opacity-20 pointer-events-none"
           style={{ width: 'min(384px, 100vw)', background: 'radial-gradient(ellipse at 50% 0%, #8b5cf6, transparent 70%)' }} />
 
-        {/* ===== プロフィールカード ===== */}
+        {/* ===== プロフィールカード (アリーナ階級が上がるほど枠が豪華になる) ===== */}
         <div className="px-4 pt-4 mb-4">
-          <div className="rounded-2xl overflow-hidden" style={{
-            background: 'linear-gradient(145deg, rgba(20,8,50,0.97), rgba(8,8,24,0.98))',
-            border: '1px solid rgba(139,92,246,0.3)',
-            boxShadow: '0 8px 32px rgba(139,92,246,0.15), 0 2px 8px rgba(0,0,0,0.5)',
+          <div className={`rounded-2xl overflow-hidden relative ${arenaFrame.rainbow ? 'summon-rainbow-border' : ''}`} style={{
+            background: arenaFrame.background ?? 'linear-gradient(145deg, rgba(20,8,50,0.97), rgba(8,8,24,0.98))',
+            border: arenaFrame.border,
+            boxShadow: arenaFrame.boxShadow,
+            transition: 'border-color 0.4s, box-shadow 0.4s',
           }}>
             {/* カードヘッダー帯 */}
             <div className="h-20 relative" style={{
@@ -118,12 +126,12 @@ export const ProfilePage = () => {
             <div className="px-4 pb-4">
               {/* アバター + 基本情報 */}
               <div className="flex items-end gap-4 -mt-8 mb-4">
-                {/* アバターフレーム */}
-                <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-black relative flex-shrink-0"
+                {/* アバターフレーム (アリーナ階級の色で縁取り) */}
+                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-black relative flex-shrink-0 ${arenaFrame.rainbow ? 'summon-rainbow-border' : ''}`}
                   style={{
                     background: 'linear-gradient(135deg, #2e1065, #7c3aed)',
-                    border: '2px solid rgba(139,92,246,0.7)',
-                    boxShadow: '0 0 20px rgba(139,92,246,0.4)',
+                    border: `2px solid ${arenaTitle.color}b0`,
+                    boxShadow: `0 0 20px ${arenaTitle.color}66`,
                   }}>
                   {(player.name[0] ?? '?').toUpperCase()}
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs"
@@ -134,11 +142,16 @@ export const ProfilePage = () => {
 
                 <div className="flex-1 min-w-0 pt-8">
                   <h2 className="text-white font-black text-xl leading-tight truncate">{player.name}</h2>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <span className="text-xs px-2 py-0.5 rounded-full font-bold"
                       style={{ background: 'rgba(139,92,246,0.25)', border: '1px solid rgba(139,92,246,0.5)', color: '#c4b5fd' }}>
                       ◆ {title}
                     </span>
+                    <button onClick={() => navigate('/pvp')}
+                      className="text-xs px-2 py-0.5 rounded-full font-bold active:scale-95 transition-all"
+                      style={{ background: `${arenaTitle.color}22`, border: `1px solid ${arenaTitle.color}66`, color: arenaTitle.color }}>
+                      🏆 {arenaTitle.label}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -224,6 +237,9 @@ export const ProfilePage = () => {
           <div className="grid grid-cols-2 gap-3 mt-3">
             <StatCard label="プレイヤーランク" value={`Rank ${player.rank}`} accent="#f97316" />
             <StatCard label="所持ゴールド" value={formatNumber(player.gold)} accent="#eab308" />
+          </div>
+          <div className="grid grid-cols-1 gap-3 mt-3">
+            <StatCard label="アリーナ階級" value={`${arenaTitle.label} (${arenaPoints.toLocaleString()}pt)`} accent={arenaTitle.color} />
           </div>
         </div>
 

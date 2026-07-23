@@ -85,8 +85,12 @@ export const ITEM_MASTER: ItemMaster[] = [
   { id: 'item_dragon_heart',     name: 'ドラゴンハート',     description: '龍の心臓。最強の装備素材',         category: 'material',        emoji: '🫀', sellPrice: 3000 },
 
   // ===== ログインボーナス =====
-  { id: 'item_login_day1',       name: 'ログインギフト(初日)', description: '初回ログインのプレゼント',       category: 'stamina',         emoji: '🎁', sellPrice: 0 },
-  { id: 'item_login_weekly',     name: '週間ログインボーナス', description: '7日間ログインした報酬',          category: 'stamina',         emoji: '🎁', sellPrice: 0 },
+  // category は 'stamina' ではなく 'material' にしている点に注意:
+  // 'stamina' 扱いだとアイテム画面で「使用」ボタンが表示されるが、
+  // handleUseItem 側はスタミナ系3種のIDしか処理しないため、押しても
+  // 個数だけ消費されて何の効果も出ない(サイレント消滅)バグになる。
+  { id: 'item_login_day1',       name: 'ログインギフト(初日)', description: '初回ログインのプレゼント',       category: 'material',        emoji: '🎁', sellPrice: 0 },
+  { id: 'item_login_weekly',     name: '週間ログインボーナス', description: '7日間ログインした報酬',          category: 'material',        emoji: '🎁', sellPrice: 0 },
 
   // ===== 追加経験値ポーション =====
   { id: 'item_exp_xxl',          name: '経験値の雫(超特大)', description: '経験値100000を獲得する最高位のポーション', category: 'exp_potion', emoji: '🌟', sellPrice: 5000 },

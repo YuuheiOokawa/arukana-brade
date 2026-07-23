@@ -15,10 +15,11 @@ import { useMissionStore } from '../stores/missionStore';
 import { useLoginBonusStore } from '../stores/loginBonusStore';
 import { useTutorialStore } from '../stores/tutorialStore';
 import { useArenaStore } from '../stores/arenaStore';
-import { useRaidStore } from '../stores/raidStore';
+import { useRaidStore, getDefaultRaidStates } from '../stores/raidStore';
 import { useAchievementStore } from '../stores/achievementStore';
 import { useCollectionStore } from '../stores/collectionStore';
 import { useGiftStore } from '../stores/giftStore';
+import { useGuildStore, GUILD_MISSIONS } from '../stores/guildStore';
 import type { PlayerData, OwnedItem, OwnedUnit, OwnedEquipment } from '../types';
 import type { GameDataResponse } from '../stores/authStore';
 import { getUnitMaster, calcUnitStats } from '../data/units';
@@ -56,6 +57,7 @@ export const collectGameState = () => {
   const ach = useAchievementStore.getState();
   const col = useCollectionStore.getState();
   const gift = useGiftStore.getState();
+  const guild = useGuildStore.getState();
 
   return {
     // playerStore
@@ -97,6 +99,12 @@ export const collectGameState = () => {
     collectionDiscoveredEquips: col.discoveredEquips,
     // giftStore（プレゼント受取記録）
     giftClaimedIds: gift.claimedIds,
+    // guildStore（ギルドミッション進捗・チャットは今までサーバーに一切保存されず
+    //  端末のlocalStorageのみに存在していたため、機種変更やストレージ消去で
+    //  未受取のミッション進捗が完全に失われてしまっていた）
+    guildMissions: guild.guildMissions,
+    guildChatMessages: guild.guildChatMessages,
+    guildLastMissionReset: guild.lastGuildMissionReset,
     // メタ
     savedAt: Date.now(),
   };
@@ -359,6 +367,15 @@ export const hydrateFromGameState = (
       if (playerMiscData.stageStars && typeof playerMiscData.stageStars === 'object' && !Array.isArray(playerMiscData.stageStars)) {
         useQuestStore.setState({ stageStars: playerMiscData.stageStars as Record<string, number> });
       }
+      if (Array.isArray(playerMiscData.guildMissions)) {
+        useGuildStore.setState({
+          guildMissions: playerMiscData.guildMissions as ReturnType<typeof useGuildStore.getState>['guildMissions'],
+          guildChatMessages: Array.isArray(playerMiscData.guildChatMessages)
+            ? playerMiscData.guildChatMessages as ReturnType<typeof useGuildStore.getState>['guildChatMessages']
+            : [],
+          lastGuildMissionReset: typeof playerMiscData.guildLastMissionReset === 'string' ? playerMiscData.guildLastMissionReset : '',
+        });
+      }
     }
 
   } else {
@@ -489,6 +506,11 @@ export const resetAllStores = () => {
   useAchievementStore.setState({ claimed: [] });
   useCollectionStore.setState({ discovered: [], discoveredEquips: [] });
   useGiftStore.setState({ claimedIds: [] });
+  // guild/raid は他ストアと違い resetAllStores から漏れていたため、共有端末で
+  // 別アカウントに切り替えても前のアカウントのギルド(未受取ミッション報酬・チャット含む)や
+  // レイドボスの被ダメージ状態がそのまま残ってしまうバグがあった。
+  useRaidStore.setState({ raidStates: getDefaultRaidStates() });
+  useGuildStore.setState({ guild: null, guildMissions: GUILD_MISSIONS, lastGuildMissionReset: '', guildChatMessages: [] });
   setTimeout(() => { isHydrating = false; }, 300);
 };
 
@@ -507,6 +529,11 @@ export const initAutoSave = () => {
     useAchievementStore.subscribe(() => scheduleSave(500)),  // 報酬受取は早めに保存（二重受取防止）
     useCollectionStore.subscribe(() => scheduleSave(2000)),
     useGiftStore.subscribe(() => scheduleSave(500)),         // 報酬受取は早めに保存（二重受取防止）
+    // 以前は raidStore/guildStore の変化を購読しておらず、他ストアの変化に
+    // 便乗してたまたま保存されるかに依存していた（レイドダメージ直後に他の
+    // ストアが一切変化しないケースでは未保存のまま取り残される）。明示的に購読する。
+    useRaidStore.subscribe(() => scheduleSave(1000)),
+    useGuildStore.subscribe(() => scheduleSave(2000)),
   ];
   return () => unsubs.forEach(u => u());
 };

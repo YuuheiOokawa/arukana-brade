@@ -11,61 +11,9 @@ import { elementGradient } from '../../utils/elementUtils';
 import { calcTotalPower } from '../../utils/format';
 import type { ArenaOpponent } from '../../types';
 import { ELEMENT_ADVANTAGE } from '../../types';
+import { getRankTitle, getRankProgressPct, getPointsToNextRank, RANK_TITLES } from '../../data/arenaRank';
 
 type Phase = 'list' | 'confirm' | 'battle' | 'result';
-
-// アリーナ階級名 (No.1〜100、下位→上位の順)
-const RANK_NAMES: string[] = [
-  '名もなき挑戦者', '駆け出しの闘士', '見習い剣士', '若き戦士', '戦場の新星',
-  '鉄刃の戦士', '鋼刃の戦士', '疾風の戦士', '猛炎の戦士', '百戦の闘士',
-  '青銅の剣士', '白銀の剣士', '黄金の剣士', '紅蓮の剣士', '蒼天の剣士',
-  '烈火の闘士', '疾風の闘士', '雷鳴の闘士', '氷刃の闘士', '歴戦の猛者',
-  '剣豪', '剣鬼', '剣聖', '武豪', '武神の候補者',
-  '紅蓮の騎士', '蒼穹の騎士', '雷光の騎士', '黒炎の騎士', '白銀の騎士王',
-  '戦場の英雄', '千刃の英雄', '万軍の英雄', '不敗の英雄', '救世の英雄',
-  '覇道の将', '天翔の将', '破軍の将', '無双の将', '天下無双',
-  '覇王の剣', '覇王の盾', '覇王の翼', '覇王の魂', '覇王',
-  '皇剣の覇者', '皇天の覇者', '皇龍の覇者', '皇帝', '天上の覇者',
-  '天剣の闘将', '天槍の闘将', '天翼の闘将', '天雷の闘将', '天焔の闘将',
-  '聖域の守護者', '聖剣の継承者', '聖戦の覇者', '聖天の英雄', '神域への挑戦者',
-  '神剣の使徒', '神槍の使徒', '神翼の使徒', '神雷の使徒', '神焔の使徒',
-  '六星の守護者', '七星の守護者', '八星の守護者', '九星の守護者', '十星の覇者',
-  '星界の騎士', '星界の将軍', '星界の王', '星界の皇帝', '星界の覇帝',
-  '天界の征服者', '神界の征服者', '魔界の征服者', '三界の征服者', '世界の覇者',
-  '運命を斬る者', '因果を断つ者', '時を超える者', '次元を裂く者', '理を超える者',
-  '神殺し', '神々の天敵', '神域の破壊者', '神話の超越者', '終焉を超えし者',
-  '原初の戦神', '永劫の戦神', '無限の戦神', '創世の戦神', '終焉の戦神',
-  'アルカナの超越者', 'アルカナの支配者', 'アルカナの覇神', '唯一無二の神話', 'ARCANA BLADE',
-];
-// 10ランクごとのブロック単位で必要ポイントの増分(step)を上げていく（最終ランクのみ単独）
-const RANK_BLOCKS: { color: string; step: number; count: number }[] = [
-  { color: '#9ca3af', step: 100,  count: 10 }, // 1-10
-  { color: '#b45309', step: 150,  count: 10 }, // 11-20
-  { color: '#94a3b8', step: 200,  count: 10 }, // 21-30
-  { color: '#f59e0b', step: 300,  count: 10 }, // 31-40
-  { color: '#e2e8f0', step: 400,  count: 10 }, // 41-50
-  { color: '#60a5fa', step: 500,  count: 10 }, // 51-60
-  { color: '#a855f7', step: 700,  count: 10 }, // 61-70
-  { color: '#c4b5fd', step: 900,  count: 10 }, // 71-80
-  { color: '#f97316', step: 1200, count: 10 }, // 81-90
-  { color: '#ec4899', step: 2000, count: 9  }, // 91-99
-  { color: '#fff8e0', step: 0,    count: 1  }, // 100 (ARCANA BLADE)
-];
-const RANK_TITLES: { min: number; label: string; color: string }[] = (() => {
-  const result: { min: number; label: string; color: string }[] = [];
-  let cur = 0;
-  let idx = 0;
-  for (const block of RANK_BLOCKS) {
-    for (let i = 0; i < block.count; i++) {
-      result.push({ min: cur, label: RANK_NAMES[idx] ?? `階級${idx + 1}`, color: block.color });
-      idx++;
-      cur += block.step;
-    }
-  }
-  return result.sort((a, b) => b.min - a.min);
-})();
-
-const getRankTitle = (pts: number) => RANK_TITLES.find(r => pts >= r.min) ?? RANK_TITLES[RANK_TITLES.length - 1];
 
 export const PvPPage = () => {
   const { record, getMatchOpponents, recordWin, recordLoss, battleHistory, checkDailyRefresh } = useArenaStore();
@@ -80,6 +28,7 @@ export const PvPPage = () => {
   const [battleLog, setBattleLog] = useState<string[]>([]);
   const [result, setResult] = useState<{ won: boolean; pointsGained: number; gold: number; diamond: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showRankList, setShowRankList] = useState(false);
 
   useEffect(() => {
     try {
@@ -204,6 +153,7 @@ export const PvPPage = () => {
   };
 
   const rankTitle = getRankTitle(record.points);
+  const pointsToNext = getPointsToNextRank(record.points);
 
   return (
     <div className="min-h-screen pb-28">
@@ -232,7 +182,17 @@ export const PvPPage = () => {
           </div>
           <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
             <div className="h-full rounded-full transition-all"
-              style={{ width: `${Math.min(100, ((record.points % 500) / 500) * 100)}%`, background: `linear-gradient(90deg, ${rankTitle.color}88, ${rankTitle.color})` }} />
+              style={{ width: `${getRankProgressPct(record.points)}%`, background: `linear-gradient(90deg, ${rankTitle.color}88, ${rankTitle.color})` }} />
+          </div>
+          <div className="flex items-center justify-between mt-1.5">
+            <p className="text-gray-500 text-xs">
+              {pointsToNext !== null ? <>次のランクまで あと <span className="font-bold" style={{ color: rankTitle.color }}>{pointsToNext.toLocaleString()}</span> pt</> : '👑 最上位ランクに到達済み'}
+            </p>
+            <button onClick={() => setShowRankList(true)}
+              className="text-purple-400 text-xs px-2.5 py-1 rounded-lg active:scale-95 transition-all flex-shrink-0"
+              style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)' }}>
+              階級一覧
+            </button>
           </div>
         </div>
       )}
@@ -381,6 +341,54 @@ export const PvPPage = () => {
                 再挑戦
               </GameButton>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── 階級一覧モーダル ── */}
+      {showRankList && (
+        <div className="fixed inset-0 z-[60] flex items-end" style={{ background: 'rgba(0,0,0,0.75)' }}
+          onClick={e => { if (e.target === e.currentTarget) setShowRankList(false); }}>
+          <div className="w-full max-w-lg mx-auto rounded-t-3xl flex flex-col" style={{
+            background: 'linear-gradient(180deg, #1a0838 0%, #0d0620 100%)',
+            border: '1px solid rgba(139,92,246,0.4)',
+            maxHeight: '85vh',
+          }}>
+            <div className="px-5 pt-5 pb-3 flex-shrink-0">
+              <div className="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-4" />
+              <p className="text-white font-black text-center">🏆 アリーナ階級一覧</p>
+              <p className="text-gray-500 text-xs text-center mt-1">現在: {record.points.toLocaleString()} pt</p>
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-1">
+              {[...RANK_TITLES].sort((a, b) => a.min - b.min).map((t, i) => {
+                const rankNo = i + 1;
+                const isCurrent = t.label === rankTitle.label && t.min === rankTitle.min;
+                const achieved = record.points >= t.min;
+                return (
+                  <div key={`${rankNo}_${t.min}`}
+                    className="flex items-center gap-3 px-3 py-2 rounded-xl"
+                    style={{
+                      background: isCurrent ? `${t.color}22` : achieved ? 'rgba(255,255,255,0.03)' : 'transparent',
+                      border: isCurrent ? `1px solid ${t.color}88` : '1px solid transparent',
+                    }}>
+                    <span className="text-gray-600 text-[10px] font-bold w-8 flex-shrink-0">No.{rankNo}</span>
+                    <span className="flex-1 min-w-0 text-sm font-bold truncate"
+                      style={{ color: achieved ? t.color : '#4b5563' }}>{t.label}</span>
+                    <span className="text-[10px] flex-shrink-0" style={{ color: achieved ? '#9ca3af' : '#374151' }}>
+                      {t.min.toLocaleString()} pt〜
+                    </span>
+                    {isCurrent && <span className="text-[9px] font-black flex-shrink-0" style={{ color: t.color }}>現在</span>}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="px-5 py-4 flex-shrink-0" style={{ borderTop: '1px solid rgba(100,80,140,0.2)' }}>
+              <button onClick={() => setShowRankList(false)}
+                className="w-full py-3 rounded-xl text-sm font-bold text-gray-400"
+                style={{ background: 'rgba(40,30,60,0.6)', border: '1px solid rgba(100,80,140,0.3)' }}>
+                閉じる
+              </button>
+            </div>
           </div>
         </div>
       )}
