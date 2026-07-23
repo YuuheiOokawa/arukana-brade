@@ -73,7 +73,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
     if (!user?.player) return res.status(404).json({ error: 'Player not found' });
 
-    const { player, gameData } = serializePlayerData(user.player);
+    // セッションCookie(30日有効)による自動ログインでは、以前は loginDays を
+    // 一切更新していなかった。資格情報を毎回入力し直すユーザーは稀なため、
+    // 実質「初回ログイン後は二度と増えない」状態になり、ログイン日数系の
+    // 実績が達成不能になっていた。POSTログインと同じ日付チェックをここにも適用する。
+    let playerData = user.player;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const lastLogin = new Date(playerData.lastLoginAt); lastLogin.setHours(0, 0, 0, 0);
+    if (lastLogin < today) {
+      playerData = await prisma.player.update({
+        where: { playerId: playerData.playerId },
+        data: { loginDays: { increment: 1 }, lastLoginAt: new Date() },
+        include: PLAYER_INCLUDE,
+      });
+    }
+
+    const { player, gameData } = serializePlayerData(playerData);
     return res.status(200).json({ user: { id: user.id, email: user.email }, player, gameData });
   }
 

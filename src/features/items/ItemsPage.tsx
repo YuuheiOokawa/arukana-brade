@@ -33,7 +33,7 @@ const CATEGORIES: { id: Category; label: string; emoji: string }[] = [
 export const ItemsPage = () => {
   const { player, items, useItem, addGold } = usePlayerStore();
   const { ownedUnits, levelUpUnit } = useUnitStore();
-  const { addDailyProgress } = useMissionStore();
+  const { addDailyProgress, addWeeklyProgress } = useMissionStore();
   const [activeCategory, setActiveCategory] = useState<Category>('all');
   const [toast, setToast] = useState<string | null>(null);
   const [expModal, setExpModal] = useState<{ itemId: string; exp: number; name: string } | null>(null);
@@ -108,6 +108,7 @@ export const ItemsPage = () => {
     if (!ok) { showToast('アイテムが足りません'); setExpModal(null); return; }
     levelUpUnit(unitInstanceId, expModal.exp);
     addDailyProgress('enhance');
+    addWeeklyProgress('enhance');
     const m = getUnitMaster(unit.masterId);
     showToast(`${m?.emoji ?? '✨'} ${m?.name ?? 'ユニット'} に EXP +${expModal.exp.toLocaleString()}！`);
     setExpModal(null);

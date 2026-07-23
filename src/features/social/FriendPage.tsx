@@ -39,6 +39,8 @@ export const FriendPage = () => {
   const [addResult, setAddResult] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  // 承認/拒否/削除の二重タップ防止(処理中のrequestId/arcanaPlayerIdを保持)
+  const [pendingActions, setPendingActions] = useState<Set<string>>(new Set());
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -99,7 +101,18 @@ export const FriendPage = () => {
     }
   };
 
-  const handleAccept = async (requestId: string, name: string) => {
+  // requestId/arcanaPlayerId をキーに処理中フラグを立て、完了後に必ず外す
+  const withPending = async (key: string, fn: () => Promise<void>) => {
+    if (pendingActions.has(key)) return; // 二重タップ防止
+    setPendingActions(prev => new Set(prev).add(key));
+    try {
+      await fn();
+    } finally {
+      setPendingActions(prev => { const next = new Set(prev); next.delete(key); return next; });
+    }
+  };
+
+  const handleAccept = (requestId: string, name: string) => withPending(requestId, async () => {
     try {
       const res = await fetch('/api/actions', {
         method: 'POST',
@@ -110,35 +123,49 @@ export const FriendPage = () => {
       if (res.ok) {
         showToast(`${name} とフレンドになりました！`);
         void fetchFriends();
+      } else {
+        showToast('承認に失敗しました。もう一度お試しください');
+        void fetchFriends();
       }
-    } catch { /* offline */ }
-  };
+    } catch {
+      showToast('ネットワークエラーが発生しました');
+    }
+  });
 
-  const handleReject = async (requestId: string) => {
+  const handleReject = (requestId: string) => withPending(requestId, async () => {
     try {
-      await fetch('/api/actions', {
+      const res = await fetch('/api/actions', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'friend_reject', requestId }),
       });
+      if (!res.ok) showToast('拒否に失敗しました。もう一度お試しください');
       void fetchFriends();
-    } catch { /* offline */ }
-  };
+    } catch {
+      showToast('ネットワークエラーが発生しました');
+    }
+  });
 
-  const handleDelete = async (arcanaPlayerId: string, name: string) => {
+  const handleDelete = (arcanaPlayerId: string, name: string) => withPending(arcanaPlayerId, async () => {
     if (!window.confirm(`${name} をフレンドから削除しますか？`)) return;
     try {
-      await fetch('/api/actions', {
+      const res = await fetch('/api/actions', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'friend_delete', arcanaPlayerId }),
       });
-      showToast(`${name} をフレンドから削除しました`);
+      if (res.ok) {
+        showToast(`${name} をフレンドから削除しました`);
+      } else {
+        showToast('削除に失敗しました。もう一度お試しください');
+      }
       void fetchFriends();
-    } catch { /* offline */ }
-  };
+    } catch {
+      showToast('ネットワークエラーが発生しました');
+    }
+  });
 
   const pendingCount = receivedRequests.length;
 
@@ -223,7 +250,8 @@ export const FriendPage = () => {
                   </div>
                   <button
                     onClick={() => void handleDelete(f.arcanaPlayerId, f.playerName)}
-                    className="text-gray-500 hover:text-red-400 text-xs px-3 py-2 rounded-lg transition-colors active:scale-95 flex-shrink-0"
+                    disabled={pendingActions.has(f.arcanaPlayerId)}
+                    className="text-gray-500 hover:text-red-400 text-xs px-3 py-2 rounded-lg transition-colors active:scale-95 flex-shrink-0 disabled:opacity-40"
                     style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
                     削除
                   </button>
@@ -258,10 +286,12 @@ export const FriendPage = () => {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <GameButton variant="primary" size="sm" fullWidth onClick={() => void handleAccept(req.requestId, req.fromPlayerName)}>
+                        <GameButton variant="primary" size="sm" fullWidth disabled={pendingActions.has(req.requestId)}
+                          onClick={() => void handleAccept(req.requestId, req.fromPlayerName)}>
                           承認
                         </GameButton>
-                        <GameButton variant="secondary" size="sm" fullWidth onClick={() => void handleReject(req.requestId)}>
+                        <GameButton variant="secondary" size="sm" fullWidth disabled={pendingActions.has(req.requestId)}
+                          onClick={() => void handleReject(req.requestId)}>
                           拒否
                         </GameButton>
                       </div>

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { cancelPendingSave } from '../lib/syncService';
 
 export interface AuthUser {
   id: string;
@@ -125,6 +126,14 @@ interface AuthStore {
   syncUnits: (units: Array<{ masterId: string; level: number; exp: number; awakenRank: number; awakeningCount: number; currentRarity: number; isLocked: boolean }>) => Promise<void>;
 }
 
+// checkAuth() の GET /api/auth はアプリ起動時に無条件で発火するため、サーバーの
+// コールドスタート等で応答が遅延している間に手動ログイン/登録が先に成功することがある。
+// 対策なしだと、後から届く古い checkAuth の401応答がログイン直後のユーザーを
+// user:null で強制ログアウトさせてしまっていた。setAuth/logout/clearAuth のたびに
+// 世代を進め、届いた応答が最新の世代でなければ(＝後から発生した別の認証操作に
+// 追い越されていれば)適用せず捨てることで、この競合を防ぐ。
+let authGeneration = 0;
+
 export const useAuthStore = create<AuthStore>((set, get) => ({
   user: null,
   player: null,
@@ -133,27 +142,36 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   isChecked: false,
 
   checkAuth: async () => {
+    const myGen = ++authGeneration;
     set({ isLoading: true });
     try {
       const res = await fetch('/api/auth', { credentials: 'include' });
       if (res.ok) {
         const data = await res.json() as { user: AuthUser; player: AuthPlayer; gameData: GameDataResponse | null };
-        set({ user: data.user, player: data.player, gameData: data.gameData ?? null });
+        if (myGen === authGeneration) set({ user: data.user, player: data.player, gameData: data.gameData ?? null });
       } else {
-        set({ user: null, player: null, gameData: null });
+        if (myGen === authGeneration) set({ user: null, player: null, gameData: null });
       }
     } catch {
-      set({ user: null, player: null, gameData: null });
+      if (myGen === authGeneration) set({ user: null, player: null, gameData: null });
     } finally {
       set({ isLoading: false, isChecked: true });
     }
   },
 
-  setAuth: (user, player, gameData) => set({ user, player, gameData: gameData ?? null, isChecked: true }),
+  setAuth: (user, player, gameData) => {
+    authGeneration++;
+    set({ user, player, gameData: gameData ?? null, isChecked: true });
+  },
 
-  clearAuth: () => set({ user: null, player: null, gameData: null }),
+  clearAuth: () => {
+    authGeneration++;
+    set({ user: null, player: null, gameData: null });
+  },
 
   logout: async () => {
+    authGeneration++;
+    cancelPendingSave();
     await fetch('/api/auth', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'logout' }) });
     set({ user: null, player: null, gameData: null });
   },

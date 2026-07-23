@@ -117,6 +117,12 @@ let saveAgainRequested = false;
 
 // DBへ保存（失敗時はリトライキューに積む）
 export const saveAllToServer = async () => {
+  // scheduleSave/saveImmediately は「予約する時点」でのみ isHydrating を見ていたため、
+  // ログアウト直後に前ユーザーの保存タイマーが残っていた場合、それが実際に発火する
+  // タイミングでは既に次ユーザーのリセット/復元処理中ということがあり得た。
+  // 実行直前にもここで再チェックすることで、復元中の状態がそのままサーバーに
+  // 送信されてしまうのを防ぐ（"belt and suspenders" の保険）。
+  if (isHydrating) return;
   if (isSaving) {
     saveAgainRequested = true;
     return;
@@ -195,6 +201,14 @@ if (typeof window !== 'undefined') {
     }
   });
 }
+
+// ログアウト時に呼ぶ: 予約済みの保存タイマーを破棄する。
+// (呼ばなかった場合、ログアウト前の変更を保存するタイマーが残ったまま次のユーザーが
+//  同じタブでログインすると、そのタイマーが発火した際に前ユーザーのデータを
+//  次ユーザーのセッションで送信してしまう恐れがあった)
+export const cancelPendingSave = () => {
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+};
 
 // デバウンス保存
 export const scheduleSave = (delayMs = 3000) => {

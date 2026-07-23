@@ -34,6 +34,7 @@ import { RegisterPage } from './features/auth/RegisterPage';
 import { UIShowcasePage } from './features/debug/UIShowcasePage';
 import { useAuthStore } from './stores/authStore';
 import { useTutorialStore } from './stores/tutorialStore';
+import type { TutorialPhase } from './types';
 import { usePlayerStore } from './stores/playerStore';
 import { hydrateFromGameState, resetAllStores, initAutoSave, saveImmediately, saveBeforeUnload, setSaveErrorHandler, setSaveSuccessHandler, initCrossTabClaimSync } from './lib/syncService';
 import { fetchAndPopulateMasterData } from './lib/masterDataCache';
@@ -66,6 +67,27 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
 const MainGuard = ({ children }: { children: React.ReactNode }) => {
   const { completed } = useTutorialStore();
   if (!completed) return <Navigate to="/tutorial/intro" replace />;
+  return <>{children}</>;
+};
+
+// チュートリアル完了済みなら /tutorial/* 系画面へは再入場させないガード。
+// 各画面側で phase の再チェックに頼っていたが、HeroSelectScreen の
+// setPhase('tutorial_battle') は completed を見ずに常に phase を巻き戻せるため、
+// 完了後にこれらのURLへ直接アクセスするだけで主人公ユニットや初回無料10連ガチャを
+// 何度でも farming できてしまっていた。ルート単位で塞ぐことで根本的に防ぐ。
+//
+// minPhase を指定すると、通常のフローで直前の画面が離脱時にセットする phase 値
+// (下記PHASE_ORDER)にまだ到達していない状態での直接URLアクセスも防ぐ。
+// これにより例えば /tutorial/gacha への直接アクセスで名前入力・主人公選択・
+// チュートリアルバトルを全てスキップし、初期ヒーロー/アイテムを一切受け取れない
+// まま「チュートリアル完了」になってしまう問題も防止する。
+const PHASE_ORDER: TutorialPhase[] = ['title', 'intro', 'name_input', 'hero_select', 'tutorial_battle', 'initial_gacha', 'complete'];
+const TutorialGuard = ({ children, minPhase }: { children: React.ReactNode; minPhase?: TutorialPhase }) => {
+  const { completed, phase } = useTutorialStore();
+  if (completed) return <Navigate to="/" replace />;
+  if (minPhase && PHASE_ORDER.indexOf(phase) < PHASE_ORDER.indexOf(minPhase)) {
+    return <Navigate to="/tutorial/intro" replace />;
+  }
   return <>{children}</>;
 };
 
@@ -190,13 +212,13 @@ const AppContent = () => {
         <Route path="/login"    element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
-        {/* 認証必須・チュートリアル不要 */}
-        <Route path="/tutorial/intro"    element={<AuthGuard><TutorialIntroScreen /></AuthGuard>} />
-        <Route path="/tutorial/name"     element={<AuthGuard><PlayerNameInputScreen /></AuthGuard>} />
-        <Route path="/tutorial/hero"     element={<AuthGuard><HeroSelectScreen /></AuthGuard>} />
-        <Route path="/tutorial/battle"   element={<AuthGuard><TutorialBattleScreen /></AuthGuard>} />
-        <Route path="/tutorial/complete" element={<AuthGuard><TutorialCompleteScreen /></AuthGuard>} />
-        <Route path="/tutorial/gacha"    element={<AuthGuard><TutorialGachaScreen /></AuthGuard>} />
+        {/* 認証必須・チュートリアル未完了時のみ（かつ直前の画面まで正規の順序で到達している場合のみ） */}
+        <Route path="/tutorial/intro"    element={<AuthGuard><TutorialGuard><TutorialIntroScreen /></TutorialGuard></AuthGuard>} />
+        <Route path="/tutorial/name"     element={<AuthGuard><TutorialGuard minPhase="name_input"><PlayerNameInputScreen /></TutorialGuard></AuthGuard>} />
+        <Route path="/tutorial/hero"     element={<AuthGuard><TutorialGuard minPhase="hero_select"><HeroSelectScreen /></TutorialGuard></AuthGuard>} />
+        <Route path="/tutorial/battle"   element={<AuthGuard><TutorialGuard minPhase="tutorial_battle"><TutorialBattleScreen /></TutorialGuard></AuthGuard>} />
+        <Route path="/tutorial/complete" element={<AuthGuard><TutorialGuard minPhase="tutorial_battle"><TutorialCompleteScreen /></TutorialGuard></AuthGuard>} />
+        <Route path="/tutorial/gacha"    element={<AuthGuard><TutorialGuard minPhase="initial_gacha"><TutorialGachaScreen /></TutorialGuard></AuthGuard>} />
 
         {/* 認証必須・チュートリアル完了必須 */}
         <Route path="/"         element={<AuthGuard><MainGuard><HomePage /></MainGuard></AuthGuard>} />
