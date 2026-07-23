@@ -35,7 +35,7 @@ import { UIShowcasePage } from './features/debug/UIShowcasePage';
 import { useAuthStore } from './stores/authStore';
 import { useTutorialStore } from './stores/tutorialStore';
 import { usePlayerStore } from './stores/playerStore';
-import { hydrateFromGameState, resetAllStores, initAutoSave, saveImmediately, saveBeforeUnload, setSaveErrorHandler, setSaveSuccessHandler } from './lib/syncService';
+import { hydrateFromGameState, resetAllStores, initAutoSave, saveImmediately, saveBeforeUnload, setSaveErrorHandler, setSaveSuccessHandler, initCrossTabClaimSync } from './lib/syncService';
 import { fetchAndPopulateMasterData } from './lib/masterDataCache';
 import { populateImageCache } from './lib/unitImage';
 
@@ -135,6 +135,9 @@ const AppContent = () => {
     // ストア変更を監視して自動デバウンス保存
     const stopAutoSave = initAutoSave();
 
+    // 同一アカウントを複数タブで開いた場合の報酬二重受け取り防止
+    const stopCrossTabSync = initCrossTabClaimSync();
+
     // フォーカスロス時に即時保存
     window.addEventListener('blur', saveImmediately);
     // ページ離脱時は keepalive 付き専用関数で保存
@@ -146,6 +149,7 @@ const AppContent = () => {
 
     return () => {
       stopAutoSave();
+      stopCrossTabSync();
       window.removeEventListener('blur', saveImmediately);
       window.removeEventListener('beforeunload', saveBeforeUnload);
       clearInterval(staminaInterval);

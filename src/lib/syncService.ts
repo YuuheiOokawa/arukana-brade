@@ -102,9 +102,17 @@ export const collectGameState = () => {
   };
 };
 
+// 保存中に追加の保存要求が来た場合、取りこぼさず完了後に再実行するためのフラグ
+// （以前は isSaving のガードで単純に return していたため、保存中に発生した
+//   別の保存要求＝その時点の最新の状態がそのまま失われることがあった）
+let saveAgainRequested = false;
+
 // DBへ保存（失敗時はリトライキューに積む）
 export const saveAllToServer = async () => {
-  if (isSaving) return;
+  if (isSaving) {
+    saveAgainRequested = true;
+    return;
+  }
   isSaving = true;
   try {
     const state = failedSaveState ?? collectGameState();
@@ -125,6 +133,10 @@ export const saveAllToServer = async () => {
     onSaveError?.('データの保存に失敗しました。ネットワークを確認してください。');
   } finally {
     isSaving = false;
+    if (saveAgainRequested) {
+      saveAgainRequested = false;
+      void saveAllToServer();
+    }
   }
 };
 
@@ -143,6 +155,28 @@ export const saveBeforeUnload = () => {
       keepalive: true,
     });
   } catch { /* ignore */ }
+};
+
+// クロスタブ同期: ミッション/ギフト/実績/ログインボーナスの受け取り(claim)状態は
+// タブごとのメモリ上のZustand状態でのみ判定されており、DBへの同期もなかったため、
+// 同じアカウントを2タブで開いて片方で受け取った直後にもう片方でも受け取れてしまう
+// (通貨・アイテムの二重付与)ことがあった。他タブがlocalStorageを更新したら
+// このタブのストアも re-hydrate して追従させることで、その窓を塞ぐ。
+export const initCrossTabClaimSync = () => {
+  if (typeof window === 'undefined') return () => {};
+  const targets: { key: string; store: { persist: { rehydrate: () => unknown } } }[] = [
+    { key: 'arcana-missions', store: useMissionStore },
+    { key: 'arcana-gifts', store: useGiftStore },
+    { key: 'arcana-achievements', store: useAchievementStore },
+    { key: 'arcana-login-bonus', store: useLoginBonusStore },
+  ];
+  const handler = (e: StorageEvent) => {
+    if (!e.key) return;
+    const match = targets.find(t => t.key === e.key);
+    if (match) void match.store.persist.rehydrate();
+  };
+  window.addEventListener('storage', handler);
+  return () => window.removeEventListener('storage', handler);
 };
 
 // オンライン復帰時に自動リトライ

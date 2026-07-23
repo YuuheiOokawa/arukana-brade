@@ -1,13 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Guild, GuildMember } from '../types';
+import { localWeekMondayStr } from '../utils/dateUtils';
 
-const weekMondayStr = () => {
-  const d = new Date();
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(d.getFullYear(), d.getMonth(), diff).toISOString().slice(0, 10);
-};
+const weekMondayStr = () => localWeekMondayStr();
 
 // ダミーギルドメンバー
 const DUMMY_MEMBERS: GuildMember[] = [

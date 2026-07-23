@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUnitStore } from '../../stores/unitStore';
 import { usePlayerStore } from '../../stores/playerStore';
 import { usePartyStore } from '../../stores/partyStore';
+import { useEquipmentStore } from '../../stores/equipmentStore';
 import { getUnitMaster } from '../../data/units';
 import { UnitCard } from '../../components/ui/UnitCard';
 import { TopBar } from '../../components/layout/TopBar';
@@ -42,7 +43,8 @@ export const UnitsPage = () => {
   const [confirmRelease, setConfirmRelease] = useState(false);
   const [actionUnit, setActionUnit] = useState<OwnedUnit | null>(null);
 
-  const { setSlot, getActiveParty } = usePartyStore();
+  const { setSlot, getActiveParty, removeUnitFromParties } = usePartyStore();
+  const { unequipFromUnit } = useEquipmentStore();
   const activeParty = getActiveParty();
   const isInParty = (instanceId: string) => activeParty.slots.includes(instanceId);
   const toggleParty = (unit: OwnedUnit) => {
@@ -95,6 +97,13 @@ export const UnitsPage = () => {
     const { ownedUnits: current } = useUnitStore.getState();
     const keep = current.filter(u => !selected.has(u.instanceId));
     useUnitStore.setState({ ownedUnits: keep });
+    // 解放したユニットをパーティ編成・装備から後片付けする
+    // (放置すると、存在しないユニットがパーティに残ったままバトルへ進んで戦力が欠けたり、
+    //  装備が付けっぱなしで売却できなくなったりする)
+    selected.forEach(instanceId => {
+      removeUnitFromParties(instanceId);
+      unequipFromUnit(instanceId, '');
+    });
     addGold(totalReleaseGold);
     setSelected(new Set());
     setReleaseMode(false);

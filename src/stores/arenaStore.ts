@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ArenaRecord, ArenaOpponent } from '../types';
 import { UNIT_MASTER } from '../data/units';
+import { localDateStr } from '../utils/dateUtils';
 
 const ARENA_OPPONENTS: ArenaOpponent[] = [
   { id: 'ao_1', playerName: '紅蓮の剣士',   playerRank: 15, power: 25000, leaderUnitMasterId: 'unit_001', leaderUnitLevel: 40, leaderUnitAwakenRank: 2, arenaPoints: 1850 },
@@ -44,7 +45,7 @@ export const useArenaStore = create<ArenaStore>()(
       battleHistory: [],
 
       checkDailyRefresh: () => {
-        const today = new Date().toISOString().slice(0, 10);
+        const today = localDateStr();
         if (get().lastOpponentRefreshDate === today) return;
         const { points } = get().record;
         const withScore = ARENA_OPPONENTS.map(o => ({

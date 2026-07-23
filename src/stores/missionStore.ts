@@ -3,15 +3,11 @@ import { persist } from 'zustand/middleware';
 import type { DailyMissionState, MissionProgress, MissionType } from '../types';
 import { DAILY_MISSIONS, WEEKLY_MISSIONS } from '../data/missions';
 import { usePlayerStore } from './playerStore';
+import { localDateStr, localWeekMondayStr } from '../utils/dateUtils';
 
-const todayStr = () => new Date().toISOString().slice(0, 10);
+const todayStr = () => localDateStr();
 
-const weekMondayStr = () => {
-  const d = new Date();
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(d.getFullYear(), d.getMonth(), diff).toISOString().slice(0, 10);
-};
+const weekMondayStr = () => localWeekMondayStr();
 
 const buildFreshProgress = (): MissionProgress[] =>
   DAILY_MISSIONS.map(m => ({
