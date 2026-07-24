@@ -123,7 +123,7 @@ export const HomePage = () => {
 
       {/* プレイヤー情報パネル (アリーナ階級が上がるほど枠が豪華になる) */}
       <div className="px-4 mb-3">
-        <div className={`rounded-2xl overflow-hidden relative ${arenaFrame.rainbow ? 'summon-rainbow-border' : ''}`}
+        <div className={`rounded-2xl overflow-hidden relative ${arenaFrame.rainbow ? 'arena-rainbow-border' : ''}`}
           style={{
             background: arenaFrame.background ?? 'linear-gradient(145deg, rgba(22,12,55,0.96) 0%, rgba(14,8,36,0.98) 100%)',
             border: arenaFrame.border,

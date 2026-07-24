@@ -793,6 +793,17 @@
 .mini-card-elem { font-size:10px; font-weight:700; margin-top:2px; opacity:.8; }
 .summon-result-actions { display:flex; gap:14px; margin-top:20px; flex-wrap:wrap; justify-content:center; }
 
+/* 常時表示のプロフィール枠向け: 虹色の縁取りは残しつつ回転させない静止版 */
+.arena-rainbow-border { position:relative; }
+.arena-rainbow-border::before {
+  content:''; position:absolute; inset:-2px; border-radius:inherit; z-index:0; pointer-events:none;
+  padding:2px;
+  background: linear-gradient(135deg, #ffe48d, #ff8ddc, #8ddcff, #b8ff8d, #ffe48d);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
 /* ===== メニュータイル (参考ソース準拠) ===== */
 .menu-tile {
   height:86px; border-radius:20px;
