@@ -16,6 +16,7 @@ import { CurrencyIcon } from '../../components/ui/game/GameIcons';
 import { formatCompact } from '../../utils/format';
 import { UnitIcon } from '../../components/ui/UnitCard';
 import { resolveUnitImage } from '../../lib/unitImage';
+import { elementGradient } from '../../utils/elementUtils';
 
 /* ============================================================
    パーティクル
@@ -341,6 +342,8 @@ export const SummonPage = () => {
       spawnBurst(300, color, 1.15);
       setShakePage(true);
       setWhiteFlash(true);
+      // モバイル端末での触覚フィードバック(対応端末のみ、非対応環境では何もしない)
+      try { navigator.vibrate?.([30, 40, 90]); } catch { /* 非対応環境は無視 */ }
       await sleep(200);
       setShakePage(false);
       setWhiteFlash(false);
@@ -522,195 +525,230 @@ export const SummonPage = () => {
         </div>
       )}
 
-      {/* カード開封フェーズ（チュートリアルと同じシンプルスタイル） */}
-      {showReveal && currentUnit && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
-          <div
-            className={`w-48 rounded-2xl p-4 text-center cursor-pointer active:scale-95 transition-all duration-200 ${
-              openedCards.has(revealIndex) && currentStar_ === 3 ? 'summon-rainbow-border' : ''
-            }`}
-            onClick={() => void openCard()}
-            style={{
-              background: openedCards.has(revealIndex)
-                ? 'linear-gradient(145deg, rgba(20,10,40,0.95), rgba(10,5,20,0.98))'
-                : 'rgba(10,5,25,0.9)',
-              border: `2px solid ${starBorder(currentStar_)}`,
-              boxShadow: openedCards.has(revealIndex)
-                ? `0 0 30px ${STAR_COLORS[currentStar_]}`
-                : '0 4px 20px rgba(0,0,0,0.8)',
-              transform: openedCards.has(revealIndex) ? 'scale(1.05)' : 'scale(1)',
-              transition: 'transform 0.5s ease, background 0.5s ease, box-shadow 0.5s ease',
-              animation: openedCards.has(revealIndex) ? 'cardFlipOpen 0.5s ease' : 'none',
-            }}>
-            {openedCards.has(revealIndex) ? (
-              <>
-                <div className="flex justify-center mb-2">
-                  <UnitIcon
-                    src={resolveUnitImage(currentUnit.id, RARITY_TYPE_TO_STAR[currentUnit.rarity] ?? 1)}
-                    masterId={currentUnit.id}
-                    unitRarity={RARITY_TYPE_TO_STAR[currentUnit.rarity] ?? 1}
-                    fallbackEmoji={currentUnit.emoji}
-                    element={currentUnit.element}
-                    size={90}
-                    height={160}
-                  />
-                </div>
-                <div className="font-black text-white text-base mb-1">{currentUnit.name}</div>
-                <div className="text-sm mb-1 font-bold" style={{ color: STAR_COLORS[currentStar_] }}>
-                  {'★'.repeat(currentStar_)}{' '}{STAR_LABELS[currentStar_]}
-                </div>
-                <div className="text-xs font-bold" style={{ color: ELEMENT_COLOR[currentUnit.element] }}>
-                  {ELEMENT_NAMES[currentUnit.element]}属性 · {currentUnit.title}
-                </div>
-                {summonResultTypes[revealIndex]?.type === 'awakening' && (
-                  <div style={{
-                    marginTop: '6px',
-                    background: 'rgba(255,200,80,0.25)',
-                    border: '1px solid rgba(255,200,80,0.7)',
-                    borderRadius: '6px', padding: '3px 8px',
-                    fontSize: '11px', fontWeight: 'bold', color: '#ffe48d',
-                  }}>
-                    覚醒 +1 ({summonResultTypes[revealIndex].awakeningCount}/{AWAKENING_CONFIG.maxAwakeningCount})
-                  </div>
-                )}
-                {summonResultTypes[revealIndex]?.type === 'crystal' && (
-                  <div style={{
-                    marginTop: '6px',
-                    background: 'rgba(80,180,255,0.25)',
-                    border: '1px solid rgba(80,180,255,0.7)',
-                    borderRadius: '6px', padding: '3px 8px',
-                    fontSize: '11px', fontWeight: 'bold', color: '#7bc8ff',
-                  }}>
-                    覚醒結晶に変換
-                  </div>
-                )}
-              </>
-            ) : (
-              <>
-                <div className="relative w-14 h-14 mx-auto mb-3 flex items-center justify-center">
-                  <div className="absolute inset-0 rounded-full animate-spin"
-                    style={{
-                      background: 'conic-gradient(from 0deg, rgba(124,58,237,0.8), rgba(79,70,229,0.4), rgba(124,58,237,0.8))',
-                      animationDuration: '3s',
-                    }} />
-                  <div className="absolute inset-2 rounded-full flex items-center justify-center"
-                    style={{ background: 'rgba(8,8,26,0.9)' }}>
-                    <span className="text-2xl">✨</span>
-                  </div>
-                </div>
-                <div className="text-xs text-purple-300 font-bold">タップして開く</div>
-                <div className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                  {revealIndex + 1} / {summonResults.length}
-                </div>
-              </>
-            )}
-          </div>
-
-          {!openedCards.has(revealIndex) && (
-            <button
-              onClick={() => void openCard()}
-              className="mt-4 px-8 py-2 rounded-xl font-bold text-sm active:scale-95 transition-all"
+      {/* カード開封フェーズ（3Dフリップ演出） */}
+      {showReveal && currentUnit && (() => {
+        const isOpen = openedCards.has(revealIndex);
+        const starColor = STAR_COLORS[currentStar_];
+        return (
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+            {/*
+              filter(drop-shadow)は .gacha-flip-card (transform-style:preserve-3d) 自身に
+              かけると3D合成が壊れ、フリップしても常に裏面(またはその鏡像)しか
+              見えなくなる不具合があった(Playwrightでの検証で発見)。
+              preserve-3dを持つ要素とは別の親要素にfilterをかける。
+            */}
+            <div className="gacha-flip-perspective"
               style={{
-                background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
-                color: 'white',
-                boxShadow: '0 0 16px rgba(124,58,237,0.5)',
+                width: 208, height: 296,
+                filter: isOpen
+                  ? `drop-shadow(0 0 26px ${starColor}) drop-shadow(0 0 54px ${starColor}88)`
+                  : `drop-shadow(0 4px 20px rgba(0,0,0,0.8)) drop-shadow(0 0 14px ${starColor}55)`,
               }}>
-              {summonResults.length === 1 ? 'OPEN' : `${revealIndex + 1} / ${summonResults.length} OPEN`}
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* 結果グリッド（チュートリアルと同じ5列スタイル） */}
-      {showResults && (
-        <div className="absolute inset-0 z-20 overflow-y-auto px-4 pt-4 pb-6"
-          style={{ background: 'radial-gradient(ellipse at 50% 20%, #1a0535 0%, #08081a 70%)' }}>
-          <h2 className="text-center font-black text-white text-base mb-3">召喚結果</h2>
-          <div className="grid grid-cols-5 gap-2 mb-4">
-            {summonResults.map((u, i) => {
-              const star = RARITY_TO_STAR[u.rarity];
-              const rt = summonResultTypes[i];
-              return (
-                <div key={i} className="rounded-xl p-2 text-center"
+              <div
+                className={`gacha-flip-card ${isOpen ? 'flipped' : ''}`}
+                onClick={() => void openCard()}>
+                {/* 裏面: タップ前 */}
+                <div className="gacha-flip-face"
                   style={{
-                    background: 'linear-gradient(145deg, rgba(20,10,40,0.9), rgba(10,5,20,0.95))',
-                    border: `1.5px solid ${STAR_COLORS[star]}`,
-                    boxShadow: star === 3
-                      ? `0 0 14px ${STAR_COLORS[star]}, 0 0 28px rgba(214,152,255,.35)`
-                      : `0 0 8px ${STAR_COLORS[star]}44`,
-                    animation: `popIn .45s ease backwards`,
-                    animationDelay: `${i * 0.05}s`,
+                    background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,.14), transparent 22%), linear-gradient(145deg, rgba(22,16,35,.98), rgba(94,55,111,.55) 45%, rgba(8,7,16,.98))',
+                    border: `1.5px solid ${starBorder(currentStar_)}`,
                   }}>
-                  <div className="flex justify-center mb-1">
+                  <div className="gacha-card-orbit-stack">
+                    <div className="gacha-card-ring ring-outer" />
+                    <div className="gacha-card-ring ring-inner" />
+                    <div className="gacha-card-emblem" />
+                  </div>
+                  <div className="text-xs text-purple-300 font-bold mt-4">タップして開く</div>
+                  <div className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                    {revealIndex + 1} / {summonResults.length}
+                  </div>
+                </div>
+
+                {/* 表面: 開封後 */}
+                <div className={`gacha-flip-face gacha-flip-front ${currentStar_ === 3 ? 'summon-rainbow-border' : ''}`}
+                  style={{
+                    background: 'linear-gradient(145deg, rgba(20,10,40,0.97), rgba(10,5,20,0.99))',
+                    border: `2px solid ${starColor}`,
+                    padding: '14px 10px 12px',
+                  }}>
+                  {currentStar_ === 3 && <div className="gacha-shine-sweep" />}
+                  <div className="flex justify-center mb-2">
                     <UnitIcon
-                      src={resolveUnitImage(u.id, RARITY_TYPE_TO_STAR[u.rarity] ?? 1)}
-                      masterId={u.id}
-                      unitRarity={RARITY_TYPE_TO_STAR[u.rarity] ?? 1}
-                      fallbackEmoji={u.emoji}
-                      element={u.element}
-                      size={44}
-                      height={66}
+                      src={resolveUnitImage(currentUnit.id, RARITY_TYPE_TO_STAR[currentUnit.rarity] ?? 1)}
+                      masterId={currentUnit.id}
+                      unitRarity={RARITY_TYPE_TO_STAR[currentUnit.rarity] ?? 1}
+                      fallbackEmoji={currentUnit.emoji}
+                      element={currentUnit.element}
+                      size={90}
+                      height={150}
                     />
                   </div>
-                  <div className="text-white font-bold text-[9px] leading-tight mb-0.5 truncate">{u.name}</div>
-                  <div style={{ color: STAR_COLORS[star], fontSize: '9px', fontWeight: 'bold' }}>
-                    {'★'.repeat(star)}
+                  <div className="font-black text-white text-base mb-1 text-center">{currentUnit.name}</div>
+                  <div className="text-sm mb-1 font-bold text-center" style={{ color: starColor }}>
+                    {'★'.repeat(currentStar_)}{' '}{STAR_LABELS[currentStar_]}
                   </div>
-                  {rt?.type === 'awakening' && (
-                    <div style={{ fontSize: '8px', color: '#ffe48d', fontWeight: 'bold' }}>覚醒+1</div>
+                  <div className="text-xs font-bold text-center" style={{ color: ELEMENT_COLOR[currentUnit.element] }}>
+                    {ELEMENT_NAMES[currentUnit.element]}属性 · {currentUnit.title}
+                  </div>
+                  {summonResultTypes[revealIndex]?.type === 'awakening' && (
+                    <div className="text-center" style={{
+                      marginTop: '6px',
+                      background: 'rgba(255,200,80,0.25)',
+                      border: '1px solid rgba(255,200,80,0.7)',
+                      borderRadius: '6px', padding: '3px 8px',
+                      fontSize: '11px', fontWeight: 'bold', color: '#ffe48d',
+                    }}>
+                      覚醒 +1 ({summonResultTypes[revealIndex].awakeningCount}/{AWAKENING_CONFIG.maxAwakeningCount})
+                    </div>
                   )}
-                  {rt?.type === 'crystal' && (
-                    <div style={{ fontSize: '8px', color: '#7bc8ff', fontWeight: 'bold' }}>結晶</div>
+                  {summonResultTypes[revealIndex]?.type === 'crystal' && (
+                    <div className="text-center" style={{
+                      marginTop: '6px',
+                      background: 'rgba(80,180,255,0.25)',
+                      border: '1px solid rgba(80,180,255,0.7)',
+                      borderRadius: '6px', padding: '3px 8px',
+                      fontSize: '11px', fontWeight: 'bold', color: '#7bc8ff',
+                    }}>
+                      覚醒結晶に変換
+                    </div>
                   )}
                 </div>
-              );
-            })}
-          </div>
-
-          {summonResults.some(u => RARITY_TO_STAR[u.rarity] === 3) && (
-            <div className="rounded-2xl p-3 mb-3 text-center"
-              style={{
-                background: 'linear-gradient(135deg, rgba(240,192,64,0.15), rgba(253,230,138,0.1))',
-                border: '1px solid rgba(240,192,64,0.4)',
-              }}>
-              <p className="text-yellow-300 font-black text-sm">🎉 ★★★ ARCANA 獲得！</p>
-              <p className="text-yellow-400 text-xs mt-0.5">最高レアリティのユニットを引き当てました！</p>
+              </div>
             </div>
-          )}
 
-          {summonResultTypes.filter(r => r.type === 'crystal').length > 0 && (
-            <div className="rounded-xl p-2 mb-3 text-center"
-              style={{ background: 'rgba(80,180,255,0.1)', border: '1px solid rgba(80,180,255,0.3)' }}>
-              <p className="text-xs" style={{ color: '#7bc8ff' }}>
-                💎 覚醒結晶 ×{summonResultTypes.filter(r => r.type === 'crystal').length} 獲得
-              </p>
-            </div>
-          )}
-
-          <div className="flex gap-3">
-            <button
-              className="flex-1 py-3 rounded-2xl font-black text-white text-sm active:scale-95 transition-all"
-              style={{
-                background: 'linear-gradient(135deg, #f0c040, #d97706)',
-                boxShadow: '0 4px 16px rgba(240,192,64,0.4)',
-                border: '1px solid rgba(255,220,80,0.4)',
-              }}
-              onClick={reset}>
-              もう一度召喚
-            </button>
-            <button
-              className="flex-1 py-3 rounded-2xl font-black text-sm active:scale-95 transition-all"
-              style={{
-                background: 'rgba(30,30,60,0.8)',
-                border: '1px solid rgba(75,85,99,0.4)',
-                color: '#9ca3af',
-              }}
-              onClick={reset}>
-              閉じる
-            </button>
+            {!isOpen && (
+              <button
+                onClick={() => void openCard()}
+                className="mt-5 px-8 py-2 rounded-xl font-bold text-sm active:scale-95 transition-all"
+                style={{
+                  background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+                  color: 'white',
+                  boxShadow: '0 0 16px rgba(124,58,237,0.5)',
+                }}>
+                {summonResults.length === 1 ? 'OPEN' : `${revealIndex + 1} / ${summonResults.length} OPEN`}
+              </button>
+            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
+
+      {/* 結果グリッド（レアリティ降順ソート + 最高レアのスポットライト演出） */}
+      {showResults && (() => {
+        // 引いた順ではなくレアリティ降順で並べる(最新のガチャ演出の定番)。
+        // 元のインデックス(summonResultTypesとの対応)を保持したままソートする
+        const sorted = summonResults
+          .map((u, i) => ({ u, rt: summonResultTypes[i], i }))
+          .sort((a, b) => RARITY_TO_STAR[b.u.rarity] - RARITY_TO_STAR[a.u.rarity]);
+        const best = sorted[0];
+        const bestStar = best ? RARITY_TO_STAR[best.u.rarity] : null;
+
+        return (
+          <div className="absolute inset-0 z-20 overflow-y-auto px-4 pt-4 pb-6"
+            style={{ background: 'radial-gradient(ellipse at 50% 20%, #1a0535 0%, #08081a 70%)' }}>
+            <h2 className="text-center font-black text-white text-base mb-3">召喚結果</h2>
+
+            {/* スポットライト: ★3(最高レア)を引いた場合、実物カードを大きく表示 */}
+            {bestStar === 3 && best && (
+              <div className="relative rounded-2xl p-4 mb-4 text-center overflow-hidden"
+                style={{
+                  background: `linear-gradient(160deg, ${elementGradient(best.u.element)}, rgba(10,5,20,0.92))`,
+                  border: '2px solid rgba(255,228,141,0.85)',
+                  boxShadow: '0 0 30px rgba(255,228,141,.5), 0 0 60px rgba(214,152,255,.25)',
+                  animation: 'popIn .5s ease backwards',
+                }}>
+                <div className="gacha-shine-sweep" />
+                <p className="text-yellow-200 font-black text-xs tracking-widest mb-2">🎉 ★★★ ARCANA 獲得！</p>
+                <div className="flex justify-center mb-1">
+                  <UnitIcon
+                    src={resolveUnitImage(best.u.id, RARITY_TYPE_TO_STAR[best.u.rarity] ?? 1)}
+                    masterId={best.u.id}
+                    unitRarity={RARITY_TYPE_TO_STAR[best.u.rarity] ?? 1}
+                    fallbackEmoji={best.u.emoji}
+                    element={best.u.element}
+                    size={100}
+                    height={170}
+                  />
+                </div>
+                <p className="text-white font-black text-lg">{best.u.name}</p>
+                <p className="text-yellow-300 text-xs font-bold">{'★'.repeat(3)} {STAR_LABELS[3]} · {best.u.title}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-5 gap-2 mb-4">
+              {sorted.map(({ u, rt, i }) => {
+                const star = RARITY_TO_STAR[u.rarity];
+                return (
+                  <div key={i} className="relative rounded-xl p-2 text-center overflow-hidden"
+                    style={{
+                      background: 'linear-gradient(145deg, rgba(20,10,40,0.9), rgba(10,5,20,0.95))',
+                      border: `1.5px solid ${STAR_COLORS[star]}`,
+                      boxShadow: star === 3
+                        ? `0 0 14px ${STAR_COLORS[star]}, 0 0 28px rgba(214,152,255,.35)`
+                        : `0 0 8px ${STAR_COLORS[star]}44`,
+                      animation: `popIn .45s ease backwards`,
+                      animationDelay: `${i * 0.05}s`,
+                    }}>
+                    {star === 3 && <div className="gacha-shine-sweep" />}
+                    <div className="flex justify-center mb-1">
+                      <UnitIcon
+                        src={resolveUnitImage(u.id, RARITY_TYPE_TO_STAR[u.rarity] ?? 1)}
+                        masterId={u.id}
+                        unitRarity={RARITY_TYPE_TO_STAR[u.rarity] ?? 1}
+                        fallbackEmoji={u.emoji}
+                        element={u.element}
+                        size={44}
+                        height={66}
+                      />
+                    </div>
+                    <div className="text-white font-bold text-[9px] leading-tight mb-0.5 truncate">{u.name}</div>
+                    <div style={{ color: STAR_COLORS[star], fontSize: '9px', fontWeight: 'bold' }}>
+                      {'★'.repeat(star)}
+                    </div>
+                    {rt?.type === 'awakening' && (
+                      <div style={{ fontSize: '8px', color: '#ffe48d', fontWeight: 'bold' }}>覚醒+1</div>
+                    )}
+                    {rt?.type === 'crystal' && (
+                      <div style={{ fontSize: '8px', color: '#7bc8ff', fontWeight: 'bold' }}>結晶</div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {summonResultTypes.filter(r => r.type === 'crystal').length > 0 && (
+              <div className="rounded-xl p-2 mb-3 text-center"
+                style={{ background: 'rgba(80,180,255,0.1)', border: '1px solid rgba(80,180,255,0.3)' }}>
+                <p className="text-xs" style={{ color: '#7bc8ff' }}>
+                  💎 覚醒結晶 ×{summonResultTypes.filter(r => r.type === 'crystal').length} 獲得
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                className="flex-1 py-3 rounded-2xl font-black text-white text-sm active:scale-95 transition-all"
+                style={{
+                  background: 'linear-gradient(135deg, #f0c040, #d97706)',
+                  boxShadow: '0 4px 16px rgba(240,192,64,0.4)',
+                  border: '1px solid rgba(255,220,80,0.4)',
+                }}
+                onClick={reset}>
+                もう一度召喚
+              </button>
+              <button
+                className="flex-1 py-3 rounded-2xl font-black text-sm active:scale-95 transition-all"
+                style={{
+                  background: 'rgba(30,30,60,0.8)',
+                  border: '1px solid rgba(75,85,99,0.4)',
+                  color: '#9ca3af',
+                }}
+                onClick={reset}>
+                閉じる
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* エラートースト */}
       {toast && (
