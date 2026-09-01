@@ -141,12 +141,39 @@ export const executeSkillOnTargets = (
         );
       }
       effectLogs.targetNames = targets.map(t => t.name);
+    } else if (effect.type === 'status_poison' || effect.type === 'status_paralyze') {
+      const potentialTargets = skill.target === 'single_enemy'
+        ? [enemies.find(e => e.currentHp > 0)].filter(Boolean) as BattleEnemy[]
+        : enemies.filter(e => e.currentHp > 0);
+      const chance = effect.chance ?? 1;
+      const afflicted = potentialTargets.filter(() => Math.random() < chance);
+
+      if (afflicted.length > 0) {
+        const newEffect: StatusEffect = {
+          type: effect.type,
+          power: effect.power,
+          remainingTurns: (effect.duration ?? 2) + 1,
+        };
+        updatedEnemies = updatedEnemies.map(e =>
+          afflicted.some(t => t.instanceId === e.instanceId)
+            ? { ...e, buffs: [...e.buffs.filter(b => b.type !== effect.type), newEffect] }
+            : e
+        );
+        logs.push({
+          turn, actorName: actor.name, action: 'status',
+          targetNames: afflicted.map(t => t.name), statusApplied: effect.type,
+        });
+      }
     }
   }
 
   logs.push(effectLogs);
   return { updatedAllies, updatedEnemies, logs };
 };
+
+/** 対象が指定の状態異常(毒・麻痺)を受けているか判定する */
+export const hasStatusEffect = (unit: BattleActor, type: 'status_poison' | 'status_paralyze'): boolean =>
+  unit.buffs.some(b => b.type === type);
 
 export const executeNormalAttack = (
   actor: BattleUnit,
@@ -211,6 +238,7 @@ export const executeEnemyTurn = (
     let totalDamage = 0;
     let hasElementBonus = false;
     const targetNames: string[] = [];
+    const statusLogs: BattleLog[] = [];
 
     for (const effect of skill.effects) {
       if (effect.type === 'damage') {
@@ -240,6 +268,21 @@ export const executeEnemyTurn = (
         // 敵自身を強化（このゲームには敵チーム全体バフの概念がないため自己バフとして扱う）
         const newEffect: StatusEffect = { type: effect.type, power: effect.power, remainingTurns: (effect.duration ?? 2) + 1 };
         updatedSelf = { ...updatedSelf, buffs: [...updatedSelf.buffs.filter(b => b.type !== effect.type), newEffect] };
+      } else if (effect.type === 'status_poison' || effect.type === 'status_paralyze') {
+        const chance = effect.chance ?? 1;
+        const afflicted = targets.filter(() => Math.random() < chance);
+        if (afflicted.length > 0) {
+          const newEffect: StatusEffect = { type: effect.type, power: effect.power, remainingTurns: (effect.duration ?? 2) + 1 };
+          updatedAllies = updatedAllies.map(a =>
+            afflicted.some(t => t.instanceId === a.instanceId)
+              ? { ...a, buffs: [...a.buffs.filter(b => b.type !== effect.type), newEffect] }
+              : a
+          );
+          statusLogs.push({
+            turn, actorName: enemy.name, action: 'status',
+            targetNames: afflicted.map(t => t.name), statusApplied: effect.type,
+          });
+        }
       }
     }
 
@@ -252,7 +295,7 @@ export const executeEnemyTurn = (
       damage: totalDamage,
       elementBonus: hasElementBonus,
     };
-    return { updatedAllies, updatedEnemies, logs: [log] };
+    return { updatedAllies, updatedEnemies, logs: [log, ...statusLogs] };
   }
 
   // 通常攻撃
@@ -308,7 +351,23 @@ export const applyLeaderSkills = (
   });
 };
 
-export const tickBuffs = (allies: BattleUnit[], enemies: BattleEnemy[]): { allies: BattleUnit[]; enemies: BattleEnemy[] } => {
+export const tickBuffs = (
+  allies: BattleUnit[],
+  enemies: BattleEnemy[],
+  turn: number
+): { allies: BattleUnit[]; enemies: BattleEnemy[]; allyLogs: BattleLog[]; enemyLogs: BattleLog[] } => {
+  const applyPoison = <T extends { instanceId: string; name: string; currentHp: number; maxHp: number; buffs: StatusEffect[] }>(
+    units: T[], logs: BattleLog[]
+  ): T[] =>
+    units.map(u => {
+      const poison = u.currentHp > 0 ? u.buffs.find(b => b.type === 'status_poison') : undefined;
+      if (!poison) return u;
+      const damage = Math.max(1, Math.floor(u.maxHp * poison.power));
+      const newHp = Math.max(0, u.currentHp - damage);
+      logs.push({ turn, actorName: '毒', action: 'status', targetNames: [u.name], damage });
+      return { ...u, currentHp: newHp };
+    });
+
   const tickBuffsOnUnit = <T extends { buffs: StatusEffect[] }>(units: T[]): T[] =>
     units.map(u => ({
       ...u,
@@ -317,8 +376,15 @@ export const tickBuffs = (allies: BattleUnit[], enemies: BattleEnemy[]): { allie
         .filter(b => b.remainingTurns > 0),
     }));
 
+  const allyLogs: BattleLog[] = [];
+  const enemyLogs: BattleLog[] = [];
+  const poisonedAllies = applyPoison(allies, allyLogs);
+  const poisonedEnemies = applyPoison(enemies, enemyLogs);
+
   return {
-    allies: tickBuffsOnUnit(allies),
-    enemies: tickBuffsOnUnit(enemies),
+    allies: tickBuffsOnUnit(poisonedAllies),
+    enemies: tickBuffsOnUnit(poisonedEnemies),
+    allyLogs,
+    enemyLogs,
   };
 };

@@ -307,7 +307,7 @@ export interface StatusEffect {
   remainingTurns: number;
 }
 
-export type BattleActionType = 'normal_attack' | 'skill' | 'bb_skill';
+export type BattleActionType = 'normal_attack' | 'skill' | 'bb_skill' | 'status';
 
 export interface BattleLog {
   turn: number;
@@ -318,6 +318,8 @@ export interface BattleLog {
   heal?: number;
   isCritical?: boolean;
   elementBonus?: boolean;
+  /** 毒・麻痺などの状態異常が新規付与されたときのみセットする */
+  statusApplied?: SkillEffectType;
 }
 
 export type BattlePhase = 'friend_select' | 'battle' | 'victory' | 'defeat';

@@ -12,6 +12,7 @@ import { resolveUnitImage } from '../../lib/unitImage';
 import type { OwnedUnit } from '../../types';
 
 const MAX_SLOTS = 5;
+const MAX_PARTIES = 5;
 
 const elementGradient = (element: string): string => {
   const map: Record<string, string> = {
@@ -28,12 +29,12 @@ const elementGradient = (element: string): string => {
 
 export const PartyPage = () => {
   const navigate = useNavigate();
-  const { setSlot, setLeader, getActiveParty } = usePartyStore();
+  const { parties, activePartyId, setSlot, setLeader, getActiveParty, createParty, setActiveParty } = usePartyStore();
   const { ownedUnits } = useUnitStore();
 
   const party = getActiveParty();
 
-  // 存在しないユニットIDを参照している古いスロットを起動時にクリア
+  // 存在しないユニットIDを参照している古いスロットを起動時・パーティ切替時にクリア
   useEffect(() => {
     party.slots.forEach((id, idx) => {
       if (id && !ownedUnits.find(u => u.instanceId === id)) {
@@ -41,7 +42,7 @@ export const PartyPage = () => {
       }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [party.id]);
 
   const filledSlots = party.slots.filter(id => id && ownedUnits.find(u => u.instanceId === id)).length;
 
@@ -78,6 +79,31 @@ export const PartyPage = () => {
   return (
     <div className="min-h-screen pb-36" style={{ background: 'radial-gradient(ellipse at top, #0a0a28 0%, #08081a 60%)' }}>
       <TopBar title="パーティ編成" />
+
+      {/* ── パーティ切り替えタブ ── */}
+      <div className="px-4 pt-3 flex items-center gap-2 overflow-x-auto scrollbar-hide">
+        {parties.map(p => (
+          <button
+            key={p.id}
+            onClick={() => setActiveParty(p.id)}
+            className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95"
+            style={{
+              background: p.id === activePartyId ? 'linear-gradient(135deg, #7c3aed, #4f46e5)' : 'rgba(30,30,55,0.6)',
+              border: p.id === activePartyId ? '1px solid rgba(167,139,250,0.7)' : '1px solid rgba(75,85,99,0.3)',
+              color: p.id === activePartyId ? '#fff' : '#9ca3af',
+            }}>
+            {p.name}
+          </button>
+        ))}
+        {parties.length < MAX_PARTIES && (
+          <button
+            onClick={() => createParty(`パーティ${parties.length + 1}`)}
+            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-black transition-all active:scale-90"
+            style={{ background: 'rgba(30,30,55,0.6)', border: '1px dashed rgba(107,114,128,0.5)', color: '#9ca3af' }}>
+            ＋
+          </button>
+        )}
+      </div>
 
       {/* ── パーティスロット ── */}
       <div className="px-4 pt-3 pb-4">

@@ -18,7 +18,7 @@ import { UNIT_MASTER, calcUnitStats } from '../../data/units';
 import { FRIEND_CANDIDATES } from '../../data/friends';
 import { getItemMaster } from '../../data/items';
 import { calcEquipmentStats, getEquipmentMaster } from '../../data/equipments';
-import { applyLeaderSkills, executeNormalAttack, executeEnemyTurn, executeSkillOnTargets, tickBuffs } from '../../utils/battleEngine';
+import { applyLeaderSkills, executeNormalAttack, executeEnemyTurn, executeSkillOnTargets, tickBuffs, hasStatusEffect } from '../../utils/battleEngine';
 import { getSkill } from '../../data/skills';
 import { GameButton } from '../../components/ui/game/GameButton';
 import type { BattleUnit, BattleEnemy, BattleLog, QuestStage, LeaderSkillEffect } from '../../types';
@@ -296,6 +296,13 @@ export const BattlePage = () => {
             // パーティで指定したリーダーを優先。戦闘不能なら先頭の生存ユニットにフォールバック
             const leader = liveAllies.find(a => a.instanceId === leaderInstanceIdRef.current) ?? liveAllies[0];
             const isSkillTurn = useSkill && curBb >= 100;
+            const isParalyzed = (u: BattleUnit | BattleEnemy) => hasStatusEffect(u, 'status_paralyze');
+            const pushStatusLogs = (statusLogs: BattleLog[], emoji: string) => {
+              statusLogs.forEach(log => {
+                const label = log.statusApplied === 'status_poison' ? '🐍 毒' : '⚡ 麻痺';
+                newLines.push(`${emoji} ${log.actorName} → ${log.targetNames.join('・')} に${label}を付与！`);
+              });
+            };
 
             // ===== 味方フェーズ =====
             let nextBb = curBb;
@@ -316,37 +323,43 @@ export const BattlePage = () => {
 
             if (isSkillTurn) {
               // BBスキル（リーダー）
-              const leaderSkill = leader.bbSkillId ? getSkill(leader.bbSkillId) : null;
-              if (leaderSkill) {
-                const result = executeSkillOnTargets(leader, leaderSkill, updAllies, updEnemies, curRound);
-                applyEnemyResult(result);
-                result.logs.forEach(log => {
-                  const elem = log.elementBonus ? '（属性有利！）' : '';
-                  newLines.push(log.heal
-                    ? `💚 ${leader.emoji} ${log.actorName} のスキル → ${log.targetNames.join('・')} を ${log.heal.toLocaleString()} 回復！`
-                    : `✨ ${leader.emoji} ${log.actorName} のBBスキル → ${log.targetNames.join('・')} に ${(log.damage ?? 0).toLocaleString()} ダメージ！${elem}`);
-                });
+              if (isParalyzed(leader)) {
+                newLines.push(`⚡ ${leader.emoji} ${leader.name} は麻痺で動けない！`);
               } else {
-                // フォールバック: 全体2〜3倍ダメージ
-                const multiplier = 2 + Math.random();
-                let totalDmg = 0;
-                const prevHps = new Map(updEnemies.map(e => [e.instanceId, e.currentHp]));
-                updEnemies = updEnemies.map(e => {
-                  if (e.currentHp <= 0) return e;
-                  const dmg = Math.max(1, Math.floor(leader.atk * (0.8 + Math.random() * 0.4) * multiplier - e.def * 0.3));
-                  totalDmg += dmg;
-                  return { ...e, currentHp: Math.max(0, e.currentHp - dmg) };
-                });
-                totalDamageRef.current += totalDmg;
-                newLines.push(`✨ ${leader.emoji} ${leader.name} のBBスキル発動！全体に ${totalDmg.toLocaleString()} ダメージ！`);
-                updEnemies.forEach(e => {
-                  if (e.currentHp <= 0 && (prevHps.get(e.instanceId) ?? 1) > 0) newLines.push(`💀 ${e.name} を撃破！`);
-                });
+                const leaderSkill = leader.bbSkillId ? getSkill(leader.bbSkillId) : null;
+                if (leaderSkill) {
+                  const result = executeSkillOnTargets(leader, leaderSkill, updAllies, updEnemies, curRound);
+                  applyEnemyResult(result);
+                  pushStatusLogs(result.logs.filter(l => l.statusApplied), leader.emoji);
+                  result.logs.filter(l => !l.statusApplied).forEach(log => {
+                    const elem = log.elementBonus ? '（属性有利！）' : '';
+                    newLines.push(log.heal
+                      ? `💚 ${leader.emoji} ${log.actorName} のスキル → ${log.targetNames.join('・')} を ${log.heal.toLocaleString()} 回復！`
+                      : `✨ ${leader.emoji} ${log.actorName} のBBスキル → ${log.targetNames.join('・')} に ${(log.damage ?? 0).toLocaleString()} ダメージ！${elem}`);
+                  });
+                } else {
+                  // フォールバック: 全体2〜3倍ダメージ
+                  const multiplier = 2 + Math.random();
+                  let totalDmg = 0;
+                  const prevHps = new Map(updEnemies.map(e => [e.instanceId, e.currentHp]));
+                  updEnemies = updEnemies.map(e => {
+                    if (e.currentHp <= 0) return e;
+                    const dmg = Math.max(1, Math.floor(leader.atk * (0.8 + Math.random() * 0.4) * multiplier - e.def * 0.3));
+                    totalDmg += dmg;
+                    return { ...e, currentHp: Math.max(0, e.currentHp - dmg) };
+                  });
+                  totalDamageRef.current += totalDmg;
+                  newLines.push(`✨ ${leader.emoji} ${leader.name} のBBスキル発動！全体に ${totalDmg.toLocaleString()} ダメージ！`);
+                  updEnemies.forEach(e => {
+                    if (e.currentHp <= 0 && (prevHps.get(e.instanceId) ?? 1) > 0) newLines.push(`💀 ${e.name} を撃破！`);
+                  });
+                }
               }
               // 残りの味方は通常攻撃
               for (let i = 1; i < liveAllies.length; i++) {
                 const ally = liveAllies[i];
                 if (!updEnemies.some(e => e.currentHp > 0)) break;
+                if (isParalyzed(ally)) { newLines.push(`⚡ ${ally.emoji} ${ally.name} は麻痺で動けない！`); continue; }
                 const result = executeNormalAttack(ally, updEnemies.filter(e => e.currentHp > 0), updAllies, curRound);
                 applyEnemyResult(result);
                 result.logs.forEach(log => {
@@ -359,6 +372,7 @@ export const BattlePage = () => {
               // 全味方が通常攻撃
               for (const ally of liveAllies) {
                 if (!updEnemies.some(e => e.currentHp > 0)) break;
+                if (isParalyzed(ally)) { newLines.push(`⚡ ${ally.emoji} ${ally.name} は麻痺で動けない！`); continue; }
                 const result = executeNormalAttack(ally, updEnemies.filter(e => e.currentHp > 0), updAllies, curRound);
                 applyEnemyResult(result);
                 result.logs.forEach(log => {
@@ -372,6 +386,7 @@ export const BattlePage = () => {
             // ===== 敵フェーズ =====
             for (const enemy of updEnemies.filter(e => e.currentHp > 0)) {
               if (!updAllies.some(a => a.currentHp > 0)) break;
+              if (isParalyzed(enemy)) { newLines.push(`⚡ ${enemy.emoji} ${enemy.name} は麻痺で動けない！`); continue; }
               const prevAllyHps = new Map(updAllies.map(a => [a.instanceId, a.currentHp]));
               const result = executeEnemyTurn(enemy, updAllies.filter(a => a.currentHp > 0), updEnemies, curRound);
               updAllies = updAllies.map(a => {
@@ -380,7 +395,8 @@ export const BattlePage = () => {
               });
               // 敵の自己バフ（updatedEnemies）も反映する（以前は取りこぼしていた）
               updEnemies = updEnemies.map(e => result.updatedEnemies.find(ue => ue.instanceId === e.instanceId) ?? e);
-              result.logs.forEach(log => {
+              pushStatusLogs(result.logs.filter(l => l.statusApplied), enemy.emoji);
+              result.logs.filter(l => !l.statusApplied).forEach(log => {
                 const prefix = (log.action === 'skill' || log.action === 'bb_skill') ? '💥' : '🔴';
                 newLines.push(`${prefix} ${enemy.emoji} ${log.actorName} → ${log.targetNames.join('・')} に ${(log.damage ?? 0).toLocaleString()} ダメージ！`);
               });
@@ -389,10 +405,22 @@ export const BattlePage = () => {
               });
             }
 
-            // ===== バフ/デバフ経過処理 =====
-            const ticked = tickBuffs(updAllies, updEnemies);
+            // ===== バフ/デバフ経過処理（毒ダメージもここで適用） =====
+            const prevAllyHpsBeforeTick = new Map(updAllies.map(a => [a.instanceId, a.currentHp]));
+            const prevEnemyHpsBeforeTick = new Map(updEnemies.map(e => [e.instanceId, e.currentHp]));
+            const ticked = tickBuffs(updAllies, updEnemies, curRound);
             updAllies = ticked.allies;
             updEnemies = ticked.enemies;
+            totalDamageRef.current += ticked.enemyLogs.reduce((s, l) => s + (l.damage ?? 0), 0);
+            [...ticked.allyLogs, ...ticked.enemyLogs].forEach(log => {
+              newLines.push(`🐍 ${log.targetNames.join('・')} は毒のダメージ！ ${(log.damage ?? 0).toLocaleString()}`);
+            });
+            updEnemies.forEach(e => {
+              if (e.currentHp <= 0 && (prevEnemyHpsBeforeTick.get(e.instanceId) ?? 1) > 0) newLines.push(`💀 ${e.name} を撃破！`);
+            });
+            updAllies.forEach(a => {
+              if (a.currentHp <= 0 && (prevAllyHpsBeforeTick.get(a.instanceId) ?? 1) > 0) newLines.push(`😵 ${a.name} が倒れた...`);
+            });
 
             addLogs(newLines);
 

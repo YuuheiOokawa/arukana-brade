@@ -19,6 +19,13 @@ const clamp = (v: unknown, min: number, max: number): number => {
   return Math.max(min, Math.min(max, Math.floor(v)));
 };
 
+// staminaRecoveryTime は DB 上 BigInt のため、そのまま res.json() に渡すと
+// JSON.stringify が例外を投げてリクエスト全体が 500 になる。number に変換してから返す。
+const serializePlayer = <T extends { staminaRecoveryTime: bigint }>(player: T) => ({
+  ...player,
+  staminaRecoveryTime: Number(player.staminaRecoveryTime),
+});
+
 const STAGE_RE = /^stage_\d+_\d+_\d+$/;
 const isValidStageId = (id: string) => STAGE_RE.test(id);
 
@@ -77,7 +84,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: '更新するデータがありません' });
 
     const updated = await prisma.player.update({ where: { playerId: player.playerId }, data: updateData });
-    return res.status(200).json({ player: updated });
+    return res.status(200).json({ player: serializePlayer(updated) });
   }
 
   // ── currency: 通貨・スタミナ同期 ─────────────────────────────────
@@ -98,7 +105,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (Object.keys(updateData).length === 0)
       return res.status(400).json({ error: '更新するデータがありません' });
     const updated = await prisma.player.update({ where: { playerId: player.playerId }, data: updateData });
-    return res.status(200).json({ player: updated });
+    return res.status(200).json({ player: serializePlayer(updated) });
   }
 
   // ── saveAll: 全ゲーム状態保存 ────────────────────────────────────
