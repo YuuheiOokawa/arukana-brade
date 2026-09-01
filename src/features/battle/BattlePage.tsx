@@ -81,6 +81,7 @@ export const BattlePage = () => {
   const [logQueue, setLogQueue] = useState<string[]>([]);
   const isLogAnimatingRef = useRef(false);
   const totalDamageRef = useRef(0);
+  const defeatedEnemyMasterIdsRef = useRef<string[]>([]);
   const leaderInstanceIdRef = useRef<string | null>(null);
   const [phase, setPhase] = useState<Phase>('battle');
   const [leaderBbGauge, setLeaderBbGauge] = useState(0);
@@ -336,7 +337,10 @@ export const BattlePage = () => {
               });
               updEnemies = updEnemies.map(e => result.updatedEnemies.find(ue => ue.instanceId === e.instanceId) ?? e);
               result.updatedEnemies.forEach(e => {
-                if (e.currentHp <= 0 && (prevHps.get(e.instanceId) ?? 1) > 0) newLines.push(`💀 ${e.name} を撃破！`);
+                if (e.currentHp <= 0 && (prevHps.get(e.instanceId) ?? 1) > 0) {
+                  newLines.push(`💀 ${e.name} を撃破！`);
+                  defeatedEnemyMasterIdsRef.current.push(e.masterId);
+                }
               });
               totalDamageRef.current += result.logs.reduce((s, l) => s + (l.damage ?? 0), 0);
             };
@@ -371,7 +375,10 @@ export const BattlePage = () => {
                   totalDamageRef.current += totalDmg;
                   newLines.push(`✨ ${leader.emoji} ${leader.name} のBBスキル発動！全体に ${totalDmg.toLocaleString()} ダメージ！`);
                   updEnemies.forEach(e => {
-                    if (e.currentHp <= 0 && (prevHps.get(e.instanceId) ?? 1) > 0) newLines.push(`💀 ${e.name} を撃破！`);
+                    if (e.currentHp <= 0 && (prevHps.get(e.instanceId) ?? 1) > 0) {
+                      newLines.push(`💀 ${e.name} を撃破！`);
+                      defeatedEnemyMasterIdsRef.current.push(e.masterId);
+                    }
                   });
                 }
               }
@@ -436,7 +443,10 @@ export const BattlePage = () => {
               newLines.push(`🐍 ${log.targetNames.join('・')} は毒のダメージ！ ${(log.damage ?? 0).toLocaleString()}`);
             });
             updEnemies.forEach(e => {
-              if (e.currentHp <= 0 && (prevEnemyHpsBeforeTick.get(e.instanceId) ?? 1) > 0) newLines.push(`💀 ${e.name} を撃破！`);
+              if (e.currentHp <= 0 && (prevEnemyHpsBeforeTick.get(e.instanceId) ?? 1) > 0) {
+                newLines.push(`💀 ${e.name} を撃破！`);
+                defeatedEnemyMasterIdsRef.current.push(e.masterId);
+              }
             });
             updAllies.forEach(a => {
               if (a.currentHp <= 0 && (prevAllyHpsBeforeTick.get(a.instanceId) ?? 1) > 0) newLines.push(`😵 ${a.name} が倒れた...`);
@@ -466,6 +476,15 @@ export const BattlePage = () => {
                     if (Math.random() < ri.chance) {
                       for (let i = 0; i < ri.quantity; i++) items.push(ri.itemId);
                     }
+                  });
+
+                  // 撃破した敵ごとのドロップ抽選（ハードはドロップ率1.5倍）
+                  const ENEMY_DROP_CHANCE = 0.12;
+                  defeatedEnemyMasterIdsRef.current.forEach(masterId => {
+                    const enemyMaster = getEnemyMaster(masterId);
+                    enemyMaster?.dropItemIds.forEach(itemId => {
+                      if (Math.random() < Math.min(1, ENEMY_DROP_CHANCE * (isHard ? 1.5 : 1))) items.push(itemId);
+                    });
                   });
 
                   // レイド: ダメージを反映し、今回新たに到達した累計報酬段階のアイテムも加算

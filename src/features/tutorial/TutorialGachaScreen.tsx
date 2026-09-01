@@ -77,7 +77,7 @@ type Phase = 'pre' | 'summon' | 'reveal' | 'results';
 export const TutorialGachaScreen = () => {
   const navigate = useNavigate();
   const { completeTutorial, setInitialGachaDone } = useTutorialStore();
-  const { processSummonResults } = useUnitStore();
+  const { processSummonResults, addAwakeningCrystal } = useUnitStore();
   const { syncSummonResult } = useAuthStore();
 
   // 既に初回無料ガチャを実行済み（戻る/リロード等での再訪問）なら、
@@ -176,6 +176,9 @@ export const TutorialGachaScreen = () => {
 
     // [localStorage SAVE] ユニット追加・被り処理
     const gachaResults = processSummonResults(summonedMasters.map(m => m.id));
+    for (const r of gachaResults) {
+      if (r.type === 'crystal') addAwakeningCrystal(r.masterId);
+    }
     setResultTypes(gachaResults);
 
     // [DB SAVE] 初回ガチャ結果を DB に保存（無料なのでダイヤ消費は 0）

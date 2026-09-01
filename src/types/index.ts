@@ -91,7 +91,7 @@ export interface ScenarioLine {
   position?: CharacterPosition;
   text: string;
   expression?: string;
-  effect?: string;
+  effect?: 'shake' | 'flash';
 }
 
 export interface ScenarioMaster {

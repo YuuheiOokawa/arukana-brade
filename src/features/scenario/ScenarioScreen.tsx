@@ -19,6 +19,26 @@ export const CreditsScrollScreen = ({
   const accent = BG_ACCENT[bgKey] ?? '#8b5cf6';
   const durationSec = Math.max(12, lines.length * 2.4 + 6);
 
+  // 各行がスクロールで画面中央付近に来たタイミングで shake/flash 演出を一度だけ発火する
+  const effectLineRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  useEffect(() => {
+    const targets = Object.values(effectLineRefs.current).filter((el): el is HTMLDivElement => !!el);
+    if (targets.length === 0) return;
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target as HTMLElement;
+        const effect = el.dataset.effect;
+        if (effect === 'shake') el.classList.add('animate-shake');
+        else if (effect === 'flash') el.classList.add('animate-flash');
+        observer.unobserve(el);
+      });
+    }, { threshold: 0.6 });
+    targets.forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stageId]);
+
   return (
     <div
       className="fixed inset-0 overflow-hidden select-none"
@@ -75,7 +95,11 @@ export const CreditsScrollScreen = ({
           <div style={{ height: '100vh' }} />
           <div className="px-8 max-w-sm mx-auto space-y-7 text-center">
             {lines.map((line, i) => (
-              <div key={i}>
+              <div
+                key={i}
+                ref={line.effect ? (el => { effectLineRefs.current[i] = el; }) : undefined}
+                data-effect={line.effect}
+              >
                 {line.type === 'narration' ? (
                   <p className="text-sm leading-7 text-gray-300 italic">
                     {line.text}
@@ -257,10 +281,14 @@ export const ScenarioScreen = () => {
 
   const isNarration = currentLine?.type === 'narration';
   const speakerName = currentLine?.speakerName;
+  const effectClass = currentLine?.effect === 'shake' ? 'animate-shake'
+    : currentLine?.effect === 'flash' ? 'animate-flash'
+    : '';
 
   return (
     <div
-      className="fixed inset-0 overflow-hidden flex flex-col select-none"
+      key={lineIndex}
+      className={`fixed inset-0 overflow-hidden flex flex-col select-none ${effectClass}`}
       style={{ background: BG_STYLES[bgKey] }}
       onClick={advance}
     >
