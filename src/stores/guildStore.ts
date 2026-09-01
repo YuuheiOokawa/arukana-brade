@@ -45,7 +45,11 @@ interface GuildStore {
   lastGuildMissionReset: string;
   guildChatMessages: { sender: string; text: string; timestamp: number }[];
   createGuild: (name: string, emblem: string, playerName: string) => void;
-  hydrateGuildFromServer: (apiGuild: { id: string; name: string; emblem: string; description: string; level: number; exp: number }, playerName: string) => void;
+  hydrateGuildFromServer: (
+    apiGuild: { id: string; name: string; emblem: string; description: string; level: number; exp: number },
+    playerName: string,
+    myRole?: 'master' | 'officer' | 'member'
+  ) => void;
   leaveGuild: () => void;
   addGuildExp: (amount: number) => void;
   updateGuildMissionProgress: (type: 'battle' | 'exp' | 'raid', count?: number) => void;
@@ -53,13 +57,6 @@ interface GuildStore {
   sendChatMessage: (playerName: string, text: string) => void;
   claimGuildMission: (id: string) => GuildMissionReward | null;
 }
-
-const PRESET_GUILDS = [
-  { id: 'guild_a', name: 'アルカナ騎士団',   description: 'レイドボス討伐を中心に活動！初心者歓迎',  level: 8, emblem: '⚔️' },
-  { id: 'guild_b', name: '召喚師の集い',     description: '召喚・育成重視。まったり楽しもう！',       level: 5, emblem: '✨' },
-  { id: 'guild_c', name: 'ダークファング',   description: 'アリーナ上位を目指す上級者ギルド',         level: 12, emblem: '🌑' },
-];
-export { PRESET_GUILDS };
 
 export const useGuildStore = create<GuildStore>()(
   persist(
@@ -99,13 +96,13 @@ export const useGuildStore = create<GuildStore>()(
       // 新規ギルドとして作ってしまうため、既存ギルドの再読み込み時にこれを使うと
       // サーバー側で積み上げたレベル・経験値が毎回1/0にリセットされて見えるバグがあった
       // (メンバーの実名/戦力はサーバーAPIが持っていないため引き続きダミーで補完する)
-      hydrateGuildFromServer: (apiGuild, playerName) => {
+      hydrateGuildFromServer: (apiGuild, playerName, myRole = 'master') => {
         const playerMember: GuildMember = {
           id: 'player',
           name: playerName,
           rank: 1,
           power: 0,
-          role: 'master',
+          role: myRole,
           joinedAt: Date.now(),
           isPlayer: true,
         };

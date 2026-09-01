@@ -39,7 +39,7 @@ import { usePlayerStore } from './stores/playerStore';
 import { hydrateFromGameState, resetAllStores, initAutoSave, saveImmediately, saveBeforeUnload, setSaveErrorHandler, setSaveSuccessHandler, initCrossTabClaimSync } from './lib/syncService';
 import { fetchAndPopulateMasterData } from './lib/masterDataCache';
 import { populateImageCache } from './lib/unitImage';
-import { ADMIN_EMAIL } from './utils/admin';
+import { isAdminEmail } from './utils/admin';
 
 const LAST_USER_KEY = 'arcana-last-user-id';
 
@@ -142,7 +142,7 @@ const AppContent = () => {
       })
       .catch(() => { /* 失敗時は静的パスにフォールバック */ });
 
-    if (user.email === ADMIN_EMAIL) setAdminMode();
+    if (isAdminEmail(user.email)) setAdminMode();
 
     // 保存失敗・成功のUI通知
     setSaveErrorHandler((msg) => {

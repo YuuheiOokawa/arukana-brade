@@ -82,15 +82,31 @@ export const PvPPage = () => {
     logs.push(`相手リーダー: ${oppMaster?.name ?? '???'} (戦力 ${oppPower.toLocaleString()})`);
     logs.push('');
 
-    partyUnits.forEach(unit => {
+    // 各ユニットの表示ダメージを算出（勝敗そのものは戦力比で既に決定済み）。
+    // ダメージ合計と相手HPの大小が won の結果と食い違うと、プレイヤーには
+    // 「ログ上は圧勝しているのに敗北」のような矛盾に見えてしまうため、
+    // 合計が won の結果と整合するようスケーリングして表示する。
+    const unitDamages = partyUnits.map(unit => {
       const master = UNIT_MASTER.find(m => m.id === unit.masterId);
-      if (!master) return;
+      if (!master) return null;
       const stats = calcUnitStats(master, unit.level, unit.awakenRank, unit.awakeningCount ?? 0);
       const elemMult = ELEMENT_ADVANTAGE[master.element]?.[oppMaster?.element ?? 'none' as never] ?? 1.0;
       const baseDmg = Math.max(1, stats.atk * (0.85 + Math.random() * 0.3) - oppStats.def * 0.3);
-      const dmg = Math.floor(baseDmg * elemMult);
+      return { master, elemMult, dmg: baseDmg * elemMult };
+    }).filter((u): u is NonNullable<typeof u> => u != null);
+
+    const rawTotal = unitDamages.reduce((s, u) => s + u.dmg, 0);
+    let scale = 1;
+    if (won && rawTotal < oppStats.hp) {
+      scale = (oppStats.hp * (1.05 + Math.random() * 0.15)) / Math.max(1, rawTotal);
+    } else if (!won && rawTotal >= oppStats.hp) {
+      scale = (oppStats.hp * (0.6 + Math.random() * 0.3)) / Math.max(1, rawTotal);
+    }
+
+    unitDamages.forEach(({ master, elemMult, dmg }) => {
+      const scaledDmg = Math.max(1, Math.floor(dmg * scale));
       const elemNote = elemMult > 1.0 ? ' ⚡属性有利！' : elemMult < 1.0 ? ' ↓属性不利' : '';
-      logs.push(`${master.emoji} ${master.name} → ${dmg.toLocaleString()} ダメージ！${elemNote}`);
+      logs.push(`${master.emoji} ${master.name} → ${scaledDmg.toLocaleString()} ダメージ！${elemNote}`);
     });
 
     if (oppMaster) {

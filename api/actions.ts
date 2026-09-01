@@ -1,6 +1,7 @@
 /**
  * /api/actions  — ゲームアクション統合エンドポイント
  * GET  ?action=guild              → ギルド情報取得
+ * GET  ?action=guild_list         → 参加可能なギルド一覧取得
  * GET  ?action=friends            → フレンドリスト・申請一覧取得
  * POST action=shop_stamina        → スタミナ購入
  * POST action=shop_item           → アイテム購入
@@ -136,6 +137,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
     if (!membership) return res.json({ guild: null });
     return res.json({ guild: membership.guild, myRole: membership.role });
+  }
+
+  // ── GET: 参加可能なギルド一覧取得 ────────────────────────────
+  if (req.method === 'GET' && req.query.action === 'guild_list') {
+    const token = getTokenFromRequest(req.headers.cookie);
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+    const payload = verifyToken(token);
+    if (!payload) return res.status(401).json({ error: 'Invalid token' });
+    const guilds = await prisma.guild.findMany({
+      orderBy: [{ level: 'desc' }, { exp: 'desc' }],
+      take: 20,
+      include: { _count: { select: { members: true } } },
+    });
+    return res.json({
+      guilds: guilds.map(g => ({
+        id: g.id, name: g.name, emblem: g.emblem, description: g.description,
+        level: g.level, memberCount: g._count.members,
+      })),
+    });
   }
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });

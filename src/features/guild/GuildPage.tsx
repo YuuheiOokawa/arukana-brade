@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { GameButton } from '../../components/ui/game/GameButton';
-import { useGuildStore, PRESET_GUILDS } from '../../stores/guildStore';
+import { useGuildStore } from '../../stores/guildStore';
 import { usePlayerStore } from '../../stores/playerStore';
 import { TopBar } from '../../components/layout/TopBar';
 
@@ -15,6 +15,17 @@ interface ApiGuild {
   exp: number;
   members: { id: string; playerId: string; role: string; joinedAt: string }[];
 }
+
+interface JoinableGuild {
+  id: string;
+  name: string;
+  emblem: string;
+  description: string;
+  level: number;
+  memberCount: number;
+}
+
+type GuildRole = 'master' | 'officer' | 'member';
 
 export const GuildPage = () => {
   const {
@@ -31,6 +42,8 @@ export const GuildPage = () => {
   const [newGuildEmblem, setNewGuildEmblem] = useState('⚔️');
   const [apiLoading, setApiLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [joinableGuilds, setJoinableGuilds] = useState<JoinableGuild[]>([]);
+  const [joiningGuildId, setJoiningGuildId] = useState<string | null>(null);
 
   useEffect(() => {
     checkAndResetGuildMissions();
@@ -41,18 +54,29 @@ export const GuildPage = () => {
     try {
       const res = await fetch('/api/actions?action=guild', { credentials: 'include' });
       if (!res.ok) return;
-      const data = await res.json() as { guild: ApiGuild | null };
+      const data = await res.json() as { guild: ApiGuild | null; myRole?: GuildRole };
       if (data.guild && !guild) {
         // サーバー側にギルドがあるのにローカルにない場合は同期
         // (createGuild だと level/exp が毎回 1/0 にリセットされてしまうため、
         //  既存ギルドの復元には hydrateGuildFromServer を使う)
-        hydrateGuildFromServer(data.guild, player.name);
+        hydrateGuildFromServer(data.guild, player.name, data.myRole);
       }
     } catch { /* offline時はlocalStorage継続 */ }
   }, [guild, hydrateGuildFromServer, player.name]);
 
+  // 参加可能な実在ギルドの一覧を取得（未所属時のみ）
+  const fetchJoinableGuilds = useCallback(async () => {
+    try {
+      const res = await fetch('/api/actions?action=guild_list', { credentials: 'include' });
+      if (!res.ok) return;
+      const data = await res.json() as { guilds: JoinableGuild[] };
+      setJoinableGuilds(data.guilds ?? []);
+    } catch { /* offline時は空一覧のまま。新規作成のみ案内 */ }
+  }, []);
+
   useEffect(() => {
     void fetchGuildFromServer();
+    void fetchJoinableGuilds();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -102,30 +126,28 @@ export const GuildPage = () => {
     }
   };
 
-  const handleJoinPreset = async (pg: typeof PRESET_GUILDS[0]) => {
-    setApiLoading(true);
+  const handleJoinGuild = async (g: JoinableGuild) => {
+    setJoiningGuildId(g.id);
     setApiError(null);
     try {
-      // プリセットギルドはサーバーにまだ存在しないため create → join の代わりに
-      // サーバー側でギルドを作成してから参加する
-      const createRes = await fetch('/api/actions', {
+      const res = await fetch('/api/actions', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'guild_create', name: pg.name, emblem: pg.emblem }),
+        body: JSON.stringify({ action: 'guild_join', guildId: g.id }),
       });
-      if (!createRes.ok) {
-        // APIエラーでもローカルには参加
-        createGuild(pg.name, pg.emblem, player.name);
+      const data = await res.json() as { guild?: ApiGuild; myRole?: GuildRole; error?: string };
+      if (!res.ok || data.error || !data.guild) {
+        setApiError(data.error ?? 'ギルドへの参加に失敗しました');
         return;
       }
-      const data = await createRes.json() as { guild?: ApiGuild };
-      if (data.guild) createGuild(data.guild.name, data.guild.emblem, player.name);
-      else createGuild(pg.name, pg.emblem, player.name);
+      // 実在の共有ギルドに参加するため、level/exp/メンバー構成をそのまま引き継ぐ
+      // hydrateGuildFromServer を使う（createGuild は自分だけの新規ギルドを作ってしまう）
+      hydrateGuildFromServer(data.guild, player.name, data.myRole ?? 'member');
     } catch {
-      createGuild(pg.name, pg.emblem, player.name);
+      setApiError('ネットワークエラーのため参加できませんでした');
     } finally {
-      setApiLoading(false);
+      setJoiningGuildId(null);
     }
   };
 
@@ -158,31 +180,33 @@ export const GuildPage = () => {
             <div className="px-4 py-2 rounded-xl bg-red-900/40 border border-red-700/40 text-red-300 text-sm">{apiError}</div>
           )}
 
-          {/* おすすめギルド */}
-          <div>
-            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">おすすめギルド</p>
-            <div className="space-y-2">
-              {PRESET_GUILDS.map(pg => (
-                <div key={pg.id} className="card-base p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-purple-900/40 rounded-xl flex items-center justify-center text-2xl">
-                      {pg.emblem}
+          {/* おすすめギルド（実在の他プレイヤーのギルドに参加） */}
+          {joinableGuilds.length > 0 && (
+            <div>
+              <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">おすすめギルド</p>
+              <div className="space-y-2">
+                {joinableGuilds.map(g => (
+                  <div key={g.id} className="card-base p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-purple-900/40 rounded-xl flex items-center justify-center text-2xl">
+                        {g.emblem}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-bold truncate">{g.name}</p>
+                        <p className="text-gray-500 text-xs truncate">{g.description}</p>
+                        <p className="text-purple-400 text-xs mt-0.5">ギルドLv {g.level} · メンバー{g.memberCount}人</p>
+                      </div>
+                      <GameButton variant="primary" size="sm"
+                        disabled={joiningGuildId !== null}
+                        onClick={() => void handleJoinGuild(g)}>
+                        {joiningGuildId === g.id ? '...' : '参加'}
+                      </GameButton>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white font-bold truncate">{pg.name}</p>
-                      <p className="text-gray-500 text-xs truncate">{pg.description}</p>
-                      <p className="text-purple-400 text-xs mt-0.5">ギルドLv {pg.level}</p>
-                    </div>
-                    <GameButton variant="primary" size="sm"
-                      disabled={apiLoading}
-                      onClick={() => void handleJoinPreset(pg)}>
-                      {apiLoading ? '...' : '参加'}
-                    </GameButton>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* ギルド新規作成 */}
           <div className="card-base p-4">

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { useTutorialStore } from '../../stores/tutorialStore';
 import { usePlayerStore } from '../../stores/playerStore';
-import { ADMIN_EMAIL } from '../../utils/admin';
+import { isAdminEmail } from '../../utils/admin';
 
 type TitlePhase = 'loading' | 'tap' | 'menu';
 
@@ -38,7 +38,7 @@ export const TitleScreen = () => {
     if (user && authPlayer) {
       syncFromAuth(authPlayer);
       if (authPlayer.tutorialCompleted && !completed) completeTutorial();
-      if (user.email === ADMIN_EMAIL) setAdminMode();
+      if (isAdminEmail(user.email)) setAdminMode();
       const done = completed || authPlayer.tutorialCompleted;
       navigate(done ? '/' : '/tutorial/intro', { replace: true });
       return;
