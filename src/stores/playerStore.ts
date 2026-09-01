@@ -17,6 +17,9 @@ interface AuthPlayerSnapshot {
   bio: string | null;
   loginDays: number;
   staminaRecoveryTime?: number;
+  battleWins?: number;
+  questClears?: number;
+  summonCount?: number;
 }
 
 interface PlayerStore {
@@ -114,6 +117,9 @@ export const usePlayerStore = create<PlayerStore>()(
               bio: p.bio ?? s.player.bio,
               loginDays: p.loginDays,
               staminaRecoveryTime,
+              battleWins: p.battleWins ?? s.player.battleWins,
+              questClears: p.questClears ?? s.player.questClears,
+              summonCount: p.summonCount ?? s.player.summonCount,
             },
           };
         });

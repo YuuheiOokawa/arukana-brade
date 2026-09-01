@@ -33,8 +33,21 @@ function serializePlayerData(player: {
     questProgress, parties, missionProgress, loginBonus, arenaRecord,
     ...playerFields
   } = player;
+  // 実績（初勝利/10勝/召喚10回等）が参照する累計カウンターは Player の列ではなく
+  // miscData 内に保存されている（api/player.ts の saveAll 参照）ため、ここで展開する。
+  const misc = (playerFields.miscData ?? {}) as Record<string, unknown>;
+  const miscCount = (v: unknown): number => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
   return {
-    player: { ...playerFields, staminaRecoveryTime: Number(playerFields.staminaRecoveryTime) },
+    player: {
+      ...playerFields,
+      staminaRecoveryTime: Number(playerFields.staminaRecoveryTime),
+      battleWins: miscCount(misc.battleWins),
+      questClears: miscCount(misc.questClears),
+      summonCount: miscCount(misc.summonCount),
+    },
     gameData: {
       ownedUnits: ownedUnits.map(u => ({ ...u, acquiredAt: Number(u.acquiredAt) })),
       items: playerItems,

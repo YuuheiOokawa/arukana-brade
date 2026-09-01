@@ -116,7 +116,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (JSON.stringify(state).length > MAX_STATE_BYTES)
       return res.status(413).json({ error: 'state too large' });
 
-    type P = { name?: string; rank?: number; exp?: number; gold?: number; diamond?: number; stamina?: number; maxStamina?: number; staminaRecoveryTime?: number; title?: string; bio?: string; favoriteUnitInstanceId?: string | null; loginDays?: number; playerId?: string };
+    type P = { name?: string; rank?: number; exp?: number; gold?: number; diamond?: number; stamina?: number; maxStamina?: number; staminaRecoveryTime?: number; title?: string; bio?: string; favoriteUnitInstanceId?: string | null; loginDays?: number; playerId?: string; battleWins?: number; questClears?: number; summonCount?: number };
     type U = { instanceId: string; masterId: string; level?: number; exp?: number; awakenRank?: number; awakeningCount?: number; currentRarity?: string | number; isLocked?: boolean; acquiredAt?: number };
     type I = { itemId: string; quantity?: number };
     type E = { instanceId: string; masterId: string; level?: number; exp?: number; equippedTo?: string | null };
@@ -125,6 +125,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // miscData 用サニタイズヘルパー
     const strArray = (v: unknown, max = 2000): string[] =>
       Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').slice(0, max) : [];
+    // 実績の達成条件（初勝利/10勝/召喚10回等）が参照するカウンターのサニタイズ。
+    // クライアントが値を送らなかった場合は、DBに既にある値を保持する。
+    const safeCount = (v: unknown, fallback: unknown): number => {
+      const n = Number(v);
+      if (Number.isFinite(n)) return Math.max(0, Math.min(999_999_999, Math.floor(n)));
+      const fn = Number(fallback);
+      return Number.isFinite(fn) ? Math.max(0, fn) : 0;
+    };
     const starsRecord = (v: unknown): Record<string, number> => {
       if (!v || typeof v !== 'object' || Array.isArray(v)) return {};
       const out: Record<string, number> = {};
@@ -211,6 +219,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             guildMissions: state.guildMissions !== undefined ? guildMissionsArray(state.guildMissions) : (prevMisc.guildMissions ?? []),
             guildChatMessages: state.guildChatMessages !== undefined ? guildChatArray(state.guildChatMessages) : (prevMisc.guildChatMessages ?? []),
             guildLastMissionReset: typeof state.guildLastMissionReset === 'string' ? state.guildLastMissionReset.slice(0, 20) : (prevMisc.guildLastMissionReset ?? ''),
+            // 実績（初勝利/10勝/召喚10回等）が参照する累計カウンター。
+            // 以前はPlayerモデルに列がなくクライアントのlocalStorageのみで保持していたため、
+            // 別端末でのログインやアカウント切り替え時に0にリセットされて見えていた。
+            battleWins: safeCount(p?.battleWins, prevMisc.battleWins),
+            questClears: safeCount(p?.questClears, prevMisc.questClears),
+            summonCount: safeCount(p?.summonCount, prevMisc.summonCount),
           })) as any,
           updatedAt: new Date(),
         },
