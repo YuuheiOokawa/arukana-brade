@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UNIT_MASTER } from '../../data/units';
 import { useUnitStore } from '../../stores/unitStore';
+import { useCollectionStore } from '../../stores/collectionStore';
 import { useTutorialStore } from '../../stores/tutorialStore';
 import { useAuthStore } from '../../stores/authStore';
 import { ELEMENT_NAMES, RARITY_TO_STAR, STAR_COLORS, STAR_LABELS } from '../../types';
@@ -179,6 +180,8 @@ export const TutorialGachaScreen = () => {
     for (const r of gachaResults) {
       if (r.type === 'crystal') addAwakeningCrystal(r.masterId);
     }
+    // 図鑑の発見登録（後で売却/解放されても図鑑上は発見済みのまま残す）
+    useCollectionStore.getState().registerDiscovered(summonedMasters.map(m => m.id));
     setResultTypes(gachaResults);
 
     // [DB SAVE] 初回ガチャ結果を DB に保存（無料なのでダイヤ消費は 0）

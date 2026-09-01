@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTutorialStore } from '../../stores/tutorialStore';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useUnitStore } from '../../stores/unitStore';
+import { useCollectionStore } from '../../stores/collectionStore';
 import { useAuthStore } from '../../stores/authStore';
 import { saveImmediately } from '../../lib/syncService';
 import { HERO_MASTER } from '../../data/heroes';
@@ -66,7 +67,11 @@ export const TutorialCompleteScreen = () => {
     setupFromTutorial(playerName || '勇者');
 
     if (heroMaster?.unitMasterId) {
-      try { addUnit(heroMaster.unitMasterId); } catch { /* ignore */ }
+      try {
+        addUnit(heroMaster.unitMasterId);
+        // 図鑑の発見登録（後で売却/解放されても図鑑上は発見済みのまま残す）
+        useCollectionStore.getState().registerDiscovered([heroMaster.unitMasterId]);
+      } catch { /* ignore */ }
     }
 
     // 主人公ユニットをすぐに DB に保存（ガチャ前に離脱してもデータが残るよう）
