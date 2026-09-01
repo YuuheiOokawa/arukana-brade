@@ -21,7 +21,7 @@ import { calcEquipmentStats, getEquipmentMaster } from '../../data/equipments';
 import { applyLeaderSkills, executeNormalAttack, executeEnemyTurn, executeSkillOnTargets, tickBuffs, hasStatusEffect } from '../../utils/battleEngine';
 import { getSkill } from '../../data/skills';
 import { GameButton } from '../../components/ui/game/GameButton';
-import type { BattleUnit, BattleEnemy, BattleLog, QuestStage, LeaderSkillEffect } from '../../types';
+import type { BattleUnit, BattleEnemy, BattleLog, QuestStage, LeaderSkillEffect, StatusEffect } from '../../types';
 import { UnitIcon } from '../../components/ui/UnitCard';
 import { resolveUnitImage } from '../../lib/unitImage';
 
@@ -40,6 +40,26 @@ const logColor = (line: string) => {
   if (line.startsWith('━━') || line.startsWith('──')) return 'text-purple-400 font-bold';
   if (line.startsWith('💥')) return 'text-orange-400';
   return 'text-gray-300';
+};
+
+// ===== バフ/デバフ/状態異常アイコン =====
+const STATUS_ICON: Partial<Record<StatusEffect['type'], string>> = {
+  buff_atk: '🔺', buff_def: '🛡️', buff_rec: '💚',
+  debuff_atk: '🔻', debuff_def: '💢',
+  status_poison: '🐍', status_paralyze: '⚡',
+};
+
+const StatusBadges = ({ buffs }: { buffs: StatusEffect[] }) => {
+  if (buffs.length === 0) return null;
+  return (
+    <span className="flex items-center gap-0.5 flex-shrink-0">
+      {buffs.map((b, i) => (
+        <span key={i} title={b.type} className="text-[9px] leading-none">
+          {STATUS_ICON[b.type] ?? ''}
+        </span>
+      ))}
+    </span>
+  );
 };
 
 export const BattlePage = () => {
@@ -664,6 +684,7 @@ export const BattlePage = () => {
               <div key={e.instanceId} className={`flex items-center gap-2 ${isDead ? 'opacity-30' : ''}`}>
                 <span className="text-base w-6 text-center">{e.emoji}</span>
                 <span className="text-gray-200 text-xs w-28 truncate">{e.name}</span>
+                <StatusBadges buffs={e.buffs} />
                 <div className="h-2 bg-gray-700 rounded-full overflow-hidden flex-1">
                   <div
                     className="h-full rounded-full transition-all duration-300"
@@ -703,6 +724,7 @@ export const BattlePage = () => {
                 <span className={`text-xs w-28 truncate ${a.isFriend ? 'text-purple-300' : 'text-gray-200'}`}>
                   {a.name}
                 </span>
+                <StatusBadges buffs={a.buffs} />
                 <div className="h-2 bg-gray-700 rounded-full overflow-hidden flex-1">
                   <div
                     className="h-full rounded-full transition-all duration-300"
