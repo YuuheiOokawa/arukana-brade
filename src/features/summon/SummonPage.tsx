@@ -23,9 +23,29 @@ import { elementGradient } from '../../utils/elementUtils';
 ============================================================ */
 interface Particle {
   x: number; y: number; vx: number; vy: number;
-  life: number; maxLife: number; size: number;
-  color: string; shape: 'circle' | 'diamond';
+  life: number; maxLife: number; size: number; rot: number; vrot: number;
+  color: string; shape: 'circle' | 'diamond' | 'star';
 }
+
+interface Shockwave {
+  x: number; y: number; radius: number; maxRadius: number;
+  life: number; maxLife: number; color: string; width: number;
+}
+
+// 5方向の星形パスを描画する(★3演出専用のリッチなパーティクル用)
+const drawStarPath = (ctx: CanvasRenderingContext2D, size: number) => {
+  const spikes = 5;
+  const outerR = size * 2.2;
+  const innerR = size * 0.9;
+  ctx.beginPath();
+  for (let i = 0; i < spikes * 2; i++) {
+    const r = i % 2 === 0 ? outerR : innerR;
+    const a = (Math.PI / spikes) * i - Math.PI / 2;
+    const px = Math.cos(a) * r, py = Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+};
 
 /* ============================================================
    ガチャロジック
@@ -87,17 +107,18 @@ const ELEMENT_COLOR: Record<string, string> = {
 /* ============================================================
    MagicCircle SVG
 ============================================================ */
-const MagicCircle = ({ active, star }: { active: boolean; star: GachaStar }) => {
+const MagicCircle = ({ active, star, intense = false }: { active: boolean; star: GachaStar; intense?: boolean }) => {
   const color = star === 3 ? '#ffe48d' : star === 2 ? '#d698ff' : '#7bc8ff';
   const glow = star === 3
     ? 'drop-shadow(0 0 16px rgba(255,228,141,.95)) drop-shadow(0 0 40px rgba(255,180,60,.5))'
     : star === 2
     ? 'drop-shadow(0 0 12px rgba(183,115,255,.9)) drop-shadow(0 0 30px rgba(150,60,255,.4))'
     : 'drop-shadow(0 0 10px rgba(123,200,255,.9))';
+  const intenseGlow = 'drop-shadow(0 0 24px rgba(255,228,141,1)) drop-shadow(0 0 60px rgba(255,180,60,.7))';
   return (
-    <div className={`summon-magic-circle ${active ? 'active' : ''}`}
-      style={{ filter: active ? glow : 'none', transition: 'filter 0.8s, opacity 0.8s', opacity: active ? 1 : 0.4 }}>
-      <svg viewBox="0 0 500 500" className="summon-circle-svg" style={{ stroke: color }}>
+    <div className={`summon-magic-circle ${active ? 'active' : ''} ${intense ? 'intense' : ''}`}
+      style={{ filter: active ? (intense ? intenseGlow : glow) : 'none', transition: 'filter 0.8s, opacity 0.8s', opacity: active ? 1 : 0.4 }}>
+      <svg viewBox="0 0 500 500" className={`summon-circle-svg ${intense ? 'intense' : ''}`} style={{ stroke: color }}>
         <defs>
           <filter id="mg">
             <feGaussianBlur stdDeviation="3" result="b" />
@@ -139,10 +160,16 @@ export const SummonPage = () => {
   const [colorFlash, setColorFlash] = useState<string | null>(null);
   const [raysActive, setRaysActive] = useState(false);
   const [currentStar, setCurrentStar] = useState<GachaStar>(1);
+  const [intenseCircle, setIntenseCircle] = useState(false);
+  const [dimPulse, setDimPulse] = useState(false);
+  const [stagePunch, setStagePunch] = useState(false);
+  const [confirmBurst, setConfirmBurst] = useState(false);
+  const [shakeHeavy, setShakeHeavy] = useState(false);
   const skipRef = useRef(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
+  const shockwavesRef = useRef<Shockwave[]>([]);
   const animFrameRef = useRef<number>(0);
 
   const ticketCount    = items.find(i => i.itemId === 'item_summon_ticket')?.quantity ?? 0;
@@ -153,7 +180,7 @@ export const SummonPage = () => {
   const SSR_POOL = SUMMON_POOLS.find(p => p.id === 'summon_ssr_ticket')!;
 
   /* ---- パーティクルループ ---- */
-  const spawnBurst = useCallback((count: number, color: string, power = 1) => {
+  const spawnBurst = useCallback((count: number, color: string, power = 1, rich = false) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const cx = canvas.width / (2 * devicePixelRatio);
@@ -161,15 +188,29 @@ export const SummonPage = () => {
     for (let i = 0; i < count; i++) {
       const a = Math.random() * Math.PI * 2;
       const s = (Math.random() * 6 + 1.5) * power;
+      const shapeRoll = Math.random();
+      const shape: Particle['shape'] = rich
+        ? (shapeRoll < 0.22 ? 'star' : shapeRoll < 0.5 ? 'diamond' : 'circle')
+        : (shapeRoll < 0.25 ? 'diamond' : 'circle');
       particlesRef.current.push({
         x: cx + (Math.random() - 0.5) * 100,
         y: cy + (Math.random() - 0.5) * 100,
         vx: Math.cos(a) * s, vy: Math.sin(a) * s - Math.random() * 2,
         life: Math.random() * 55 + 45, maxLife: 100,
-        size: Math.random() * 2.5 + 0.6,
-        color, shape: Math.random() < 0.25 ? 'diamond' : 'circle',
+        size: (rich ? Math.random() * 3.2 + 1 : Math.random() * 2.5 + 0.6),
+        rot: Math.random() * Math.PI * 2, vrot: (Math.random() - 0.5) * 0.2,
+        color, shape,
       });
     }
+  }, []);
+
+  // 衝撃波リング(★3クライマックス演出用)
+  const spawnShockwave = useCallback((color: string, maxRadius = 320, width = 3) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const cx = canvas.width / (2 * devicePixelRatio);
+    const cy = canvas.height * 0.46 / devicePixelRatio;
+    shockwavesRef.current.push({ x: cx, y: cy, radius: 8, maxRadius, life: 40, maxLife: 40, color, width });
   }, []);
 
   useEffect(() => {
@@ -188,20 +229,42 @@ export const SummonPage = () => {
 
     const loop = () => {
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+      shockwavesRef.current = shockwavesRef.current.filter(r => r.life > 0);
+      shockwavesRef.current.forEach(r => {
+        r.radius += (r.maxRadius - r.radius) * 0.16;
+        r.life--;
+        ctx.globalAlpha = Math.max(r.life / r.maxLife, 0) * 0.9;
+        ctx.strokeStyle = r.color;
+        ctx.shadowColor = r.color;
+        ctx.shadowBlur = 30;
+        ctx.lineWidth = r.width;
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+
       particlesRef.current = particlesRef.current.filter(p => p.life > 0);
       particlesRef.current.forEach(p => {
-        p.x += p.vx; p.y += p.vy; p.vy += 0.016; p.life--;
+        p.x += p.vx; p.y += p.vy; p.vy += 0.016; p.life--; p.rot += p.vrot;
         ctx.globalAlpha = Math.max(p.life / 90, 0);
         ctx.fillStyle = p.color;
         ctx.shadowColor = p.color;
-        ctx.shadowBlur = p.shape === 'diamond' ? 24 : 14;
-        ctx.beginPath();
+        ctx.shadowBlur = p.shape === 'circle' ? 14 : 24;
         if (p.shape === 'diamond') {
-          ctx.save(); ctx.translate(p.x, p.y); ctx.rotate((90 - p.life) * 0.04);
+          ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+          ctx.beginPath();
           ctx.moveTo(0, -p.size * 2.2); ctx.lineTo(p.size * 1.2, 0);
           ctx.lineTo(0, p.size * 2.2); ctx.lineTo(-p.size * 1.2, 0);
           ctx.closePath(); ctx.fill(); ctx.restore();
-        } else { ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); }
+        } else if (p.shape === 'star') {
+          ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+          drawStarPath(ctx, p.size);
+          ctx.fill(); ctx.restore();
+        } else {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+        }
       });
       ctx.globalAlpha = 1;
       animFrameRef.current = requestAnimationFrame(loop);
@@ -218,6 +281,20 @@ export const SummonPage = () => {
       clearInterval(idleInterval);
     };
   }, [spawnBurst, phase]);
+
+  // スキップ/中断時に演出用フラグをまとめてクリアする(★3クライマックス演出の追加後、
+  // 個別にリセットし忘れるとダーク暗転やズームパンチが結果画面に残留してしまうため)
+  const resetFx = () => {
+    setShakePage(false);
+    setShakeHeavy(false);
+    setWhiteFlash(false);
+    setColorFlash(null);
+    setRaysActive(false);
+    setIntenseCircle(false);
+    setDimPulse(false);
+    setStagePunch(false);
+    setConfirmBurst(false);
+  };
 
   /* ---- 召喚アニメーション ---- */
   const startSummon = async (count: number, ticketType: 'normal' | 'sr' | 'ssr' | null = null) => {
@@ -286,32 +363,84 @@ export const SummonPage = () => {
     );
 
     const pColor = maxStar === 3 ? 'rgba(255,228,141,.8)' : maxStar === 2 ? 'rgba(183,115,255,.8)' : 'rgba(123,200,255,.8)';
+    const abort = () => { setPhase('results'); resetFx(); };
 
     setPhase('summon');
     setRaysActive(maxStar === 3);
-    spawnBurst(120, pColor, 0.45);
-    if (skipRef.current) { setPhase('results'); return; }
-    await sleep(1200);
 
-    if (skipRef.current) { setPhase('results'); return; }
-    spawnBurst(200, 'rgba(255,244,190,.85)', 0.6);
-    setShakePage(true);
-    spawnBurst(220, pColor, 1.0);
     if (maxStar === 3) {
-      setColorFlash('rgba(255,228,141,.55)');
-      await sleep(160);
-      setColorFlash(null);
-    }
-    await sleep(240);
-    setShakePage(false);
+      // ★3クライマックス: 予兆 → 集束(ダーク暗転+魔法陣加速) → 爆発(衝撃波+激震+確定演出) → 開放(白閃光+確定テキスト)
+      setIntenseCircle(true);
+      spawnBurst(60, pColor, 0.3);
+      if (skipRef.current) { abort(); return; }
+      await sleep(500);
 
-    if (skipRef.current) { setPhase('results'); return; }
-    spawnBurst(260, 'rgba(190,249,255,.9)', 1.1);
-    setWhiteFlash(true);
-    await sleep(200);
-    setWhiteFlash(false);
-    if (skipRef.current) { setPhase('results'); return; }
-    await sleep(600);
+      if (skipRef.current) { abort(); return; }
+      setDimPulse(true);
+      spawnBurst(150, pColor, 0.55, true);
+      await sleep(700);
+      setDimPulse(false);
+
+      if (skipRef.current) { abort(); return; }
+      spawnShockwave('rgba(255,228,141,.9)', 340, 4);
+      spawnBurst(240, 'rgba(255,244,190,.9)', 1.0, true);
+      setShakeHeavy(true);
+      setShakePage(true);
+      setStagePunch(true);
+      setColorFlash('rgba(255,228,141,.6)');
+      try { navigator.vibrate?.([20, 30, 60, 40, 130]); } catch { /* 非対応環境は無視 */ }
+      await sleep(220);
+      setColorFlash(null);
+      setStagePunch(false);
+      await sleep(180);
+      setShakePage(false);
+      setShakeHeavy(false);
+
+      if (skipRef.current) { abort(); return; }
+      spawnShockwave('rgba(255,255,255,.95)', 420, 3);
+      spawnBurst(340, 'rgba(190,249,255,.95)', 1.3, true);
+      setWhiteFlash(true);
+      setConfirmBurst(true);
+      await sleep(240);
+      setWhiteFlash(false);
+      if (skipRef.current) { abort(); return; }
+      await sleep(760);
+      setConfirmBurst(false);
+      setIntenseCircle(false);
+    } else if (maxStar === 2) {
+      // ★2: 通常より一段華やかな中間演出
+      spawnBurst(120, pColor, 0.45);
+      if (skipRef.current) { abort(); return; }
+      await sleep(950);
+
+      if (skipRef.current) { abort(); return; }
+      spawnBurst(200, 'rgba(255,244,190,.85)', 0.6);
+      setShakePage(true);
+      spawnBurst(210, pColor, 0.95, true);
+      await sleep(240);
+      setShakePage(false);
+
+      if (skipRef.current) { abort(); return; }
+      spawnBurst(240, 'rgba(190,249,255,.9)', 1.05);
+      setWhiteFlash(true);
+      await sleep(190);
+      setWhiteFlash(false);
+      if (skipRef.current) { abort(); return; }
+      await sleep(480);
+    } else {
+      // ★1: テンポよく短く
+      spawnBurst(70, pColor, 0.4);
+      if (skipRef.current) { abort(); return; }
+      await sleep(480);
+
+      if (skipRef.current) { abort(); return; }
+      spawnBurst(140, 'rgba(190,249,255,.8)', 0.75);
+      setWhiteFlash(true);
+      await sleep(150);
+      setWhiteFlash(false);
+      if (skipRef.current) { abort(); return; }
+      await sleep(280);
+    }
 
     setPhase('reveal');
   };
@@ -319,10 +448,7 @@ export const SummonPage = () => {
   /* スキップ */
   const handleSkip = () => {
     skipRef.current = true;
-    setShakePage(false);
-    setWhiteFlash(false);
-    setColorFlash(null);
-    setRaysActive(false);
+    resetFx();
     if (phase === 'reveal') {
       setOpenedCards(new Set(summonResults.map((_, i) => i)));
       setTimeout(() => setPhase('results'), 80);
@@ -339,21 +465,32 @@ export const SummonPage = () => {
     setOpenedCards(prev => new Set([...prev, revealIndex]));
 
     if (star === 3) {
-      spawnBurst(300, color, 1.15);
+      // ★3カードを開いた瞬間: 衝撃波+激震+暗転パルス+確定テキストのフルコンボ
+      spawnShockwave(color, 260, 4);
+      spawnBurst(320, color, 1.25, true);
+      setDimPulse(true);
+      setShakeHeavy(true);
       setShakePage(true);
+      setStagePunch(true);
       setWhiteFlash(true);
+      setConfirmBurst(true);
       // モバイル端末での触覚フィードバック(対応端末のみ、非対応環境では何もしない)
-      try { navigator.vibrate?.([30, 40, 90]); } catch { /* 非対応環境は無視 */ }
-      await sleep(200);
+      try { navigator.vibrate?.([20, 30, 60, 40, 130]); } catch { /* 非対応環境は無視 */ }
+      await sleep(220);
       setShakePage(false);
+      setShakeHeavy(false);
+      setStagePunch(false);
       setWhiteFlash(false);
+      setDimPulse(false);
+      await sleep(560);
+      setConfirmBurst(false);
     } else if (star === 2) {
-      spawnBurst(180, color, 0.85);
+      spawnBurst(180, color, 0.85, true);
     } else {
       spawnBurst(100, color, 0.55);
     }
 
-    await sleep(1000);
+    await sleep(star === 3 ? 420 : 1000);
     if (revealIndex + 1 >= summonResults.length) {
       setPhase('results');
     } else {
@@ -369,9 +506,9 @@ export const SummonPage = () => {
     setRevealIndex(0);
     setOpenedCards(new Set());
     setCurrentStar(1);
-    setRaysActive(false);
-    setColorFlash(null);
+    resetFx();
     particlesRef.current = [];
+    shockwavesRef.current = [];
   };
 
   useEffect(() => {
@@ -391,7 +528,7 @@ export const SummonPage = () => {
   const currentStar_ = currentUnit ? RARITY_TO_STAR[currentUnit.rarity] : 1 as GachaStar;
 
   return (
-    <div className={`summon-page ${shakePage ? 'summon-shake' : ''}`}>
+    <div className={`summon-page ${shakePage ? (shakeHeavy ? 'summon-shake-heavy' : 'summon-shake') : ''}`}>
       {/* 背景画像 */}
       <img
         src="/assets/images/backgrounds/summon/bg_ui_summon.webp"
@@ -416,12 +553,21 @@ export const SummonPage = () => {
         <div className="summon-floor" />
       </div>
 
-      {/* 白フラッシュ / レアリティカラーフラッシュ */}
+      {/* 白フラッシュ / レアリティカラーフラッシュ / 暗転パルス(★3クライマックス予兆) */}
       {whiteFlash && <div className="summon-white-flash active" />}
       {colorFlash && (
         <div className="summon-color-flash active" style={{ '--flash-color': colorFlash } as CSSPropertiesWithVars} />
       )}
+      {dimPulse && <div className="gacha-dim-pulse" />}
       <div className="summon-vignette" />
+
+      {/* ★3確定テキストバースト */}
+      {confirmBurst && (
+        <div className="gacha-confirm-burst">
+          ★★★ CONFIRMED
+          <span className="sub">ARCANA ACQUIRED</span>
+        </div>
+      )}
 
       {/* ヘッダー */}
       <header className="summon-header">
@@ -449,10 +595,10 @@ export const SummonPage = () => {
 
       {/* メインステージ (idle / summon) */}
       {showStage && (
-        <div className="summon-stage" style={{ opacity: showReveal ? 0 : 1, transition: 'opacity 0.6s' }}>
+        <div className={`summon-stage ${stagePunch ? 'punch' : ''}`} style={{ opacity: showReveal ? 0 : 1, transition: 'opacity 0.6s' }}>
           <div className={`summon-rays ${raysActive ? 'active' : ''}`} />
           <div className={`summon-light-column ${isAnimating ? 'active' : ''}`} />
-          <MagicCircle active={isAnimating} star={currentStar} />
+          <MagicCircle active={isAnimating} star={currentStar} intense={intenseCircle} />
         </div>
       )}
 
@@ -537,7 +683,7 @@ export const SummonPage = () => {
               見えなくなる不具合があった(Playwrightでの検証で発見)。
               preserve-3dを持つ要素とは別の親要素にfilterをかける。
             */}
-            <div className="gacha-flip-perspective"
+            <div className={`gacha-flip-perspective ${stagePunch ? 'card-punch' : ''}`}
               style={{
                 width: 208, height: 296,
                 filter: isOpen
