@@ -17,6 +17,7 @@ import { formatCompact } from '../../utils/format';
 import { UnitIcon } from '../../components/ui/UnitCard';
 import { resolveUnitImage } from '../../lib/unitImage';
 import { elementGradient } from '../../utils/elementUtils';
+import './SummonPage.css';
 
 /* ============================================================
    パーティクル
@@ -69,8 +70,6 @@ const performSummon = (pool: SummonPool, count: number): UnitMaster[] => {
 /* ============================================================
    ユーティリティ
 ============================================================ */
-const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
-
 type CSSPropertiesWithVars = CSSProperties & Record<`--${string}`, string>;
 
 const starBorder = (star: GachaStar) => {
@@ -84,37 +83,27 @@ const ELEMENT_COLOR: Record<string, string> = {
   earth: '#fbbf24', light: '#fde68a', dark: '#c4b5fd', thunder: '#facc15',
 };
 
-/* ============================================================
-   MagicCircle SVG
-============================================================ */
-const MagicCircle = ({ active, star }: { active: boolean; star: GachaStar }) => {
-  const color = star === 3 ? '#ffe48d' : star === 2 ? '#d698ff' : '#7bc8ff';
-  const glow = star === 3
-    ? 'drop-shadow(0 0 16px rgba(255,228,141,.95)) drop-shadow(0 0 40px rgba(255,180,60,.5))'
-    : star === 2
-    ? 'drop-shadow(0 0 12px rgba(183,115,255,.9)) drop-shadow(0 0 30px rgba(150,60,255,.4))'
-    : 'drop-shadow(0 0 10px rgba(123,200,255,.9))';
-  return (
-    <div className={`summon-magic-circle ${active ? 'active' : ''}`}
-      style={{ filter: active ? glow : 'none', transition: 'filter 0.8s, opacity 0.8s', opacity: active ? 1 : 0.4 }}>
-      <svg viewBox="0 0 500 500" className="summon-circle-svg" style={{ stroke: color }}>
-        <defs>
-          <filter id="mg">
-            <feGaussianBlur stdDeviation="3" result="b" />
-            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-        </defs>
-        <circle cx="250" cy="250" r="224" filter="url(#mg)" />
-        <circle cx="250" cy="250" r="185" />
-        <circle cx="250" cy="250" r="136" />
-        <circle cx="250" cy="250" r="72" />
-        <polygon points="250,46 417,393 83,393" opacity="0.6" />
-        <polygon points="250,454 83,107 417,107" opacity="0.6" />
-        <path opacity="0.5" d="M250 24 L276 118 L370 94 L318 176 L402 230 L306 238 L326 334 L250 274 L174 334 L194 238 L98 230 L182 176 L130 94 L224 118 Z" />
+/** Lightweight, asset-free crystal with independently animated orbital rings. */
+const SummonPortal = ({ state }: { state: 'idle' | 'charge' | 'release' }) => (
+  <div className={`arcana-portal portal-${state}`} aria-hidden="true">
+    <div className="portal-halo" />
+    <div className="portal-orbit orbit-one" />
+    <div className="portal-orbit orbit-two" />
+    <div className="portal-orbit orbit-three" />
+    <div className="portal-core">
+      <svg viewBox="0 0 160 240" fill="none">
+        <path d="M80 8 143 81 119 173 80 232 41 173 17 81Z" fill="currentColor" fillOpacity=".16" stroke="currentColor" />
+        <path d="m80 8 24 73-24 151-24-151Z" fill="currentColor" fillOpacity=".55" />
+        <path d="m17 81 39 0 24-73Zm126 0h-39L80 8Z" fill="white" fillOpacity=".6" />
+        <path d="m17 81 63 151-24-151Zm126 0L80 232l24-151Z" fill="currentColor" fillOpacity=".3" />
+        <path d="M80 8v224M17 81h126M41 173l39-20 39 20" stroke="white" strokeOpacity=".45" />
       </svg>
     </div>
-  );
-};
+    <div className="portal-shockwave" />
+    <div className="portal-horizon" />
+    {Array.from({ length: 12 }, (_, i) => <i key={i} className="portal-spark" style={{ '--angle': `${i * 30}deg`, '--delay': `${i * -0.23}s` } as CSSPropertiesWithVars} />)}
+  </div>
+);
 
 /* ============================================================
    メインコンポーネント
@@ -122,7 +111,7 @@ const MagicCircle = ({ active, star }: { active: boolean; star: GachaStar }) => 
 type Phase = 'idle' | 'summon' | 'reveal' | 'results';
 
 export const SummonPage = () => {
-  const { player, spendDiamond, useItem, items, recordSummon } = usePlayerStore();
+  const { player, spendDiamond, useItem: consumeItem, items, recordSummon } = usePlayerStore();
   const { processSummonResults, addAwakeningCrystal } = useUnitStore();
   const { addDailyProgress } = useMissionStore();
   const { syncSummonResult } = useAuthStore();
@@ -134,12 +123,20 @@ export const SummonPage = () => {
   const [summonResultTypes, setSummonResultTypes] = useState<GachaApplyResult[]>([]);
   const [revealIndex, setRevealIndex] = useState(0);
   const [openedCards, setOpenedCards] = useState<Set<number>>(new Set());
-  const [shakePage, setShakePage] = useState(false);
-  const [whiteFlash, setWhiteFlash] = useState(false);
-  const [colorFlash, setColorFlash] = useState<string | null>(null);
-  const [raysActive, setRaysActive] = useState(false);
+  const [portalState, setPortalState] = useState<'idle' | 'charge' | 'release'>('idle');
   const [currentStar, setCurrentStar] = useState<GachaStar>(1);
-  const skipRef = useRef(false);
+  const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const summonLock = useRef(false);
+  const openLock = useRef(false);
+  const revealButtonRef = useRef<HTMLButtonElement>(null);
+  const resultsTitleRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setReducedMotion(media.matches);
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
@@ -155,9 +152,10 @@ export const SummonPage = () => {
   /* ---- パーティクルループ ---- */
   const spawnBurst = useCallback((count: number, color: string, power = 1) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const cx = canvas.width / (2 * devicePixelRatio);
-    const cy = canvas.height * 0.46 / devicePixelRatio;
+    if (!canvas || reducedMotion) return;
+    count = Math.min(count, 100);
+    const cx = canvas.clientWidth / 2;
+    const cy = canvas.clientHeight * 0.40;
     for (let i = 0; i < count; i++) {
       const a = Math.random() * Math.PI * 2;
       const s = (Math.random() * 6 + 1.5) * power;
@@ -170,18 +168,20 @@ export const SummonPage = () => {
         color, shape: Math.random() < 0.25 ? 'diamond' : 'circle',
       });
     }
-  }, []);
+  }, [reducedMotion]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d')!;
+    if (!canvas || reducedMotion || phase === 'results') return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     const resize = () => {
-      canvas.width = window.innerWidth * devicePixelRatio;
-      canvas.height = window.innerHeight * devicePixelRatio;
+      canvas.width = window.innerWidth * Math.min(devicePixelRatio, 2);
+      canvas.height = window.innerHeight * Math.min(devicePixelRatio, 2);
       canvas.style.width = `${window.innerWidth}px`;
       canvas.style.height = `${window.innerHeight}px`;
-      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      const dpr = Math.min(devicePixelRatio, 2);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
     window.addEventListener('resize', resize);
@@ -216,13 +216,31 @@ export const SummonPage = () => {
       window.removeEventListener('resize', resize);
       cancelAnimationFrame(animFrameRef.current);
       clearInterval(idleInterval);
+      particlesRef.current = [];
     };
-  }, [spawnBurst, phase]);
+  }, [spawnBurst, phase, reducedMotion]);
+
+  // Phase-owned timers are cancelled on skip, reset, navigation, and motion changes.
+  useEffect(() => {
+    if (phase !== 'summon') return;
+    if (reducedMotion) { setPhase('reveal'); return; }
+    setPortalState('charge');
+    const release = window.setTimeout(() => {
+      setPortalState('release');
+      spawnBurst(100, STAR_COLORS[currentStar], 0.9);
+    }, 1600);
+    const reveal = window.setTimeout(() => setPhase('reveal'), 2400);
+    return () => { window.clearTimeout(release); window.clearTimeout(reveal); };
+  }, [phase, reducedMotion, currentStar, spawnBurst]);
+
+  useEffect(() => {
+    if (phase === 'reveal') revealButtonRef.current?.focus({ preventScroll: true });
+    if (phase === 'results') resultsTitleRef.current?.focus({ preventScroll: true });
+  }, [phase, revealIndex, openedCards]);
 
   /* ---- 召喚アニメーション ---- */
-  const startSummon = async (count: number, ticketType: 'normal' | 'sr' | 'ssr' | null = null) => {
-    if (phase !== 'idle') return;
-    skipRef.current = false;
+  const startSummon = (count: number, ticketType: 'normal' | 'sr' | 'ssr' | null = null) => {
+    if (phase !== 'idle' || summonLock.current) return;
 
     let diamondSpent = 0;
     let pool = selectedPool;
@@ -232,21 +250,21 @@ export const SummonPage = () => {
         setToast({ msg: `チケットが足りません (所持: ${ticketCount})`, type: 'error' });
         return;
       }
-      useItem('item_summon_ticket', count);
+      consumeItem('item_summon_ticket', count);
       pool = SR_POOL;
     } else if (ticketType === 'sr') {
       if (srTicketCount < 1) {
         setToast({ msg: 'SR確定チケットがありません', type: 'error' });
         return;
       }
-      useItem('item_summon_ticket_sr', 1);
+      consumeItem('item_summon_ticket_sr', 1);
       pool = SR_POOL;
     } else if (ticketType === 'ssr') {
       if (ssrTicketCount < 1) {
         setToast({ msg: 'SSR確定チケットがありません', type: 'error' });
         return;
       }
-      useItem('item_summon_ticket_ssr', 1);
+      consumeItem('item_summon_ticket_ssr', 1);
       pool = SSR_POOL;
     } else {
       const cost = count === 1 ? selectedPool.cost1 : selectedPool.cost10;
@@ -257,6 +275,8 @@ export const SummonPage = () => {
       diamondSpent = cost;
     }
 
+    summonLock.current = true;
+    openLock.current = false;
     const summonedMasters = performSummon(pool, count);
     const maxStar = Math.max(...summonedMasters.map(u => RARITY_TO_STAR[u.rarity])) as GachaStar;
     setCurrentStar(maxStar);
@@ -285,92 +305,40 @@ export const SummonPage = () => {
       diamondSpent,
     );
 
-    const pColor = maxStar === 3 ? 'rgba(255,228,141,.8)' : maxStar === 2 ? 'rgba(183,115,255,.8)' : 'rgba(123,200,255,.8)';
-
+    setPortalState('charge');
     setPhase('summon');
-    setRaysActive(maxStar === 3);
-    spawnBurst(120, pColor, 0.45);
-    if (skipRef.current) { setPhase('results'); return; }
-    await sleep(1200);
-
-    if (skipRef.current) { setPhase('results'); return; }
-    spawnBurst(200, 'rgba(255,244,190,.85)', 0.6);
-    setShakePage(true);
-    spawnBurst(220, pColor, 1.0);
-    if (maxStar === 3) {
-      setColorFlash('rgba(255,228,141,.55)');
-      await sleep(160);
-      setColorFlash(null);
-    }
-    await sleep(240);
-    setShakePage(false);
-
-    if (skipRef.current) { setPhase('results'); return; }
-    spawnBurst(260, 'rgba(190,249,255,.9)', 1.1);
-    setWhiteFlash(true);
-    await sleep(200);
-    setWhiteFlash(false);
-    if (skipRef.current) { setPhase('results'); return; }
-    await sleep(600);
-
-    setPhase('reveal');
   };
 
-  /* スキップ */
   const handleSkip = () => {
-    skipRef.current = true;
-    setShakePage(false);
-    setWhiteFlash(false);
-    setColorFlash(null);
-    setRaysActive(false);
-    if (phase === 'reveal') {
-      setOpenedCards(new Set(summonResults.map((_, i) => i)));
-      setTimeout(() => setPhase('results'), 80);
-    } else {
-      setPhase('results');
-    }
+    setPhase('results');
+    particlesRef.current = [];
   };
 
-  const openCard = async () => {
-    if (openedCards.has(revealIndex)) return;
+  const openCard = () => {
+    if (phase !== 'reveal' || openLock.current || openedCards.has(revealIndex)) return;
+    openLock.current = true;
     const star = RARITY_TO_STAR[summonResults[revealIndex].rarity];
-    const color = STAR_COLORS[star];
-
     setOpenedCards(prev => new Set([...prev, revealIndex]));
+    spawnBurst(star === 3 ? 100 : 50, STAR_COLORS[star], star === 3 ? 1.1 : 0.6);
+  };
 
-    if (star === 3) {
-      spawnBurst(300, color, 1.15);
-      setShakePage(true);
-      setWhiteFlash(true);
-      // モバイル端末での触覚フィードバック(対応端末のみ、非対応環境では何もしない)
-      try { navigator.vibrate?.([30, 40, 90]); } catch { /* 非対応環境は無視 */ }
-      await sleep(200);
-      setShakePage(false);
-      setWhiteFlash(false);
-    } else if (star === 2) {
-      spawnBurst(180, color, 0.85);
-    } else {
-      spawnBurst(100, color, 0.55);
-    }
-
-    await sleep(1000);
-    if (revealIndex + 1 >= summonResults.length) {
-      setPhase('results');
-    } else {
-      setRevealIndex(i => i + 1);
-    }
+  const nextCard = () => {
+    if (!openedCards.has(revealIndex)) return;
+    openLock.current = false;
+    if (revealIndex + 1 >= summonResults.length) setPhase('results');
+    else setRevealIndex(i => i + 1);
   };
 
   const reset = () => {
-    skipRef.current = false;
+    summonLock.current = false;
+    openLock.current = false;
     setPhase('idle');
     setSummonResults([]);
     setSummonResultTypes([]);
     setRevealIndex(0);
     setOpenedCards(new Set());
     setCurrentStar(1);
-    setRaysActive(false);
-    setColorFlash(null);
+    setPortalState('idle');
     particlesRef.current = [];
   };
 
@@ -385,13 +353,13 @@ export const SummonPage = () => {
   const showButtons = phase === 'idle';
   const showReveal  = phase === 'reveal';
   const showResults = phase === 'results';
-  const showStage   = phase !== 'results';
+  const showStage   = phase === 'idle' || phase === 'summon';
 
   const currentUnit = summonResults[revealIndex];
   const currentStar_ = currentUnit ? RARITY_TO_STAR[currentUnit.rarity] : 1 as GachaStar;
 
   return (
-    <div className={`summon-page ${shakePage ? 'summon-shake' : ''}`}>
+    <div className={`summon-page summon-modern phase-${phase}`} style={{ '--summon-accent': STAR_COLORS[showReveal ? currentStar_ : currentStar] } as CSSPropertiesWithVars}>
       {/* 背景画像 */}
       <img
         src="/assets/images/backgrounds/summon/bg_ui_summon.webp"
@@ -402,30 +370,12 @@ export const SummonPage = () => {
       {/* Canvas パーティクル */}
       <canvas ref={canvasRef} className="summon-particle-canvas" />
 
-      {/* 神殿背景 */}
-      <div className="summon-temple-bg">
-        <div className="summon-aurora aurora-a" />
-        <div className="summon-aurora aurora-b" />
-        <div className="summon-moon-gate" />
-        <div className="summon-glass-veil veil-a" />
-        <div className="summon-glass-veil veil-b" />
-        <div className="summon-pillar pillar-left" />
-        <div className="summon-pillar pillar-right" />
-        <div className="summon-mist mist-a" />
-        <div className="summon-mist mist-b" />
-        <div className="summon-floor" />
-      </div>
-
-      {/* 白フラッシュ / レアリティカラーフラッシュ */}
-      {whiteFlash && <div className="summon-white-flash active" />}
-      {colorFlash && (
-        <div className="summon-color-flash active" style={{ '--flash-color': colorFlash } as CSSPropertiesWithVars} />
-      )}
+      <div className="summon-atmosphere" aria-hidden="true" />
       <div className="summon-vignette" />
 
       {/* ヘッダー */}
       <header className="summon-header">
-        <h1 className="summon-title text-luxe-gold">召喚神殿</h1>
+        <div><p className="summon-eyebrow">ARCANA / SUMMON</p><h1 className="summon-title text-luxe-gold">召喚神殿</h1></div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {(phase === 'summon' || phase === 'reveal') && (
             <button
@@ -437,7 +387,7 @@ export const SummonPage = () => {
                 color: 'rgba(255,255,255,0.7)',
                 backdropFilter: 'blur(4px)',
               }}>
-              SKIP
+              演出をスキップ
             </button>
           )}
           <div className="summon-currency flex-shrink-0">
@@ -449,10 +399,14 @@ export const SummonPage = () => {
 
       {/* メインステージ (idle / summon) */}
       {showStage && (
-        <div className="summon-stage" style={{ opacity: showReveal ? 0 : 1, transition: 'opacity 0.6s' }}>
-          <div className={`summon-rays ${raysActive ? 'active' : ''}`} />
-          <div className={`summon-light-column ${isAnimating ? 'active' : ''}`} />
-          <MagicCircle active={isAnimating} star={currentStar} />
+        <div className="summon-stage">
+          <SummonPortal state={isAnimating ? portalState : 'idle'} />
+          <div className="portal-caption" role="status">
+            <p className="summon-eyebrow">{isAnimating ? 'RESONANCE' : 'CALL OF THE ARCANA'}</p>
+            <h2>{isAnimating ? (portalState === 'release' ? '運命が、目を覚ます。' : '星の記憶と共鳴中…') : 'その光が、運命を変える。'}</h2>
+            {!isAnimating && <p>クリスタルに眠る、新たな仲間を召喚</p>}
+            {isAnimating && <div className="summon-charge-track"><span /></div>}
+          </div>
         </div>
       )}
 
@@ -530,7 +484,9 @@ export const SummonPage = () => {
         const isOpen = openedCards.has(revealIndex);
         const starColor = STAR_COLORS[currentStar_];
         return (
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+          <div className="summon-reveal-stage">
+            <p className="summon-eyebrow">REVEAL / {String(revealIndex + 1).padStart(2, '0')} — {String(summonResults.length).padStart(2, '0')}</p>
+            <div className="reveal-aura" aria-hidden="true" />
             {/*
               filter(drop-shadow)は .gacha-flip-card (transform-style:preserve-3d) 自身に
               かけると3D合成が壊れ、フリップしても常に裏面(またはその鏡像)しか
@@ -539,16 +495,17 @@ export const SummonPage = () => {
             */}
             <div className="gacha-flip-perspective"
               style={{
-                width: 208, height: 296,
+                width: 'clamp(208px, 27vw, 260px)', height: 'clamp(320px, 44vh, 370px)',
                 filter: isOpen
                   ? `drop-shadow(0 0 26px ${starColor}) drop-shadow(0 0 54px ${starColor}88)`
                   : `drop-shadow(0 4px 20px rgba(0,0,0,0.8)) drop-shadow(0 0 14px ${starColor}55)`,
               }}>
               <div
+                key={revealIndex}
                 className={`gacha-flip-card ${isOpen ? 'flipped' : ''}`}
                 onClick={() => void openCard()}>
                 {/* 裏面: タップ前 */}
-                <div className="gacha-flip-face"
+                <div className="gacha-flip-face" aria-hidden={isOpen}
                   style={{
                     background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,.14), transparent 22%), linear-gradient(145deg, rgba(22,16,35,.98), rgba(94,55,111,.55) 45%, rgba(8,7,16,.98))',
                     border: `1.5px solid ${starBorder(currentStar_)}`,
@@ -565,13 +522,14 @@ export const SummonPage = () => {
                 </div>
 
                 {/* 表面: 開封後 */}
-                <div className={`gacha-flip-face gacha-flip-front ${currentStar_ === 3 ? 'summon-rainbow-border' : ''}`}
+                <div aria-hidden={!isOpen} className={`gacha-flip-face gacha-flip-front ${currentStar_ === 3 ? 'summon-rainbow-border' : ''}`}
                   style={{
                     background: 'linear-gradient(145deg, rgba(20,10,40,0.97), rgba(10,5,20,0.99))',
                     border: `2px solid ${starColor}`,
                     padding: '14px 10px 12px',
                   }}>
                   {currentStar_ === 3 && <div className="gacha-shine-sweep" />}
+                  {summonResultTypes[revealIndex]?.type === 'new' && <span className="summon-new-badge">NEW</span>}
                   <div className="flex justify-center mb-2">
                     <UnitIcon
                       src={resolveUnitImage(currentUnit.id, RARITY_TYPE_TO_STAR[currentUnit.rarity] ?? 1)}
@@ -616,18 +574,13 @@ export const SummonPage = () => {
               </div>
             </div>
 
-            {!isOpen && (
-              <button
-                onClick={() => void openCard()}
-                className="mt-5 px-8 py-2 rounded-xl font-bold text-sm active:scale-95 transition-all"
-                style={{
-                  background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
-                  color: 'white',
-                  boxShadow: '0 0 16px rgba(124,58,237,0.5)',
-                }}>
-                {summonResults.length === 1 ? 'OPEN' : `${revealIndex + 1} / ${summonResults.length} OPEN`}
-              </button>
-            )}
+            <div className="summon-reveal-progress" aria-label={`${revealIndex + 1} / ${summonResults.length}`}>
+              {summonResults.map((_, i) => <span key={i} className={i <= revealIndex ? 'active' : ''} />)}
+            </div>
+            <button ref={revealButtonRef} onClick={isOpen ? nextCard : openCard} className="summon-reveal-action">
+              {isOpen ? (revealIndex + 1 === summonResults.length ? '結果を見る' : '次の仲間へ →') : 'タップして解放'}
+            </button>
+            <p className="summon-reveal-hint" aria-live="polite">{isOpen ? currentUnit.name + ' を獲得' : 'クリスタルに宿る記憶を解き放つ'}</p>
           </div>
         );
       })()}
@@ -643,13 +596,15 @@ export const SummonPage = () => {
         const bestStar = best ? RARITY_TO_STAR[best.u.rarity] : null;
 
         return (
-          <div className="absolute inset-0 z-20 overflow-y-auto px-4 pt-4 pb-6"
+          <div className="summon-results-panel"
             style={{ background: 'radial-gradient(ellipse at 50% 20%, #1a0535 0%, #08081a 70%)' }}>
-            <h2 className="text-center font-black text-white text-base mb-3">召喚結果</h2>
+            <p className="summon-eyebrow text-center">SUMMON COMPLETE</p>
+            <h2 ref={resultsTitleRef} tabIndex={-1} className="summon-results-title">召喚結果</h2>
+            <p className="summon-results-summary">{summonResults.length}体の仲間 · NEW {summonResultTypes.filter(r => r.type === 'new').length} · 覚醒 {summonResultTypes.filter(r => r.type === 'awakening').length}</p>
 
             {/* スポットライト: ★3(最高レア)を引いた場合、実物カードを大きく表示 */}
             {bestStar === 3 && best && (
-              <div className="relative rounded-2xl p-4 mb-4 text-center overflow-hidden"
+              <div className="summon-spotlight relative rounded-2xl p-4 mb-4 text-center overflow-hidden"
                 style={{
                   background: `linear-gradient(160deg, ${elementGradient(best.u.element)}, rgba(10,5,20,0.92))`,
                   border: '2px solid rgba(255,228,141,0.85)',
@@ -657,7 +612,7 @@ export const SummonPage = () => {
                   animation: 'popIn .5s ease backwards',
                 }}>
                 <div className="gacha-shine-sweep" />
-                <p className="text-yellow-200 font-black text-xs tracking-widest mb-2">🎉 ★★★ ARCANA 獲得！</p>
+                <p className="text-yellow-200 font-black text-xs tracking-widest mb-2">★★★ ARCANA / 星の導き</p>
                 <div className="flex justify-center mb-1">
                   <UnitIcon
                     src={resolveUnitImage(best.u.id, RARITY_TYPE_TO_STAR[best.u.rarity] ?? 1)}
@@ -674,11 +629,11 @@ export const SummonPage = () => {
               </div>
             )}
 
-            <div className="grid grid-cols-5 gap-2 mb-4">
-              {sorted.map(({ u, rt, i }) => {
+            <div className={`summon-result-grid ${summonResults.length === 1 ? 'single-result' : ''}`}>
+              {sorted.map(({ u, rt, i }, order) => {
                 const star = RARITY_TO_STAR[u.rarity];
                 return (
-                  <div key={i} className="relative rounded-xl p-2 text-center overflow-hidden"
+                  <div key={i} className="summon-result-card relative rounded-xl p-2 text-center overflow-hidden"
                     style={{
                       background: 'linear-gradient(145deg, rgba(20,10,40,0.9), rgba(10,5,20,0.95))',
                       border: `1.5px solid ${STAR_COLORS[star]}`,
@@ -686,9 +641,10 @@ export const SummonPage = () => {
                         ? `0 0 14px ${STAR_COLORS[star]}, 0 0 28px rgba(214,152,255,.35)`
                         : `0 0 8px ${STAR_COLORS[star]}44`,
                       animation: `popIn .45s ease backwards`,
-                      animationDelay: `${i * 0.05}s`,
+                      animationDelay: `${order * 0.06}s`,
                     }}>
                     {star === 3 && <div className="gacha-shine-sweep" />}
+                    {rt?.type === 'new' && <span className="summon-new-badge">NEW</span>}
                     <div className="flex justify-center mb-1">
                       <UnitIcon
                         src={resolveUnitImage(u.id, RARITY_TYPE_TO_STAR[u.rarity] ?? 1)}
@@ -696,11 +652,11 @@ export const SummonPage = () => {
                         unitRarity={RARITY_TYPE_TO_STAR[u.rarity] ?? 1}
                         fallbackEmoji={u.emoji}
                         element={u.element}
-                        size={44}
-                        height={66}
+                        size={64}
+                        height={96}
                       />
                     </div>
-                    <div className="text-white font-bold text-[9px] leading-tight mb-0.5 truncate">{u.name}</div>
+                    <div className="summon-result-name text-white font-bold leading-tight mb-0.5">{u.name}</div>
                     <div style={{ color: STAR_COLORS[star], fontSize: '9px', fontWeight: 'bold' }}>
                       {'★'.repeat(star)}
                     </div>
