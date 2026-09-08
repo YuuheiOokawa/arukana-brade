@@ -191,7 +191,7 @@ const AppContent = () => {
   }, [user]);
 
   return (
-    <div className="max-w-lg mx-auto relative min-h-screen">
+    <div className={`app-shell ${showNav ? 'has-navigation' : ''}`}>
       {/* 保存失敗トースト */}
       {saveError && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] px-4 py-2 rounded-xl text-sm font-bold text-white"

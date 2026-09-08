@@ -145,7 +145,7 @@ export const GuildPage = () => {
 
   if (!guild) {
     return (
-      <div className="min-h-screen pb-28">
+      <div className="game-page min-h-screen pb-28">
         <TopBar title="ギルド" />
         <div className="px-4 space-y-4 py-2">
           <div className="card-base p-5 text-center">

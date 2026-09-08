@@ -12,7 +12,9 @@
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "test": "node --import tsx --test tests/*.test.mjs",
+    "test:ui": "node tests/ui/check.mjs"
   },
   "dependencies": {
     "@prisma/client": "5.22.0",
@@ -41,6 +43,7 @@
     "@vercel/node": "^5.8.21",
     "@vitejs/plugin-react": "^6.0.2",
     "oxlint": "^1.69.0",
+    "playwright": "^1.63.0",
     "prisma": "5.22.0",
     "sharp": "^0.35.2",
     "tsx": "^4.19.2",

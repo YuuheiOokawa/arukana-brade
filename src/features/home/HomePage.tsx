@@ -1,357 +1,75 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { usePlayerStore } from '../../stores/playerStore';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { usePlayerStore, RANK_EXP_TABLE } from '../../stores/playerStore';
 import { useMissionStore } from '../../stores/missionStore';
 import { useLoginBonusStore } from '../../stores/loginBonusStore';
 import { useGiftStore } from '../../stores/giftStore';
+import { usePartyStore } from '../../stores/partyStore';
+import { useUnitStore } from '../../stores/unitStore';
 import { useArenaStore } from '../../stores/arenaStore';
 import { getActiveEvents, getActiveRaids } from '../../data/events';
-import { formatCompact } from '../../utils/format';
-import { RANK_EXP_TABLE } from '../../stores/playerStore';
-import { getRankTitle, getArenaFrameStyle } from '../../data/arenaRank';
-import {
-  IconSword, IconTeam, IconCrystal, IconArrowUp,
-  IconGear, IconShield, IconDragon, IconScroll,
-  IconTrophy, IconCastle, IconBag, IconFriends, IconMap,
-} from '../../components/ui/FantasyIcon';
+import { getRankTitle } from '../../data/arenaRank';
+import { getUnitMaster } from '../../data/units';
+import { TopBar } from '../../components/layout/TopBar';
+import { UnitIcon } from '../../components/ui/UnitCard';
+import { Icon } from '../../components/ui/Icon';
+import type { IconName } from '../../components/ui/Icon';
+import { resolveUnitImage } from '../../lib/unitImage';
 import { LoginBonusModal } from '../login/LoginBonusModal';
 
-const QUICK_ACTIONS = [
-  { label: 'クエスト',  Icon: IconSword,    path: '/quests',   bg: 'linear-gradient(145deg,#6b0e0e,#3d0808)', accent: '#ef4444' },
-  { label: 'ユニット',  Icon: IconTeam,     path: '/units',    bg: 'linear-gradient(145deg,#0e3a6b,#081e3d)', accent: '#3b82f6' },
-  { label: '召喚',     Icon: IconCrystal,  path: '/summon',   bg: 'linear-gradient(145deg,#4a1080,#260850)', accent: '#8b5cf6' },
-  { label: '強化',     Icon: IconArrowUp,  path: '/enhance',  bg: 'linear-gradient(145deg,#7a5200,#3d2900)', accent: '#f59e0b' },
-  { label: '装備',     Icon: IconGear,     path: '/equipment',bg: 'linear-gradient(145deg,#334155,#1e2a3a)', accent: '#94a3b8' },
-  { label: '編成',     Icon: IconShield,   path: '/party',    bg: 'linear-gradient(145deg,#064030,#021e17)', accent: '#10b981' },
-  { label: 'アリーナ', Icon: IconTrophy,   path: '/pvp',      bg: 'linear-gradient(145deg,#3d2800,#1e1000)', accent: '#f59e0b' },
-  { label: 'ショップ', Icon: IconBag,      path: '/shop',     bg: 'linear-gradient(145deg,#063040,#021820)', accent: '#22d3ee' },
-  { label: 'フレンド', Icon: IconFriends,  path: '/social',   bg: 'linear-gradient(145deg,#2d1460,#120a30)', accent: '#a855f7' },
+const ACTIONS: {path:string; title:string; caption:string; icon:IconName}[] = [
+  {path:'/units',title:'ユニット',caption:'仲間の力を確かめる',icon:'units'},
+  {path:'/party',title:'パーティ編成',caption:'冒険の準備を整える',icon:'party'},
+  {path:'/enhance',title:'強化・進化',caption:'新たな可能性を開く',icon:'enhance'},
+  {path:'/summon',title:'召喚神殿',caption:'運命の仲間と出会う',icon:'summon'},
 ];
-
 export const HomePage = () => {
-  const navigate = useNavigate();
-  const { player, recoverStamina } = usePlayerStore();
-  const { checkDailyReset, getCompletedCount, getClaimedCount } = useMissionStore();
-  const { canClaim, markLoggedInToday } = useLoginBonusStore();
-  const [showLoginBonus, setShowLoginBonus] = useState(false);
-  const [staminaCd, setStaminaCd] = useState('');
-
-  const updateCd = useCallback(() => {
-    const { player: p } = usePlayerStore.getState();
-    if (p.stamina >= p.maxStamina) { setStaminaCd(''); return; }
-    const left = Math.max(0, p.staminaRecoveryTime - Date.now());
-    const m = Math.floor(left / 60000);
-    const s = Math.floor((left % 60000) / 1000);
-    setStaminaCd(`${m}:${String(s).padStart(2, '0')}`);
-  }, []);
-
-  useEffect(() => {
-    recoverStamina();
-    checkDailyReset();
-    updateCd();
-    const interval = setInterval(recoverStamina, 60000);
-    const cdInterval = setInterval(updateCd, 1000);
-    // ログインボーナスを自動表示（当日初回ログイン時のみ）
-    if (markLoggedInToday() && canClaim()) setTimeout(() => setShowLoginBonus(true), 800);
-    return () => { clearInterval(interval); clearInterval(cdInterval); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recoverStamina, checkDailyReset, updateCd]);
-
-  const giftCount = useGiftStore(s => s.getUnclaimedCount());
-  const activeEvents = getActiveEvents();
-  const activeRaids = getActiveRaids();
-  const missionCompleted = getCompletedCount();
-  const missionClaimed   = getClaimedCount();
-  const missionPending   = missionCompleted - missionClaimed;
-  const rankExpNeeded = RANK_EXP_TABLE[player.rank - 1] ?? 9999;
-  const expPercent = Math.min(100, (player.exp / rankExpNeeded) * 100);
-  const arenaPoints = useArenaStore(s => s.record.points);
-  const arenaTitle = getRankTitle(arenaPoints);
-  const arenaFrame = getArenaFrameStyle(arenaPoints);
-
-  return (
-    <div className="min-h-screen pb-28 relative overflow-hidden">
-      {/* 背景画像 */}
-      <img
-        src="/assets/images/backgrounds/home/bg_ui_home_night.webp"
-        alt=""
-        className="fixed inset-0 w-full h-full object-cover pointer-events-none"
-        style={{ opacity: 0.35 }}
-      />
-      {/* グラデーションオーバーレイ */}
-      <div className="fixed inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(26,10,56,0.55) 0%, rgba(8,8,26,0.65) 55%)' }} />
-
-      {/* 背景装飾：魔法陣リング */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute" style={{
-          top: '-20%', left: '50%', transform: 'translateX(-50%)',
-          width: '500px', height: '500px',
-          background: 'conic-gradient(from 0deg, transparent, rgba(139,92,246,.12), transparent, rgba(240,192,64,.07), transparent)',
-          borderRadius: '50%',
-          filter: 'blur(2px)',
-          animation: 'spin 24s linear infinite',
-        }} />
-        <div className="absolute" style={{
-          top: '-10%', left: '50%', transform: 'translateX(-50%)',
-          width: '340px', height: '340px',
-          border: '1px solid rgba(139,92,246,0.15)',
-          borderRadius: '50%',
-          animation: 'spin 18s linear infinite reverse',
-        }} />
-        {/* 星粒 */}
-        {Array.from({ length: 20 }).map((_, i) => (
-          <div key={i} className="absolute rounded-full bg-white"
-            style={{
-              width: `${Math.random() * 2 + 0.5}px`,
-              height: `${Math.random() * 2 + 0.5}px`,
-              top: `${Math.random() * 50}%`,
-              left: `${Math.random() * 100}%`,
-              opacity: Math.random() * 0.35 + 0.05,
-              animation: `glow-pulse ${2 + Math.random() * 3}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 4}s`,
-            }} />
-        ))}
-      </div>
-
-      {/* ヒーローバナー (コンパクト) */}
-      <div className="relative px-4 pt-4 pb-3 text-center">
-        <h1 className="text-2xl font-black" style={{
-          background: 'linear-gradient(160deg, #fde68a 0%, #f0c040 50%, #d97706 100%)',
-          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-        }}>ARCANA BLADE</h1>
-      </div>
-
-      {/* プレイヤー情報パネル (アリーナ階級が上がるほど枠が豪華になる) */}
-      <div className="px-4 mb-3">
-        <div className={`rounded-2xl overflow-hidden relative ${arenaFrame.rainbow ? 'arena-rainbow-border' : ''}`}
-          style={{
-            background: arenaFrame.background ?? 'linear-gradient(145deg, rgba(22,12,55,0.96) 0%, rgba(14,8,36,0.98) 100%)',
-            border: arenaFrame.border,
-            boxShadow: arenaFrame.boxShadow,
-            transition: 'border-color 0.4s, box-shadow 0.4s',
-          }}>
-          {/* 装飾ライン */}
-          <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, transparent, #7c3aed, #a855f7, transparent)' }} />
-          <div className="p-4">
-            {/* 名前・ランク行 */}
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <p className="text-[10px] font-bold tracking-widest mb-0.5" style={{ color: '#6b7280' }}>SUMMONER</p>
-                <p className="text-xl font-black text-white leading-none">{player.name}</p>
-                {player.title && <p className="text-xs mt-0.5 truncate max-w-[180px]" style={{ color: '#a78bfa' }}>{player.title}</p>}
-                <button onClick={() => navigate('/pvp')}
-                  className="mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 active:scale-95 transition-all"
-                  style={{ background: `${arenaTitle.color}22`, border: `1px solid ${arenaTitle.color}55` }}>
-                  <span className="text-[10px]">🏆</span>
-                  <span className="text-[10px] font-bold truncate max-w-[150px]" style={{ color: arenaTitle.color }}>{arenaTitle.label}</span>
-                </button>
-              </div>
-              <div className="text-center">
-                <div className="rounded-xl px-3 py-1.5" style={{ background: 'linear-gradient(135deg, rgba(240,192,64,0.15), rgba(217,119,6,0.1))', border: '1px solid rgba(240,192,64,0.3)' }}>
-                  <p className="text-[9px] font-bold tracking-widest" style={{ color: '#d97706' }}>Lv</p>
-                  <p className="text-2xl font-black leading-none" style={{
-                    background: 'linear-gradient(135deg, #fde68a, #f0c040, #d97706)',
-                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                  }}>{player.rank}</p>
-                </div>
-                {canClaim() && (
-                  <button onClick={() => setShowLoginBonus(true)}
-                    className="mt-1.5 text-[9px] font-bold px-2 py-0.5 rounded-full animate-pulse"
-                    style={{ background: 'rgba(240,192,64,0.2)', color: '#f0c040', border: '1px solid rgba(240,192,64,0.4)' }}>
-                    🎁 受取
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* EXPゲージ */}
-            <div className="mb-3">
-              <div className="flex justify-between mb-1">
-                <span className="text-[10px] font-bold" style={{ color: '#4b5563' }}>EXP</span>
-                <span className="text-[10px]" style={{ color: '#6b7280' }}>{player.exp.toLocaleString()} / {rankExpNeeded.toLocaleString()}</span>
-              </div>
-              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
-                <div className="h-full rounded-full transition-all duration-500"
-                  style={{ width: `${expPercent}%`, background: 'linear-gradient(90deg, #7c3aed, #a855f7, #c084fc)' }} />
-              </div>
-            </div>
-
-            {/* スタミナ */}
-            <div className="mb-3">
-              <div className="flex justify-between mb-1">
-                <span className="text-[10px] font-bold" style={{ color: '#4b5563' }}>⚡ スタミナ</span>
-                <div className="flex items-center gap-2">
-                  {player.stamina < player.maxStamina && staminaCd && (
-                    <span className="text-[9px]" style={{ color: '#6b7280' }}>次の回復まで {staminaCd}</span>
-                  )}
-                  <span className="text-[10px] font-bold" style={{ color: player.stamina >= player.maxStamina ? '#34d399' : '#f59e0b' }}>
-                    {player.stamina} / {player.maxStamina}
-                  </span>
-                </div>
-              </div>
-              <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
-                <div className="h-full rounded-full transition-all duration-300"
-                  style={{
-                    width: `${Math.min(100, (player.stamina / player.maxStamina) * 100)}%`,
-                    background: player.stamina >= player.maxStamina ? 'linear-gradient(90deg, #10b981, #34d399)' : 'linear-gradient(90deg, #f59e0b, #fbbf24)',
-                  }} />
-              </div>
-            </div>
-
-            {/* 通貨 */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-xl px-3 py-2 flex items-center gap-2"
-                style={{ background: 'rgba(240,192,64,0.08)', border: '1px solid rgba(240,192,64,0.2)' }}>
-                <span className="text-lg">🪙</span>
-                <div>
-                  <p className="text-[9px] font-bold" style={{ color: '#6b7280' }}>GOLD</p>
-                  <p className="text-sm font-black" style={{ color: '#f0c040' }}>{formatCompact(player.gold)}</p>
-                </div>
-              </div>
-              <div className="rounded-xl px-3 py-2 flex items-center gap-2"
-                style={{ background: 'rgba(99,202,255,0.08)', border: '1px solid rgba(99,202,255,0.2)' }}>
-                <span className="text-lg">💎</span>
-                <div>
-                  <p className="text-[9px] font-bold" style={{ color: '#6b7280' }}>DIAMOND</p>
-                  <p className="text-sm font-black" style={{ color: '#7bc8ff' }}>{formatCompact(player.diamond)}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* 下装飾ライン */}
-          <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.3), transparent)' }} />
-        </div>
-      </div>
-
-      {/* お知らせ */}
-      <div className="px-4 space-y-2 mb-4" style={{ position: 'relative', zIndex: 2 }}>
-        {giftCount > 0 && (
-          <button onClick={() => navigate('/gifts')}
-            className="w-full rounded-xl p-3 flex items-center gap-3 text-left transition-all active:scale-98"
-            style={{
-              background: 'linear-gradient(145deg, #5c3d00, #2e1e00)',
-              border: '2px solid #f0c040',
-              boxShadow: '0 0 20px rgba(240,192,64,0.8), 0 4px 12px rgba(0,0,0,0.6)',
-            }}>
-            <span className="text-xl">🎁</span>
-            <div className="flex-1">
-              <p className="text-sm font-bold" style={{ color: '#fde68a' }}>プレゼントが届いています！</p>
-              <p className="text-xs" style={{ color: '#fcd34d' }}>{giftCount} 件の未受取プレゼント</p>
-            </div>
-            <span className="w-6 h-6 rounded-full bg-red-500 text-white text-xs font-black flex items-center justify-center">
-              {giftCount}
-            </span>
-          </button>
-        )}
-        {missionPending > 0 && (
-          <button onClick={() => navigate('/missions')}
-            className="w-full rounded-xl p-3 flex items-center gap-3 text-left transition-all active:scale-98"
-            style={{
-              background: 'linear-gradient(145deg, #6b3800, #3d2000)',
-              border: '2px solid #f59e0b',
-              boxShadow: '0 0 20px rgba(245,158,11,0.8), 0 4px 12px rgba(0,0,0,0.6)',
-            }}>
-            <IconScroll size={22} color="#fbbf24" />
-            <div className="flex-1">
-              <p className="text-sm font-bold" style={{ color: '#fde68a' }}>デイリーミッション達成！</p>
-              <p className="text-xs" style={{ color: '#fcd34d' }}>{missionPending} 件の報酬が受け取れます</p>
-            </div>
-            <span className="w-6 h-6 rounded-full bg-red-500 text-white text-xs font-black flex items-center justify-center">
-              {missionPending}
-            </span>
-          </button>
-        )}
-        {activeRaids.slice(0, 1).map(raid => (
-          <button key={raid.id} onClick={() => navigate('/raid')}
-            className="w-full rounded-xl p-3 flex items-center gap-3 text-left transition-all active:scale-98"
-            style={{
-              background: 'linear-gradient(145deg, #3d0870, #1e0440)',
-              border: '2px solid #a855f7',
-              boxShadow: '0 0 20px rgba(168,85,247,0.8), 0 4px 12px rgba(0,0,0,0.6)',
-            }}>
-            <IconDragon size={22} color="#d8b4fe" />
-            <div className="flex-1">
-              <p className="text-sm font-bold" style={{ color: '#e9d5ff' }}>{raid.name}</p>
-              <p className="text-xs" style={{ color: '#c4b5fd' }}>レイドボス開催中！</p>
-            </div>
-            <span style={{ color: '#c4b5fd' }}>›</span>
-          </button>
-        ))}
-        {activeEvents.slice(0, 1).map(event => (
-          <button key={event.id} onClick={() => navigate('/quests')}
-            className="w-full rounded-xl p-3 flex items-center gap-3 text-left transition-all active:scale-98"
-            style={{
-              background: 'linear-gradient(145deg, #0a0870, #060548)',
-              border: '2px solid #6366f1',
-              boxShadow: '0 0 20px rgba(99,102,241,0.8), 0 4px 12px rgba(0,0,0,0.6)',
-            }}>
-            <IconSword size={22} color="#a5b4fc" />
-            <div className="flex-1">
-              <p className="text-sm font-bold" style={{ color: '#c7d2fe' }}>{event.name}</p>
-              <p className="text-xs" style={{ color: '#a5b4fc' }}>期間限定イベント開催中！</p>
-            </div>
-            <span style={{ color: '#a5b4fc' }}>›</span>
-          </button>
-        ))}
-      </div>
-
-      {/* クイックアクション */}
-      <div className="px-4 mb-4" style={{ position: 'relative', zIndex: 2 }}>
-        <p className="text-xs font-bold tracking-widest mb-3" style={{ color: '#4b5563' }}>— メニュー —</p>
-        <div className="grid grid-cols-3 gap-2">
-          {QUICK_ACTIONS.map(btn => {
-            const IconComp = btn.Icon;
-            return (
-              <button key={btn.path} onClick={() => navigate(btn.path)}
-                className="rounded-2xl p-3 flex flex-col items-center text-center transition-all active:scale-95 relative overflow-hidden"
-                style={{
-                  background: btn.bg,
-                  border: `2px solid ${btn.accent}`,
-                  boxShadow: `0 4px 16px rgba(0,0,0,0.6), 0 0 18px ${btn.accent}88`,
-                }}>
-                <div className="absolute top-0 left-0 right-0 h-px" style={{
-                  background: `linear-gradient(90deg, transparent, ${btn.accent}50, transparent)`,
-                }} />
-                <IconComp size={24} color={btn.accent} />
-                <p className="text-white font-black text-sm mt-2">{btn.label}</p>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* コンテンツ一覧 */}
-      <div className="px-4 grid grid-cols-2 gap-2.5 mb-4" style={{ position: 'relative', zIndex: 2 }}>
-        {[
-          { path: '/collection', label: '図鑑',      sub: 'コレクション', Icon: IconMap,     accent: '#a78bfa', bg: 'linear-gradient(145deg,#2a1050,#150828)' },
-          { path: '/guild',    label: 'ギルド',     sub: '仲間と協力',   Icon: IconCastle,  accent: '#8b5cf6', bg: 'linear-gradient(145deg,#2d1460,#120a30)' },
-          { path: '/missions', label: 'ミッション', sub: 'デイリー報酬', Icon: IconScroll,  accent: '#10b981', bg: 'linear-gradient(145deg,#053828,#021c15)', badge: missionPending > 0 },
-          { path: '/raid',     label: 'レイドボス', sub: '協力討伐',     Icon: IconDragon,  accent: '#ef4444', bg: 'linear-gradient(145deg,#3d0a0a,#1e0505)' },
-        ].map(item => {
-          const IconComp = item.Icon;
-          return (
-            <button key={item.path} onClick={() => navigate(item.path)}
-              className="rounded-2xl p-4 text-left transition-all active:scale-95 relative"
-              style={{
-                background: item.bg,
-                border: `2px solid ${item.accent}`,
-                boxShadow: `0 4px 16px rgba(0,0,0,0.6), 0 0 18px ${item.accent}88`,
-              }}>
-              <IconComp size={26} color={item.accent} />
-              <p className="text-white font-black text-sm mt-2">{item.label}</p>
-              <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.65)' }}>{item.sub}</p>
-              {item.badge && (
-                <span className="absolute top-2 right-2 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">
-                  {missionPending}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* ログインボーナスモーダル */}
-      {showLoginBonus && <LoginBonusModal onClose={() => setShowLoginBonus(false)} />}
+  const {player,recoverStamina} = usePlayerStore();
+  const missions = useMissionStore();
+  const loginBonus = useLoginBonusStore();
+  const giftCount = useGiftStore(s=>s.getUnclaimedCount());
+  const party = usePartyStore(s=>s.getActiveParty());
+  const ownedUnits = useUnitStore(s=>s.ownedUnits);
+  const arenaPoints = useArenaStore(s=>s.record.points);
+  const [showLoginBonus,setShowLoginBonus] = useState(false);
+  // Keep the pending flag across StrictMode's setup/cleanup replay.
+  const [autoBonus] = useState(()=>useLoginBonusStore.getState().canClaim());
+  useEffect(()=>{
+    recoverStamina(); useMissionStore.getState().checkDailyReset();
+    const interval = window.setInterval(recoverStamina,30000);
+    const bonus = autoBonus ? window.setTimeout(()=>{
+      if(useLoginBonusStore.getState().markLoggedInToday() && useLoginBonusStore.getState().canClaim()) setShowLoginBonus(true);
+    },800) : undefined;
+    return ()=>{ window.clearInterval(interval); window.clearTimeout(bonus); };
+  },[recoverStamina,autoBonus]);
+  const leader = ownedUnits.find(u=>u.instanceId===party.leaderId) ?? ownedUnits[0];
+  const leaderMaster = leader ? getUnitMaster(leader.masterId) : undefined;
+  const missionPending = Math.max(0,missions.getCompletedCount()-missions.getClaimedCount());
+  const rankTitle = getRankTitle(arenaPoints);
+  const expNeeded = RANK_EXP_TABLE[player.rank-1] ?? 9999;
+  const events = getActiveEvents(); const raids = getActiveRaids();
+  return <div className="game-page home-page">
+    <TopBar />
+    <div className="home-welcome"><div><p className="eyebrow">THE NEXT CHAPTER</p><h1>おかえりなさい、{player.name}。</h1><p>今日も、あなただけの冒険を。</p></div><Link to="/profile" className="rank-pill"><Icon name="crown" size={17}/>RANK {player.rank}</Link></div>
+    <section className="home-hero" aria-labelledby="hero-heading">
+      <img src="/assets/images/backgrounds/home/bg_ui_home_night.webp" className="home-hero-background" alt=""/>
+      <div className="home-hero-copy"><p className="eyebrow">ARCANA CHRONICLES</p><h2 id="hero-heading">星の記憶が、<br/>あなたを待っている。</h2><p>仲間とともに、物語の続きを紡ごう。</p><Link to="/quests" className="hero-cta"><Icon name="quest" size={20}/>冒険へ出発<Icon name="next" size={18}/></Link></div>
+      {leader && leaderMaster && <div className="home-featured-unit"><UnitIcon src={resolveUnitImage(leader.masterId,leader.currentRarity)} masterId={leader.masterId} unitRarity={leader.currentRarity} fallbackEmoji={leaderMaster.emoji} element={leaderMaster.element} size={48} height={56} variant="portrait" alt={leaderMaster.name}/><div><span>PARTY LEADER</span><p>{leaderMaster.name}</p></div></div>}
+      <div className="hero-bottom-line"><span>YOUR STORY, YOUR LEGEND</span><span>01 / ADVENTURE</span></div>
+    </section>
+    <div className="home-stat-row">
+      <Link to="/profile" className="home-stat"><Icon name="profile"/><div><span>冒険者ランク</span><strong>{player.rank}<small> RANK</small></strong><div className="mini-progress"><i style={{width:`${Math.min(100,player.exp/expNeeded*100)}%`}}/></div></div></Link>
+      <Link to="/pvp" className="home-stat"><Icon name="pvp"/><div><span>アリーナ</span><strong className="stat-title">{rankTitle.label}</strong><small>{arenaPoints.toLocaleString()} ポイント</small></div></Link>
+      <button onClick={()=>setShowLoginBonus(true)} className="home-stat"><Icon name="gifts"/><div><span>ログインボーナス</span><strong className="stat-title">{loginBonus.canClaim() ? '受取可能' : '受取済み'}</strong><small>毎日の冒険に贈り物を</small></div>{loginBonus.canClaim() && <i className="notification-dot"/>}</button>
     </div>
-  );
+    <section className="home-section"><div className="section-heading"><h2>冒険の準備</h2><span>PREPARE YOUR PARTY</span></div><div className="home-action-grid">{ACTIONS.map(a=><Link key={a.path} to={a.path} className="home-action"><span className="action-icon"><Icon name={a.icon} size={26}/></span><div><h3>{a.title}</h3><p>{a.caption}</p></div><Icon name="next" size={16}/></Link>)}</div></section>
+    <div className="home-lower-grid"><section className="home-section"><div className="section-heading"><h2>冒険のお知らせ</h2><span>UPDATES</span></div><div className="home-notices">
+      {giftCount>0 && <Link to="/gifts"><Icon name="gifts"/><div><strong>贈り物が届いています</strong><p>{giftCount}件のプレゼントを受け取る</p></div><Icon name="next" size={18}/></Link>}
+      {missionPending>0 && <Link to="/missions"><Icon name="missions"/><div><strong>ミッション達成</strong><p>{missionPending}件の報酬を受け取る</p></div><Icon name="next" size={18}/></Link>}
+      {raids.slice(0,1).map(r=><Link key={r.id} to="/raid"><Icon name="raid"/><div><strong>{r.name}</strong><p>レイドボスに挑戦</p></div><Icon name="next" size={18}/></Link>)}
+      {events.slice(0,1).map(e=><Link key={e.id} to="/quests"><Icon name="quest"/><div><strong>{e.name}</strong><p>開催中のイベントを確認</p></div><Icon name="next" size={18}/></Link>)}
+      {!giftCount && !missionPending && !raids.length && !events.length && <p className="quiet-empty">新しいお知らせはありません。次の冒険へ出かけましょう。</p>}
+    </div></section><section className="home-section"><div className="section-heading"><h2>世界を広げる</h2><span>DISCOVER</span></div><div className="home-discover-grid">{([{path:'/collection',title:'図鑑',icon:'collection'},{path:'/guild',title:'ギルド',icon:'guild'},{path:'/shop',title:'ショップ',icon:'shop'},{path:'/social',title:'フレンド',icon:'social'},{path:'/equipment',title:'装備',icon:'equipment'},{path:'/missions',title:'ミッション',icon:'missions'}] as const).map(a=><Link to={a.path} key={a.path}><Icon name={a.icon}/><span>{a.title}</span></Link>)}</div></section></div>
+    {showLoginBonus && <LoginBonusModal onClose={()=>setShowLoginBonus(false)}/>}
+  </div>;
 };

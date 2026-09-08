@@ -1,0 +1,462 @@
+{
+  "characters-051-060.webp": {
+    "units": [
+      {
+        "id": "unit_051",
+        "name": "ルミン"
+      },
+      {
+        "id": "unit_052",
+        "name": "グロウ"
+      },
+      {
+        "id": "unit_053",
+        "name": "アビス"
+      },
+      {
+        "id": "unit_054",
+        "name": "ネクロマンサー"
+      },
+      {
+        "id": "unit_055",
+        "name": "ダークプリンセス"
+      },
+      {
+        "id": "unit_056",
+        "name": "ヴァンパイア"
+      },
+      {
+        "id": "unit_057",
+        "name": "ゴースト"
+      },
+      {
+        "id": "unit_058",
+        "name": "ダークエルフ"
+      },
+      {
+        "id": "unit_059",
+        "name": "シャドウプップ"
+      },
+      {
+        "id": "unit_060",
+        "name": "ダーク"
+      }
+    ],
+    "prompt": "Production JRPG 5-column by 2-row atlas. Dark navy background, detailed painted anime full-body art, independent cells, no text or stars. Subjects in row-major order: unit_051 ルミン 光の妖精 light 光の粒を纏う小さな妖精。暗い場所を照らして仲間を導く。; unit_052 グロウ 光る石 light 光を放つ不思議な石から生まれた存在。光を武器として放つ。; unit_053 アビス 深淵の君主 dark 深淵を支配する君主。無底の闇から無数の怨念を解き放つ。; unit_054 ネクロマンサー 死霊術師 dark 死者を操る術師。生命力を奪い取り自らの力に変える。; unit_055 ダークプリンセス 闇の姫君 dark 闇の王国に君臨する姫君。その美貌と魔力で敵の心を惑わす。; unit_056 ヴァンパイア 血族の伯爵 dark 不死の伯爵。敵の血を吸い取ることで傷を癒やす。; unit_057 ゴースト 幽霊の剣士 dark 成仏できない戦士の幽霊。物理攻撃を無効化する特殊能力を持つ。; unit_058 ダークエルフ 闇の射手 dark 闇の森に生きるダークエルフ。毒矢と闇魔法を使いこなす。; unit_059 シャドウプップ 影の子 dark 影から生まれた小さな戦士。暗闇の中に溶け込む力を持つ。; unit_060 ダーク 闇の欠片 dark 闇の力の欠片が意思を持ったもの。攻撃特化の謎の存在。",
+    "method": "Built-in image generation; loss-limited WebP encoding; SVG viewport cropping."
+  },
+  "characters-061-070.webp": {
+    "units": [
+      {
+        "id": "unit_061",
+        "name": "ライトニングロード"
+      },
+      {
+        "id": "unit_062",
+        "name": "サンダーゴッド"
+      },
+      {
+        "id": "unit_063",
+        "name": "エレクトラ"
+      },
+      {
+        "id": "unit_064",
+        "name": "ストームキング"
+      },
+      {
+        "id": "unit_065",
+        "name": "ボルトウォリアー"
+      },
+      {
+        "id": "unit_066",
+        "name": "ジョルト"
+      },
+      {
+        "id": "unit_067",
+        "name": "ライトニングアーチャー"
+      },
+      {
+        "id": "unit_068",
+        "name": "スパーク"
+      },
+      {
+        "id": "unit_069",
+        "name": "ピリカ"
+      },
+      {
+        "id": "unit_070",
+        "name": "サンダープップ"
+      }
+    ],
+    "prompt": "Production JRPG 5-column by 2-row atlas. Dark navy background, detailed painted anime full-body art, independent cells, no text or stars. Subjects in row-major order: unit_061 ライトニングロード 雷神の後継 thunder 雷神の力を受け継ぐ者。天を貫く雷の一撃で敵を消し飛ばす。; unit_062 サンダーゴッド 雷霆の神将 thunder 雷の神から遣わされた神将。天空を割る雷撃で敵を裁く。; unit_063 エレクトラ 電光の姫剣士 thunder 電光石火の速さで動く姫剣士。連続攻撃で敵を圧倒する。; unit_064 ストームキング 嵐王の剣士 thunder 嵐を王国として支配する剣士。雷の球体で敵を焼き尽くす。; unit_065 ボルトウォリアー 電撃の勇士 thunder 電撃の斧を振るう勇士。戦場に雷鳴を轟かせる豪快な戦士。; unit_066 ジョルト 衝撃の戦士 thunder 電気衝撃で敵を痺れさせる戦士。雷の速さで攻撃を叩き込む。; unit_067 ライトニングアーチャー 雷矢の弓手 thunder 雷を宿した矢を放つ弓手。遠距離から電撃を浴びせる。; unit_068 スパーク 電気の精 thunder 電気の精が人の姿を取ったもの。素早い動きで敵を翻弄する。; unit_069 ピリカ 雷の巫女 thunder 雷の神殿に仕える巫女。小さな体に雷の力を秘める。; unit_070 サンダープップ 雷の見習い thunder 雷の力に目覚めたばかりの見習い。成長が楽しみな逸材。",
+    "method": "Built-in image generation; loss-limited WebP encoding; SVG viewport cropping."
+  },
+  "characters-071-080.webp": {
+    "units": [
+      {
+        "id": "unit_071",
+        "name": "コーラル"
+      },
+      {
+        "id": "unit_072",
+        "name": "フロスト"
+      },
+      {
+        "id": "unit_073",
+        "name": "ライラ"
+      },
+      {
+        "id": "unit_074",
+        "name": "ポセイドン"
+      },
+      {
+        "id": "unit_075",
+        "name": "シーフォックス"
+      },
+      {
+        "id": "unit_076",
+        "name": "タイドウォーカー"
+      },
+      {
+        "id": "unit_077",
+        "name": "ウォーターサーペント"
+      },
+      {
+        "id": "unit_078",
+        "name": "ドリップ"
+      },
+      {
+        "id": "unit_079",
+        "name": "ハリケーン"
+      },
+      {
+        "id": "unit_080",
+        "name": "スカイドラゴン"
+      }
+    ],
+    "prompt": "Production JRPG 5-column by 2-row atlas. Dark navy background, detailed painted anime full-body art, independent cells, no text or stars. Subjects in row-major order: unit_071 コーラル 珊瑚の女王 water 深海の珊瑚礁を統べる女王。海の生命と共に戦う。; unit_072 フロスト 絶零の氷姫 water 絶対零度の氷を操る姫。触れるものすべてを瞬時に凍結させる。; unit_073 ライラ 波紋の踊り手 water 波のように優雅に舞いながら敵を翻弄する踊り手。; unit_074 ポセイドン 海嵐の戦神 water 荒れ狂う海の神。嵐と津波を自在に呼び起こす。; unit_075 シーフォックス 海狐の忍者 water 海を疾駆する狐の忍者。水の術を使った素早い攻撃が得意。; unit_076 タイドウォーカー 潮の歩者 water 潮の流れを読んで戦う戦士。引き潮で敵を翻弄する。; unit_077 ウォーターサーペント 海蛇の戦士 water 海に潜む巨大な蛇の戦士。締め付けと水の毒で敵を弱らせる。; unit_078 ドリップ 雨粒の精 water 雨粒が集まって生まれた精霊。雨を降らせて仲間を癒す。; unit_079 ハリケーン 暴風の覇将 wind 暴風雨を引き起こす覇将。嵐の中心に立ち敵を蹴散らす。; unit_080 スカイドラゴン 天空の古龍 wind 天空を支配する古の龍。その翼ばたきだけで嵐を起こす。",
+    "method": "Built-in image generation; loss-limited WebP encoding; SVG viewport cropping."
+  },
+  "characters-081-090.webp": {
+    "units": [
+      {
+        "id": "unit_081",
+        "name": "フォレスト"
+      },
+      {
+        "id": "unit_082",
+        "name": "ヴァルキリー"
+      },
+      {
+        "id": "unit_083",
+        "name": "リーフ"
+      },
+      {
+        "id": "unit_084",
+        "name": "クロウ"
+      },
+      {
+        "id": "unit_085",
+        "name": "ネイチャー"
+      },
+      {
+        "id": "unit_086",
+        "name": "ダンデ"
+      },
+      {
+        "id": "unit_087",
+        "name": "グランドレイヴン"
+      },
+      {
+        "id": "unit_088",
+        "name": "フローラ"
+      },
+      {
+        "id": "unit_089",
+        "name": "ランドシャーク"
+      },
+      {
+        "id": "unit_090",
+        "name": "モスモン"
+      }
+    ],
+    "prompt": "Production JRPG 5-column by 2-row atlas. Dark navy background, detailed painted anime full-body art, independent cells, no text or stars. Subjects in row-major order: unit_081 フォレスト 古森の守人 wind 太古の森を守る精霊。豊かな自然の力で仲間を癒す。; unit_082 ヴァルキリー 風翼の戦乙女 wind 戦場を翔け回る戦乙女。翼から放つ風刃で多数の敵を薙ぎ払う。; unit_083 リーフ 緑葉の剣士 wind 葉を刃のように操る剣士。風と緑の力で連続斬りを放つ。; unit_084 クロウ 嵐鴉の使い wind 嵐の中を自在に飛ぶ鴉の使い。予言の力も持つ。; unit_085 ネイチャー 自然の化身 wind 自然そのものが姿を現した存在。草木の力で仲間を守る。; unit_086 ダンデ 綿毛の使い wind タンポポの綿毛に宿った精霊。風に乗って戦場を漂う。; unit_087 グランドレイヴン 岩翼の古龍 earth 岩で覆われた翼を持つ古龍。大地を揺るがす咆哮が必殺の技。; unit_088 フローラ 花園の女神 earth 花の力で大地を守る女神。毒の花粉で敵を弱らせる。; unit_089 ランドシャーク 砂漠の鮫 earth 砂の海を泳ぐように移動する鮫型の戦士。地中から奇襲する。; unit_090 モスモン 苔の守り人 earth 苔に覆われた巨大なモンスター。硬い体で仲間を守る。",
+    "method": "Built-in image generation; loss-limited WebP encoding; SVG viewport cropping."
+  },
+  "characters-091-100.webp": {
+    "units": [
+      {
+        "id": "unit_091",
+        "name": "ロックバード"
+      },
+      {
+        "id": "unit_092",
+        "name": "グラス"
+      },
+      {
+        "id": "unit_093",
+        "name": "ソーラーキング"
+      },
+      {
+        "id": "unit_094",
+        "name": "クリスタルセイント"
+      },
+      {
+        "id": "unit_095",
+        "name": "オーラ"
+      },
+      {
+        "id": "unit_096",
+        "name": "ピラー"
+      },
+      {
+        "id": "unit_097",
+        "name": "ホーリーバード"
+      },
+      {
+        "id": "unit_098",
+        "name": "スター"
+      },
+      {
+        "id": "unit_099",
+        "name": "シャドウロード"
+      },
+      {
+        "id": "unit_100",
+        "name": "ノクターン"
+      }
+    ],
+    "prompt": "Use case: stylized-concept. Asset type: ONE production JRPG sprite atlas of 10 unique full-body fantasy characters. Match the attached reference illustration style only, replace every character with the following new subjects. Landscape 1536x1024. STRICT grid: FIVE equal columns and TWO equal rows. Each of 10 cells is exactly 20% of sheet width and 50% of sheet height. No borders or dividers. Each full character and weapon entirely inside its own cell with 8% padding; feet near 88% cell height, heads near 12%; leave room around all silhouettes. Dark navy #101827 background. Refined Japanese fantasy RPG painted anime, beautiful detailed outfits, clear faces, distinct silhouettes; creatures must look like described creatures. NO TEXT, labels, numbers, letters, UI or rarity symbols. Exact row-major subject order:\n1. ロックバード, 石の鳥 (earth, R): 岩石のような翼を持つ鳥。岩を落として敵を押し潰す。\n2. グラス, 草の精 (earth, N): 大地の草原に宿る精霊。小さいが大地の力を秘める。\n3. ソーラーキング, 太陽の覇王 (light, SSR): 太陽の力を宿す覇王。聖なる光で敵を焼き尽くす究極の存在。\n4. クリスタルセイント, 水晶の聖者 (light, SR): 水晶の鎧を纏う聖者。光を屈折させて攻撃と守備を同時に行う。\n5. オーラ, 聖光の歌姫 (light, SR): 聖なる歌声で仲間を癒す歌姫。声の力で敵の意志を砕く。\n6. ピラー, 光柱の騎士 (light, R): 光の柱を作り出す聖騎士。陣地を固めて味方を守る。\n7. ホーリーバード, 聖鳥の使者 (light, R): 聖なる白鳥の姿をした使者。光の羽根で攻撃と回復を行う。\n8. スター, 光の星 (light, N): 夜空の星が地に降りた存在。小さな光で仲間を照らす。\n9. シャドウロード, 影の覇君 (dark, SSR): 影そのものを統べる覇君。あらゆる光を吸い込み無限の力に変える。\n10. ノクターン, 夜曲の魔法使い (dark, SR): 夜に奏でる魔法の曲で敵の心を惑わす魔法使い。",
+    "method": "Built-in image generation; loss-limited WebP encoding; SVG viewport cropping."
+  },
+  "characters-101-110.webp": {
+    "units": [
+      {
+        "id": "unit_101",
+        "name": "ヴェノム"
+      },
+      {
+        "id": "unit_102",
+        "name": "バンシー"
+      },
+      {
+        "id": "unit_103",
+        "name": "コルヴァス"
+      },
+      {
+        "id": "unit_104",
+        "name": "ダークスプリット"
+      },
+      {
+        "id": "unit_105",
+        "name": "フォックスファイア"
+      },
+      {
+        "id": "unit_106",
+        "name": "マグマタイタン"
+      },
+      {
+        "id": "unit_107",
+        "name": "シンダー"
+      },
+      {
+        "id": "unit_108",
+        "name": "パイロブレイズ"
+      },
+      {
+        "id": "unit_109",
+        "name": "ブレイズラン"
+      },
+      {
+        "id": "unit_110",
+        "name": "スパーク"
+      }
+    ],
+    "prompt": "Use case: stylized-concept. Asset type: ONE production JRPG sprite atlas of 10 unique full-body fantasy characters. Match the attached reference illustration style only, replace every character with the following new subjects. Landscape 1536x1024. STRICT grid: FIVE equal columns and TWO equal rows. Each of 10 cells is exactly 20% of sheet width and 50% of sheet height. No borders or dividers. Each full character and weapon entirely inside its own cell with 8% padding; feet near 88% cell height, heads near 12%; leave room around all silhouettes. Dark navy #101827 background. Refined Japanese fantasy RPG painted anime, beautiful detailed outfits, clear faces, distinct silhouettes; creatures must look like described creatures. NO TEXT, labels, numbers, letters, UI or rarity symbols. Exact row-major subject order:\n1. ヴェノム, 闇毒の刺客 (dark, SR): 闇の毒を操る刺客。毒で敵を弱らせてから一撃で仕留める。\n2. バンシー, 嘆きの幽霊 (dark, R): 嘆きの泣き声で敵の戦意を折る幽霊。精神攻撃が得意。\n3. コルヴァス, 黒鴉の呪術師 (dark, R): 黒鴉を使い魔とする呪術師。呪いの霧で敵の能力を封じる。\n4. ダークスプリット, 影の断片 (dark, N): 闇が分裂して生まれた欠片の存在。本体が近くにいると強化される。\n5. フォックスファイア, 狐火の妖狐 (fire, SSR): 九尾の狐火を操る妖狐。幻術と炎で敵を惑わし焼き尽くす。\n6. マグマタイタン, 溶岩の巨人 (fire, SR): 溶岩の体を持つ巨人。触れるものすべてを溶かす熱さを誇る。\n7. シンダー, 残炎の忍者 (fire, SR): 炎の残り火を操る忍者。素早い攻撃で敵の隙をつく。\n8. パイロブレイズ, 紅炎の剣聖 (fire, R): 紅い炎をまとった剣聖。太刀筋が炎となって広がる。\n9. ブレイズラン, 疾炎の走者 (fire, R): 炎の速さで走る戦士。先手必勝の電光石火が得意。\n10. スパーク, 火花の精 (fire, N): 火花が集まって生まれた精霊。小さな炎を操って戦う。",
+    "method": "Built-in image generation; loss-limited WebP encoding; SVG viewport cropping."
+  },
+  "characters-111-120.webp": {
+    "units": [
+      {
+        "id": "unit_111",
+        "name": "フェニクサード"
+      },
+      {
+        "id": "unit_112",
+        "name": "アクアリオン"
+      },
+      {
+        "id": "unit_113",
+        "name": "ガレオス"
+      },
+      {
+        "id": "unit_114",
+        "name": "セラフィム"
+      },
+      {
+        "id": "unit_115",
+        "name": "ヴォイドレクス"
+      },
+      {
+        "id": "unit_116",
+        "name": "エルムスパイア"
+      },
+      {
+        "id": "unit_117",
+        "name": "グレイシア"
+      },
+      {
+        "id": "unit_118",
+        "name": "ボルカニクス"
+      },
+      {
+        "id": "unit_119",
+        "name": "ルナシア"
+      },
+      {
+        "id": "unit_120",
+        "name": "テラゴーン"
+      }
+    ],
+    "prompt": "Use case: stylized-concept. Asset type: ONE production JRPG sprite atlas of 10 unique full-body fantasy characters. Match the attached reference illustration style only, replace every character with the following new subjects. Landscape 1536x1024. STRICT grid: FIVE equal columns and TWO equal rows. Each of 10 cells is exactly 20% of sheet width and 50% of sheet height. No borders or dividers. Each full character and weapon entirely inside its own cell with 8% padding; feet near 88% cell height, heads near 12%; leave room around all silhouettes. Dark navy #101827 background. Refined Japanese fantasy RPG painted anime, beautiful detailed outfits, clear faces, distinct silhouettes; creatures must look like described creatures. NO TEXT, labels, numbers, letters, UI or rarity symbols. Exact row-major subject order:\n1. フェニクサード, 不死の炎帝 (fire, SSR): 不死鳥の血を引く炎の帝王。何度滅びても炎の中から蘇る。\n2. アクアリオン, 深海の女王 (water, SSR): 深海を支配する水の女王。その力は嵐をも鎮める。\n3. ガレオス, 大地の守護巨人 (earth, SSR): 大地の精霊が結晶化した守護巨人。その体は岩よりも堅い。\n4. セラフィム, 光の大天使 (light, SSR): 六枚の翼を持つ大天使。神の光を地上に降らせる使者。\n5. ヴォイドレクス, 虚無の支配者 (dark, SSR): 虚無から生まれた破壊の化身。すべてを無に帰す闇の力を持つ。\n6. エルムスパイア, 風の剣士 (wind, SR): 風を操る俊足の剣士。その剣は風よりも速い。\n7. グレイシア, 氷の魔術師 (water, SR): 極寒の地で育った氷の魔術師。触れるものすべてを凍らせる。\n8. ボルカニクス, 火山の戦士 (fire, SR): 火山の麓で鍛えられた鋼鉄の戦士。熔岩の鎧を纏う。\n9. ルナシア, 月の巫女 (light, SR): 月光を操る癒しの巫女。仲間の傷を月の力で癒す。\n10. テラゴーン, 大地の守護者 (earth, SR): 大地の意思が宿った守護者。仲間を守るため動じることなく立ちはだかる。",
+    "method": "Built-in image generation; loss-limited WebP encoding; SVG viewport cropping."
+  },
+  "characters-121-130.webp": {
+    "units": [
+      {
+        "id": "unit_121",
+        "name": "ナイトシェード"
+      },
+      {
+        "id": "unit_122",
+        "name": "ストームレイジ"
+      },
+      {
+        "id": "unit_123",
+        "name": "エンバーフォックス"
+      },
+      {
+        "id": "unit_124",
+        "name": "ホーリーナイト"
+      },
+      {
+        "id": "unit_125",
+        "name": "ダークソーサラー"
+      },
+      {
+        "id": "unit_126",
+        "name": "マリンハンター"
+      },
+      {
+        "id": "unit_127",
+        "name": "サンダーランサー"
+      },
+      {
+        "id": "unit_128",
+        "name": "フレアアーチャー"
+      },
+      {
+        "id": "unit_129",
+        "name": "タイダルウォリアー"
+      },
+      {
+        "id": "unit_130",
+        "name": "ゼファーダンサー"
+      }
+    ],
+    "prompt": "Use case: stylized-concept. Asset type: ONE production JRPG sprite atlas of 10 unique full-body fantasy characters. Match the attached reference illustration style only, replace every character with the following new subjects. Landscape 1536x1024. STRICT grid: FIVE equal columns and TWO equal rows. Each of 10 cells is exactly 20% of sheet width and 50% of sheet height. No borders or dividers. Each full character and weapon entirely inside its own cell with 8% padding; feet near 88% cell height, heads near 12%; leave room around all silhouettes. Dark navy #101827 background. Refined Japanese fantasy RPG painted anime, beautiful detailed outfits, clear faces, distinct silhouettes; creatures must look like described creatures. NO TEXT, labels, numbers, letters, UI or rarity symbols. Exact row-major subject order:\n1. ナイトシェード, 闇の暗殺者 (dark, SR): 影に潜む闇の暗殺者。標的を確実に仕留める一撃必殺の技を持つ。\n2. ストームレイジ, 嵐の魔法使い (wind, SR): 嵐を呼ぶ魔法使い。その魔法は竜巻さえも操る。\n3. エンバーフォックス, 炎の奇術師 (fire, SR): 炎を操る神出鬼没の奇術師。炎の幻術で敵を翻弄する。\n4. ホーリーナイト, 聖騎士 (light, SR): 神に誓いを立てた聖騎士。神聖な力を纏った剣と盾で仲間を守る。\n5. ダークソーサラー, 黒魔術師 (dark, SR): 禁断の黒魔術を操る魔術師。その呪文は命さえも奪う。\n6. マリンハンター, 海の狩人 (water, SR): 深海を駆ける海の狩人。水中でもその弓の精度は衰えない。\n7. サンダーランサー, 雷の槍騎士 (thunder, SR): 雷を纏った槍を操る騎士。一閃で敵陣を貫く稲妻の槍使い。\n8. フレアアーチャー, 炎の弓使い (fire, R): 炎の矢を放つ弓使い。その矢は標的を燃やし尽くす。\n9. タイダルウォリアー, 波涛の戦士 (water, R): 荒波の中で鍛えられた戦士。水の力を盾に仲間を守る。\n10. ゼファーダンサー, 風の踊り子 (wind, R): 風を纏って舞う踊り子。その舞は敵を惑わし、仲間に力を与える。",
+    "method": "Built-in image generation; loss-limited WebP encoding; SVG viewport cropping."
+  },
+  "characters-131-140.webp": {
+    "units": [
+      {
+        "id": "unit_131",
+        "name": "グラウンドナイト"
+      },
+      {
+        "id": "unit_132",
+        "name": "ライトプリースト"
+      },
+      {
+        "id": "unit_133",
+        "name": "シャドウスナイパー"
+      },
+      {
+        "id": "unit_134",
+        "name": "ブレイズソードマン"
+      },
+      {
+        "id": "unit_135",
+        "name": "コーラルヒーラー"
+      },
+      {
+        "id": "unit_136",
+        "name": "ゴールドナイト"
+      },
+      {
+        "id": "unit_137",
+        "name": "ストーンゴーレム"
+      },
+      {
+        "id": "unit_138",
+        "name": "クリムゾンウィッチ"
+      },
+      {
+        "id": "unit_139",
+        "name": "アイスランサー"
+      },
+      {
+        "id": "unit_140",
+        "name": "ダークガーディアン"
+      }
+    ],
+    "prompt": "Use case: stylized-concept. Asset type: ONE production JRPG sprite atlas of 10 unique full-body fantasy characters. Match the attached reference illustration style only, replace every character with the following new subjects. Landscape 1536x1024. STRICT grid: FIVE equal columns and TWO equal rows. Each of 10 cells is exactly 20% of sheet width and 50% of sheet height. No borders or dividers. Each full character and weapon entirely inside its own cell with 8% padding; feet near 88% cell height, heads near 12%; leave room around all silhouettes. Dark navy #101827 background. Refined Japanese fantasy RPG painted anime, beautiful detailed outfits, clear faces, distinct silhouettes; creatures must look like described creatures. NO TEXT, labels, numbers, letters, UI or rarity symbols. Exact row-major subject order:\n1. グラウンドナイト, 大地の騎士 (earth, R): 大地の鎧を纏った騎士。堅牢な守りで仲間を護る盾となる。\n2. ライトプリースト, 光の司祭 (light, R): 光の神殿に仕える司祭。祈りの力で傷を癒し、悪を退ける。\n3. シャドウスナイパー, 影の狙撃手 (dark, R): 影に潜む一流の狙撃手。遠距離から闇の矢で急所を狙い撃つ。\n4. ブレイズソードマン, 炎刃の剣士 (fire, R): 炎を宿した剣を振るう剣士。その一太刀は炎を纏い敵を焼く。\n5. コーラルヒーラー, 珊瑚の癒し手 (water, R): 珊瑚礁に宿る癒しの精霊。海の力で傷ついた命を蘇らせる。\n6. ゴールドナイト, 黄金の騎士 (light, R): 黄金の鎧に身を包んだ騎士。眩い光で敵の目を眩ませる。\n7. ストーンゴーレム, 岩の番人 (earth, R): 岩から生まれた番人ゴーレム。重厚な体で侵入者を跳ね返す。\n8. クリムゾンウィッチ, 紅の魔女 (fire, R): 真紅のローブを纏う魔女。炎魔法の扱いは一流で、敵を焼き尽くす。\n9. アイスランサー, 氷の槍士 (water, R): 氷の槍を操る戦士。突き刺した敵を瞬く間に凍らせる。\n10. ダークガーディアン, 闇の番人 (dark, R): 闇の門を守る番人。暗黒のオーラで近づく者を寄せ付けない。",
+    "method": "Built-in image generation; loss-limited WebP encoding; SVG viewport cropping."
+  },
+  "characters-141-150.webp": {
+    "units": [
+      {
+        "id": "unit_141",
+        "name": "ウィンドシェイマン"
+      },
+      {
+        "id": "unit_142",
+        "name": "サンダービースト"
+      },
+      {
+        "id": "unit_143",
+        "name": "ファイアブロブ"
+      },
+      {
+        "id": "unit_144",
+        "name": "ウォーターブロブ"
+      },
+      {
+        "id": "unit_145",
+        "name": "ウィンドブロブ"
+      },
+      {
+        "id": "unit_146",
+        "name": "アーズブロブ"
+      },
+      {
+        "id": "unit_147",
+        "name": "ライトブロブ"
+      },
+      {
+        "id": "unit_148",
+        "name": "ダークブロブ"
+      },
+      {
+        "id": "unit_149",
+        "name": "サンダーブロブ"
+      },
+      {
+        "id": "unit_150",
+        "name": "アルカナブロブ"
+      }
+    ],
+    "prompt": "Use case: stylized-concept. Asset type: ONE production JRPG sprite atlas of 10 unique full-body fantasy characters. Match the attached reference illustration style only, replace every character with the following new subjects. Landscape 1536x1024. STRICT grid: FIVE equal columns and TWO equal rows. Each of 10 cells is exactly 20% of sheet width and 50% of sheet height. No borders or dividers. Each full character and weapon entirely inside its own cell with 8% padding; feet near 88% cell height, heads near 12%; leave room around all silhouettes. Dark navy #101827 background. Refined Japanese fantasy RPG painted anime, beautiful detailed outfits, clear faces, distinct silhouettes; creatures must look like described creatures. NO TEXT, labels, numbers, letters, UI or rarity symbols. Exact row-major subject order:\n1. ウィンドシェイマン, 風の呪術師 (wind, R): 風の精霊と対話できる呪術師。嵐を呼び、風で敵を吹き飛ばす。\n2. サンダービースト, 雷の獣人 (thunder, R): 雷の力を宿した獣人戦士。電光石火の突撃で敵を圧倒する。\n3. ファイアブロブ, 炎のスライム (fire, N): 炎の魔力を吸収したスライム。触れると焼けどする。\n4. ウォーターブロブ, 水のスライム (water, N): 水の魔力を宿したスライム。体が半透明で水にそっくり。\n5. ウィンドブロブ, 風のスライム (wind, N): 風の魔力を宿したスライム。ふわふわと浮かぶ不思議な存在。\n6. アーズブロブ, 大地のスライム (earth, N): 大地の魔力を宿したスライム。岩のように硬い表面を持つ。\n7. ライトブロブ, 光のスライム (light, N): 光の魔力を宿したスライム。眩しく輝き、暗闇を照らす。\n8. ダークブロブ, 闇のスライム (dark, N): 闇の魔力を宿したスライム。触れると暗くなる不気味な存在。\n9. サンダーブロブ, 雷のスライム (thunder, N): 雷の魔力を宿したスライム。たまに静電気を放つ危険な存在。\n10. アルカナブロブ, アルカナのスライム (fire, N): アルカナの力を宿した特別なスライム。虹色に輝く神秘的な存在。",
+    "method": "Built-in image generation; loss-limited WebP encoding; SVG viewport cropping."
+  }
+}

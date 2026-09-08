@@ -159,7 +159,7 @@ export const PvPPage = () => {
   const pointsToNext = getPointsToNextRank(record.points);
 
   return (
-    <div className="min-h-screen pb-28">
+    <div className="game-page min-h-screen pb-28">
       <TopBar title="アリーナ" />
 
       {/* ── 自分のランク（list / confirm で表示） ── */}

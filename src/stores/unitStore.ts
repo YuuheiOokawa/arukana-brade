@@ -80,7 +80,7 @@ export const useUnitStore = create<UnitStore>()(
         const awakeningCount = 0;
         const currentRarity: StarRarity = RARITY_TYPE_TO_STAR[master.rarity] ?? 1;
         const newUnit: OwnedUnit = {
-          instanceId: `unit_${Date.now()}_${masterId}`,
+          instanceId: `unit_${crypto.randomUUID()}_${masterId}`,
           masterId,
           level: 1,
           exp: 0,
@@ -96,6 +96,7 @@ export const useUnitStore = create<UnitStore>()(
       },
 
       levelUpUnit: (instanceId, expAmount) => {
+        if (!Number.isFinite(expAmount) || expAmount <= 0) return;
         set(s => ({
           ownedUnits: s.ownedUnits.map(unit => {
             if (unit.instanceId !== instanceId) return unit;

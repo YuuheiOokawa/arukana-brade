@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import type { OwnedUnit } from '../../types';
 import { getUnitMaster } from '../../data/units';
 import { UNIT_MASTER } from '../../data/units';
 import { ElementBadge } from './ElementBadge';
 import { RarityBadge } from './RarityBadge';
 import { getStarColor, getLevelCap, AWAKENING_CONFIG } from '../../data/rarityConfig';
-import { resolveUnitImage, getUnitSpritesheet, getSpritesheetCellIndex, SPRITESHEET_TOTAL_CELLS } from '../../lib/unitImage';
+import { resolveUnitImage, getCharacterArt, getUnitImagePath, UNIT_IMAGE_FALLBACK } from '../../lib/unitImage';
+import { Icon } from './Icon';
+import type { IconName } from './Icon';
 
 interface Props {
   unit: OwnedUnit;
@@ -31,13 +33,18 @@ export const UnitCard = ({ unit, selected, onClick, compact = false }: Props) =>
   const cardInner = (
     <div
       onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? `${master.name} Lv.${unit.level}` : undefined}
+      aria-pressed={selected}
+      onKeyDown={e => { if(onClick && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onClick(); } }}
       className={`unit-card card-base cursor-pointer relative ${
         selected ? 'ring-2 ring-yellow-400 animate-pulse-gold' : 'hover:border-purple-500'
       } ${compact ? 'p-2' : 'p-3'} ${isMaxed ? '!border-transparent' : ''}`}
       style={selected || isMaxed ? {} : { borderColor: `${starColor}44` }}
     >
       {unit.isLocked && (
-        <div className="absolute top-1 right-1 text-yellow-400 text-xs">🔒</div>
+        <div className="absolute top-2 right-2 text-yellow-400" aria-label="ロック中"><Icon name="lock" size={13}/></div>
       )}
       {awakeningCount > 0 && (
         <div
@@ -60,8 +67,9 @@ export const UnitCard = ({ unit, selected, onClick, compact = false }: Props) =>
           unitRarity={rarity}
           fallbackEmoji={master.emoji}
           element={master.element}
-          size={compact ? 40 : 52}
-          height={compact ? 60 : 78}
+          size={compact ? 44 : 72}
+          height={compact ? 56 : 84}
+          variant="portrait"
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1 flex-wrap">
@@ -94,157 +102,36 @@ export const UnitCard = ({ unit, selected, onClick, compact = false }: Props) =>
   return cardInner;
 };
 
-// キャラ画像アイコン（エラー時はemoji fallback）
-// 画像は 256×512 (1:2 縦長) → height を指定して縦長表示推奨
-// masterId + unitRarity を渡すとスプライトシート対応ユニット(unit_051〜)を自動で8分割表示
-export const UnitIcon = ({
-  src,
-  masterId,
-  unitRarity,
-  fallbackEmoji,
-  element,
-  size = 56,
-  height,
-  className = '',
-}: {
-  src: string | null;
-  masterId?: string;
-  unitRarity?: number | string;
-  fallbackEmoji: string;
-  element: string;
-  size?: number;
-  height?: number;
-  className?: string;
-}) => {
-  const [imgError, setImgError] = useState(false);
+export type PortraitVariant = 'full' | 'portrait';
+interface UnitIconProps {
+  src: string | null; masterId?: string; unitRarity?: number | string;
+  fallbackEmoji: string; element: string; size?: number; height?: number;
+  className?: string; variant?: PortraitVariant; alt?: string;
+}
+/** Crop the source image, not the character: bounds come from the asset catalog. */
+export const UnitIcon = ({ src, masterId, unitRarity=1, element, size=56, height, className='', variant, alt }: UnitIconProps) => {
+  const [failed, setFailed] = useState<Set<string>>(()=>new Set());
+  const clipId = useId();
   const h = height ?? size;
-
-  // スプライトシート対応: masterId と unitRarity が渡されている場合に判定
-  const spritesheetSrc = masterId ? getUnitSpritesheet(masterId) : null;
-  const cellIndex = (spritesheetSrc && unitRarity !== undefined)
-    ? getSpritesheetCellIndex(unitRarity)
-    : null;
-
-  const fallbackEl = (
-    <div
-      className={`rounded-xl flex items-center justify-center flex-shrink-0 ${className}`}
-      style={{ width: size, height: h, background: elementGradient(element), fontSize: size * 0.5 }}
-    >
-      {fallbackEmoji}
-    </div>
-  );
-
-  // スプライトシート表示 (unit_051〜: 1枚のwebpに8列で格納)
-  if (spritesheetSrc && cellIndex !== null) {
-    if (imgError) return fallbackEl;
-    return (
-      <div
-        className={`rounded-xl overflow-hidden flex-shrink-0 ${className}`}
-        style={{ width: size, height: h, background: elementGradient(element), WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
-      >
-        <div style={{
-          width: '100%', height: '100%',
-          overflow: 'hidden', position: 'relative',
-          transform: 'scale(1.5)',
-          transformOrigin: 'top center',
-        }}>
-          <img
-            src={spritesheetSrc}
-            alt=""
-            onError={() => setImgError(true)}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: `${SPRITESHEET_TOTAL_CELLS * 100}%`,
-              height: 'auto',
-              transform: `translateX(-${(cellIndex / SPRITESHEET_TOTAL_CELLS) * 100}%)`,
-              transformOrigin: 'top left',
-            }}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // 通常表示
-  if (!src || imgError) return fallbackEl;
-
-  return (
-    <div
-      className={`rounded-xl overflow-hidden flex-shrink-0 ${className}`}
-      style={{ width: size, height: h, background: elementGradient(element), WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
-    >
-      <img
-        src={src}
-        alt=""
-        onError={() => setImgError(true)}
-        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
-      />
-    </div>
-  );
+  const mode = variant ?? (h/size>=1.5 ? 'full' : 'portrait');
+  const label = alt ?? (masterId ? getUnitMaster(masterId)?.name : undefined) ?? 'キャラクター';
+  const staticSource = masterId ? getUnitImagePath(masterId,unitRarity) : null;
+  const source = [src,staticSource].find((s):s is string=>!!s && s!==UNIT_IMAGE_FALLBACK && !failed.has(s));
+  const art = source ? getCharacterArt(source,masterId) : null;
+  const onError = () => { if(source) setFailed(prev=>new Set([...prev,source])); };
+  if(!source) return <div role="img" aria-label={`${label}（画像未登録）`} className={`unit-portrait unit-portrait-fallback ${className}`} style={{width:size,height:h}}><Icon name={element in {fire:1,water:1,wind:1,earth:1,light:1,dark:1,thunder:1} ? element as IconName : 'unknown'} size={Math.min(size*.4,40)}/><small>{label.slice(0,6)}</small></div>;
+  if(!art) return <div className={`unit-portrait ${className}`} style={{width:size,height:h}}><img src={source} alt={label} loading="lazy" decoding="async" onError={onError} style={{objectFit:mode==='full'?'contain':'cover',objectPosition:'50% 20%'}}/></div>;
+  const [x,y,w,fullHeight]=art.crop;
+  const cropHeight=mode==='portrait' ? Math.min(fullHeight,w*1.15) : fullHeight;
+  return <div className={`unit-portrait ${className}`} style={{width:size,height:h}}>
+    <svg className="unit-art" role="img" aria-label={label} viewBox={`0 0 ${w} ${cropHeight}`} preserveAspectRatio={mode==='full'?'xMidYMid meet':'xMidYMin slice'}>
+      <defs><clipPath id={clipId}><rect width={w} height={cropHeight}/></clipPath></defs>
+      <image href={source} x={-x} y={-y} width={art.width} height={art.height} clipPath={`url(#${clipId})`} onError={onError}/>
+    </svg>
+  </div>;
 };
 
-/**
- * PartyPage等でposition:absoluteに使う画像コンポーネント。
- * スプライトシートユニット(unit_051〜)は8分割表示、それ以外は通常表示。
- */
-export const UnitSlotImg = ({
-  masterId,
-  rarity,
-}: {
-  masterId: string;
-  rarity: number | string;
-}) => {
-  const spritesheetSrc = getUnitSpritesheet(masterId);
-
-  if (spritesheetSrc) {
-    const cellIdx = getSpritesheetCellIndex(rarity);
-    return (
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}>
-        <div style={{
-          width: '100%', height: '100%',
-          overflow: 'hidden', position: 'relative',
-          transform: 'scale(1.5)', transformOrigin: 'top center',
-        }}>
-          <img
-            src={spritesheetSrc}
-            alt=""
-            style={{
-              position: 'absolute', top: 0, left: 0,
-              width: `${SPRITESHEET_TOTAL_CELLS * 100}%`, height: 'auto',
-              transform: `translateX(-${(cellIdx / SPRITESHEET_TOTAL_CELLS) * 100}%)`,
-              transformOrigin: 'top left',
-            }}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  const imgSrc = resolveUnitImage(masterId, rarity);
-  return (
-    <img
-      src={imgSrc}
-      alt=""
-      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-      style={{
-        width: '100%', height: '100%',
-        objectFit: 'cover', objectPosition: 'top center',
-        position: 'absolute', inset: 0,
-      }}
-    />
-  );
-};
-
-const elementGradient = (element: string): string => {
-  const map: Record<string, string> = {
-    fire: 'linear-gradient(135deg, #7f1d1d, #ef4444)',
-    water: 'linear-gradient(135deg, #1e3a5f, #3b82f6)',
-    wind: 'linear-gradient(135deg, #064e3b, #10b981)',
-    earth: 'linear-gradient(135deg, #451a03, #92400e)',
-    light: 'linear-gradient(135deg, #713f12, #ca8a04)',
-    dark: 'linear-gradient(135deg, #2e1065, #7c3aed)',
-  };
-  return map[element] ?? '';
+export const UnitSlotImg = ({masterId,rarity}:{masterId:string;rarity:number|string}) => {
+  const master=getUnitMaster(masterId);
+  return <UnitIcon masterId={masterId} unitRarity={rarity} src={resolveUnitImage(masterId,rarity)} fallbackEmoji={master?.emoji ?? ''} element={master?.element ?? 'dark'} variant="portrait" className="unit-slot-art"/>;
 };

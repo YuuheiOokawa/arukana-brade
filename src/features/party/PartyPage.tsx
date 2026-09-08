@@ -40,8 +40,7 @@ export const PartyPage = () => {
         setSlot(party.id, idx, null);
       }
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [party.id, party.slots, ownedUnits, setSlot]);
 
   const filledSlots = party.slots.filter(id => id && ownedUnits.find(u => u.instanceId === id)).length;
 
@@ -76,7 +75,7 @@ export const PartyPage = () => {
   });
 
   return (
-    <div className="min-h-screen pb-36" style={{ background: 'radial-gradient(ellipse at top, #0a0a28 0%, #08081a 60%)' }}>
+    <div className="game-page min-h-screen pb-36" style={{ background: 'radial-gradient(ellipse at top, #0a0a28 0%, #08081a 60%)' }}>
       <TopBar title="パーティ編成" />
 
       {/* ── パーティスロット ── */}
@@ -254,7 +253,7 @@ export const PartyPage = () => {
       </div>
 
       {/* ── 固定フッター：クエストへ出発 ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-20"
+      <div className="party-action-footer fixed bottom-0 left-0 right-0 z-20"
         style={{
           background: 'linear-gradient(to top, rgba(8,8,26,0.98) 60%, transparent)',
           paddingBottom: 'calc(64px + max(8px, env(safe-area-inset-bottom, 8px)))',

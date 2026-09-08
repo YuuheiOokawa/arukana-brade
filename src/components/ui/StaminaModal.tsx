@@ -8,7 +8,7 @@ interface Props {
 }
 
 export const StaminaModal = ({ requiredStamina, onClose, onUsed }: Props) => {
-  const { player, items, useItem } = usePlayerStore();
+  const { player, items, useItem: consumeItem } = usePlayerStore();
 
   const staminaItems = items.filter(i => {
     const m = getItemMaster(i.itemId);
@@ -18,7 +18,7 @@ export const StaminaModal = ({ requiredStamina, onClose, onUsed }: Props) => {
   const handleUse = (itemId: string) => {
     const master = getItemMaster(itemId);
     if (!master) return;
-    const ok = useItem(itemId, 1);
+    const ok = consumeItem(itemId, 1);
     if (!ok) return;
 
     if (itemId === 'item_stamina_full') {

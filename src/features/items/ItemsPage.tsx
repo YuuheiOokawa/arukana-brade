@@ -31,7 +31,7 @@ const CATEGORIES: { id: Category; label: string; emoji: string }[] = [
 ];
 
 export const ItemsPage = () => {
-  const { player, items, useItem, addGold } = usePlayerStore();
+  const { player, items, useItem: consumeItem, addGold } = usePlayerStore();
   const { ownedUnits, levelUpUnit } = useUnitStore();
   const { addDailyProgress, addWeeklyProgress } = useMissionStore();
   const [activeCategory, setActiveCategory] = useState<Category>('all');
@@ -63,7 +63,7 @@ export const ItemsPage = () => {
         showToast('スタミナは満タンです');
         return;
       }
-      const ok = useItem(itemId, 1);
+      const ok = consumeItem(itemId, 1);
       if (!ok) return;
       if (itemId === 'item_stamina_full') {
         usePlayerStore.setState(s => ({
@@ -104,7 +104,7 @@ export const ItemsPage = () => {
       showToast('このユニットはレベルが上限です。進化させましょう');
       return;
     }
-    const ok = useItem(expModal.itemId, 1);
+    const ok = consumeItem(expModal.itemId, 1);
     if (!ok) { showToast('アイテムが足りません'); setExpModal(null); return; }
     levelUpUnit(unitInstanceId, expModal.exp);
     addDailyProgress('enhance');
@@ -124,7 +124,7 @@ export const ItemsPage = () => {
   const handleSell = () => {
     if (!sellModal) return;
     const { master } = sellModal;
-    const ok = useItem(master.id, sellQty);
+    const ok = consumeItem(master.id, sellQty);
     if (!ok) { showToast('アイテムが足りません'); setSellModal(null); return; }
     const gold = (master.sellPrice ?? 0) * sellQty;
     addGold(gold);
@@ -133,7 +133,7 @@ export const ItemsPage = () => {
   };
 
   return (
-    <div className="min-h-screen pb-28">
+    <div className="game-page min-h-screen pb-28">
       <TopBar title="アイテム" />
 
       {/* スタミナ表示 */}

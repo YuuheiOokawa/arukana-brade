@@ -177,6 +177,7 @@ export const usePlayerStore = create<PlayerStore>()(
       addGold: (amount) => set(s => ({ player: { ...s.player, gold: s.player.gold + amount } })),
 
       spendGold: (amount) => {
+        if (!Number.isFinite(amount) || amount < 0) return false;
         const { player } = get();
         if (player.gold < amount) return false;
         set(s => ({ player: { ...s.player, gold: s.player.gold - amount } }));
@@ -186,6 +187,7 @@ export const usePlayerStore = create<PlayerStore>()(
       addDiamond: (amount) => set(s => ({ player: { ...s.player, diamond: s.player.diamond + amount } })),
 
       spendDiamond: (amount) => {
+        if (!Number.isFinite(amount) || amount < 0) return false;
         const { player } = get();
         if (player.diamond < amount) return false;
         set(s => ({ player: { ...s.player, diamond: s.player.diamond - amount } }));
@@ -228,6 +230,7 @@ export const usePlayerStore = create<PlayerStore>()(
       },
 
       spendStamina: (amount) => {
+        if (!Number.isFinite(amount) || amount < 0) return false;
         const { player } = get();
         if (player.stamina < amount) return false;
         const wasMaxed = player.stamina >= player.maxStamina;
@@ -243,6 +246,7 @@ export const usePlayerStore = create<PlayerStore>()(
       },
 
       addItem: (itemId, quantity) => {
+        if (!Number.isInteger(quantity) || quantity <= 0) return;
         set(s => {
           const existing = s.items.find(i => i.itemId === itemId);
           if (existing) {
@@ -253,6 +257,7 @@ export const usePlayerStore = create<PlayerStore>()(
       },
 
       useItem: (itemId, quantity) => {
+        if (!Number.isInteger(quantity) || quantity <= 0) return false;
         const { items } = get();
         const item = items.find(i => i.itemId === itemId);
         if (!item || item.quantity < quantity) return false;

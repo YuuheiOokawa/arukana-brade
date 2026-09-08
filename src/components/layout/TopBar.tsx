@@ -1,83 +1,36 @@
+import { useEffect, useState } from 'react';
 import { usePlayerStore } from '../../stores/playerStore';
 import { formatCompact } from '../../utils/format';
 import { CurrencyIcon } from '../ui/game/GameIcons';
+import { Icon } from '../ui/Icon';
 
-interface Props {
-  title?: string;
-  onBack?: () => void;
-}
-
-const StaminaDisplay = () => {
-  const { player } = usePlayerStore();
-  const { stamina, maxStamina, staminaRecoveryTime } = player;
-  const isFull = stamina >= maxStamina;
-
-  const pct = Math.min(1, stamina / maxStamina);
-  const barColor = pct > 0.5 ? '#34d399' : pct > 0.25 ? '#f59e0b' : '#ef4444';
-
-  let recoveryLabel = '';
-  if (!isFull && staminaRecoveryTime) {
-    const msLeft = Math.max(0, staminaRecoveryTime - Date.now());
-    const mins = Math.floor(msLeft / 60000);
-    const secs = Math.floor((msLeft % 60000) / 1000);
-    recoveryLabel = `${mins}:${String(secs).padStart(2, '0')}`;
-  }
-
-  return (
-    <div className="flex items-center gap-1" style={{ minWidth: 0 }}>
-      <span style={{ fontSize: 12, color: '#34d399', fontWeight: 700, lineHeight: 1 }}>⚡</span>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: barColor }}>{stamina}</span>
-          <span style={{ fontSize: 9, color: '#6b7280' }}>/{maxStamina}</span>
-        </div>
-        <div style={{ width: 36, height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
-          <div style={{ width: `${pct * 100}%`, height: '100%', background: barColor, transition: 'width 0.3s' }} />
-        </div>
-      </div>
-      {!isFull && recoveryLabel && (
-        <span style={{ fontSize: 8, color: '#4b5563', fontVariantNumeric: 'tabular-nums' }}>{recoveryLabel}</span>
-      )}
-    </div>
-  );
+interface Props { title?: string; onBack?: () => void; }
+const SUBTITLES: Record<string, string> = {
+  'ユニット一覧': '仲間を見つめ、次の可能性を育てる。', 'パーティ編成': '五つの力を、一つの意志に。',
+  '図鑑': '出会った仲間と、集めた装備の記録。', 'クエスト': 'まだ見ぬ世界へ、冒険を続けよう。',
+  '強化': '積み重ねた経験を、新たな力へ。', 'ユニット強化': '積み重ねた経験を、新たな力へ。',
+  '装備': '冒険にふさわしい装備を選ぼう。', '装備管理': '冒険にふさわしい装備を選ぼう。',
+  'ショップ': '次の冒険に、万全の準備を。', 'ミッション': '今日の一歩が、明日の力になる。',
+  'プレゼント': '届いた贈り物を受け取ろう。', 'フレンド': '仲間とともに、さらに遠くへ。',
 };
-
 export const TopBar = ({ title, onBack }: Props) => {
-  const { player } = usePlayerStore();
-
-  return (
-    <header className="sticky top-0 z-40 px-3 py-2 flex items-center gap-2"
-      style={{
-        background: 'linear-gradient(180deg, #0a0a1a 0%, transparent 100%)',
-        backdropFilter: 'blur(8px)',
-        borderBottom: '1px solid rgba(240,192,64,0.08)',
-      }}>
-      {/* 左: 戻るボタン or ブランド名 */}
-      <div className="flex items-center gap-1 flex-shrink-0" style={{ maxWidth: '45%' }}>
-        {onBack ? (
-          <button onClick={onBack} className="text-gray-400 hover:text-white text-xl flex-shrink-0">←</button>
-        ) : (
-          <span className="text-luxe-gold font-black text-sm tracking-wider flex-shrink-0">ARCANA</span>
-        )}
-        {title && <h1 className="text-white font-bold truncate" style={{ fontSize: 13 }}>{title}</h1>}
+  const player = usePlayerStore(s => s.player);
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    if (player.stamina >= player.maxStamina) return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [player.stamina, player.maxStamina]);
+  const remaining = Math.max(0, Math.ceil((player.staminaRecoveryTime - now) / 1000));
+  return <header className="game-topbar">
+    <div className="game-topbar-row">
+      <div className="game-wordmark">{onBack && <button onClick={onBack} aria-label="戻る" className="icon-button"><Icon name="back" /></button>}<Icon name="summon" size={20} /><span>ARCANA <b>BLADE</b></span></div>
+      <div className="game-resources">
+        <div className="resource-chip stamina-chip" title="スタミナ"><Icon name="thunder" size={16} /><span>{player.stamina}<small> / {player.maxStamina}</small></span>{player.stamina < player.maxStamina && <small className="stamina-timer">{Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, '0')}</small>}</div>
+        <div className="resource-chip" title="ダイヤ"><CurrencyIcon type="diamond" size={18} /><span>{formatCompact(player.diamond)}</span></div>
+        <div className="resource-chip gold-chip" title="ゴールド"><CurrencyIcon type="gold" size={18} /><span>{formatCompact(player.gold)}</span></div>
       </div>
-
-      {/* 中央: スタミナ */}
-      <div className="flex-1 flex justify-center">
-        <StaminaDisplay />
-      </div>
-
-      {/* 右: 通貨 */}
-      <div className="flex items-center gap-1.5 flex-shrink-0">
-        <div className="flex items-center gap-0.5">
-          <CurrencyIcon type="diamond" size={15} />
-          <span className="text-blue-300 font-bold" style={{ fontSize: 11 }}>{formatCompact(player.diamond)}</span>
-        </div>
-        <div className="flex items-center gap-0.5">
-          <CurrencyIcon type="gold" size={15} />
-          <span className="text-yellow-400 font-bold" style={{ fontSize: 11 }}>{formatCompact(player.gold)}</span>
-        </div>
-      </div>
-    </header>
-  );
+    </div>
+    {title && <div className="game-page-heading"><div><p className="eyebrow">YOUR ADVENTURE</p><h1>{title}</h1>{SUBTITLES[title] && <p className="page-description">{SUBTITLES[title]}</p>}</div><span className="heading-ornament" aria-hidden="true">✧</span></div>}
+  </header>;
 };

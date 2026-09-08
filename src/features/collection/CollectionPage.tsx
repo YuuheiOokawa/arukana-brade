@@ -76,7 +76,7 @@ export const CollectionPage = () => {
   const pct = total > 0 ? (found / total) * 100 : 0;
 
   return (
-    <div className="min-h-screen pb-28" style={{ background: 'radial-gradient(ellipse at 50% 0%, #12082a 0%, #080818 60%)' }}>
+    <div className="game-page min-h-screen pb-28" style={{ background: 'radial-gradient(ellipse at 50% 0%, #12082a 0%, #080818 60%)' }}>
       <TopBar title="図鑑" />
 
       {/* タブ */}
@@ -137,7 +137,7 @@ export const CollectionPage = () => {
 
       {/* ユニット図鑑グリッド */}
       {tab === 'units' && (
-        <div className="px-4 grid grid-cols-3 gap-2">
+        <div className="px-4 collection-grid">
           {filteredUnits.map(m => {
             const isDiscovered = discoveredSet.has(m.id);
             const star = RARITY_TO_STAR[m.rarity];
@@ -199,7 +199,7 @@ export const CollectionPage = () => {
 
       {/* 装備図鑑グリッド */}
       {tab === 'equipment' && (
-        <div className="px-4 grid grid-cols-3 gap-2">
+        <div className="px-4 collection-grid">
           {filteredEquips.map(m => {
             const isDiscovered = discoveredEquipSet.has(m.id);
             const color = EQ_RARITY_COLOR[m.rarity];

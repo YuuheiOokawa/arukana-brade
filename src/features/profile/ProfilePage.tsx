@@ -69,7 +69,7 @@ export const ProfilePage = () => {
   const title = player.title ?? '駆け出しの勇者';
 
   return (
-    <div className="min-h-screen pb-24" style={{
+    <div className="game-page min-h-screen pb-24" style={{
       background: 'radial-gradient(ellipse at 50% -10%, #1a0838 0%, #080818 55%, #020208 100%)',
     }}>
       <TopBar title="プロフィール" />

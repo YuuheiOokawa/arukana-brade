@@ -5,6 +5,7 @@ import { RACE_MASTER } from '../../data/races';
 import { useTutorialStore } from '../../stores/tutorialStore';
 import { ELEMENT_NAMES } from '../../types';
 import type { GenderType, RaceType } from '../../types';
+import { UnitIcon } from '../../components/ui/UnitCard';
 import { resolveUnitImage } from '../../lib/unitImage';
 
 const GENDER_OPTIONS: { id: GenderType; label: string; emoji: string }[] = [
@@ -34,7 +35,6 @@ export const HeroSelectScreen = () => {
   const [gender, setGenderState] = useState<GenderType | null>(selectedGender);
   const [race, setRaceState] = useState<RaceType | null>(selectedRace);
   const [confirmed] = useState(false);
-  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
   const selectedHero = gender && race ? HERO_MASTER.find(h => h.gender === gender && h.race === race) : null;
 
@@ -90,7 +90,6 @@ export const HeroSelectScreen = () => {
             <div className="grid grid-cols-1 gap-2">
               {RACE_MASTER.map(r => {
                 const raceHero = getRaceHero(r.id);
-                const imgKey = `${gender}_${r.id}`;
                 const imgSrc = raceHero ? resolveUnitImage(raceHero.unitMasterId, 3) : '';
                 const isSelected = race === r.id;
                 return (
@@ -107,18 +106,7 @@ export const HeroSelectScreen = () => {
                         background: raceHero ? ELEMENT_GRADIENT[raceHero.element] : '#1a1a35',
                         WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)',
                       }}>
-                      {raceHero && imgSrc && !imgErrors[imgKey] ? (
-                        <img
-                          src={imgSrc}
-                          alt={raceHero.name}
-                          onError={() => setImgErrors(prev => ({ ...prev, [imgKey]: true }))}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-2xl">
-                          {r.emoji}
-                        </div>
-                      )}
+                      {raceHero && <UnitIcon src={imgSrc} masterId={raceHero.unitMasterId} unitRarity={3} element={raceHero.element} fallbackEmoji={raceHero.emoji} size={52} height={64} variant="portrait" alt={raceHero.name}/> }
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-bold text-sm text-white">{r.name}</div>
@@ -148,21 +136,7 @@ export const HeroSelectScreen = () => {
                   height: 220,
                   background: ELEMENT_GRADIENT[selectedHero.element],
                 }}>
-                {!imgErrors[`preview_${selectedHero.heroId}`] ? (
-                  <img
-                    src={resolveUnitImage(selectedHero.unitMasterId, 3)}
-                    alt={selectedHero.name}
-                    onError={() => setImgErrors(prev => ({ ...prev, [`preview_${selectedHero.heroId}`]: true }))}
-                    style={{
-                      width: '100%', height: '100%',
-                      objectFit: 'cover', objectPosition: 'top center',
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-8xl">
-                    {selectedHero.emoji}
-                  </div>
-                )}
+                <div className="flex justify-center"><UnitIcon src={resolveUnitImage(selectedHero.unitMasterId, 3)} masterId={selectedHero.unitMasterId} unitRarity={3} element={selectedHero.element} fallbackEmoji={selectedHero.emoji} size={220} height={220} variant="full" alt={selectedHero.name}/></div>
                 {/* 属性バッジ */}
                 <div className="absolute top-2 right-2 px-2 py-0.5 rounded-lg text-xs font-bold"
                   style={{

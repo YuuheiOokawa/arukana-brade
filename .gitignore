@@ -30,3 +30,6 @@ dist-ssr
 
 # 元の大きな画像ファイル（分割済み）
 public/キャラ画像/
+
+# Local browser validation output
+test-results/

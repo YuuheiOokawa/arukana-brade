@@ -46,7 +46,7 @@ export const GiftBoxPage = () => {
   };
 
   return (
-    <div className="min-h-screen pb-28">
+    <div className="game-page min-h-screen pb-28">
       <TopBar title="プレゼントボックス" />
 
       {toast && (
