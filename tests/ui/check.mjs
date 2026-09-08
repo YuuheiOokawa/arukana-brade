@@ -27,7 +27,7 @@ try {
       const layout=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth,missing:[...document.querySelectorAll('img')].filter(i=>i.complete&&!i.naturalWidth).map(i=>i.getAttribute('src'))}));
       report.push({page:name,width,...layout,errors:errors.splice(0)});
       assert.equal(layout.overflow,false,`${name} overflows at ${width}`);assert.deepEqual(layout.missing,[],name);
-      if(['HomePage','UnitsPage'].includes(name)) {
+      if(['HomePage','UnitsPage','ProfilePage','GuildPage','ItemsPage','ShopPage','MissionsPage','GiftBoxPage'].includes(name)) {
         if(fontDir) await page.addStyleTag({content:readFileSync(path.join(fontDir,'400.css'),'utf8').replaceAll('./files/','/__qa-fonts/')+'body,button,input,h1,h2,h3{font-family:"Noto Sans JP",sans-serif!important}'});
         await page.screenshot({path:`${output}/${name}-${width}.png`,fullPage:true,timeout:60000});
       }

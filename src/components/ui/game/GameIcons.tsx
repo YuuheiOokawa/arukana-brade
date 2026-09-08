@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { JSX } from 'react';
 import './GameUI.css';
 
@@ -498,13 +499,14 @@ interface CurrencyIconProps {
   showLabel?: boolean;
 }
 
-const GoldSvg = ({ s }: { s: number }) => (
+const GoldSvg = ({ s, id }: { s: number; id: string }) => (
   <svg width={s*0.6} height={s*0.6} viewBox="0 0 38 38" fill="none">
-    <circle cx="19" cy="19" r="15" fill="url(#g-coin)" stroke="rgba(255,255,255,.3)" strokeWidth="1"/>
-    <circle cx="19" cy="19" r="11" stroke="rgba(255,200,0,.4)" strokeWidth="1" fill="none"/>
-    <text x="19" y="25" textAnchor="middle" fontFamily="serif" fontWeight="900" fontSize="16" fill="rgba(120,80,0,.7)">G</text>
+    <circle cx="19" cy="19" r="16" fill={`url(#${id})`} stroke="#fff2a8" strokeWidth="1"/>
+    <circle cx="19" cy="19" r="12.4" stroke="#8f5a09" strokeWidth="1.2" fill="none"/>
+    <path d="M19 9L21.7 15.2L28.5 15.8L23.3 20.3L24.9 27L19 23.5L13.1 27L14.7 20.3L9.5 15.8L16.3 15.2Z" fill="#fff07a" stroke="#9a6108" strokeWidth=".7"/>
+    <circle cx="14" cy="11" r="2.2" fill="white" opacity=".75"/>
     <defs>
-      <radialGradient id="g-coin" cx="35%" cy="30%">
+      <radialGradient id={id} cx="35%" cy="28%">
         <stop stopColor="#fff5a0"/>
         <stop offset=".5" stopColor="#f5c518"/>
         <stop offset="1" stopColor="#8b6010"/>
@@ -513,17 +515,18 @@ const GoldSvg = ({ s }: { s: number }) => (
   </svg>
 );
 
-const DiamondSvg = ({ s }: { s: number }) => (
+const DiamondSvg = ({ s, id }: { s: number; id: string }) => (
   <svg width={s*0.58} height={s*0.58} viewBox="0 0 38 38" fill="none">
     {/* ダイヤモンド形 */}
-    <path d="M19 5L33 16L19 33L5 16Z" fill="url(#g-dia)" stroke="rgba(200,240,255,.4)" strokeWidth=".8"/>
+    <path d="M19 3L34 14L29 24L19 35L9 24L4 14Z" fill={`url(#${id})`} stroke="#e4fbff" strokeWidth="1"/>
     {/* 上面 */}
-    <path d="M19 5L12 16L19 14L26 16Z" fill="rgba(255,255,255,.4)"/>
+    <path d="M4 14L13 12L19 3L25 12L34 14L19 35Z" fill="rgba(255,255,255,.16)"/>
+    <path d="M4 14H34M13 12L19 35L25 12" stroke="#dffaff" strokeWidth=".65" opacity=".75"/>
     {/* 光沢 */}
     <path d="M14 10L19 5L17 12Z" fill="rgba(255,255,255,.5)"/>
     <path d="M24 10L19 5L21 12Z" fill="rgba(200,240,255,.3)"/>
     <defs>
-      <linearGradient id="g-dia" x1="5" y1="5" x2="33" y2="33" gradientUnits="userSpaceOnUse">
+      <linearGradient id={id} x1="7" y1="5" x2="31" y2="34" gradientUnits="userSpaceOnUse">
         <stop stopColor="#bfdbfe"/>
         <stop offset=".4" stopColor="#3b82f6"/>
         <stop offset="1" stopColor="#1e3a8a"/>
@@ -557,14 +560,15 @@ const CURRENCY_LABELS: Record<CurrencyType, string> = {
   mana: 'マナクリスタル',
 };
 
-export const CurrencyIcon = ({ type, size = 64, showLabel = false }: CurrencyIconProps) => (
-  <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+export const CurrencyIcon = ({ type, size = 64, showLabel = false }: CurrencyIconProps) => {
+  const id = useId().replace(/:/g, '');
+  return <div className="currency-icon-wrap">
     <div
       className={`gb-currency-icon gb-currency-icon-${type}`}
       style={{ width: size, height: size }}
     >
-      {type === 'gold'    && <GoldSvg s={size} />}
-      {type === 'diamond' && <DiamondSvg s={size} />}
+      {type === 'gold'    && <GoldSvg s={size} id={`${id}-gold`} />}
+      {type === 'diamond' && <DiamondSvg s={size} id={`${id}-diamond`} />}
       {type === 'mana'    && <ManaSvg s={size} />}
     </div>
     {showLabel && (
@@ -577,5 +581,5 @@ export const CurrencyIcon = ({ type, size = 64, showLabel = false }: CurrencyIco
         {CURRENCY_LABELS[type]}
       </span>
     )}
-  </div>
-);
+  </div>;
+};

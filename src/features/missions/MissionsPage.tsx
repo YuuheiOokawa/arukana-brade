@@ -6,6 +6,8 @@ import { TopBar } from '../../components/layout/TopBar';
 import type { MissionProgress } from '../../types';
 import { GaugeBar } from '../../components/ui/game/GaugeBar';
 import { GameButton } from '../../components/ui/game/GameButton';
+import { ItemIcon, RewardIcon } from '../../components/ui/GameGlyphs';
+import { Icon } from '../../components/ui/Icon';
 
 type Tab = 'daily' | 'weekly';
 
@@ -24,7 +26,7 @@ export const MissionsPage = () => {
   const handleClaimAll = (kind: Tab) => {
     const count = kind === 'daily' ? claimAllDaily() : claimAllWeekly();
     if (count > 0) {
-      setClaimToast(`🎁 ${count}件の報酬を受け取りました！`);
+      setClaimToast(`${count}件の報酬を受け取りました`);
       setTimeout(() => setClaimToast(''), 2500);
     }
   };
@@ -58,7 +60,7 @@ export const MissionsPage = () => {
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 ${
             prog.completed ? 'bg-yellow-900/40 border border-yellow-700/40' : 'bg-gray-800/60'
           }`}>
-            {prog.claimed ? '✓' : mission.emoji}
+            {prog.claimed ? <Icon name="check" size={20}/> : <Icon name="missions" size={20}/ >}
           </div>
           <div className="flex-1 min-w-0">
             <p className={`font-bold text-sm mb-0.5 ${prog.claimed ? 'text-gray-500 line-through' : 'text-white'}`}>
@@ -81,12 +83,12 @@ export const MissionsPage = () => {
 
             <div className="flex flex-wrap gap-1.5">
               {mission.rewards.map((r, i) => (
-                <span key={i} className="text-xs bg-gray-800/60 rounded px-2 py-0.5 text-gray-300 border border-gray-700/40">
-                  {r.type === 'gold' ? `🪙 ${r.amount.toLocaleString()}` :
-                   r.type === 'diamond' ? `💎 ${r.amount}` :
-                   r.type === 'stamina' ? `⚡ ${r.amount}` :
-                   r.itemId ? `${getItemMaster(r.itemId)?.emoji ?? '📦'} ${getItemMaster(r.itemId)?.name ?? ''} ×${r.amount}` :
-                   `📦 ×${r.amount}`}
+                <span key={i} className="text-xs bg-gray-800/60 rounded px-2 py-0.5 text-gray-300 border border-gray-700/40 inline-flex items-center gap-1">
+                  {r.type === 'gold' ? <><RewardIcon type="gold" size={13}/>{r.amount.toLocaleString()}</> :
+                   r.type === 'diamond' ? <><RewardIcon type="diamond" size={13}/>{r.amount}</> :
+                   r.type === 'stamina' ? <><RewardIcon type="stamina" size={13}/>{r.amount}</> :
+                   r.itemId && getItemMaster(r.itemId) ? <><ItemIcon item={getItemMaster(r.itemId)!} size={20}/>{getItemMaster(r.itemId)?.name} ×{r.amount}</> :
+                   <>×{r.amount}</>}
                 </span>
               ))}
             </div>
@@ -123,11 +125,11 @@ export const MissionsPage = () => {
       <div className="px-4 mb-4 flex gap-2">
         <button onClick={() => setTab('daily')}
           className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === 'daily' ? 'tab-active' : 'tab-inactive'}`}>
-          📅 デイリー
+          <span className="inline-flex items-center gap-2"><Icon name="calendar" size={16}/>デイリー</span>
         </button>
         <button onClick={() => setTab('weekly')}
           className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === 'weekly' ? 'tab-active' : 'tab-inactive'}`}>
-          📆 ウィークリー
+          <span className="inline-flex items-center gap-2"><Icon name="weekly" size={16}/>ウィークリー</span>
         </button>
       </div>
 

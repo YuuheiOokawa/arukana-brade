@@ -3,6 +3,9 @@ import { GameButton } from '../../components/ui/game/GameButton';
 import { useGuildStore, PRESET_GUILDS } from '../../stores/guildStore';
 import { usePlayerStore } from '../../stores/playerStore';
 import { TopBar } from '../../components/layout/TopBar';
+import { GuildEmblem, MemberIcon, RewardIcon } from '../../components/ui/GameGlyphs';
+import { getItemMaster } from '../../data/items';
+import { Icon } from '../../components/ui/Icon';
 
 type Tab = 'home' | 'members' | 'mission' | 'chat';
 
@@ -62,13 +65,13 @@ export const GuildPage = () => {
     let msg = '';
     if (reward.type === 'diamond') {
       usePlayerStore.getState().addDiamond(reward.amount);
-      msg = `💎 ダイヤ×${reward.amount} を獲得！`;
+      msg = `ダイヤ ${reward.amount}個を獲得しました`;
     } else if (reward.type === 'gold') {
       addGold(reward.amount);
-      msg = `🪙 ゴールド×${reward.amount} を獲得！`;
+      msg = `ゴールド ${reward.amount.toLocaleString()}Gを獲得しました`;
     } else if (reward.type === 'item') {
       addItem(reward.itemId, reward.amount);
-      msg = `✨ アイテムを獲得！`;
+      msg = `${getItemMaster(reward.itemId)?.name ?? 'アイテム'}を獲得しました`;
     }
     setRewardToast(msg);
     setTimeout(() => setRewardToast(null), 3000);
@@ -149,7 +152,7 @@ export const GuildPage = () => {
         <TopBar title="ギルド" />
         <div className="px-4 space-y-4 py-2">
           <div className="card-base p-5 text-center">
-            <p className="text-5xl mb-3">🏰</p>
+            <span className="mx-auto mb-4 guild-emblem guild-emblem-gold" style={{width:72,height:72}}><Icon name="guild" size={34}/></span>
             <p className="text-white font-bold text-lg mb-1">ギルドに参加していません</p>
             <p className="text-gray-500 text-sm">ギルドに参加してレイドに挑戦しよう！</p>
           </div>
@@ -166,7 +169,7 @@ export const GuildPage = () => {
                 <div key={pg.id} className="card-base p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-purple-900/40 rounded-xl flex items-center justify-center text-2xl">
-                      {pg.emblem}
+                      <GuildEmblem emblem={pg.emblem} size={48}/>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-bold truncate">{pg.name}</p>
@@ -186,7 +189,7 @@ export const GuildPage = () => {
 
           {/* ギルド新規作成 */}
           <div className="card-base p-4">
-            <p className="text-white font-bold mb-3">🏗️ 新しいギルドを作成</p>
+            <p className="text-white font-bold mb-3 flex items-center gap-2"><Icon name="guild" size={20}/>新しいギルドを作成</p>
             <div className="mb-3">
               <p className="text-gray-500 text-xs mb-1">ギルド名</p>
               <input
@@ -200,9 +203,8 @@ export const GuildPage = () => {
               <div className="flex gap-2 flex-wrap">
                 {EMBLEMS.map(e => (
                   <button key={e} onClick={() => setNewGuildEmblem(e)}
-                    className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all ${
-                      newGuildEmblem === e ? 'bg-purple-700 border-2 border-purple-400' : 'bg-gray-800 border border-gray-700'
-                    }`}>{e}</button>
+                    aria-label={`エンブレム ${EMBLEMS.indexOf(e) + 1}`}
+                    className="rounded-xl flex items-center justify-center transition-all"><GuildEmblem emblem={e} size={40} selected={newGuildEmblem === e}/></button>
                 ))}
               </div>
             </div>
@@ -222,7 +224,7 @@ export const GuildPage = () => {
   const guildExpNeeded = guildLevel * 1000;
 
   return (
-    <div className="min-h-screen pb-28">
+    <div className="game-page min-h-screen pb-28">
       <TopBar title="ギルド" />
       {rewardToast && (
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-yellow-900/90 border border-yellow-600 text-yellow-200 text-sm font-bold px-4 py-2 rounded-xl shadow-lg">
@@ -231,12 +233,10 @@ export const GuildPage = () => {
       )}
 
       {/* ギルドヘッダー */}
-      <div className="mx-4 mb-4 rounded-2xl p-4 border border-purple-800/40"
+      <div className="guild-hero mx-4 mb-4 rounded-2xl p-4"
         style={{ background: 'linear-gradient(135deg, #12052a, #1a0a40)' }}>
         <div className="flex items-center gap-3">
-          <div className="w-14 h-14 bg-purple-900/60 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0">
-            {guild.emblem}
-          </div>
+          <GuildEmblem emblem={guild.emblem} size={58}/>
           <div className="flex-1 min-w-0">
             <p className="text-white font-black text-lg truncate">{guild.name}</p>
             <div className="flex items-center gap-2 mt-0.5">
@@ -279,7 +279,7 @@ export const GuildPage = () => {
                     <span className="text-gray-500 text-xs">{m.progress}/{m.target}</span>
                   </div>
                 </div>
-                <div className="text-xs text-gray-500">{m.reward}</div>
+                <div className="text-xs text-gray-500 flex items-center gap-1"><RewardIcon type={m.reward.includes('G') ? 'gold' : 'diamond'} size={14}/>{m.reward}</div>
                 {m.progress >= m.target && !m.claimed && (
                   <GameButton variant="gold" size="sm" onClick={() => handleClaimMission(m.id)}>受取</GameButton>
                 )}
@@ -294,16 +294,14 @@ export const GuildPage = () => {
         <div className="px-4 space-y-2">
           {guild.members.map(m => (
             <div key={m.id} className={`card-base p-3.5 flex items-center gap-3 ${m.isPlayer ? 'border-yellow-600/30' : ''}`}>
-              <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center text-lg">
-                {m.isPlayer ? '🧑' : m.role === 'master' ? '👑' : m.role === 'officer' ? '⭐' : '👤'}
-              </div>
+              <MemberIcon role={m.role} self={m.isPlayer}/>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 min-w-0">
                   <p className={`font-bold text-sm truncate ${m.isPlayer ? 'text-yellow-400' : 'text-white'}`}>
                     {m.name} {m.isPlayer ? '(自分)' : ''}
                   </p>
                   <span className="text-[10px] text-gray-500 flex-shrink-0">
-                    {m.role === 'master' ? '👑ギルドマスター' : m.role === 'officer' ? '⭐幹部' : 'メンバー'}
+                    {m.role === 'master' ? 'ギルドマスター' : m.role === 'officer' ? '幹部' : 'メンバー'}
                   </span>
                 </div>
                 <p className="text-gray-500 text-xs">Rank {m.rank} · 戦力 {m.power.toLocaleString()}</p>
@@ -320,7 +318,7 @@ export const GuildPage = () => {
             <div key={m.id} className={`card-base p-4 ${m.claimed ? 'opacity-50' : ''}`}>
               <div className="flex justify-between mb-2">
                 <p className={`font-bold text-sm ${m.claimed ? 'line-through text-gray-500' : 'text-white'}`}>{m.title}</p>
-                <span className="text-yellow-400 text-xs font-medium">{m.reward}</span>
+                <span className="text-yellow-400 text-xs font-medium flex items-center gap-1"><RewardIcon type={m.reward.includes('G') ? 'gold' : 'diamond'} size={14}/>{m.reward}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
@@ -343,9 +341,7 @@ export const GuildPage = () => {
           <div className="flex-1 overflow-y-auto space-y-2 mb-3 scrollbar-hide">
             {[...guildChatMessages].reverse().map((msg, i) => (
               <div key={i} className={`flex gap-2 ${msg.sender === player.name ? 'flex-row-reverse' : ''}`}>
-                <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-sm flex-shrink-0">
-                  {msg.sender === player.name ? '🧑' : '👤'}
-                </div>
+                <MemberIcon role="member" self={msg.sender === player.name}/>
                 <div className={`max-w-[70%] ${msg.sender === player.name ? 'items-end' : 'items-start'} flex flex-col`}>
                   <p className="text-gray-500 text-xs mb-0.5">{msg.sender}</p>
                   <div className={`rounded-xl px-3 py-2 text-sm ${
