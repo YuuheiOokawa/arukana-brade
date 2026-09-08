@@ -22,7 +22,7 @@ export const UnitDetailPage = () => {
   const { instanceId } = useParams<{ instanceId: string }>();
   const navigate = useNavigate();
   const { ownedUnits, toggleLock, setCustomBbSkill } = useUnitStore();
-  const { items, useItem } = usePlayerStore();
+  const { items, useItem: consumeItem } = usePlayerStore();
   const { getEquippedByUnit } = useEquipmentStore();
   const [skillModal, setSkillModal] = useState(false);
   const [skillToast, setSkillToast] = useState('');
@@ -53,7 +53,7 @@ export const UnitDetailPage = () => {
 
   const handleRewrite = (skillId: string) => {
     if (skillBookCount < 1) { showSkillToast('スキルの書が足りません'); return; }
-    const ok = useItem('item_skill_book', 1);
+    const ok = consumeItem('item_skill_book', 1);
     if (!ok) { showSkillToast('スキルの書が足りません'); return; }
     setCustomBbSkill(unit.instanceId, skillId);
     const newSkill = getSkill(skillId);
@@ -82,7 +82,7 @@ export const UnitDetailPage = () => {
     : null;
 
   return (
-    <div className="min-h-screen pb-24" style={{ background: 'radial-gradient(ellipse at 50% 0%, #100820 0%, #08081a 55%)' }}>
+    <div className="game-page min-h-screen pb-24" style={{ background: 'radial-gradient(ellipse at 50% 0%, #100820 0%, #08081a 55%)' }}>
       <TopBar onBack={() => navigate('/units')} />
 
       {/* ヘッダーカード */}

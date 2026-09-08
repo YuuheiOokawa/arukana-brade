@@ -92,7 +92,7 @@ export const ShopPage = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24" style={{ background: 'radial-gradient(ellipse at 50% 0%, #1a0820 0%, #080818 60%)' }}>
+    <div className="game-page min-h-screen pb-24" style={{ background: 'radial-gradient(ellipse at 50% 0%, #1a0820 0%, #080818 60%)' }}>
       <TopBar title="ショップ" />
 
       {/* トースト */}

@@ -47,7 +47,7 @@ type SortType = 'rarity' | 'level' | 'slot';
 export const EquipmentPage = () => {
   const { ownedEquipments, sellEquipment, equipToUnit, unequipEquipment, levelUpEquipmentBy, evolveEquipment } = useEquipmentStore();
   const { ownedUnits } = useUnitStore();
-  const { player, spendGold, addGold, items, useItem } = usePlayerStore();
+  const { player, spendGold, addGold, items, useItem: consumeItem } = usePlayerStore();
   const [tab, setTab] = useState<TabType>('list');
   const [selectedEq, setSelectedEq] = useState<OwnedEquipment | null>(null);
   const [filterSlot, setFilterSlot] = useState<EquipmentSlot | 'all'>('all');
@@ -91,7 +91,7 @@ export const EquipmentPage = () => {
     if (eq.equippedTo) return; // 装備中は選択不可
     setBulkSelected(prev => {
       const next = new Set(prev);
-      next.has(eq.instanceId) ? next.delete(eq.instanceId) : next.add(eq.instanceId);
+      if(next.has(eq.instanceId)) next.delete(eq.instanceId); else next.add(eq.instanceId);
       return next;
     });
   };
@@ -142,7 +142,7 @@ export const EquipmentPage = () => {
   };
 
   return (
-    <div className="min-h-screen pb-28">
+    <div className="game-page min-h-screen pb-28">
       <TopBar title="装備" />
 
       {/* タブ */}
@@ -317,7 +317,7 @@ export const EquipmentPage = () => {
                       // evolveEquipment 成功後に素材・ゴールドを消費（失敗時の素材消滅を防ぐ）
                       const ok = evolveEquipment(eq.instanceId);
                       if (!ok) { showToast('進化できませんでした'); return; }
-                      evolveMats.forEach(mat => useItem(mat.itemId, mat.quantity));
+                      evolveMats.forEach(mat => consumeItem(mat.itemId, mat.quantity));
                       spendGold(evolveGold);
                       showToast(`✨ ${master.name} +${evolveRank + 1} に進化！`);
                       setSelectedEq(null);

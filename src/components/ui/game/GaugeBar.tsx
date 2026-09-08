@@ -60,7 +60,7 @@ export const GaugeBar = ({
   width = '100%',
 }: GaugeBarProps) => {
   const meta = GAUGE_META[type];
-  const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
+  const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
 
   return (
     <div className="gb-gauge-wrap" style={{ width }}>

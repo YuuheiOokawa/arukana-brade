@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getScenario, BG_STYLES, BG_ACCENT } from '../../data/scenarios';
 import { StoryTextBox } from '../../components/ui/game/GamePanel';
 
+const EMPTY_LINES: NonNullable<ReturnType<typeof getScenario>>['lines'] = [];
+
 const AUTO_INTERVAL_MS = 3200;
 
 // ===== クレジットスクロールモード（映画エンディングロール風）=====
@@ -14,7 +16,7 @@ export const CreditsScrollScreen = ({
   onFinish: () => void;
 }) => {
   const scenario = getScenario(stageId);
-  const lines = scenario?.lines ?? [];
+  const lines = scenario?.lines ?? EMPTY_LINES;
   const bgKey = scenario?.backgroundKey ?? 'forest';
   const accent = BG_ACCENT[bgKey] ?? '#8b5cf6';
   const durationSec = Math.max(12, lines.length * 2.4 + 6);
@@ -175,7 +177,7 @@ export const ScenarioScreen = () => {
   const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const lines = scenario?.lines ?? [];
+  const lines = scenario?.lines ?? EMPTY_LINES;
   const currentLine = lines[lineIndex];
   const bgKey = scenario?.backgroundKey ?? 'forest';
   const accent = BG_ACCENT[bgKey] ?? '#8b5cf6';

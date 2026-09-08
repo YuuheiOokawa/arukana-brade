@@ -1,3 +1,4 @@
+import { Icon } from './Icon';
 import type { StarRarity } from '../../types';
 import { getStarDisplay, getStarColor } from '../../data/rarityConfig';
 
@@ -25,7 +26,7 @@ export const RarityBadge = ({ rarity, size = 'md' }: Props) => {
         textShadow: `0 0 8px ${color}`,
       }}
     >
-      {label}
+      {rarity === 'CROWN' ? <><Icon name="crown" size={13}/> <span className="sr-only">CROWN</span></> : label}
     </span>
   );
 };

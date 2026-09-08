@@ -28,6 +28,7 @@ export const usePartyStore = create<PartyStore>()(
       activePartyId: 'party_default',
 
       setSlot: (partyId, slotIndex, instanceId) => {
+        if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= 5) return;
         set(s => ({
           parties: s.parties.map(p => {
             if (p.id !== partyId) return p;
@@ -38,13 +39,8 @@ export const usePartyStore = create<PartyStore>()(
               if (existingIdx !== -1 && existingIdx !== slotIndex) slots[existingIdx] = null;
             }
             slots[slotIndex] = instanceId;
-            // リーダーが外れた場合
-            let leaderId = p.leaderId;
-            if (instanceId === null && p.leaderId === p.slots[slotIndex]) {
-              leaderId = slots.find(s => s !== null) ?? null;
-            }
-            // 先頭ユニットを自動リーダーに
-            if (!leaderId && instanceId) leaderId = instanceId;
+            const leaderId = p.leaderId && slots.includes(p.leaderId)
+              ? p.leaderId : slots.find(id => id !== null) ?? null;
             return { ...p, slots, leaderId };
           }),
         }));
@@ -53,7 +49,7 @@ export const usePartyStore = create<PartyStore>()(
       setLeader: (partyId, instanceId) => {
         set(s => ({
           parties: s.parties.map(p =>
-            p.id === partyId ? { ...p, leaderId: instanceId } : p
+            p.id === partyId && (instanceId === null || p.slots.includes(instanceId)) ? { ...p, leaderId: instanceId } : p
           ),
         }));
       },
@@ -65,7 +61,7 @@ export const usePartyStore = create<PartyStore>()(
         }));
       },
 
-      setActiveParty: (partyId) => set({ activePartyId: partyId }),
+      setActiveParty: (partyId) => { if(get().parties.some(p => p.id === partyId)) set({activePartyId:partyId}); },
 
       removeUnitFromParties: (instanceId) => {
         set(s => ({
@@ -82,7 +78,7 @@ export const usePartyStore = create<PartyStore>()(
 
       getActiveParty: () => {
         const { parties, activePartyId } = get();
-        return parties.find(p => p.id === activePartyId) ?? parties[0];
+        return parties.find(p => p.id === activePartyId) ?? parties[0] ?? DEFAULT_PARTY;
       },
     }),
     { name: 'arcana-party' }

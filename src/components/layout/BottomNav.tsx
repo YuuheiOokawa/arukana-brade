@@ -1,171 +1,57 @@
-import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useMissionStore } from '../../stores/missionStore';
-import { useAuthStore } from '../../stores/authStore';
-import {
-  IconMenu, IconScroll, IconGear, IconBag,
-  IconArrowUp, IconShield, IconDragon, IconCastle, IconFriends, IconMap, IconStar,
-} from '../ui/FantasyIcon';
 import { useGiftStore } from '../../stores/giftStore';
-import { GameNavIcon } from '../ui/game/GameIcons';
-
-type NavIconKey = 'home' | 'quest' | 'unit' | 'summon' | 'profile' | 'guild' | 'arena';
-
-const MAIN_NAV: { path: string; navType: NavIconKey }[] = [
-  { path: '/',       navType: 'home'   },
-  { path: '/quests', navType: 'quest'  },
-  { path: '/units',  navType: 'unit'   },
-  { path: '/summon', navType: 'summon' },
+import { useAuthStore } from '../../stores/authStore';
+import { Icon } from '../ui/Icon';
+import type { IconName } from '../ui/Icon';
+const MAIN = [
+  { path: '/', label: 'ホーム', icon: 'home' }, { path: '/quests', label: 'クエスト', icon: 'quest' },
+  { path: '/units', label: 'ユニット', icon: 'units' }, { path: '/summon', label: '召喚', icon: 'summon' },
+] as const;
+const MORE: {path: string; label: string; icon: IconName}[] = [
+  {path:'/party',label:'パーティ編成',icon:'party'}, {path:'/enhance',label:'強化・進化',icon:'enhance'},
+  {path:'/equipment',label:'装備',icon:'equipment'}, {path:'/items',label:'アイテム',icon:'items'},
+  {path:'/collection',label:'図鑑',icon:'collection'}, {path:'/missions',label:'ミッション',icon:'missions'},
+  {path:'/gifts',label:'プレゼント',icon:'gifts'}, {path:'/shop',label:'ショップ',icon:'shop'},
+  {path:'/raid',label:'レイド',icon:'raid'}, {path:'/pvp',label:'アリーナ',icon:'pvp'},
+  {path:'/guild',label:'ギルド',icon:'guild'}, {path:'/social',label:'フレンド',icon:'social'},
+  {path:'/profile',label:'プロフィール',icon:'profile'},
 ];
-
-type FantasyItem = { path: string; label: string; badge?: true; giftBadge?: true; type: 'fantasy'; Icon: React.ComponentType<{ size: number; color: string }> };
-type GameItem   = { path: string; label: string; badge?: true; type: 'game'; navType: NavIconKey };
-
-const MENU_FANTASY: FantasyItem[] = [
-  { path: '/missions',  label: 'ミッション', type: 'fantasy', Icon: IconScroll,   badge: true },
-  { path: '/shop',      label: 'ショップ',   type: 'fantasy', Icon: IconCastle },
-  { path: '/equipment', label: '装備',       type: 'fantasy', Icon: IconGear },
-  { path: '/items',     label: 'アイテム',   type: 'fantasy', Icon: IconBag },
-  { path: '/enhance',   label: '強化',       type: 'fantasy', Icon: IconArrowUp },
-  { path: '/party',     label: '編成',       type: 'fantasy', Icon: IconShield },
-  { path: '/raid',      label: 'レイド',     type: 'fantasy', Icon: IconDragon },
-  { path: '/social',    label: 'フレンド',   type: 'fantasy', Icon: IconFriends },
-  { path: '/collection', label: '図鑑',      type: 'fantasy', Icon: IconMap },
-  { path: '/gifts',     label: 'プレゼント', type: 'fantasy', Icon: IconStar, giftBadge: true },
-];
-
-const MENU_SOCIAL: GameItem[] = [
-  { path: '/pvp',     label: 'アリーナ',    type: 'game', navType: 'arena' },
-  { path: '/guild',   label: 'ギルド',      type: 'game', navType: 'guild' },
-  { path: '/profile', label: 'プロフィール', type: 'game', navType: 'profile' },
-];
-
 export const BottomNav = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { getCompletedCount, getClaimedCount } = useMissionStore();
-  const { getUnclaimedCount } = useGiftStore();
-  const { logout } = useAuthStore();
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  const missionBadge = getCompletedCount() > getClaimedCount();
-  const giftBadge = getUnclaimedCount() > 0;
-  const isActive = (path: string) => path === '/' ? pathname === '/' : pathname.startsWith(path);
-
-  const handleNav = (path: string) => { setMenuOpen(false); navigate(path); };
-
-  const handleLogout = async () => {
-    setMenuOpen(false);
-    await logout();
-    navigate('/title', { replace: true });
+  const missions = useMissionStore();
+  const gifts = useGiftStore();
+  const [open, setOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const dialog = useRef<HTMLDialogElement>(null);
+  const pending = missions.getCompletedCount() - missions.getClaimedCount();
+  const giftCount = gifts.getUnclaimedCount();
+  useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => {
+    const el = dialog.current;
+    if (open) el?.showModal(); else el?.close();
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previous; };
+  }, [open]);
+  const logout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try { await useAuthStore.getState().logout(); navigate('/title', {replace:true}); }
+    finally { setLoggingOut(false); setOpen(false); }
   };
-
-  return (
-    <>
-      {/* メニュードロワー */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <div className="absolute bottom-[64px] left-0 right-0 max-w-lg mx-auto px-4 pb-2"
-            onClick={e => e.stopPropagation()}>
-            <div className="animate-slide-bottom rounded-t-3xl overflow-hidden"
-              style={{
-                background: 'linear-gradient(180deg, #1a1a3a 0%, #10102a 100%)',
-                border: '1px solid rgba(139,92,246,0.3)',
-                borderBottom: 'none',
-                boxShadow: '0 -8px 40px rgba(0,0,0,0.7)',
-                padding: '20px 16px 24px',
-              }}>
-              {/* ドラッグハンドル */}
-              <div className="flex justify-center mb-5">
-                <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(139,92,246,0.4)' }} />
-              </div>
-              {/* ファンタジーメニュー (4列) */}
-              <div className="grid grid-cols-4 gap-2">
-                {MENU_FANTASY.map(item => {
-                  const active = isActive(item.path);
-                  return (
-                    <div key={item.path} className="relative" onClick={() => handleNav(item.path)}>
-                      <button
-                        className="w-full flex flex-col items-center gap-1.5 py-3 rounded-2xl transition-all active:scale-95"
-                        style={{
-                          background: active
-                            ? 'linear-gradient(180deg, rgba(139,92,246,0.25), rgba(79,70,229,0.2))'
-                            : 'rgba(255,255,255,0.04)',
-                          border: `1px solid ${active ? 'rgba(167,139,250,0.5)' : 'rgba(255,255,255,0.07)'}`,
-                          boxShadow: active ? '0 0 16px rgba(139,92,246,0.2)' : 'none',
-                        }}>
-                        <item.Icon size={22} color={active ? '#c4b5fd' : '#4b5563'} />
-                        <span style={{ fontSize: 9, fontWeight: 700, color: active ? '#c4b5fd' : '#4b5563', whiteSpace: 'nowrap' }}>
-                          {item.label}
-                        </span>
-                      </button>
-                      {((item.badge && missionBadge) || (item.giftBadge && giftBadge)) && (
-                        <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full pointer-events-none" />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* ソーシャル (アリーナ・ギルド・プロフィール横並び) */}
-              <div className="grid grid-cols-3 gap-2 mt-2">
-                {MENU_SOCIAL.map(item => {
-                  const active = isActive(item.path);
-                  return (
-                    <div key={item.path} className="relative" onClick={() => handleNav(item.path)}>
-                      <GameNavIcon type={item.navType} active={active} showLabel size={44} />
-                    </div>
-                  );
-                })}
-              </div>
-
-              <button
-                onClick={() => void handleLogout()}
-                className="w-full mt-3 py-2.5 rounded-xl text-center text-xs font-bold transition-all active:scale-98"
-                style={{ color: '#9ca3af', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)' }}>
-                ← ログアウト
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* メインナビゲーションバー */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50"
-        style={{
-          background: 'linear-gradient(180deg, rgba(8,8,22,0.96) 0%, rgba(6,6,16,0.99) 100%)',
-          borderTop: '1px solid rgba(139,92,246,0.2)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-        }}>
-        <div className="max-w-lg mx-auto flex pb-safe">
-          {MAIN_NAV.map(item => {
-            const active = isActive(item.path);
-            return (
-              <div key={item.path} className="flex-1 flex justify-center pt-1 pb-1 active:scale-95 transition-all duration-200"
-                onClick={() => { setMenuOpen(false); navigate(item.path); }}>
-                <GameNavIcon type={item.navType} active={active} showLabel size={46} />
-              </div>
-            );
-          })}
-
-          {/* メニューボタン */}
-          <button onClick={() => setMenuOpen(p => !p)}
-            className="flex-1 flex flex-col items-center pt-2 pb-3 transition-all duration-200 active:scale-95 relative">
-            <div style={{ transition: 'transform 0.2s', transform: menuOpen ? 'rotate(90deg)' : '' }}>
-              <IconMenu size={22} color={menuOpen ? '#f0c040' : '#4b5563'} />
-            </div>
-            <span style={{ fontSize: 10, marginTop: 3, fontWeight: 700,
-              color: menuOpen ? '#f0c040' : '#4b5563' }}>
-              メニュー
-            </span>
-            {missionBadge && !menuOpen && (
-              <span className="absolute top-1.5 right-[15%] w-2.5 h-2.5 bg-red-500 rounded-full" />
-            )}
-          </button>
-        </div>
-      </nav>
-    </>
-  );
+  const badge = (path: string) => path === '/missions' ? pending : path === '/gifts' ? giftCount : 0;
+  const link = (item: {path:string;label:string;icon:IconName}) => <NavLink key={item.path} to={item.path} end={item.path === '/'} className={({isActive}) => `game-nav-link ${isActive ? 'is-active' : ''}`} onClick={() => setOpen(false)}><Icon name={item.icon} /><span>{item.label}</span>{badge(item.path) > 0 && <b className="nav-badge">{badge(item.path)}</b>}</NavLink>;
+  return <>
+    <aside className="game-sidebar"><NavLink to="/" className="sidebar-brand"><Icon name="summon" size={32} /><span>ARCANA<small>BLADE</small></span></NavLink><p className="eyebrow">EXPLORE</p><nav aria-label="メインナビゲーション">{MAIN.map(link)}<div className="nav-divider" />{MORE.map(link)}</nav><button className="game-logout" onClick={() => void logout()} disabled={loggingOut}><Icon name="logout" size={16}/>ログアウト</button><p className="sidebar-footer">星の記憶と、あなたの物語。</p></aside>
+    <nav className="game-bottom-nav" aria-label="モバイルナビゲーション">{MAIN.map(link)}<button className={`game-nav-link ${open ? 'is-active' : ''}`} aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen(true)}><Icon name="menu" /><span>メニュー</span>{pending + giftCount > 0 && <i className="notification-dot" />}</button></nav>
+    <dialog ref={dialog} className="game-menu-dialog" onCancel={() => setOpen(false)} onClose={() => setOpen(false)} onClick={e => { if(e.target === e.currentTarget) setOpen(false); }} aria-labelledby="game-menu-title">
+      <div className="menu-heading"><div><p className="eyebrow">DISCOVER MORE</p><h2 id="game-menu-title">冒険メニュー</h2></div><button className="icon-button" aria-label="メニューを閉じる" onClick={() => setOpen(false)}><Icon name="close" /></button></div>
+      <nav className="game-menu-grid" aria-label="その他の画面">{MORE.map(link)}</nav>
+      <button className="game-logout" onClick={() => void logout()} disabled={loggingOut}><Icon name="logout" size={18}/>{loggingOut ? 'ログアウト中…' : 'ログアウト'}</button>
+    </dialog>
+  </>;
 };

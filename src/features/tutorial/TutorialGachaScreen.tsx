@@ -54,7 +54,6 @@ const performTutorialSummon = (): UnitMaster[] => {
   return results;
 };
 
-const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
 const starBorder = (star: GachaStar) => {
   if (star === 3) return 'rgba(255,228,141,.88)';
@@ -77,7 +76,7 @@ type Phase = 'pre' | 'summon' | 'reveal' | 'results';
 export const TutorialGachaScreen = () => {
   const navigate = useNavigate();
   const { completeTutorial, setInitialGachaDone } = useTutorialStore();
-  const { processSummonResults } = useUnitStore();
+  const { processSummonResults, addAwakeningCrystal } = useUnitStore();
   const { syncSummonResult } = useAuthStore();
 
   // 既に初回無料ガチャを実行済み（戻る/リロード等での再訪問）なら、
@@ -99,6 +98,25 @@ export const TutorialGachaScreen = () => {
   const [shake, setShake] = useState(false);
   const [currentStar, setCurrentStar] = useState<GachaStar>(1);
   const skipRef = useRef(false);
+  const mountedRef = useRef(true);
+  const openingRef = useRef(false);
+  const waitsRef = useRef(new Map<ReturnType<typeof setTimeout>, (active: boolean) => void>());
+  useEffect(() => {
+    mountedRef.current = true;
+    const waits = waitsRef.current;
+    return () => {
+      mountedRef.current = false;
+      waits.forEach((resolve, timer) => { clearTimeout(timer); resolve(false); });
+      waits.clear();
+    };
+  }, []);
+  const pause = (ms: number) => new Promise<boolean>(resolve => {
+    const timer = setTimeout(() => {
+      waitsRef.current.delete(timer);
+      resolve(mountedRef.current && !skipRef.current);
+    }, ms);
+    waitsRef.current.set(timer, resolve);
+  });
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
@@ -126,7 +144,8 @@ export const TutorialGachaScreen = () => {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     const resize = () => {
       canvas.width = window.innerWidth * devicePixelRatio;
       canvas.height = window.innerHeight * devicePixelRatio;
@@ -177,6 +196,9 @@ export const TutorialGachaScreen = () => {
     // [localStorage SAVE] ユニット追加・被り処理
     const gachaResults = processSummonResults(summonedMasters.map(m => m.id));
     setResultTypes(gachaResults);
+    gachaResults.forEach(result => {
+      if (result.type === 'crystal') addAwakeningCrystal(result.masterId);
+    });
 
     // [DB SAVE] 初回ガチャ結果を DB に保存（無料なのでダイヤ消費は 0）
     void syncSummonResult(
@@ -189,29 +211,30 @@ export const TutorialGachaScreen = () => {
       0,
     );
 
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setPhase('results'); return; }
     setPhase('summon');
     const pColor = maxStar === 3 ? 'rgba(255,228,141,.8)' : maxStar === 2 ? 'rgba(183,115,255,.8)' : 'rgba(123,200,255,.8)';
     spawnBurst(100, pColor, 0.4);
     if (skipRef.current) { setPhase('results'); return; }
-    await sleep(800);
+    if (!await pause(800)) return;
 
     if (skipRef.current) { setPhase('results'); return; }
     spawnBurst(200, 'rgba(255,244,190,.85)', 0.55);
-    await sleep(700);
+    if (!await pause(700)) return;
 
     if (skipRef.current) { setPhase('results'); return; }
     setShake(true);
     spawnBurst(240, pColor, 0.9);
-    await sleep(400);
+    if (!await pause(400)) return;
     setShake(false);
 
     if (skipRef.current) { setPhase('results'); return; }
     spawnBurst(260, 'rgba(190,249,255,.9)', 1.0);
     setWhiteFlash(true);
-    await sleep(180);
+    if (!await pause(180)) return;
     setWhiteFlash(false);
     if (skipRef.current) { setPhase('results'); return; }
-    await sleep(600);
+    if (!await pause(600)) return;
 
     setPhase('reveal');
   };
@@ -222,14 +245,15 @@ export const TutorialGachaScreen = () => {
     setWhiteFlash(false);
     if (phase === 'reveal') {
       setOpened(new Set(results.map((_, i) => i)));
-      setTimeout(() => setPhase('results'), 80);
+      setPhase('results');
     } else {
       setPhase('results');
     }
   };
 
   const openCard = async () => {
-    if (opened.has(revealIndex)) return;
+    if (openingRef.current || opened.has(revealIndex) || !results[revealIndex]) return;
+    openingRef.current = true;
     const star = RARITY_TO_STAR[results[revealIndex].rarity];
     const color = STAR_COLORS[star];
 
@@ -239,7 +263,7 @@ export const TutorialGachaScreen = () => {
       spawnBurst(280, color, 1.1);
       setShake(true);
       setWhiteFlash(true);
-      await sleep(180);
+      if (!await pause(180)) return;
       setShake(false);
       setWhiteFlash(false);
     } else if (star === 2) {
@@ -248,7 +272,8 @@ export const TutorialGachaScreen = () => {
       spawnBurst(90, color, 0.5);
     }
 
-    await sleep(1000);
+    if (!await pause(1000)) return;
+    openingRef.current = false;
     if (revealIndex + 1 >= results.length) {
       setPhase('results');
     } else {

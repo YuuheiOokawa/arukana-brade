@@ -109,7 +109,7 @@ export const MissionsPage = () => {
   });
 
   return (
-    <div className="min-h-screen pb-28">
+    <div className="game-page min-h-screen pb-28">
       <TopBar title="ミッション" />
 
       {claimToast && (

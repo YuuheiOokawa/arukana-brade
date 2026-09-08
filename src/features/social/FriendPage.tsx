@@ -170,7 +170,7 @@ export const FriendPage = () => {
   const pendingCount = receivedRequests.length;
 
   return (
-    <div className="min-h-screen pb-28">
+    <div className="game-page min-h-screen pb-28">
       <TopBar title="フレンド" />
 
       {toast && (

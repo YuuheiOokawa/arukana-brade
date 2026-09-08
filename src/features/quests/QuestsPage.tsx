@@ -14,6 +14,7 @@ import { ENEMY_MASTER } from '../../data/enemies';
 import { getItemMaster } from '../../data/items';
 import { getEquipmentMaster } from '../../data/equipments';
 import { useEquipmentStore } from '../../stores/equipmentStore';
+import { Icon } from '../../components/ui/Icon';
 import { TopBar } from '../../components/layout/TopBar';
 import { StaminaModal } from '../../components/ui/StaminaModal';
 import { GameBadge } from '../../components/ui/game/UIDecorations';
@@ -174,7 +175,7 @@ export const QuestsPage = () => {
   const worldAccent = getWorldAccent(mainTab === 'story' ? selectedWorld.id : null);
 
   return (
-    <div className="min-h-screen pb-24 relative">
+    <div className="game-page min-h-screen pb-24 relative">
       {/* ワールドテーマ背景 */}
       <div className="fixed inset-0 -z-10 pointer-events-none" style={{ background: worldBg }}>
         <div className="absolute inset-0" style={{
@@ -242,7 +243,7 @@ export const QuestsPage = () => {
               <button onClick={() => setDifficulty('normal')}
                 className="flex-1 py-2 rounded-lg text-xs font-black transition-all"
                 style={{
-                  background: !isHard ? 'linear-gradient(135deg, #7c3aed, #4f46e5)' : 'transparent',
+                  background: !isHard ? '#425675' : 'transparent',
                   color: !isHard ? '#fff' : '#6b7280',
                 }}>
                 ノーマル
@@ -293,7 +294,7 @@ export const QuestsPage = () => {
                           isComplete ? 'bg-emerald-900/50 border border-emerald-700/40' :
                           area.isExtra ? 'bg-yellow-900/40 border border-yellow-700/40' : 'bg-purple-900/40 border border-purple-700/30'
                         }`}>
-                          {area.emoji}
+                          <Icon name="earth" size={24}/>
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-0.5">

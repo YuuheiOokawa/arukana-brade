@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useUnitStore } from '../../stores/unitStore';
 import { usePlayerStore } from '../../stores/playerStore';
@@ -17,10 +17,10 @@ export const EnhancePage = () => {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const initUnit = params.get('unit');
-  const initTab = (params.get('tab') as 'level' | 'awaken') ?? 'level';
+  const initTab = params.get('tab') === 'awaken' ? 'awaken' : 'level';
 
   const { ownedUnits, levelUpUnit, awakenUnit, incrementAwakeningCount, getAwakeningCrystalCount, rarityUp } = useUnitStore();
-  const { items, useItem, player, spendGold } = usePlayerStore();
+  const { items, useItem: consumeItem, player, spendGold } = usePlayerStore();
   const { addDailyProgress, addWeeklyProgress } = useMissionStore();
   const [selectedId, setSelectedId] = useState<string | null>(initUnit);
   const [tab, setTab] = useState<'level' | 'awaken'>(initTab);
@@ -43,6 +43,8 @@ export const EnhancePage = () => {
     if (pressIntervalRef.current) { clearInterval(pressIntervalRef.current); pressIntervalRef.current = null; }
   }, []);
 
+  useEffect(() => stopLongPress, [stopLongPress, selectedId]);
+
   const handleUseExpItem = useCallback((itemId: string, exp: number, silent = false) => {
     if (!selectedId) return;
     const freshUnit = useUnitStore.getState().ownedUnits.find(u => u.instanceId === selectedId);
@@ -61,11 +63,14 @@ export const EnhancePage = () => {
   }, [selectedId, levelUpUnit, addDailyProgress, addWeeklyProgress, stopLongPress]);
 
   const startLongPress = useCallback((itemId: string, exp: number) => {
+    stopLongPress();
     handleUseExpItem(itemId, exp, false);
     pressIntervalRef.current = setInterval(() => handleUseExpItem(itemId, exp, true), 150);
-  }, [handleUseExpItem]);
+  }, [handleUseExpItem, stopLongPress]);
 
   const handleAwaken = () => {
+    const unit = useUnitStore.getState().ownedUnits.find(u => u.instanceId === selectedId);
+    const items = usePlayerStore.getState().items;
     if (!unit || !master) return;
     if (unit.awakenRank >= master.maxAwaken) { setMessage('最大覚醒済み'); return; }
     const mats = master.awakenMaterials ?? [];
@@ -81,7 +86,7 @@ export const EnhancePage = () => {
     // (逆順だと二重タップ等で awakenRank が上限を超えられないのに素材だけ2重に消費されるバグを防ぐ)
     const ok = awakenUnit(unit.instanceId);
     if (!ok) { setMessage('覚醒できませんでした'); return; }
-    mats.forEach(mat => useItem(mat.itemId, mat.quantity));
+    mats.forEach(mat => consumeItem(mat.itemId, mat.quantity));
     addDailyProgress('enhance');
     addWeeklyProgress('enhance');
     setMessage('覚醒成功！');
@@ -102,6 +107,8 @@ export const EnhancePage = () => {
   };
 
   const handleRarityUp = () => {
+    const unit = useUnitStore.getState().ownedUnits.find(u => u.instanceId === selectedId);
+    const { items, player } = usePlayerStore.getState();
     if (!unit) return;
     const lvCap = getLevelCap(unit.currentRarity);
     if (unit.level < lvCap) { setMessage(`Lv${lvCap}に達してから進化できます`); return; }
@@ -125,7 +132,7 @@ export const EnhancePage = () => {
     const nextR = NEXT_RARITY[String(unit.currentRarity)];
     const ok = rarityUp(unit.instanceId);
     if (!ok) { setMessage('進化できません'); return; }
-    for (const mat of mats) useItem(mat.itemId, mat.quantity);
+    for (const mat of mats) consumeItem(mat.itemId, mat.quantity);
     spendGold(goldCost);
     addDailyProgress('enhance');
     addWeeklyProgress('enhance');
@@ -138,7 +145,7 @@ export const EnhancePage = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="game-page min-h-screen pb-24">
       <TopBar title="ユニット強化" onBack={() => navigate(-1)} />
 
       {/* ユニット選択 */}
@@ -282,6 +289,7 @@ export const EnhancePage = () => {
                         <span className="text-gray-400 text-sm">×{owned}</span>
                         <button
                           onPointerDown={() => startLongPress(itemId, exp)}
+                          onKeyDown={e => { if((e.key === 'Enter' || e.key === ' ') && !e.repeat) {e.preventDefault(); handleUseExpItem(itemId, exp);} }}
                           onPointerUp={stopLongPress}
                           onPointerLeave={stopLongPress}
                           onPointerCancel={stopLongPress}

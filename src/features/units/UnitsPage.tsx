@@ -7,12 +7,13 @@ import { useEquipmentStore } from '../../stores/equipmentStore';
 import { getUnitMaster } from '../../data/units';
 import { UnitCard } from '../../components/ui/UnitCard';
 import { TopBar } from '../../components/layout/TopBar';
+import { Icon } from '../../components/ui/Icon';
 import { getStarRarityOrder } from '../../data/rarityConfig';
 import type { ElementType, StarRarity, OwnedUnit } from '../../types';
 
-const ELEMENTS: (ElementType | 'all')[] = ['all', 'fire', 'water', 'wind', 'earth', 'light', 'dark'];
+const ELEMENTS: (ElementType | 'all')[] = ['all', 'fire', 'water', 'wind', 'earth', 'thunder', 'light', 'dark'];
 const ELEMENT_LABELS: Record<string, string> = {
-  all: '全', fire: '炎', water: '水', wind: '風', earth: '土', light: '光', dark: '闇',
+  all: '全', fire: '炎', water: '水', wind: '風', earth: '土', thunder: '雷', light: '光', dark: '闇',
 };
 
 type StarFilter = 'all' | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 'CROWN';
@@ -35,6 +36,7 @@ export const UnitsPage = () => {
   const navigate = useNavigate();
   const { ownedUnits, toggleLock } = useUnitStore();
   const { addGold } = usePlayerStore();
+  const [search, setSearch] = useState('');
   const [filterElement, setFilterElement] = useState<ElementType | 'all'>('all');
   const [filterStar, setFilterStar] = useState<StarFilter>('all');
   const [sortBy, setSortBy] = useState<'acquired' | 'level' | 'rarity'>('acquired');
@@ -61,6 +63,7 @@ export const UnitsPage = () => {
     .filter(u => {
       const master = getUnitMaster(u.masterId);
       if (!master) return false;
+      if (search.trim() && !`${master.name} ${master.title}`.normalize('NFKC').toLowerCase().includes(search.trim().normalize('NFKC').toLowerCase())) return false;
       if (filterElement !== 'all' && master.element !== filterElement) return false;
       if (filterStar !== 'all') {
         const cr: StarRarity = u.currentRarity ?? 1;
@@ -83,7 +86,7 @@ export const UnitsPage = () => {
     if (u?.isLocked) return;
     setSelected(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   };
@@ -95,32 +98,32 @@ export const UnitsPage = () => {
 
   const doRelease = () => {
     const { ownedUnits: current } = useUnitStore.getState();
-    const keep = current.filter(u => !selected.has(u.instanceId));
-    useUnitStore.setState({ ownedUnits: keep });
-    // 解放したユニットをパーティ編成・装備から後片付けする
-    // (放置すると、存在しないユニットがパーティに残ったままバトルへ進んで戦力が欠けたり、
-    //  装備が付けっぱなしで売却できなくなったりする)
-    selected.forEach(instanceId => {
+    // Revalidate at confirmation time: a selection may have been locked or removed.
+    const released = current.filter(u => selected.has(u.instanceId) && !u.isLocked);
+    const ids = new Set(released.map(u => u.instanceId));
+    useUnitStore.setState({ ownedUnits: current.filter(u => !ids.has(u.instanceId)) });
+    ids.forEach(instanceId => {
       removeUnitFromParties(instanceId);
       unequipFromUnit(instanceId, '');
     });
-    addGold(totalReleaseGold);
+    addGold(released.reduce((sum, u) => sum + releaseGold(u), 0));
     setSelected(new Set());
     setReleaseMode(false);
     setConfirmRelease(false);
   };
 
   return (
-    <div className="min-h-screen pb-24" style={{ background: 'radial-gradient(ellipse at 50% 0%, #12082a 0%, #080818 60%)' }}>
+    <div className="game-page min-h-screen pb-24" style={{ background: 'radial-gradient(ellipse at 50% 0%, #12082a 0%, #080818 60%)' }}>
       <TopBar title="ユニット一覧" />
 
       {/* フィルター */}
-      <div className="px-4 py-2 space-y-2">
+      <div className="px-4 py-2 space-y-2 unit-filter-bar">
+        <label className="unit-search"><Icon name="search" size={18}/><input aria-label="ユニットを検索" placeholder="名前・称号で仲間を探す" value={search} onChange={e => setSearch(e.target.value)}/>{search && <button onClick={() => setSearch('')} aria-label="検索をクリア"><Icon name="close" size={16}/></button>}</label>
         <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-1">
           {ELEMENTS.map(el => (
             <button key={el} onClick={() => setFilterElement(el)}
               className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-bold transition-colors ${
-                filterElement === el ? 'bg-purple-600 text-white' : 'bg-gray-800/70 text-gray-400'
+                filterElement === el ? 'bg-slate-600 text-white' : 'bg-gray-800/70 text-gray-400'
               }`}>
               {ELEMENT_LABELS[el]}
             </button>
@@ -131,9 +134,9 @@ export const UnitsPage = () => {
           {STAR_FILTERS.map(f => (
             <button key={String(f)} onClick={() => setFilterStar(f)}
               className={`flex-shrink-0 px-2 py-1 rounded text-xs font-bold transition-colors ${
-                filterStar === f ? 'bg-yellow-600 text-white' : 'bg-gray-800/70 text-gray-400'
+                filterStar === f ? 'bg-amber-800 text-amber-100' : 'bg-gray-800/70 text-gray-400'
               }`}>
-              {starFilterLabel(f)}
+              {f === 'CROWN' ? <><Icon name="crown" size={14}/><span className="sr-only">CROWN</span></> : starFilterLabel(f)}
             </button>
           ))}
         </div>
@@ -144,7 +147,7 @@ export const UnitsPage = () => {
             {(['acquired', 'level', 'rarity'] as const).map(s => (
               <button key={s} onClick={() => setSortBy(s)}
                 className={`px-2 py-1 rounded text-xs transition-colors ${
-                  sortBy === s ? 'bg-blue-600 text-white' : 'bg-gray-800/70 text-gray-400'
+                  sortBy === s ? 'bg-slate-600 text-white' : 'bg-gray-800/70 text-gray-400'
                 }`}>
                 {s === 'acquired' ? '取得順' : s === 'level' ? 'Lv順' : 'レア順'}
               </button>
@@ -178,12 +181,11 @@ export const UnitsPage = () => {
       </div>
 
       {/* ユニット一覧 */}
-      <div className="px-4 grid grid-cols-1 gap-2">
+      <div className="px-4 unit-library-grid">
         {filtered.map(unit => {
           const isSelected = selected.has(unit.instanceId);
           return (
-            <div key={unit.instanceId} className="relative"
-              onClick={() => releaseMode ? toggleSelect(unit.instanceId) : setActionUnit(unit)}>
+            <div key={unit.instanceId} className="relative">
               {releaseMode && (
                 <div className="absolute inset-0 z-10 rounded-xl pointer-events-none transition-all"
                   style={{
@@ -194,7 +196,7 @@ export const UnitsPage = () => {
                   {unit.isLocked && <div className="absolute top-2 right-2 text-xs">🔒</div>}
                 </div>
               )}
-              <UnitCard unit={unit} onClick={() => {}} />
+              <UnitCard unit={unit} onClick={() => releaseMode ? toggleSelect(unit.instanceId) : setActionUnit(unit)} />
             </div>
           );
         })}

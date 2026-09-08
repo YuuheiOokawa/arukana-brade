@@ -1,0 +1,5906 @@
+{
+  "assets": {
+    "/assets/images/characters/units/hero_darius/hero_darius_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_darius/hero_darius_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_darius/hero_darius_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_darius/hero_darius_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_darius/hero_darius_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_darius/hero_darius_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_darius/hero_darius_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_darius/hero_darius_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_fen/hero_fen_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_fen/hero_fen_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_fen/hero_fen_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_fen/hero_fen_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_fen/hero_fen_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_fen/hero_fen_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_fen/hero_fen_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_fen/hero_fen_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_lilith/hero_lilith_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_lilith/hero_lilith_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_lilith/hero_lilith_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_lilith/hero_lilith_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_lilith/hero_lilith_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_lilith/hero_lilith_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_lilith/hero_lilith_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_lilith/hero_lilith_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_luna/hero_luna_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_luna/hero_luna_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_luna/hero_luna_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_luna/hero_luna_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_luna/hero_luna_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_luna/hero_luna_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_luna/hero_luna_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_luna/hero_luna_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_raiga/hero_raiga_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_raiga/hero_raiga_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_raiga/hero_raiga_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_raiga/hero_raiga_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_raiga/hero_raiga_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_raiga/hero_raiga_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_raiga/hero_raiga_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_raiga/hero_raiga_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_serena/hero_serena_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_serena/hero_serena_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_serena/hero_serena_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_serena/hero_serena_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_serena/hero_serena_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_serena/hero_serena_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_serena/hero_serena_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_serena/hero_serena_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_sol/hero_sol_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_sol/hero_sol_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_sol/hero_sol_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_sol/hero_sol_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_sol/hero_sol_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_sol/hero_sol_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_sol/hero_sol_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_sol/hero_sol_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_sylphy/hero_sylphy_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_sylphy/hero_sylphy_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_sylphy/hero_sylphy_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_sylphy/hero_sylphy_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_sylphy/hero_sylphy_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_sylphy/hero_sylphy_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_sylphy/hero_sylphy_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_sylphy/hero_sylphy_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_vaal/hero_vaal_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_vaal/hero_vaal_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_vaal/hero_vaal_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_vaal/hero_vaal_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_vaal/hero_vaal_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_vaal/hero_vaal_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_vaal/hero_vaal_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_vaal/hero_vaal_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_zel/hero_zel_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_zel/hero_zel_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_zel/hero_zel_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_zel/hero_zel_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_zel/hero_zel_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_zel/hero_zel_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_zel/hero_zel_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/hero_zel/hero_zel_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_001/unit_001_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_001/unit_001_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_001/unit_001_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_001/unit_001_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_001/unit_001_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_001/unit_001_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_001/unit_001_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_001/unit_001_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_002/unit_002_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_002/unit_002_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_002/unit_002_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_002/unit_002_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_002/unit_002_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_002/unit_002_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_002/unit_002_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_002/unit_002_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_003/unit_003_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_003/unit_003_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_003/unit_003_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_003/unit_003_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_003/unit_003_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_003/unit_003_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_003/unit_003_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_003/unit_003_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_004/unit_004_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_004/unit_004_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_004/unit_004_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_004/unit_004_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_004/unit_004_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_004/unit_004_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_004/unit_004_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_004/unit_004_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_005/unit_005_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_005/unit_005_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_005/unit_005_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_005/unit_005_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_005/unit_005_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_005/unit_005_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_005/unit_005_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_005/unit_005_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_006/unit_006_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_006/unit_006_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_006/unit_006_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_006/unit_006_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_006/unit_006_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_006/unit_006_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_006/unit_006_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_006/unit_006_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_007/unit_007_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        257
+      ]
+    },
+    "/assets/images/characters/units/unit_007/unit_007_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        257
+      ]
+    },
+    "/assets/images/characters/units/unit_007/unit_007_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        257
+      ]
+    },
+    "/assets/images/characters/units/unit_007/unit_007_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        255
+      ]
+    },
+    "/assets/images/characters/units/unit_007/unit_007_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        257
+      ]
+    },
+    "/assets/images/characters/units/unit_007/unit_007_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        257
+      ]
+    },
+    "/assets/images/characters/units/unit_007/unit_007_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        257
+      ]
+    },
+    "/assets/images/characters/units/unit_007/unit_007_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        255
+      ]
+    },
+    "/assets/images/characters/units/unit_008/unit_008_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_008/unit_008_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_008/unit_008_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_008/unit_008_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_008/unit_008_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_008/unit_008_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_008/unit_008_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_008/unit_008_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_009/unit_009_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_009/unit_009_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_009/unit_009_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_009/unit_009_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_009/unit_009_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_009/unit_009_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_009/unit_009_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_009/unit_009_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_010/unit_010_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_010/unit_010_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_010/unit_010_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_010/unit_010_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_010/unit_010_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_010/unit_010_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_010/unit_010_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_010/unit_010_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_011/unit_011_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_011/unit_011_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_011/unit_011_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_011/unit_011_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_011/unit_011_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_011/unit_011_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_011/unit_011_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_011/unit_011_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_012/unit_012_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_012/unit_012_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_012/unit_012_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_012/unit_012_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_012/unit_012_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_012/unit_012_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_012/unit_012_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_012/unit_012_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        348
+      ]
+    },
+    "/assets/images/characters/units/unit_013/unit_013_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_013/unit_013_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_013/unit_013_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_013/unit_013_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_013/unit_013_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_013/unit_013_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_013/unit_013_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_013/unit_013_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_014/unit_014_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_014/unit_014_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_014/unit_014_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_014/unit_014_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_014/unit_014_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_014/unit_014_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_014/unit_014_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_014/unit_014_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_015/unit_015_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_015/unit_015_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_015/unit_015_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_015/unit_015_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_015/unit_015_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_015/unit_015_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_015/unit_015_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_015/unit_015_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_016/unit_016_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_016/unit_016_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_016/unit_016_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_016/unit_016_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_016/unit_016_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_016/unit_016_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_016/unit_016_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_016/unit_016_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_017/unit_017_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_017/unit_017_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_017/unit_017_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_017/unit_017_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_017/unit_017_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_017/unit_017_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_017/unit_017_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_017/unit_017_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_018/unit_018_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_018/unit_018_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_018/unit_018_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_018/unit_018_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_018/unit_018_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_018/unit_018_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_018/unit_018_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_018/unit_018_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_019/unit_019_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_019/unit_019_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_019/unit_019_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_019/unit_019_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_019/unit_019_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_019/unit_019_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_019/unit_019_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_019/unit_019_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_020/unit_020_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_020/unit_020_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_020/unit_020_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_020/unit_020_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_020/unit_020_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_020/unit_020_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_020/unit_020_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_020/unit_020_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_021/unit_021_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_021/unit_021_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_021/unit_021_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_021/unit_021_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_021/unit_021_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_021/unit_021_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_021/unit_021_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_021/unit_021_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_022/unit_022_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_022/unit_022_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_022/unit_022_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_022/unit_022_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_022/unit_022_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_022/unit_022_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_022/unit_022_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_022/unit_022_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_023/unit_023_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_023/unit_023_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_023/unit_023_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_023/unit_023_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_023/unit_023_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_023/unit_023_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_023/unit_023_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_023/unit_023_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_024/unit_024_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_024/unit_024_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_024/unit_024_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_024/unit_024_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_024/unit_024_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_024/unit_024_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_024/unit_024_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_024/unit_024_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_025/unit_025_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_025/unit_025_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_025/unit_025_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_025/unit_025_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_025/unit_025_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_025/unit_025_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_025/unit_025_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_025/unit_025_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_026/unit_026_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_026/unit_026_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_026/unit_026_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_026/unit_026_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_026/unit_026_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_026/unit_026_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_026/unit_026_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_026/unit_026_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_027/unit_027_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_027/unit_027_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_027/unit_027_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_027/unit_027_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_027/unit_027_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_027/unit_027_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_027/unit_027_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_027/unit_027_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_028/unit_028_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_028/unit_028_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_028/unit_028_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_028/unit_028_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_028/unit_028_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_028/unit_028_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_028/unit_028_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_028/unit_028_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_029/unit_029_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_029/unit_029_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_029/unit_029_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_029/unit_029_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_029/unit_029_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_029/unit_029_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_029/unit_029_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_029/unit_029_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_030/unit_030_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_030/unit_030_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_030/unit_030_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_030/unit_030_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_030/unit_030_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_030/unit_030_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_030/unit_030_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_030/unit_030_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_031/unit_031_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_031/unit_031_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_031/unit_031_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_031/unit_031_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_031/unit_031_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_031/unit_031_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_031/unit_031_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_031/unit_031_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_032/unit_032_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_032/unit_032_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_032/unit_032_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_032/unit_032_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_032/unit_032_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_032/unit_032_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_032/unit_032_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_032/unit_032_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_033/unit_033_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_033/unit_033_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_033/unit_033_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_033/unit_033_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_033/unit_033_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_033/unit_033_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_033/unit_033_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_033/unit_033_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_034/unit_034_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_034/unit_034_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_034/unit_034_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_034/unit_034_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_034/unit_034_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_034/unit_034_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_034/unit_034_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_034/unit_034_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_035/unit_035_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_035/unit_035_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_035/unit_035_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_035/unit_035_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_035/unit_035_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_035/unit_035_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_035/unit_035_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_035/unit_035_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_036/unit_036_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_036/unit_036_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_036/unit_036_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_036/unit_036_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_036/unit_036_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_036/unit_036_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_036/unit_036_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_036/unit_036_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_037/unit_037_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_037/unit_037_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_037/unit_037_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_037/unit_037_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_037/unit_037_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_037/unit_037_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_037/unit_037_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_037/unit_037_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_038/unit_038_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_038/unit_038_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_038/unit_038_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_038/unit_038_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_038/unit_038_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_038/unit_038_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_038/unit_038_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_038/unit_038_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_039/unit_039_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_039/unit_039_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_039/unit_039_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_039/unit_039_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_039/unit_039_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_039/unit_039_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_039/unit_039_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_039/unit_039_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_040/unit_040_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_040/unit_040_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_040/unit_040_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_040/unit_040_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_040/unit_040_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_040/unit_040_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_040/unit_040_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_040/unit_040_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_041/unit_041_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_041/unit_041_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_041/unit_041_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_041/unit_041_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_041/unit_041_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_041/unit_041_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_041/unit_041_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_041/unit_041_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_042/unit_042_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_042/unit_042_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_042/unit_042_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_042/unit_042_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_042/unit_042_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_042/unit_042_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_042/unit_042_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_042/unit_042_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_043/unit_043_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_043/unit_043_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_043/unit_043_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_043/unit_043_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_043/unit_043_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_043/unit_043_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_043/unit_043_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_043/unit_043_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_044/unit_044_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_044/unit_044_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_044/unit_044_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_044/unit_044_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_044/unit_044_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_044/unit_044_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_044/unit_044_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_044/unit_044_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_045/unit_045_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_045/unit_045_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_045/unit_045_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_045/unit_045_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_045/unit_045_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_045/unit_045_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_045/unit_045_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_045/unit_045_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_046/unit_046_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_046/unit_046_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_046/unit_046_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_046/unit_046_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_046/unit_046_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_046/unit_046_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_046/unit_046_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_046/unit_046_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_047/unit_047_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_047/unit_047_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_047/unit_047_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_047/unit_047_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_047/unit_047_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_047/unit_047_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_047/unit_047_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_047/unit_047_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_048/unit_048_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_048/unit_048_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_048/unit_048_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_048/unit_048_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_048/unit_048_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_048/unit_048_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_048/unit_048_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_048/unit_048_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_049/unit_049_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_049/unit_049_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_049/unit_049_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_049/unit_049_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_049/unit_049_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_049/unit_049_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_049/unit_049_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_049/unit_049_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_050/unit_050_1.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_050/unit_050_2.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_050/unit_050_3.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_050/unit_050_4.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_050/unit_050_5.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_050/unit_050_6.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_050/unit_050_7.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    },
+    "/assets/images/characters/units/unit_050/unit_050_crown.webp": {
+      "width": 256,
+      "height": 512,
+      "crop": [
+        0,
+        36,
+        256,
+        252
+      ]
+    }
+  },
+  "generated": {
+    "unit_051": {
+      "src": "/assets/images/characters/generated/characters-051-060.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_052": {
+      "src": "/assets/images/characters/generated/characters-051-060.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_053": {
+      "src": "/assets/images/characters/generated/characters-051-060.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        0,
+        308,
+        512
+      ]
+    },
+    "unit_054": {
+      "src": "/assets/images/characters/generated/characters-051-060.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_055": {
+      "src": "/assets/images/characters/generated/characters-051-060.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_056": {
+      "src": "/assets/images/characters/generated/characters-051-060.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_057": {
+      "src": "/assets/images/characters/generated/characters-051-060.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_058": {
+      "src": "/assets/images/characters/generated/characters-051-060.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        512,
+        308,
+        512
+      ]
+    },
+    "unit_059": {
+      "src": "/assets/images/characters/generated/characters-051-060.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_060": {
+      "src": "/assets/images/characters/generated/characters-051-060.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_061": {
+      "src": "/assets/images/characters/generated/characters-061-070.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_062": {
+      "src": "/assets/images/characters/generated/characters-061-070.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_063": {
+      "src": "/assets/images/characters/generated/characters-061-070.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        0,
+        308,
+        512
+      ]
+    },
+    "unit_064": {
+      "src": "/assets/images/characters/generated/characters-061-070.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_065": {
+      "src": "/assets/images/characters/generated/characters-061-070.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_066": {
+      "src": "/assets/images/characters/generated/characters-061-070.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_067": {
+      "src": "/assets/images/characters/generated/characters-061-070.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_068": {
+      "src": "/assets/images/characters/generated/characters-061-070.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        512,
+        308,
+        512
+      ]
+    },
+    "unit_069": {
+      "src": "/assets/images/characters/generated/characters-061-070.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_070": {
+      "src": "/assets/images/characters/generated/characters-061-070.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_071": {
+      "src": "/assets/images/characters/generated/characters-071-080.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_072": {
+      "src": "/assets/images/characters/generated/characters-071-080.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_073": {
+      "src": "/assets/images/characters/generated/characters-071-080.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        0,
+        308,
+        512
+      ]
+    },
+    "unit_074": {
+      "src": "/assets/images/characters/generated/characters-071-080.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_075": {
+      "src": "/assets/images/characters/generated/characters-071-080.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_076": {
+      "src": "/assets/images/characters/generated/characters-071-080.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_077": {
+      "src": "/assets/images/characters/generated/characters-071-080.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_078": {
+      "src": "/assets/images/characters/generated/characters-071-080.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        512,
+        308,
+        512
+      ]
+    },
+    "unit_079": {
+      "src": "/assets/images/characters/generated/characters-071-080.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_080": {
+      "src": "/assets/images/characters/generated/characters-071-080.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_081": {
+      "src": "/assets/images/characters/generated/characters-081-090.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_082": {
+      "src": "/assets/images/characters/generated/characters-081-090.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_083": {
+      "src": "/assets/images/characters/generated/characters-081-090.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        0,
+        308,
+        512
+      ]
+    },
+    "unit_084": {
+      "src": "/assets/images/characters/generated/characters-081-090.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_085": {
+      "src": "/assets/images/characters/generated/characters-081-090.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_086": {
+      "src": "/assets/images/characters/generated/characters-081-090.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_087": {
+      "src": "/assets/images/characters/generated/characters-081-090.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_088": {
+      "src": "/assets/images/characters/generated/characters-081-090.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        512,
+        308,
+        512
+      ]
+    },
+    "unit_089": {
+      "src": "/assets/images/characters/generated/characters-081-090.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_090": {
+      "src": "/assets/images/characters/generated/characters-081-090.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_091": {
+      "src": "/assets/images/characters/generated/characters-091-100.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_092": {
+      "src": "/assets/images/characters/generated/characters-091-100.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_093": {
+      "src": "/assets/images/characters/generated/characters-091-100.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        0,
+        308,
+        512
+      ]
+    },
+    "unit_094": {
+      "src": "/assets/images/characters/generated/characters-091-100.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_095": {
+      "src": "/assets/images/characters/generated/characters-091-100.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_096": {
+      "src": "/assets/images/characters/generated/characters-091-100.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_097": {
+      "src": "/assets/images/characters/generated/characters-091-100.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_098": {
+      "src": "/assets/images/characters/generated/characters-091-100.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        512,
+        308,
+        512
+      ]
+    },
+    "unit_099": {
+      "src": "/assets/images/characters/generated/characters-091-100.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_100": {
+      "src": "/assets/images/characters/generated/characters-091-100.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_101": {
+      "src": "/assets/images/characters/generated/characters-101-110.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_102": {
+      "src": "/assets/images/characters/generated/characters-101-110.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_103": {
+      "src": "/assets/images/characters/generated/characters-101-110.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        0,
+        308,
+        512
+      ]
+    },
+    "unit_104": {
+      "src": "/assets/images/characters/generated/characters-101-110.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_105": {
+      "src": "/assets/images/characters/generated/characters-101-110.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_106": {
+      "src": "/assets/images/characters/generated/characters-101-110.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_107": {
+      "src": "/assets/images/characters/generated/characters-101-110.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_108": {
+      "src": "/assets/images/characters/generated/characters-101-110.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        512,
+        308,
+        512
+      ]
+    },
+    "unit_109": {
+      "src": "/assets/images/characters/generated/characters-101-110.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_110": {
+      "src": "/assets/images/characters/generated/characters-101-110.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_111": {
+      "src": "/assets/images/characters/generated/characters-111-120.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_112": {
+      "src": "/assets/images/characters/generated/characters-111-120.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_113": {
+      "src": "/assets/images/characters/generated/characters-111-120.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        0,
+        308,
+        512
+      ]
+    },
+    "unit_114": {
+      "src": "/assets/images/characters/generated/characters-111-120.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_115": {
+      "src": "/assets/images/characters/generated/characters-111-120.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_116": {
+      "src": "/assets/images/characters/generated/characters-111-120.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_117": {
+      "src": "/assets/images/characters/generated/characters-111-120.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_118": {
+      "src": "/assets/images/characters/generated/characters-111-120.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        512,
+        308,
+        512
+      ]
+    },
+    "unit_119": {
+      "src": "/assets/images/characters/generated/characters-111-120.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_120": {
+      "src": "/assets/images/characters/generated/characters-111-120.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_121": {
+      "src": "/assets/images/characters/generated/characters-121-130.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_122": {
+      "src": "/assets/images/characters/generated/characters-121-130.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_123": {
+      "src": "/assets/images/characters/generated/characters-121-130.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        0,
+        308,
+        512
+      ]
+    },
+    "unit_124": {
+      "src": "/assets/images/characters/generated/characters-121-130.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_125": {
+      "src": "/assets/images/characters/generated/characters-121-130.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_126": {
+      "src": "/assets/images/characters/generated/characters-121-130.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_127": {
+      "src": "/assets/images/characters/generated/characters-121-130.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_128": {
+      "src": "/assets/images/characters/generated/characters-121-130.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        512,
+        308,
+        512
+      ]
+    },
+    "unit_129": {
+      "src": "/assets/images/characters/generated/characters-121-130.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_130": {
+      "src": "/assets/images/characters/generated/characters-121-130.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_131": {
+      "src": "/assets/images/characters/generated/characters-131-140.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_132": {
+      "src": "/assets/images/characters/generated/characters-131-140.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_133": {
+      "src": "/assets/images/characters/generated/characters-131-140.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        0,
+        308,
+        512
+      ]
+    },
+    "unit_134": {
+      "src": "/assets/images/characters/generated/characters-131-140.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_135": {
+      "src": "/assets/images/characters/generated/characters-131-140.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_136": {
+      "src": "/assets/images/characters/generated/characters-131-140.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_137": {
+      "src": "/assets/images/characters/generated/characters-131-140.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_138": {
+      "src": "/assets/images/characters/generated/characters-131-140.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        512,
+        308,
+        512
+      ]
+    },
+    "unit_139": {
+      "src": "/assets/images/characters/generated/characters-131-140.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_140": {
+      "src": "/assets/images/characters/generated/characters-131-140.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_141": {
+      "src": "/assets/images/characters/generated/characters-141-150.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_142": {
+      "src": "/assets/images/characters/generated/characters-141-150.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_143": {
+      "src": "/assets/images/characters/generated/characters-141-150.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        0,
+        308,
+        512
+      ]
+    },
+    "unit_144": {
+      "src": "/assets/images/characters/generated/characters-141-150.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_145": {
+      "src": "/assets/images/characters/generated/characters-141-150.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        0,
+        307,
+        512
+      ]
+    },
+    "unit_146": {
+      "src": "/assets/images/characters/generated/characters-141-150.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        0,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_147": {
+      "src": "/assets/images/characters/generated/characters-141-150.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        307,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_148": {
+      "src": "/assets/images/characters/generated/characters-141-150.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        614,
+        512,
+        308,
+        512
+      ]
+    },
+    "unit_149": {
+      "src": "/assets/images/characters/generated/characters-141-150.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        922,
+        512,
+        307,
+        512
+      ]
+    },
+    "unit_150": {
+      "src": "/assets/images/characters/generated/characters-141-150.webp",
+      "width": 1536,
+      "height": 1024,
+      "crop": [
+        1229,
+        512,
+        307,
+        512
+      ]
+    }
+  }
+}

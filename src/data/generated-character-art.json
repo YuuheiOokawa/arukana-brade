@@ -1,0 +1,1102 @@
+{
+  "unit_051": {
+    "src": "/assets/images/characters/generated/characters-051-060.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_052": {
+    "src": "/assets/images/characters/generated/characters-051-060.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_053": {
+    "src": "/assets/images/characters/generated/characters-051-060.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      0,
+      308,
+      512
+    ]
+  },
+  "unit_054": {
+    "src": "/assets/images/characters/generated/characters-051-060.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_055": {
+    "src": "/assets/images/characters/generated/characters-051-060.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_056": {
+    "src": "/assets/images/characters/generated/characters-051-060.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_057": {
+    "src": "/assets/images/characters/generated/characters-051-060.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_058": {
+    "src": "/assets/images/characters/generated/characters-051-060.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      512,
+      308,
+      512
+    ]
+  },
+  "unit_059": {
+    "src": "/assets/images/characters/generated/characters-051-060.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_060": {
+    "src": "/assets/images/characters/generated/characters-051-060.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_061": {
+    "src": "/assets/images/characters/generated/characters-061-070.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_062": {
+    "src": "/assets/images/characters/generated/characters-061-070.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_063": {
+    "src": "/assets/images/characters/generated/characters-061-070.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      0,
+      308,
+      512
+    ]
+  },
+  "unit_064": {
+    "src": "/assets/images/characters/generated/characters-061-070.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_065": {
+    "src": "/assets/images/characters/generated/characters-061-070.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_066": {
+    "src": "/assets/images/characters/generated/characters-061-070.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_067": {
+    "src": "/assets/images/characters/generated/characters-061-070.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_068": {
+    "src": "/assets/images/characters/generated/characters-061-070.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      512,
+      308,
+      512
+    ]
+  },
+  "unit_069": {
+    "src": "/assets/images/characters/generated/characters-061-070.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_070": {
+    "src": "/assets/images/characters/generated/characters-061-070.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_071": {
+    "src": "/assets/images/characters/generated/characters-071-080.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_072": {
+    "src": "/assets/images/characters/generated/characters-071-080.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_073": {
+    "src": "/assets/images/characters/generated/characters-071-080.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      0,
+      308,
+      512
+    ]
+  },
+  "unit_074": {
+    "src": "/assets/images/characters/generated/characters-071-080.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_075": {
+    "src": "/assets/images/characters/generated/characters-071-080.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_076": {
+    "src": "/assets/images/characters/generated/characters-071-080.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_077": {
+    "src": "/assets/images/characters/generated/characters-071-080.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_078": {
+    "src": "/assets/images/characters/generated/characters-071-080.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      512,
+      308,
+      512
+    ]
+  },
+  "unit_079": {
+    "src": "/assets/images/characters/generated/characters-071-080.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_080": {
+    "src": "/assets/images/characters/generated/characters-071-080.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_081": {
+    "src": "/assets/images/characters/generated/characters-081-090.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_082": {
+    "src": "/assets/images/characters/generated/characters-081-090.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_083": {
+    "src": "/assets/images/characters/generated/characters-081-090.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      0,
+      308,
+      512
+    ]
+  },
+  "unit_084": {
+    "src": "/assets/images/characters/generated/characters-081-090.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_085": {
+    "src": "/assets/images/characters/generated/characters-081-090.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_086": {
+    "src": "/assets/images/characters/generated/characters-081-090.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_087": {
+    "src": "/assets/images/characters/generated/characters-081-090.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_088": {
+    "src": "/assets/images/characters/generated/characters-081-090.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      512,
+      308,
+      512
+    ]
+  },
+  "unit_089": {
+    "src": "/assets/images/characters/generated/characters-081-090.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_090": {
+    "src": "/assets/images/characters/generated/characters-081-090.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_091": {
+    "src": "/assets/images/characters/generated/characters-091-100.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_092": {
+    "src": "/assets/images/characters/generated/characters-091-100.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_093": {
+    "src": "/assets/images/characters/generated/characters-091-100.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      0,
+      308,
+      512
+    ]
+  },
+  "unit_094": {
+    "src": "/assets/images/characters/generated/characters-091-100.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_095": {
+    "src": "/assets/images/characters/generated/characters-091-100.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_096": {
+    "src": "/assets/images/characters/generated/characters-091-100.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_097": {
+    "src": "/assets/images/characters/generated/characters-091-100.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_098": {
+    "src": "/assets/images/characters/generated/characters-091-100.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      512,
+      308,
+      512
+    ]
+  },
+  "unit_099": {
+    "src": "/assets/images/characters/generated/characters-091-100.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_100": {
+    "src": "/assets/images/characters/generated/characters-091-100.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_101": {
+    "src": "/assets/images/characters/generated/characters-101-110.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_102": {
+    "src": "/assets/images/characters/generated/characters-101-110.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_103": {
+    "src": "/assets/images/characters/generated/characters-101-110.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      0,
+      308,
+      512
+    ]
+  },
+  "unit_104": {
+    "src": "/assets/images/characters/generated/characters-101-110.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_105": {
+    "src": "/assets/images/characters/generated/characters-101-110.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_106": {
+    "src": "/assets/images/characters/generated/characters-101-110.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_107": {
+    "src": "/assets/images/characters/generated/characters-101-110.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_108": {
+    "src": "/assets/images/characters/generated/characters-101-110.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      512,
+      308,
+      512
+    ]
+  },
+  "unit_109": {
+    "src": "/assets/images/characters/generated/characters-101-110.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_110": {
+    "src": "/assets/images/characters/generated/characters-101-110.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_111": {
+    "src": "/assets/images/characters/generated/characters-111-120.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_112": {
+    "src": "/assets/images/characters/generated/characters-111-120.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_113": {
+    "src": "/assets/images/characters/generated/characters-111-120.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      0,
+      308,
+      512
+    ]
+  },
+  "unit_114": {
+    "src": "/assets/images/characters/generated/characters-111-120.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_115": {
+    "src": "/assets/images/characters/generated/characters-111-120.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_116": {
+    "src": "/assets/images/characters/generated/characters-111-120.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_117": {
+    "src": "/assets/images/characters/generated/characters-111-120.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_118": {
+    "src": "/assets/images/characters/generated/characters-111-120.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      512,
+      308,
+      512
+    ]
+  },
+  "unit_119": {
+    "src": "/assets/images/characters/generated/characters-111-120.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_120": {
+    "src": "/assets/images/characters/generated/characters-111-120.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_121": {
+    "src": "/assets/images/characters/generated/characters-121-130.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_122": {
+    "src": "/assets/images/characters/generated/characters-121-130.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_123": {
+    "src": "/assets/images/characters/generated/characters-121-130.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      0,
+      308,
+      512
+    ]
+  },
+  "unit_124": {
+    "src": "/assets/images/characters/generated/characters-121-130.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_125": {
+    "src": "/assets/images/characters/generated/characters-121-130.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_126": {
+    "src": "/assets/images/characters/generated/characters-121-130.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_127": {
+    "src": "/assets/images/characters/generated/characters-121-130.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_128": {
+    "src": "/assets/images/characters/generated/characters-121-130.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      512,
+      308,
+      512
+    ]
+  },
+  "unit_129": {
+    "src": "/assets/images/characters/generated/characters-121-130.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_130": {
+    "src": "/assets/images/characters/generated/characters-121-130.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_131": {
+    "src": "/assets/images/characters/generated/characters-131-140.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_132": {
+    "src": "/assets/images/characters/generated/characters-131-140.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_133": {
+    "src": "/assets/images/characters/generated/characters-131-140.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      0,
+      308,
+      512
+    ]
+  },
+  "unit_134": {
+    "src": "/assets/images/characters/generated/characters-131-140.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_135": {
+    "src": "/assets/images/characters/generated/characters-131-140.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_136": {
+    "src": "/assets/images/characters/generated/characters-131-140.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_137": {
+    "src": "/assets/images/characters/generated/characters-131-140.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_138": {
+    "src": "/assets/images/characters/generated/characters-131-140.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      512,
+      308,
+      512
+    ]
+  },
+  "unit_139": {
+    "src": "/assets/images/characters/generated/characters-131-140.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_140": {
+    "src": "/assets/images/characters/generated/characters-131-140.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_141": {
+    "src": "/assets/images/characters/generated/characters-141-150.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_142": {
+    "src": "/assets/images/characters/generated/characters-141-150.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_143": {
+    "src": "/assets/images/characters/generated/characters-141-150.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      0,
+      308,
+      512
+    ]
+  },
+  "unit_144": {
+    "src": "/assets/images/characters/generated/characters-141-150.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_145": {
+    "src": "/assets/images/characters/generated/characters-141-150.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      0,
+      307,
+      512
+    ]
+  },
+  "unit_146": {
+    "src": "/assets/images/characters/generated/characters-141-150.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      0,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_147": {
+    "src": "/assets/images/characters/generated/characters-141-150.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      307,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_148": {
+    "src": "/assets/images/characters/generated/characters-141-150.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      614,
+      512,
+      308,
+      512
+    ]
+  },
+  "unit_149": {
+    "src": "/assets/images/characters/generated/characters-141-150.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      922,
+      512,
+      307,
+      512
+    ]
+  },
+  "unit_150": {
+    "src": "/assets/images/characters/generated/characters-141-150.webp",
+    "width": 1536,
+    "height": 1024,
+    "crop": [
+      1229,
+      512,
+      307,
+      512
+    ]
+  }
+}

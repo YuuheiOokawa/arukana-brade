@@ -6,7 +6,7 @@ interface Props {
 }
 
 export const HpBar = ({ current, max, showNumbers = false, height = 'h-2' }: Props) => {
-  const pct = Math.max(0, Math.min(100, (current / max) * 100));
+  const pct = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0;
   const colorClass = pct > 50 ? 'hp-bar-fill' : pct > 25 ? 'hp-bar-fill mid' : 'hp-bar-fill low';
 
   return (

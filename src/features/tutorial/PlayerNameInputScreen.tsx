@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTutorialStore } from '../../stores/tutorialStore';
 
-const FORBIDDEN_PATTERN = /[<>'"&\\\/]/;
+const FORBIDDEN_PATTERN = /[<>'"&\\/]/;
 
 export const PlayerNameInputScreen = () => {
   const navigate = useNavigate();

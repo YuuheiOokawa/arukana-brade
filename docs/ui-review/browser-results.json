@@ -1,0 +1,252 @@
+[
+  {
+    "page": "HomePage",
+    "width": 1440,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "UnitsPage",
+    "width": 1440,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "PartyPage",
+    "width": 1440,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "CollectionPage",
+    "width": 1440,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "QuestsPage",
+    "width": 1440,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "EnhancePage",
+    "width": 1440,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "EquipmentPage",
+    "width": 1440,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "ItemsPage",
+    "width": 1440,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "MissionsPage",
+    "width": 1440,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "ShopPage",
+    "width": 1440,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "ProfilePage",
+    "width": 1440,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "GiftBoxPage",
+    "width": 1440,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "GuildPage",
+    "width": 1440,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "FriendPage",
+    "width": 1440,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "PvPPage",
+    "width": 1440,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "RaidPage",
+    "width": 1440,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "SummonPage",
+    "width": 1440,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "HomePage",
+    "width": 390,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "UnitsPage",
+    "width": 390,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "PartyPage",
+    "width": 390,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "CollectionPage",
+    "width": 390,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "QuestsPage",
+    "width": 390,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "EnhancePage",
+    "width": 390,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "EquipmentPage",
+    "width": 390,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "ItemsPage",
+    "width": 390,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "MissionsPage",
+    "width": 390,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "ShopPage",
+    "width": 390,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "ProfilePage",
+    "width": 390,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "GiftBoxPage",
+    "width": 390,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "GuildPage",
+    "width": 390,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "FriendPage",
+    "width": 390,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "PvPPage",
+    "width": 390,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "RaidPage",
+    "width": 390,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "page": "SummonPage",
+    "width": 390,
+    "overflow": false,
+    "missing": [],
+    "errors": []
+  },
+  {
+    "interactions": [
+      "name search",
+      "clear search",
+      "menu/Escape",
+      "keyboard unit selection",
+      "tutorial skip remains on results",
+      "duplicate crystal grants",
+      "reduced motion"
+    ],
+    "errors": []
+  }
+]

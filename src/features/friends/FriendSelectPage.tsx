@@ -103,7 +103,7 @@ export const FriendSelectPage = () => {
   ];
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="game-page min-h-screen pb-24">
       <TopBar onBack={() => navigate('/quests')} title="フレンド選択" />
 
       {/* クエスト情報 */}

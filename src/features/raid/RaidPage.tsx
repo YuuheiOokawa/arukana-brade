@@ -21,7 +21,7 @@ export const RaidPage = () => {
 
   if (activeRaids.length === 0) {
     return (
-      <div className="min-h-screen pb-28">
+      <div className="game-page min-h-screen pb-28">
         <TopBar title="レイドボス" />
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6">
           <p className="text-5xl mb-4">🏰</p>
