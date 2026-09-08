@@ -15,6 +15,9 @@ import { TitlePlate, FrameDecoration } from '../../components/ui/game/UIDecorati
 import { UnitIcon } from '../../components/ui/UnitCard';
 import { resolveUnitImage } from '../../lib/unitImage';
 import { getRankTitle, getArenaFrameStyle } from '../../data/arenaRank';
+import { AchievementIcon } from '../../components/ui/GameGlyphs';
+import { CurrencyIcon } from '../../components/ui/game/GameIcons';
+import { Icon } from '../../components/ui/Icon';
 
 const TITLES = [
   '駆け出しの勇者', '炎の剣士', '水の守護者', '風の疾走者',
@@ -35,7 +38,7 @@ export const ProfilePage = () => {
   const handleClaimAchievement = (id: string, label: string, reward: number) => {
     if (!claim(id)) return;
     addDiamond(reward);
-    setAchToast(`🏅 「${label}」達成報酬 💎${reward} を受け取りました！`);
+    setAchToast(`「${label}」の達成報酬としてダイヤ${reward}個を受け取りました`);
     setTimeout(() => setAchToast(''), 2500);
   };
 
@@ -90,14 +93,14 @@ export const ProfilePage = () => {
 
         {/* ===== プロフィールカード (アリーナ階級が上がるほど枠が豪華になる) ===== */}
         <div className="px-4 pt-4 mb-4">
-          <div className={`rounded-2xl overflow-hidden relative ${arenaFrame.rainbow ? 'summon-rainbow-border' : ''}`} style={{
+          <div className={`profile-identity-card rounded-2xl overflow-hidden relative ${arenaFrame.rainbow ? 'summon-rainbow-border' : ''}`} style={{
             background: arenaFrame.background ?? 'linear-gradient(145deg, rgba(20,8,50,0.97), rgba(8,8,24,0.98))',
             border: arenaFrame.border,
             boxShadow: arenaFrame.boxShadow,
             transition: 'border-color 0.4s, box-shadow 0.4s',
           }}>
             {/* カードヘッダー帯 */}
-            <div className="h-20 relative" style={{
+            <div className="profile-banner h-20 relative" style={{
               background: 'linear-gradient(135deg, #1a0a38 0%, #3b0764 50%, #1a0a38 100%)',
             }}>
               <div className="absolute inset-0" style={{
@@ -127,7 +130,7 @@ export const ProfilePage = () => {
               {/* アバター + 基本情報 */}
               <div className="flex items-end gap-4 -mt-8 mb-4">
                 {/* アバターフレーム (アリーナ階級の色で縁取り) */}
-                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-black relative flex-shrink-0 ${arenaFrame.rainbow ? 'summon-rainbow-border' : ''}`}
+                <div className={`profile-avatar w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-black relative flex-shrink-0 ${arenaFrame.rainbow ? 'summon-rainbow-border' : ''}`}
                   style={{
                     background: 'linear-gradient(135deg, #2e1065, #7c3aed)',
                     border: `2px solid ${arenaTitle.color}b0`,
@@ -150,7 +153,7 @@ export const ProfilePage = () => {
                     <button onClick={() => navigate('/pvp')}
                       className="text-xs px-2 py-0.5 rounded-full font-bold active:scale-95 transition-all"
                       style={{ background: `${arenaTitle.color}22`, border: `1px solid ${arenaTitle.color}66`, color: arenaTitle.color }}>
-                      🏆 {arenaTitle.label}
+                      <span className="inline-flex items-center gap-1"><Icon name="pvp" size={13}/>{arenaTitle.label}</span>
                     </button>
                   </div>
                 </div>
@@ -181,8 +184,8 @@ export const ProfilePage = () => {
 
         {/* ===== 推しユニット ===== */}
         <div className="px-4 mb-4">
-          <div className="mb-2"><TitlePlate color="purple">推しユニット</TitlePlate></div>
-          <FrameDecoration color="purple">
+          <div className="mb-2"><TitlePlate color="gold">推しユニット</TitlePlate></div>
+          <FrameDecoration color="gold">
             {favMaster && favUnit ? (
               <div className="flex items-center gap-4">
                 <UnitIcon
@@ -262,18 +265,18 @@ export const ProfilePage = () => {
                     border: `1px solid ${canClaim ? `${ach.color}99` : earned ? `${ach.color}44` : 'rgba(255,255,255,0.05)'}`,
                     boxShadow: canClaim ? `0 0 16px ${ach.color}55` : earned ? `0 0 12px ${ach.color}22` : 'none',
                   }}>
-                  <p className="text-2xl mb-1" style={{ filter: earned ? 'none' : 'grayscale(1)' }}>{ach.emoji}</p>
+                  <AchievementIcon id={ach.id} color={ach.color} earned={earned}/>
                   <p className="text-xs font-bold leading-tight" style={{ color: earned ? ach.color : '#4b5563' }}>{ach.label}</p>
                   <p className="text-[9px] mt-0.5" style={{ color: earned ? '#9ca3af' : '#374151' }}>{ach.desc}</p>
                   {canClaim ? (
                     <p className="text-[9px] font-black mt-1 px-1.5 py-0.5 rounded-full inline-block"
                       style={{ background: 'rgba(240,192,64,0.25)', color: '#fde68a', border: '1px solid rgba(240,192,64,0.5)' }}>
-                      🎁 💎{ach.rewardDiamond} 受取
+                      <span className="inline-flex items-center gap-1"><CurrencyIcon type="diamond" size={15}/>{ach.rewardDiamond} 受取</span>
                     </p>
                   ) : claimed ? (
                     <p className="text-[9px] font-bold mt-1 text-emerald-500">✓ 受取済</p>
                   ) : (
-                    <p className="text-[9px] mt-1" style={{ color: earned ? '#9ca3af' : '#374151' }}>💎{ach.rewardDiamond}</p>
+                    <p className="text-[9px] mt-1 inline-flex items-center gap-1" style={{ color: earned ? '#9ca3af' : '#374151' }}><CurrencyIcon type="diamond" size={13}/>{ach.rewardDiamond}</p>
                   )}
                 </button>
               );
@@ -283,8 +286,8 @@ export const ProfilePage = () => {
 
         {/* ===== 所持★分布 ===== */}
         <div className="px-4 mb-4">
-          <div className="mb-2"><TitlePlate color="purple">レアリティ分布</TitlePlate></div>
-          <FrameDecoration color="purple">
+          <div className="mb-2"><TitlePlate color="gold">レアリティ分布</TitlePlate></div>
+          <FrameDecoration color="gold">
             {([1, 2, 3, 4, 5, 6, 7, 'CROWN'] as StarRarity[]).map(r => {
               const cnt = ownedUnits.filter(u => (u.currentRarity ?? 1) === r).length;
               const pct = ownedUnits.length > 0 ? (cnt / ownedUnits.length) * 100 : 0;

@@ -7,6 +7,10 @@ import { ITEM_MASTER, getItemMaster } from '../../data/items';
 import { TopBar } from '../../components/layout/TopBar';
 import { getLevelCap } from '../../data/rarityConfig';
 import type { ItemMaster } from '../../types';
+import { CategoryIcon, ItemIcon, RewardIcon } from '../../components/ui/GameGlyphs';
+import { Icon } from '../../components/ui/Icon';
+import { UnitIcon } from '../../components/ui/UnitCard';
+import { resolveUnitImage } from '../../lib/unitImage';
 
 const EXP_MAP: Record<string, number> = {
   item_exp_s: 500,
@@ -21,13 +25,10 @@ const EXP_MAP: Record<string, number> = {
 
 type Category = 'all' | 'stamina' | 'exp_potion' | 'material' | 'awaken_material' | 'summon_ticket';
 
-const CATEGORIES: { id: Category; label: string; emoji: string }[] = [
-  { id: 'all',             label: 'すべて',   emoji: '📦' },
-  { id: 'stamina',         label: 'スタミナ', emoji: '⚡' },
-  { id: 'exp_potion',      label: '経験値',   emoji: '💧' },
-  { id: 'awaken_material', label: '覚醒',     emoji: '✨' },
-  { id: 'material',        label: '素材',     emoji: '🦷' },
-  { id: 'summon_ticket',   label: 'チケット', emoji: '🎫' },
+const CATEGORIES: { id: Category; label: string }[] = [
+  { id: 'all', label: 'すべて' }, { id: 'stamina', label: 'スタミナ' },
+  { id: 'exp_potion', label: '経験値' }, { id: 'awaken_material', label: '覚醒' },
+  { id: 'material', label: '素材' }, { id: 'summon_ticket', label: 'チケット' },
 ];
 
 export const ItemsPage = () => {
@@ -69,17 +70,17 @@ export const ItemsPage = () => {
         usePlayerStore.setState(s => ({
           player: { ...s.player, stamina: s.player.maxStamina },
         }));
-        showToast(`${master.emoji} スタミナ全回復！`);
+        showToast(`${master.name}でスタミナを全回復しました`);
       } else if (itemId === 'item_stamina_potion') {
         usePlayerStore.setState(s => ({
           player: { ...s.player, stamina: Math.min(s.player.stamina + 30, s.player.maxStamina) },
         }));
-        showToast(`${master.emoji} スタミナ +30 回復！`);
+        showToast(`${master.name}でスタミナを30回復しました`);
       } else if (itemId === 'item_stamina_plus') {
         usePlayerStore.setState(s => ({
           player: { ...s.player, stamina: Math.min(s.player.stamina + 50, s.player.maxStamina) },
         }));
-        showToast(`${master.emoji} スタミナ +50 回復！`);
+        showToast(`${master.name}でスタミナを50回復しました`);
       }
     } else if (master.category === 'exp_potion') {
       const exp = EXP_MAP[itemId];
@@ -88,10 +89,10 @@ export const ItemsPage = () => {
       } else if (ownedUnits.length === 0) {
         showToast('ユニットを召喚してから使用してください');
       } else {
-        showToast(`${master.emoji} このアイテムはここでは使用できません`);
+        showToast(`${master.name}はこの画面では使用できません`);
       }
     } else {
-      showToast(`${master.emoji} このアイテムはここでは使用できません`);
+      showToast(`${master.name}はこの画面では使用できません`);
     }
   };
 
@@ -128,7 +129,7 @@ export const ItemsPage = () => {
     if (!ok) { showToast('アイテムが足りません'); setSellModal(null); return; }
     const gold = (master.sellPrice ?? 0) * sellQty;
     addGold(gold);
-    showToast(`🪙 ${master.name} ×${sellQty} を ${gold.toLocaleString()} G で売却！`);
+    showToast(`${master.name} ×${sellQty}を ${gold.toLocaleString()} Gで売却しました`);
     setSellModal(null);
   };
 
@@ -139,7 +140,7 @@ export const ItemsPage = () => {
       {/* スタミナ表示 */}
       <div className="mx-4 mb-4 card-base p-3">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">⚡</span>
+          <span className="action-icon"><Icon name="thunder" size={22}/></span>
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1">
               <span className="text-gray-400 text-xs font-medium">スタミナ</span>
@@ -168,7 +169,7 @@ export const ItemsPage = () => {
                 activeCategory === cat.id ? 'tab-active' : 'tab-inactive'
               }`}
             >
-              <span>{cat.emoji}</span>
+              <CategoryIcon category={cat.id} />
               <span>{cat.label}</span>
             </button>
           ))}
@@ -183,18 +184,16 @@ export const ItemsPage = () => {
       {/* アイテム一覧 */}
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-5xl mb-4">📭</p>
+          <Icon name="items" size={46} className="mb-4 text-slate-600" />
           <p className="text-gray-500 font-bold">アイテムがありません</p>
           <p className="text-gray-600 text-sm mt-1">クエストをクリアして集めよう</p>
         </div>
       ) : (
-        <div className="px-4 space-y-2">
+        <div className="px-4 items-grid">
           {filtered.map(({ ownedItem, master }) => (
             <div key={ownedItem.itemId} className="card-base p-3.5 flex items-center gap-3">
               {/* アイコン */}
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 bg-black/30 border border-white/5">
-                {master.emoji}
-              </div>
+              <ItemIcon item={master} size={52} />
 
               {/* 情報 */}
               <div className="flex-1 min-w-0">
@@ -268,10 +267,10 @@ export const ItemsPage = () => {
             border: '1px solid rgba(245,158,11,0.4)',
           }}>
             <div className="flex items-center gap-3 mb-4">
-              <span className="text-3xl">{sellModal.master.emoji}</span>
+              <ItemIcon item={sellModal.master} size={52} />
               <div className="flex-1 min-w-0">
                 <p className="text-white font-bold truncate">{sellModal.master.name}</p>
-                <p className="text-gray-500 text-xs">所持 ×{sellModal.owned} · 単価 🪙 {(sellModal.master.sellPrice ?? 0).toLocaleString()}</p>
+                <p className="text-gray-500 text-xs flex items-center gap-1">所持 ×{sellModal.owned} · 単価 <RewardIcon type="gold" size={13}/> {(sellModal.master.sellPrice ?? 0).toLocaleString()}</p>
               </div>
             </div>
 
@@ -294,7 +293,7 @@ export const ItemsPage = () => {
             <div className="rounded-xl p-3 mb-4 text-center"
               style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
               <p className="text-gray-500 text-xs mb-0.5">売却額</p>
-              <p className="text-yellow-400 font-black text-xl">🪙 {((sellModal.master.sellPrice ?? 0) * sellQty).toLocaleString()} G</p>
+              <p className="text-yellow-400 font-black text-xl flex items-center justify-center gap-2"><RewardIcon type="gold"/> {((sellModal.master.sellPrice ?? 0) * sellQty).toLocaleString()} G</p>
             </div>
 
             <div className="flex gap-3">
@@ -338,7 +337,7 @@ export const ItemsPage = () => {
                     disabled={isMax}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${isMax ? 'opacity-40' : 'active:scale-98'}`}
                     style={{ background: 'rgba(40,20,80,0.6)', border: '1px solid rgba(139,92,246,0.2)' }}>
-                    <span className="text-2xl flex-shrink-0">{m.emoji}</span>
+                    <UnitIcon src={resolveUnitImage(u.masterId, u.currentRarity)} masterId={u.masterId} unitRarity={u.currentRarity} fallbackEmoji={m.emoji} element={m.element} size={42} height={50} variant="portrait" alt={m.name}/>
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-bold text-sm truncate">{m.name}</p>
                       <p className="text-gray-500 text-xs">Lv.{u.level} / {cap}{isMax ? ' (MAX)' : ''}</p>
@@ -394,7 +393,7 @@ const UnownedItems = ({ category, ownedIds }: { category: Category; ownedIds: st
         {unowned.map(master => (
           <div key={master.id} className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl opacity-30"
             style={{ border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)' }}>
-            <span className="text-xl grayscale">{master.emoji}</span>
+            <ItemIcon item={master} size={38} muted />
             <span className="text-gray-500 text-sm">{master.name}</span>
           </div>
         ))}
