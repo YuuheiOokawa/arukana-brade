@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../../stores/playerStore';
 import { useUnitStore } from '../../stores/unitStore';
@@ -14,7 +14,7 @@ import type { StarRarity } from '../../types';
 import { TitlePlate, FrameDecoration } from '../../components/ui/game/UIDecorations';
 import { UnitIcon } from '../../components/ui/UnitCard';
 import { resolveUnitImage } from '../../lib/unitImage';
-import { getRankTitle, getArenaFrameStyle } from '../../data/arenaRank';
+import { getRankTitle, getArenaFrameStyle, getRankProgressPct, getPointsToNextRank } from '../../data/arenaRank';
 import { AchievementIcon } from '../../components/ui/GameGlyphs';
 import { CurrencyIcon } from '../../components/ui/game/GameIcons';
 import { Icon } from '../../components/ui/Icon';
@@ -33,6 +33,8 @@ export const ProfilePage = () => {
   const arenaPoints = useArenaStore(s => s.record.points);
   const arenaTitle = getRankTitle(arenaPoints);
   const arenaFrame = getArenaFrameStyle(arenaPoints);
+  const arenaProgress = getRankProgressPct(arenaPoints);
+  const pointsToNext = getPointsToNextRank(arenaPoints);
   const [achToast, setAchToast] = useState('');
 
   const handleClaimAchievement = (id: string, label: string, reward: number) => {
@@ -72,9 +74,11 @@ export const ProfilePage = () => {
   const title = player.title ?? '駆け出しの勇者';
 
   return (
-    <div className="game-page min-h-screen pb-24" style={{
+    <div className={`game-page profile-page profile-tier-${arenaFrame.tier} min-h-screen pb-24`} style={{
+      '--arena-accent': arenaFrame.accent,
+      '--arena-secondary': arenaFrame.secondary,
       background: 'radial-gradient(ellipse at 50% -10%, #1a0838 0%, #080818 55%, #020208 100%)',
-    }}>
+    } as CSSProperties}>
       <TopBar title="プロフィール" />
 
       {/* 実績受取トースト */}
@@ -93,19 +97,16 @@ export const ProfilePage = () => {
 
         {/* ===== プロフィールカード (アリーナ階級が上がるほど枠が豪華になる) ===== */}
         <div className="px-4 pt-4 mb-4">
-          <div className={`profile-identity-card rounded-2xl overflow-hidden relative ${arenaFrame.rainbow ? 'summon-rainbow-border' : ''}`} style={{
+          <div className={`profile-identity-card rounded-2xl overflow-hidden relative ${arenaFrame.rainbow ? 'is-arcana' : ''}`} style={{
             background: arenaFrame.background ?? 'linear-gradient(145deg, rgba(20,8,50,0.97), rgba(8,8,24,0.98))',
             border: arenaFrame.border,
             boxShadow: arenaFrame.boxShadow,
             transition: 'border-color 0.4s, box-shadow 0.4s',
           }}>
+            <div className="profile-radiance" aria-hidden="true"><i/><i/><i/></div>
             {/* カードヘッダー帯 */}
-            <div className="profile-banner h-20 relative" style={{
-              background: 'linear-gradient(135deg, #1a0a38 0%, #3b0764 50%, #1a0a38 100%)',
-            }}>
-              <div className="absolute inset-0" style={{
-                background: 'radial-gradient(ellipse at 50% 0%, rgba(139,92,246,0.4) 0%, transparent 70%)',
-              }} />
+            <div className="profile-banner h-24 relative">
+              <div className="profile-banner-grid absolute inset-0" />
               {/* 魔法陣デコ */}
               <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-20">
                 <svg viewBox="0 0 60 60" width="56" height="56" stroke="#c4b5fd" fill="none" strokeWidth="0.8">
@@ -117,9 +118,8 @@ export const ProfilePage = () => {
               </div>
               {/* ランクバッジ */}
               <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                <div className="px-3 py-1 rounded-lg text-xs font-black"
-                  style={{ background: 'rgba(255,200,80,0.2)', border: '1px solid rgba(255,200,80,0.5)', color: '#ffe48d' }}>
-                  RANK {player.rank}
+                <div className="profile-player-rank px-3 py-1 rounded-lg text-xs font-black">
+                  PLAYER RANK {player.rank}
                 </div>
               </div>
               {/* ID */}
@@ -130,9 +130,8 @@ export const ProfilePage = () => {
               {/* アバター + 基本情報 */}
               <div className="flex items-end gap-4 -mt-8 mb-4">
                 {/* アバターフレーム (アリーナ階級の色で縁取り) */}
-                <div className={`profile-avatar w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-black relative flex-shrink-0 ${arenaFrame.rainbow ? 'summon-rainbow-border' : ''}`}
+                <div className={`profile-avatar w-24 h-24 rounded-2xl flex items-center justify-center text-3xl font-black relative flex-shrink-0 ${arenaFrame.rainbow ? 'is-arcana' : ''}`}
                   style={{
-                    background: 'linear-gradient(135deg, #2e1065, #7c3aed)',
                     border: `2px solid ${arenaTitle.color}b0`,
                     boxShadow: `0 0 20px ${arenaTitle.color}66`,
                   }}>
@@ -143,12 +142,13 @@ export const ProfilePage = () => {
                   </div>
                 </div>
 
-                <div className="flex-1 min-w-0 pt-8">
+                <div className="flex-1 min-w-0 pt-10">
+                  <p className="profile-prestige">{arenaFrame.prestige} DIVISION · TIER {arenaFrame.tier + 1}</p>
                   <h2 className="text-white font-black text-xl leading-tight truncate">{player.name}</h2>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <span className="text-xs px-2 py-0.5 rounded-full font-bold"
                       style={{ background: 'rgba(139,92,246,0.25)', border: '1px solid rgba(139,92,246,0.5)', color: '#c4b5fd' }}>
-                      ◆ {title}
+                      <Icon name="medal" size={12}/>{title}
                     </span>
                     <button onClick={() => navigate('/pvp')}
                       className="text-xs px-2 py-0.5 rounded-full font-bold active:scale-95 transition-all"
@@ -158,6 +158,20 @@ export const ProfilePage = () => {
                   </div>
                 </div>
               </div>
+
+              <button className="arena-showcase" onClick={() => navigate('/pvp')} aria-label="アリーナ詳細を見る">
+                <span className="arena-crest" aria-hidden="true"><Icon name={arenaFrame.rainbow ? 'crown' : 'pvp'} size={30}/></span>
+                <span className="arena-showcase-copy">
+                  <small>ARENA PRESTIGE</small>
+                  <strong>{arenaTitle.label}</strong>
+                  <span>{arenaPoints.toLocaleString()} RP</span>
+                </span>
+                <span className="arena-progress-wrap">
+                  <span className="arena-progress-label">{pointsToNext === null ? '最高階級到達' : `次階級まで ${pointsToNext.toLocaleString()} RP`}</span>
+                  <span className="arena-progress"><i style={{ width: `${arenaProgress}%` }}/></span>
+                </span>
+                <Icon name="next" size={18}/>
+              </button>
 
               {/* 自己紹介 */}
               {player.bio ? (
@@ -176,7 +190,7 @@ export const ProfilePage = () => {
                   color: '#c4b5fd',
                 }}
               >
-                プロフィール編集
+                <span className="inline-flex items-center justify-center gap-2"><Icon name="edit" size={16}/>プロフィール編集</span>
               </button>
             </div>
           </div>

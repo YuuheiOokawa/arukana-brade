@@ -87,6 +87,10 @@ export interface ArenaFrameStyle {
   border: string;
   boxShadow: string;
   background?: string;
+  accent: string;
+  secondary: string;
+  tier: number;
+  prestige: string;
   /** 最上位ブロック(ARCANA BLADEランクのみ)は虹色の回転リングを重ねる */
   rainbow: boolean;
 }
@@ -98,6 +102,8 @@ export const getArenaFrameStyle = (pts: number): ArenaFrameStyle => {
   const glowBlur = 6 + tier * 5; // 6〜56px
   const glowOpacity = Math.min(0.75, 0.18 + tier * 0.055);
   const bgOpacity = Math.min(0.16, tier * 0.015);
+  const secondaryColors = ['#64748b', '#d08a4b', '#d8e1ee', '#ffe07a', '#f8fafc', '#83d7ff', '#d8b4fe', '#ddd6fe', '#ffad66', '#ff87cb', '#ffffff'];
+  const prestigeNames = ['IRON', 'BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'SAPPHIRE', 'AMETHYST', 'CELESTIAL', 'INFERNO', 'MYTHIC', 'ARCANA'];
   return {
     border: `${borderWidth}px solid ${title.color}${tier === 0 ? '55' : 'aa'}`,
     boxShadow: tier === 0
@@ -106,6 +112,10 @@ export const getArenaFrameStyle = (pts: number): ArenaFrameStyle => {
     background: tier === 0
       ? undefined
       : `linear-gradient(145deg, ${hexToRgba(title.color, bgOpacity)} 0%, rgba(14,8,36,0.98) 65%)`,
+    accent: title.color,
+    secondary: secondaryColors[tier],
+    tier,
+    prestige: prestigeNames[tier],
     rainbow: tier === RANK_BLOCKS.length - 1,
   };
 };
