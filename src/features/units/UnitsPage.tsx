@@ -5,11 +5,13 @@ import { usePlayerStore } from '../../stores/playerStore';
 import { usePartyStore } from '../../stores/partyStore';
 import { useEquipmentStore } from '../../stores/equipmentStore';
 import { getUnitMaster } from '../../data/units';
-import { UnitCard } from '../../components/ui/UnitCard';
+import { UnitCard, UnitIcon } from '../../components/ui/UnitCard';
 import { TopBar } from '../../components/layout/TopBar';
 import { Icon } from '../../components/ui/Icon';
 import { getStarRarityOrder } from '../../data/rarityConfig';
 import type { ElementType, StarRarity, OwnedUnit } from '../../types';
+import { CurrencyIcon } from '../../components/ui/game/GameIcons';
+import { resolveUnitImage } from '../../lib/unitImage';
 
 const ELEMENTS: (ElementType | 'all')[] = ['all', 'fire', 'water', 'wind', 'earth', 'thunder', 'light', 'dark'];
 const ELEMENT_LABELS: Record<string, string> = {
@@ -20,7 +22,7 @@ type StarFilter = 'all' | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 'CROWN';
 const STAR_FILTERS: StarFilter[] = ['all', 1, 2, 3, 4, 5, 6, 7, 'CROWN'];
 const starFilterLabel = (f: StarFilter) => {
   if (f === 'all') return '全';
-  if (f === 'CROWN') return '👑';
+  if (f === 'CROWN') return 'CROWN';
   return `★${f}`;
 };
 
@@ -167,7 +169,7 @@ export const UnitsPage = () => {
             style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}>
             <div>
               <p className="text-red-400 text-xs font-bold">解放モード：ロックされていないユニットを選択</p>
-              <p className="text-yellow-400 text-xs">{selected.size}体選択 → 🪙 {totalReleaseGold.toLocaleString()} G</p>
+              <p className="text-yellow-400 text-xs inline-flex items-center gap-1">{selected.size}体選択 → <CurrencyIcon type="gold" size={14}/>{totalReleaseGold.toLocaleString()} G</p>
             </div>
             {selected.size > 0 && (
               <button onClick={() => setConfirmRelease(true)}
@@ -192,8 +194,8 @@ export const UnitsPage = () => {
                     border: isSelected ? '2px solid #ef4444' : unit.isLocked ? '2px solid #374151' : '2px solid transparent',
                     background: isSelected ? 'rgba(239,68,68,0.15)' : 'transparent',
                   }}>
-                  {isSelected && <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center text-white text-xs font-black">✓</div>}
-                  {unit.isLocked && <div className="absolute top-2 right-2 text-xs">🔒</div>}
+                  {isSelected && <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center text-white"><Icon name="check" size={13}/></div>}
+                  {unit.isLocked && <div className="absolute top-2 right-2 text-gray-300"><Icon name="lock" size={15}/></div>}
                 </div>
               )}
               <UnitCard unit={unit} onClick={() => releaseMode ? toggleSelect(unit.instanceId) : setActionUnit(unit)} />
@@ -202,7 +204,7 @@ export const UnitsPage = () => {
         })}
         {filtered.length === 0 && (
           <div className="text-center py-12 text-gray-500">
-            <div className="text-4xl mb-2">🔍</div>
+            <Icon name="search" size={34} className="mx-auto mb-2"/>
             <p>条件に合うユニットがいません</p>
           </div>
         )}
@@ -229,13 +231,13 @@ export const UnitsPage = () => {
               <div className="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-4" />
               {master && (
                 <div className="flex items-center gap-3 mb-4 px-1">
-                  <span className="text-2xl">{master.emoji}</span>
+                  <UnitIcon masterId={master.id} src={resolveUnitImage(master.id, actionUnit.currentRarity)} unitRarity={actionUnit.currentRarity} fallbackEmoji={master.emoji} element={master.element} size={44} height={56}/>
                   <div>
                     <p className="text-white font-bold">{master.name}</p>
                     <p className="text-gray-400 text-xs">Lv.{actionUnit.level} · {master.title}</p>
                   </div>
                   <div className="ml-auto flex items-center gap-1.5">
-                    {isLocked && <span className="text-sm">🔒</span>}
+                    {isLocked && <Icon name="lock" size={15}/ >}
                     {inParty && (
                       <span className="text-xs px-2 py-0.5 rounded-full font-bold"
                         style={{ background: 'rgba(124,58,237,0.4)', color: '#c4b5fd' }}>
@@ -261,7 +263,7 @@ export const UnitsPage = () => {
                       : '1px solid rgba(139,92,246,0.5)',
                     color: inParty ? '#fca5a5' : partyFull ? '#6b7280' : '#c4b5fd',
                   }}>
-                  {inParty ? '⚔️ パーティから外す' : partyFull ? 'パーティが満員です' : '⚔️ パーティに追加'}
+                  <span className="inline-flex items-center gap-2">{!partyFull || inParty ? <Icon name="party" size={16}/> : null}{inParty ? 'パーティから外す' : partyFull ? 'パーティが満員です' : 'パーティに追加'}</span>
                 </button>
                 <button
                   onClick={() => toggleLock(actionUnit.instanceId)}
@@ -271,7 +273,7 @@ export const UnitsPage = () => {
                     border: isLocked ? '1px solid rgba(245,158,11,0.4)' : '1px solid rgba(100,80,140,0.3)',
                     color: isLocked ? '#fbbf24' : '#d1d5db',
                   }}>
-                  {isLocked ? '🔓 ロックを解除する' : '🔒 ロックする（解放から保護）'}
+                  <span className="inline-flex items-center gap-2"><Icon name={isLocked ? 'unlock' : 'lock'} size={16}/>{isLocked ? 'ロックを解除する' : 'ロックする（解放から保護）'}</span>
                 </button>
                 <button
                   onClick={() => { navigate(`/units/${actionUnit.instanceId}`); setActionUnit(null); }}
@@ -296,7 +298,7 @@ export const UnitsPage = () => {
           <div className="rounded-2xl p-6 w-full max-w-sm" style={{ background: '#1a0a2e', border: '1px solid rgba(239,68,68,0.4)' }}>
             <h2 className="text-red-400 font-black text-lg mb-2">本当に解放しますか？</h2>
             <p className="text-gray-300 text-sm mb-1">{selected.size}体のユニットを解放します</p>
-            <p className="text-yellow-400 font-bold mb-4">🪙 {totalReleaseGold.toLocaleString()} G 獲得</p>
+            <p className="text-yellow-400 font-bold mb-4 inline-flex items-center gap-2"><CurrencyIcon type="gold" size={18}/>{totalReleaseGold.toLocaleString()} G 獲得</p>
             <div className="flex gap-3">
               <button onClick={() => setConfirmRelease(false)}
                 className="flex-1 py-2.5 rounded-xl font-bold text-sm text-gray-300"

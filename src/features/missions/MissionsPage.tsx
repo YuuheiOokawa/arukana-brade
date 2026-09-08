@@ -146,7 +146,7 @@ export const MissionsPage = () => {
               <p className="text-yellow-400 text-xs font-bold mt-1 animate-glow">✓ 全ミッション達成！報酬を受け取ろう</p>
             )}
             {dailyClaimed === dailyTotal && (
-              <p className="text-emerald-400 text-xs font-bold mt-1">🎉 本日の全報酬を受け取りました！</p>
+              <p className="text-emerald-400 text-xs font-bold mt-1 inline-flex items-center gap-1"><Icon name="check" size={14}/>本日の全報酬を受け取りました！</p>
             )}
             {dailyCompleted > dailyClaimed && (
               <button onClick={() => handleClaimAll('daily')}
@@ -156,7 +156,7 @@ export const MissionsPage = () => {
                   border: '1px solid rgba(240,192,64,0.5)',
                   boxShadow: '0 0 16px rgba(240,192,64,0.3)',
                 }}>
-                🎁 まとめて受取（{dailyCompleted - dailyClaimed}件）
+                <span className="inline-flex items-center gap-2"><Icon name="gifts" size={17}/>まとめて受取（{dailyCompleted - dailyClaimed}件）</span>
               </button>
             )}
           </div>
@@ -180,7 +180,7 @@ export const MissionsPage = () => {
               <p className="text-yellow-400 text-xs font-bold mt-1 animate-glow">✓ 全ウィークリー達成！報酬を受け取ろう</p>
             )}
             {weeklyClaimed === weeklyTotal && weeklyCompleted > 0 && (
-              <p className="text-emerald-400 text-xs font-bold mt-1">🎉 今週の全報酬を受け取りました！</p>
+              <p className="text-emerald-400 text-xs font-bold mt-1 inline-flex items-center gap-1"><Icon name="check" size={14}/>今週の全報酬を受け取りました！</p>
             )}
             {weeklyCompleted > weeklyClaimed && (
               <button onClick={() => handleClaimAll('weekly')}
@@ -190,7 +190,7 @@ export const MissionsPage = () => {
                   border: '1px solid rgba(240,192,64,0.5)',
                   boxShadow: '0 0 16px rgba(240,192,64,0.3)',
                 }}>
-                🎁 まとめて受取（{weeklyCompleted - weeklyClaimed}件）
+                <span className="inline-flex items-center gap-2"><Icon name="gifts" size={17}/>まとめて受取（{weeklyCompleted - weeklyClaimed}件）</span>
               </button>
             )}
           </div>

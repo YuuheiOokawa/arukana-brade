@@ -10,6 +10,10 @@ import { getEventStage, getRaidStage } from '../../data/events';
 import { ElementBadge } from '../../components/ui/ElementBadge';
 import { TopBar } from '../../components/layout/TopBar';
 import type { FriendCandidate } from '../../types';
+import { Icon } from '../../components/ui/Icon';
+import { CurrencyIcon } from '../../components/ui/game/GameIcons';
+import { UnitIcon } from '../../components/ui/UnitCard';
+import { resolveUnitImage } from '../../lib/unitImage';
 
 interface DbFriendRaw {
   friendPlayerId: string;
@@ -112,9 +116,9 @@ export const FriendSelectPage = () => {
           <p className="text-gray-400 text-xs mb-1">選択中のクエスト</p>
           <p className="text-white font-bold">{stage.name}</p>
           <div className="flex gap-3 text-xs text-gray-400 mt-1">
-            <span>⚡ {stage.staminaCost}</span>
-            <span>🪙 {stage.rewardGold.toLocaleString()}</span>
-            <span>✨ EXP {stage.rewardExp}</span>
+            <span className="inline-flex items-center gap-1"><Icon name="health" size={13}/>{stage.staminaCost}</span>
+            <span className="inline-flex items-center gap-1"><CurrencyIcon type="gold" size={14}/>{stage.rewardGold.toLocaleString()}</span>
+            <span className="inline-flex items-center gap-1"><Icon name="enhance" size={13}/>EXP {stage.rewardExp}</span>
           </div>
         </div>
       </div>
@@ -126,7 +130,7 @@ export const FriendSelectPage = () => {
         </div>
 
         {dbFriends.length > 0 && (
-          <p className="text-purple-400 text-xs font-bold mb-2 uppercase tracking-wider">👥 フレンド</p>
+          <p className="text-purple-400 text-xs font-bold mb-2 uppercase tracking-wider inline-flex items-center gap-2"><Icon name="social" size={15}/>フレンド</p>
         )}
 
         <div className="space-y-3">
@@ -148,10 +152,7 @@ export const FriendSelectPage = () => {
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-14 h-14 rounded-lg flex items-center justify-center text-3xl"
-                      style={{ background: leaderMaster ? elementGradient(leaderMaster.element) : '#1a1a35' }}>
-                      {leaderMaster?.emoji ?? '?'}
-                    </div>
+                    {leaderMaster ? <UnitIcon masterId={leaderMaster.id} src={resolveUnitImage(leaderMaster.id, 1)} unitRarity={1} fallbackEmoji={leaderMaster.emoji} element={leaderMaster.element} size={56} height={70} className="flex-shrink-0"/> : <div className="flex-shrink-0 w-14 h-14 rounded-lg flex items-center justify-center"><Icon name="unknown"/></div>}
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
@@ -178,14 +179,14 @@ export const FriendSelectPage = () => {
                       </div>
 
                       <div className="mt-1 bg-gray-800/50 rounded px-2 py-1">
-                        <p className="text-xs text-purple-300">👑 {friend.leaderSkillDescription}</p>
+                        <p className="text-xs text-purple-300 inline-flex items-center gap-1"><Icon name="crown" size={13}/>{friend.leaderSkillDescription}</p>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-700/50">
-                    <p className="text-xs text-gray-500">🕐 {friend.lastLogin}</p>
-                    {isSelected && <span className="text-yellow-400 text-sm font-bold">✓ 選択中</span>}
+                    <p className="text-xs text-gray-500 inline-flex items-center gap-1"><Icon name="clock" size={13}/>{friend.lastLogin}</p>
+                    {isSelected && <span className="text-yellow-400 text-sm font-bold inline-flex items-center gap-1"><Icon name="check" size={14}/>選択中</span>}
                   </div>
                 </button>
               </div>
@@ -200,11 +201,11 @@ export const FriendSelectPage = () => {
         {noSelectionError && (
           <div className="rounded-xl px-3 py-2 text-sm text-red-400 font-bold text-center"
             style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.3)' }}>
-            ⚠️ フレンドを選択してください
+            フレンドを選択してください
           </div>
         )}
         <GameButton variant="gold" fullWidth onClick={handleConfirm}>
-          ⚔️ バトル開始
+          <span className="inline-flex items-center gap-2"><Icon name="sword" size={18}/>バトル開始</span>
         </GameButton>
         <button onClick={handleSkip} className="w-full text-gray-500 text-sm py-2">
           フレンドなしで始める
@@ -212,16 +213,4 @@ export const FriendSelectPage = () => {
       </div>
     </div>
   );
-};
-
-const elementGradient = (element: string): string => {
-  const map: Record<string, string> = {
-    fire: 'linear-gradient(135deg, #7f1d1d, #ef4444)',
-    water: 'linear-gradient(135deg, #1e3a5f, #3b82f6)',
-    wind: 'linear-gradient(135deg, #064e3b, #10b981)',
-    earth: 'linear-gradient(135deg, #451a03, #92400e)',
-    light: 'linear-gradient(135deg, #713f12, #ca8a04)',
-    dark: 'linear-gradient(135deg, #2e1065, #7c3aed)',
-  };
-  return map[element] ?? '';
 };

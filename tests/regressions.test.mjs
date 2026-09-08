@@ -9,6 +9,7 @@ const {usePlayerStore} = await import('../src/stores/playerStore.ts');
 const {useUnitStore} = await import('../src/stores/unitStore.ts');
 const {UNIT_MASTER} = await import('../src/data/units.ts');
 const {getUnitImagePath, getCharacterArt, starRarityToImageRarity} = await import('../src/lib/unitImage.ts');
+const {RANK_TITLES, getArenaFrameStyle, getRankProgressPct, getPointsToNextRank} = await import('../src/data/arenaRank.ts');
 
 test('Replacing or moving a party leader keeps the leader in a unique occupied slot', () => {
   const store = usePartyStore.getState();
@@ -73,4 +74,19 @@ test('Every character has existing art at every rarity and valid clipping bounds
   assert.equal(getUnitImagePath('unknown',1),null);
   const generated=JSON.parse(readFileSync('src/data/generated-character-art.json','utf8'));
   assert.equal(Object.keys(generated).length,100);
+});
+
+test('Arena prestige styles and progress remain correct from entry to ARCANA', () => {
+  const entry = getArenaFrameStyle(0);
+  const apexThreshold = RANK_TITLES[0].min;
+  const apex = getArenaFrameStyle(apexThreshold);
+  assert.equal(entry.tier, 0);
+  assert.equal(entry.rainbow, false);
+  assert.equal(apex.tier, 10);
+  assert.equal(apex.prestige, 'ARCANA');
+  assert.equal(apex.rainbow, true);
+  assert.equal(getRankProgressPct(apexThreshold), 100);
+  assert.equal(getPointsToNextRank(apexThreshold), null);
+  assert.ok(getRankProgressPct(50) > 0 && getRankProgressPct(50) < 100);
+  assert.equal(getPointsToNextRank(50), 50);
 });
