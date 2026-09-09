@@ -54,7 +54,7 @@ export const HomePage = () => {
     <section className="home-hero" aria-labelledby="hero-heading">
       <img src="/assets/images/backgrounds/home/bg_ui_home_night.webp" className="home-hero-background" alt=""/>
       <div className="home-hero-copy"><p className="eyebrow">ARCANA CHRONICLES</p><h2 id="hero-heading">星の記憶が、<br/>あなたを待っている。</h2><p>仲間とともに、物語の続きを紡ごう。</p><Link to="/quests" className="hero-cta"><Icon name="quest" size={20}/>冒険へ出発<Icon name="next" size={18}/></Link></div>
-      {leader && leaderMaster && <div className="home-featured-unit"><UnitIcon src={resolveUnitImage(leader.masterId,leader.currentRarity)} masterId={leader.masterId} unitRarity={leader.currentRarity} fallbackEmoji={leaderMaster.emoji} element={leaderMaster.element} size={48} height={56} variant="portrait" alt={leaderMaster.name}/><div><span>PARTY LEADER</span><p>{leaderMaster.name}</p></div></div>}
+      {leader && leaderMaster && <div className="home-featured-unit"><UnitIcon src={resolveUnitImage(leader.masterId,leader.currentRarity)} masterId={leader.masterId} unitRarity={leader.currentRarity} fallbackEmoji={leaderMaster.emoji} element={leaderMaster.element} size={64} height={80} variant="portrait" alt={leaderMaster.name}/><div><span>PARTY LEADER</span><p>{leaderMaster.name}</p></div></div>}
       <div className="hero-bottom-line"><span>YOUR STORY, YOUR LEGEND</span><span>01 / ADVENTURE</span></div>
     </section>
     <div className="home-stat-row">

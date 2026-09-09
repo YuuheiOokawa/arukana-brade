@@ -165,8 +165,9 @@ export const CollectionPage = () => {
                       unitRarity={displayRarity}
                       fallbackEmoji={m.emoji}
                       element={m.element}
-                      size={56}
-                      height={72}
+                      size={112}
+                      height={140}
+                      variant="portrait"
                     />
                   </div>
                 ) : (

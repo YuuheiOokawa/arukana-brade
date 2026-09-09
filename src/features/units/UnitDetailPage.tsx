@@ -94,7 +94,7 @@ export const UnitDetailPage = () => {
         }}>
           {/* ユニット画像エリア - 縦長カード全体表示 */}
           <div className="flex items-center justify-center relative overflow-hidden"
-            style={{ height: '280px', background: elementGradient(master.element) }}>
+            style={{ height: 'clamp(280px, 48vh, 420px)', background: elementGradient(master.element) }}>
             <div className="absolute inset-0 opacity-20"
               style={{ background: 'radial-gradient(ellipse at center, white 0%, transparent 70%)' }} />
             {/* 星レアリティ光輪 */}
@@ -107,8 +107,10 @@ export const UnitDetailPage = () => {
                 unitRarity={currentRarity}
                 fallbackEmoji={master.emoji}
                 element={master.element}
-                size={130}
-                height={260}
+                size={240}
+                height={360}
+                variant="full"
+                className="unit-detail-art"
               />
             </div>
             {/* レアリティバッジ */}
