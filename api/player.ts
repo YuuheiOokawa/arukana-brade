@@ -27,6 +27,32 @@ const ITEM_RE = /^item_[a-z0-9_]{1,80}$/;
 const EQUIPMENT_RE = /^equip_[a-z0-9_]{1,80}$/;
 const isValidStageId = (id: string) => STAGE_RE.test(id);
 
+type SaveEquipment = { instanceId: string; masterId: string; level?: number; exp?: number; equippedTo?: string | null };
+type SaveParty = { id: string; name?: string; slots?: (string | null)[]; leaderId?: string | null };
+
+export function normalizeOwnedUnitReferences(
+  equips: SaveEquipment[], parties: SaveParty[], favorite: unknown, ownedUnitIds: Set<string>,
+) {
+  const normalizedEquips = equips.map(equip => ({
+    ...equip,
+    equippedTo: typeof equip.equippedTo === 'string' && ownedUnitIds.has(equip.equippedTo)
+      ? equip.equippedTo : null,
+  }));
+  const normalizedParties = parties.map(party => {
+    const seen = new Set<string>();
+    const slots = (party.slots ?? []).map(slot => {
+      if (typeof slot !== 'string' || !ownedUnitIds.has(slot) || seen.has(slot)) return null;
+      seen.add(slot);
+      return slot;
+    });
+    const leaderId = typeof party.leaderId === 'string' && seen.has(party.leaderId)
+      ? party.leaderId : slots.find((slot): slot is string => typeof slot === 'string') ?? null;
+    return { ...party, slots, leaderId };
+  });
+  const favoriteUnitId = typeof favorite === 'string' && ownedUnitIds.has(favorite) ? favorite : null;
+  return { normalizedEquips, normalizedParties, favoriteUnitId };
+}
+
 function validateStageProgression(incoming: string[], dbCleared: Set<string>): string[] {
   const confirmed = new Set<string>(dbCleared);
   const isAccessible = (stageId: string, cleared: Set<string>) => {
@@ -158,8 +184,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     type P = { name?: string; rank?: number; exp?: number; gold?: number; diamond?: number; stamina?: number; maxStamina?: number; staminaRecoveryTime?: number; title?: string; bio?: string; favoriteUnitInstanceId?: string | null; loginDays?: number; playerId?: string };
     type U = { instanceId: string; masterId: string; level?: number; exp?: number; awakenRank?: number; awakeningCount?: number; currentRarity?: string | number; isLocked?: boolean; acquiredAt?: number };
     type I = { itemId: string; quantity?: number };
-    type E = { instanceId: string; masterId: string; level?: number; exp?: number; equippedTo?: string | null };
-    type Party = { id: string; name?: string; slots?: (string | null)[]; leaderId?: string | null };
+    type E = SaveEquipment;
+    type Party = SaveParty;
 
     // miscData 用サニタイズヘルパー
     const strArray = (v: unknown, max = 2000): string[] =>
@@ -259,9 +285,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (!party || typeof party.id !== 'string' || party.id.length < 1 || party.id.length > 80 || !Array.isArray(party.slots) || party.slots.length > 5) return true;
         const slots = party.slots;
         if (slots.some(slot => slot !== null && typeof slot !== 'string')) return true;
-        const occupied = slots.filter((slot): slot is string => typeof slot === 'string');
-        return new Set(occupied).size !== occupied.length
-          || (party.leaderId !== undefined && party.leaderId !== null && (typeof party.leaderId !== 'string' || !occupied.includes(party.leaderId)));
+        return party.leaderId !== undefined && party.leaderId !== null && typeof party.leaderId !== 'string';
       });
       if (invalidParty || new Set(parties.map(party => party.id)).size !== parties.length) {
         return badRequest('invalid party records');
@@ -269,20 +293,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     const ownedUnitIds = new Set(hasUnits
       ? units.map(unit => unit.instanceId)
-      : (hasEquips || hasParties)
+      : (hasEquips || hasParties || typeof p?.favoriteUnitInstanceId === 'string')
         ? (await prisma.ownedUnit.findMany({ where: { playerId: player.playerId }, select: { instanceId: true } })).map(unit => unit.instanceId)
         : []);
-    if (hasEquips && equips.some(equip => typeof equip.equippedTo === 'string' && !ownedUnitIds.has(equip.equippedTo))) {
-      return badRequest('equipment references an unowned unit');
-    }
-    if (hasParties && parties.some(party => (party.slots ?? []).some(slot => typeof slot === 'string' && !ownedUnitIds.has(slot)))) {
-      return badRequest('party references an unowned unit');
-    }
-    if (p && Object.hasOwn(p, 'favoriteUnitInstanceId') && typeof p.favoriteUnitInstanceId === 'string') {
-      const ownsFavorite = hasUnits
-        ? units.some(unit => unit.instanceId === p.favoriteUnitInstanceId)
-        : Boolean(await prisma.ownedUnit.findFirst({ where: { playerId: player.playerId, instanceId: p.favoriteUnitInstanceId } }));
-      if (!ownsFavorite) return badRequest('favorite unit is not owned');
+    // Older local saves can retain optional references after a unit was removed.
+    // Heal those references instead of permanently rejecting the complete save.
+    const normalized = normalizeOwnedUnitReferences(
+      equips, parties, p?.favoriteUnitInstanceId, ownedUnitIds,
+    );
+    const { normalizedEquips, normalizedParties } = normalized;
+    let favoriteUnitId: string | null | undefined;
+    if (p && Object.hasOwn(p, 'favoriteUnitInstanceId')) {
+      favoriteUnitId = normalized.favoriteUnitId;
     }
 
     await prisma.$transaction(async tx => {
@@ -299,7 +321,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           staminaRecoveryTime: typeof p?.staminaRecoveryTime === 'number' && Number.isFinite(p.staminaRecoveryTime) ? BigInt(Math.floor(p.staminaRecoveryTime)) : undefined,
           title: typeof p?.title === 'string' ? p.title.slice(0, 50) : undefined,
           bio: typeof p?.bio === 'string' ? p.bio.slice(0, 200) : undefined,
-          favoriteUnitId: p && Object.hasOwn(p, 'favoriteUnitInstanceId') ? p.favoriteUnitInstanceId ?? null : undefined,
+          favoriteUnitId,
           loginDays: typeof p?.loginDays === 'number' ? clamp(p.loginDays, 1, 100_000) : undefined,
           // arcanaPlayerId はここで更新しない: 登録時(/api/auth)にサーバー側で一度だけ発行される
           // 不変の識別子であり、フレンド申請/削除がこれを検索キーに使う。
@@ -347,8 +369,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       if (hasEquips) await tx.ownedEquipment.deleteMany({ where: { playerId: player.playerId } });
-      if (hasEquips && equips.length > 0) {
-        await tx.ownedEquipment.createMany({ data: equips.filter(e => e.instanceId && e.masterId).map(e => ({ instanceId: String(e.instanceId), playerId: player.playerId, masterId: String(e.masterId), level: clamp(e.level, 1, 999), exp: clamp(e.exp, 0, 999_999_999), equippedTo: e.equippedTo ?? null })), skipDuplicates: true });
+      if (hasEquips && normalizedEquips.length > 0) {
+        await tx.ownedEquipment.createMany({ data: normalizedEquips.filter(e => e.instanceId && e.masterId).map(e => ({ instanceId: String(e.instanceId), playerId: player.playerId, masterId: String(e.masterId), level: clamp(e.level, 1, 999), exp: clamp(e.exp, 0, 999_999_999), equippedTo: e.equippedTo ?? null })), skipDuplicates: true });
       }
 
       const hasQuestProgress = state.clearedStageIds !== undefined || state.claimedAreaRewards !== undefined || state.lastSelectedWorldId !== undefined;
@@ -371,8 +393,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       if (hasParties) await tx.playerParty.deleteMany({ where: { playerId: player.playerId } });
-      if (hasParties && parties.length > 0) {
-        await tx.playerParty.createMany({ data: parties.map(party => ({ id: `${player.playerId}_${party.id}`, playerId: player.playerId, partyId: String(party.id), name: typeof party.name === 'string' ? party.name.trim().slice(0, 30) || 'パーティ' : 'パーティ', slots: [...(party.slots ?? []).slice(0, 5), ...Array(5).fill(null)].slice(0, 5) as (string | null)[], leaderId: party.leaderId ?? null, isActive: party.id === (state.activePartyId as string) })) });
+      if (hasParties && normalizedParties.length > 0) {
+        await tx.playerParty.createMany({ data: normalizedParties.map(party => ({ id: `${player.playerId}_${party.id}`, playerId: player.playerId, partyId: String(party.id), name: typeof party.name === 'string' ? party.name.trim().slice(0, 30) || 'パーティ' : 'パーティ', slots: [...(party.slots ?? []).slice(0, 5), ...Array(5).fill(null)].slice(0, 5) as (string | null)[], leaderId: party.leaderId ?? null, isActive: party.id === (state.activePartyId as string) })) });
       }
 
       const md = state.missionDaily as { date?: string; progresses?: unknown } | undefined;

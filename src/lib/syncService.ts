@@ -30,6 +30,9 @@ let failedSaveState: ReturnType<typeof collectGameState> | null = null;
 // hydrateFromGameState / resetAllStores 実行中はセーブをスキップする（DBの古いデータで上書きを防ぐ）
 let isHydrating = false;
 
+export const isRetryableSaveStatus = (status: number) =>
+  status >= 500 || status === 408 || status === 429;
+
 // 保存失敗をUIに通知するコールバック（App.tsxからセット）
 let onSaveError: ((msg: string) => void) | null = null;
 export const setSaveErrorHandler = (handler: (msg: string) => void) => {
@@ -128,6 +131,7 @@ export const saveAllToServer = async () => {
     return;
   }
   isSaving = true;
+  let retryable = true;
   try {
     const state = failedSaveState ?? collectGameState();
     const res = await fetch('/api/player', {
@@ -137,12 +141,19 @@ export const saveAllToServer = async () => {
       body: JSON.stringify({ action: 'saveAll', state }),
     });
     if (!res.ok) {
-      throw new Error(`saveAll failed: ${res.status}`);
+      retryable = isRetryableSaveStatus(res.status);
+      const detail = await res.json().catch(() => null) as { error?: string } | null;
+      throw new Error(`saveAll failed: ${res.status}${detail?.error ? ` (${detail.error})` : ''}`);
     }
     failedSaveState = null;
     onSaveSuccess?.();
   } catch (err) {
-    if (!failedSaveState) failedSaveState = collectGameState();
+    // A rejected payload never becomes valid by resending that exact snapshot.
+    if (retryable) {
+      if (!failedSaveState) failedSaveState = collectGameState();
+    } else {
+      failedSaveState = null;
+    }
     console.error('[syncService] save failed:', err);
     onSaveError?.('データの保存に失敗しました。ネットワークを確認してください。');
   } finally {
