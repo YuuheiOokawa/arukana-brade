@@ -59,10 +59,12 @@ export const useEquipmentStore = create<EquipmentStore>()(
         }));
       },
 
-      unequipFromUnit: (unitInstanceId, _slot) => {
+      unequipFromUnit: (unitInstanceId, slot) => {
         set(s => ({
           ownedEquipments: s.ownedEquipments.map(eq =>
-            eq.equippedTo === unitInstanceId ? { ...eq, equippedTo: undefined } : eq
+            eq.equippedTo === unitInstanceId && getEquipmentMaster(eq.masterId)?.slot === slot
+              ? { ...eq, equippedTo: undefined }
+              : eq
           ),
         }));
       },

@@ -17,8 +17,18 @@
  * POST action=friend_delete       → フレンド削除
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { getTokenFromRequest, verifyToken } from '../lib/auth.js';
+import {
+  GUILD_EMBLEMS,
+  RAID_BOSS_MAX_HP,
+  SUMMON_SERVER_RULES,
+  UNIT_RARITY_BY_ID,
+  isValidArcanaPlayerId,
+  toIntegerInRange,
+  type SummonRarity,
+} from '../lib/gameRules.js';
 
 // ── ショップ定義 ────────────────────────────────────────────
 const STAMINA_PACKS = [
@@ -46,18 +56,35 @@ const ARENA_LOSS_PENALTY       = 10;
 
 // ── レイド制限値 ────────────────────────────────────────────
 const MAX_RAID_DAMAGE = 2_000_000;
-const DEFAULT_BOSS_HP: Record<string, number> = { raid_dark_lord: 10_000_000 };
-const FALLBACK_BOSS_HP = 10_000_000;
 
 // ── 同期系リクエストのサイズ上限 ────────────────────────────
 const MAX_UNITS_SYNC_COUNT = 1000;
-const MAX_SUMMON_UNITS_PER_CALL = 20; // 実際の最大ガチャ枠(10連)より余裕を持たせた上限
+const MAX_GUILD_MEMBERS = 50;
+const MAX_FRIENDS = 50;
+const MAX_SENT_FRIEND_REQUESTS = 30;
 
 // v が数値でない/NaN な場合は min にフォールバックする（未検証な外部入力を渡しても安全）
 const clamp = (v: unknown, min: number, max: number): number => {
   const n = typeof v === 'number' ? v : Number(v);
   if (!isFinite(n)) return min;
   return Math.min(Math.max(n, min), max);
+};
+
+const detachFromGuild = async (tx: Prisma.TransactionClient, playerId: string): Promise<void> => {
+  const membership = await tx.guildMember.findUnique({ where: { playerId } });
+  if (!membership) return;
+  if (membership.role === 'master') {
+    const successor = await tx.guildMember.findFirst({
+      where: { guildId: membership.guildId, playerId: { not: playerId } },
+      orderBy: { joinedAt: 'asc' },
+    });
+    if (!successor) {
+      await tx.guild.delete({ where: { id: membership.guildId } });
+      return;
+    }
+    await tx.guildMember.update({ where: { id: successor.id }, data: { role: 'master' } });
+  }
+  await tx.guildMember.delete({ where: { id: membership.id } });
 };
 
 // ── ハンドラー ──────────────────────────────────────────────
@@ -188,7 +215,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const packId = body.packId as string;
     const shop = ITEM_SHOP.find(s => s.id === packId);
     if (!shop) return res.status(400).json({ error: 'Invalid pack' });
-    const purchaseCount = clamp(body.purchaseCount ?? 1, 1, 10);
+    const purchaseCount = toIntegerInRange(body.purchaseCount ?? 1, 1, 10);
+    if (purchaseCount === null) return res.status(400).json({ error: '購入数は1〜10の整数で指定してください' });
     const diamondCost = shop.diamondCost * purchaseCount;
     const goldCost = shop.goldCost * purchaseCount;
     const quantity = shop.quantity * purchaseCount;
@@ -225,7 +253,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // ── アリーナ: 戦績記録 ────────────────────────────────
   if (action === 'arena_battle') {
-    const won = Boolean(body.won);
+    if (typeof body.won !== 'boolean') return res.status(400).json({ error: 'won must be boolean' });
+    const won = body.won;
     const pointsGained = clamp(Number(body.pointsGained) || 0, 0, MAX_ARENA_POINTS_PER_WIN);
     const goldReward   = won ? clamp(Number(body.goldReward) || 0, 0, MAX_ARENA_GOLD_PER_WIN) : 0;
     const diamondReward = won ? clamp(Number(body.diamondReward) || 0, 0, MAX_ARENA_DIAMOND_WIN) : 0;
@@ -258,19 +287,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (action === 'raid_battle') {
     const bossId = typeof body.bossId === 'string' ? body.bossId : null;
     if (!bossId) return res.status(400).json({ error: 'Missing bossId' });
-    const damage = clamp(Number(body.damageDealt) || 0, 0, MAX_RAID_DAMAGE);
+    const bossMaxHp = RAID_BOSS_MAX_HP[bossId];
+    if (!bossMaxHp) return res.status(400).json({ error: 'Unknown bossId' });
+    const damage = toIntegerInRange(body.damageDealt, 1, MAX_RAID_DAMAGE);
+    if (damage === null) return res.status(400).json({ error: `damageDealt must be an integer between 1 and ${MAX_RAID_DAMAGE}` });
 
     interface RaidState { bossId: string; currentHp: number; totalDamageDealt: number; entryCount: number }
     const newState = await prisma.$transaction(async tx => {
       const fresh = await tx.player.findUniqueOrThrow({ where: { playerId: player.playerId } });
       const miscData = (fresh.miscData ?? {}) as Record<string, unknown>;
-      const raidStates: RaidState[] = Array.isArray(miscData.raidStates) ? (miscData.raidStates as RaidState[]) : [];
+      const raidStates: RaidState[] = Array.isArray(miscData.raidStates)
+        ? (miscData.raidStates as RaidState[]).filter(state => state && typeof state.bossId === 'string' && RAID_BOSS_MAX_HP[state.bossId])
+        : [];
 
       const existing = raidStates.find(s => s.bossId === bossId);
-      const bossMaxHp = DEFAULT_BOSS_HP[bossId] ?? FALLBACK_BOSS_HP;
+      const currentHp = existing ? clamp(existing.currentHp, 0, bossMaxHp) : bossMaxHp;
+      const appliedDamage = Math.min(damage, currentHp);
       const computed: RaidState = existing
-        ? { ...existing, currentHp: Math.max(0, existing.currentHp - damage), totalDamageDealt: existing.totalDamageDealt + damage, entryCount: existing.entryCount + 1 }
-        : { bossId, currentHp: Math.max(0, bossMaxHp - damage), totalDamageDealt: damage, entryCount: 1 };
+        ? { ...existing, currentHp: currentHp - appliedDamage, totalDamageDealt: Math.min(bossMaxHp, clamp(existing.totalDamageDealt, 0, bossMaxHp) + appliedDamage), entryCount: Math.min(1_000_000, clamp(existing.entryCount, 0, 1_000_000) + 1) }
+        : { bossId, currentHp: bossMaxHp - appliedDamage, totalDamageDealt: appliedDamage, entryCount: 1 };
       const updatedRaidStates = existing ? raidStates.map(s => s.bossId === bossId ? computed : s) : [...raidStates, computed];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -283,14 +318,57 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // ── ガチャ結果保存 ────────────────────────────────────────
   if (action === 'summon_save') {
-    interface SummonUnit { masterId: string; rarity: string; resultType: string }
-    const poolId = body.poolId as string;
-    const units = (body.units as SummonUnit[]) ?? [];
-    if (!units.length) return res.status(400).json({ error: 'units required' });
-    if (units.length > MAX_SUMMON_UNITS_PER_CALL) return res.status(400).json({ error: 'too many units' });
+    interface SummonUnit { masterId: string; rarity: SummonRarity }
+    const poolId = typeof body.poolId === 'string' ? body.poolId : '';
+    const rule = SUMMON_SERVER_RULES[poolId];
+    if (!rule) return res.status(400).json({ error: 'Invalid summon pool' });
+    if (!Array.isArray(body.units)) return res.status(400).json({ error: 'units array required' });
+    const units = body.units as SummonUnit[];
+    if (!rule.counts.includes(units.length)) return res.status(400).json({ error: 'Invalid summon count' });
+    const expectedDiamond = units.length === 10 ? rule.cost10 : rule.cost1;
+    const diamondSpent = toIntegerInRange(body.diamondSpent ?? 0, 0, 10_000);
+    if (diamondSpent !== expectedDiamond) return res.status(400).json({ error: 'Invalid summon cost' });
+    const invalidUnit = units.some(unit => {
+      if (!unit || typeof unit.masterId !== 'string' || typeof unit.rarity !== 'string') return true;
+      const canonicalRarity = UNIT_RARITY_BY_ID.get(unit.masterId);
+      return canonicalRarity !== unit.rarity || !rule.rarities.includes(unit.rarity);
+    });
+    if (invalidUnit) return res.status(400).json({ error: 'Invalid summon result' });
+
+    const ticketItemId = typeof body.ticketItemId === 'string' ? body.ticketItemId : null;
+    const validTicket = poolId === 'summon_ticket'
+      ? ticketItemId === 'item_summon_ticket' || (units.length === 1 && ticketItemId === 'item_summon_ticket_sr')
+      : poolId === 'summon_ssr_ticket'
+        ? ticketItemId === 'item_summon_ticket_ssr'
+        : ticketItemId === null;
+    if (!validTicket) return res.status(400).json({ error: 'Invalid summon payment' });
+
     const now = new Date();
-    await prisma.$transaction(async tx => {
-      const newUnits = units.filter(u => u.resultType === 'new');
+    try {
+      const result = await prisma.$transaction(async tx => {
+      const fresh = await tx.player.findUniqueOrThrow({ where: { playerId: player.playerId } });
+      if (fresh.diamond < diamondSpent) throw new Error('INSUFFICIENT_DIAMOND');
+      if (rule.tutorial) {
+        const priorTutorial = await tx.summonHistory.count({ where: { playerId: player.playerId, poolId: 'tutorial_free' } });
+        if (priorTutorial > 0) throw new Error('TUTORIAL_SUMMON_USED');
+      }
+      if (ticketItemId) {
+        const ticketCount = ticketItemId === 'item_summon_ticket' ? units.length : 1;
+        const consumed = await tx.playerItem.updateMany({
+          where: { playerId: player.playerId, itemId: ticketItemId, quantity: { gte: ticketCount } },
+          data: { quantity: { decrement: ticketCount } },
+        });
+        if (consumed.count !== 1) throw new Error('INSUFFICIENT_TICKET');
+      }
+
+      const owned = await tx.ownedUnit.findMany({ where: { playerId: player.playerId }, select: { masterId: true } });
+      const seen = new Set(owned.map(unit => unit.masterId));
+      const resultTypes = units.map(unit => {
+        if (seen.has(unit.masterId)) return 'crystal' as const;
+        seen.add(unit.masterId);
+        return 'new' as const;
+      });
+      const newUnits = units.filter((_, index) => resultTypes[index] === 'new');
       if (newUnits.length > 0) {
         const nowMs = BigInt(Date.now());
         await tx.ownedUnit.createMany({
@@ -304,13 +382,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
       await tx.summonHistory.createMany({
-        data: units.map(u => ({ playerId: player.playerId, poolId, masterId: u.masterId, rarity: u.rarity, resultType: u.resultType, pulledAt: now })),
+        data: units.map((unit, index) => ({ playerId: player.playerId, poolId, masterId: unit.masterId, rarity: unit.rarity, resultType: resultTypes[index], pulledAt: now })),
       });
-      if (body.diamondSpent && Number(body.diamondSpent) > 0) {
-        await tx.player.update({ where: { playerId: player.playerId }, data: { diamond: { decrement: Number(body.diamondSpent) } } });
+      if (diamondSpent > 0) {
+        await tx.player.update({ where: { playerId: player.playerId }, data: { diamond: { decrement: diamondSpent } } });
       }
-    });
-    return res.status(200).json({ ok: true, saved: units.length });
+        return resultTypes;
+      });
+      return res.status(200).json({ ok: true, saved: units.length, resultTypes: result });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'INSUFFICIENT_DIAMOND') return res.status(400).json({ error: 'ダイヤが不足しています' });
+      if (error instanceof Error && error.message === 'INSUFFICIENT_TICKET') return res.status(400).json({ error: '召喚チケットが不足しています' });
+      if (error instanceof Error && error.message === 'TUTORIAL_SUMMON_USED') return res.status(409).json({ error: '初回無料召喚は受取済みです' });
+      throw error;
+    }
   }
 
   // ── ユニット全件同期 ───────────────────────────────────────
@@ -323,7 +408,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const units = (body.units as UnitRecord[]) ?? [];
     if (!Array.isArray(units)) return res.status(400).json({ error: 'units array required' });
     if (units.length > MAX_UNITS_SYNC_COUNT) return res.status(400).json({ error: 'too many units' });
-    const validUnits = units.filter(u => typeof u?.instanceId === 'string' && u.instanceId && typeof u?.masterId === 'string' && u.masterId);
+    const validUnits = units.filter(u =>
+      typeof u?.instanceId === 'string' && u.instanceId.length > 0 && u.instanceId.length <= 100
+      && typeof u?.masterId === 'string' && UNIT_RARITY_BY_ID.has(u.masterId),
+    );
+    if (validUnits.length !== units.length || new Set(validUnits.map(unit => unit.instanceId)).size !== validUnits.length) {
+      return res.status(400).json({ error: 'invalid unit records' });
+    }
     await prisma.$transaction([
       prisma.ownedUnit.deleteMany({ where: { playerId: player.playerId } }),
       prisma.ownedUnit.createMany({
@@ -333,7 +424,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           awakenRank: clamp(u.awakenRank ?? 0, 0, 10), awakeningCount: clamp(u.awakeningCount ?? 0, 0, 10),
           currentRarity: (() => { const r = u.currentRarity; if (r === 'CROWN' || r === 'crown' || r === 8 || r === '8') return 'CROWN'; const n = Number(r); return (n >= 1 && n <= 7) ? String(n) : '1'; })(),
           isLocked: u.isLocked ?? false,
-          acquiredAt: BigInt(u.acquiredAt ?? Date.now()),
+          acquiredAt: BigInt(toIntegerInRange(u.acquiredAt ?? Date.now(), 0, Number.MAX_SAFE_INTEGER) ?? Date.now()),
         })),
         skipDuplicates: true,
       }),
@@ -344,12 +435,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // ── ギルド作成 ────────────────────────────────────────────
   if (action === 'guild_create') {
     const name = (typeof body.name === 'string' ? body.name : '').trim();
-    const emblem = (body.emblem as string) ?? '⚔️';
-    if (!name) return res.status(400).json({ error: 'ギルド名を入力してください' });
-    await prisma.guildMember.deleteMany({ where: { playerId: player.playerId } });
-    const guild = await prisma.guild.create({
-      data: { name, emblem, description: 'ギルドへようこそ！', members: { create: { playerId: player.playerId, role: 'master' } } },
-      include: { members: true },
+    const emblem = typeof body.emblem === 'string' && GUILD_EMBLEMS.includes(body.emblem as typeof GUILD_EMBLEMS[number]) ? body.emblem : '⚔️';
+    if (name.length < 2 || name.length > 20) return res.status(400).json({ error: 'ギルド名は2〜20文字で入力してください' });
+    const guild = await prisma.$transaction(async tx => {
+      await detachFromGuild(tx, player.playerId);
+      return tx.guild.create({
+        data: { name, emblem, description: 'ギルドへようこそ！', members: { create: { playerId: player.playerId, role: 'master' } } },
+        include: { members: true },
+      });
     });
     return res.json({ guild, myRole: 'master' });
   }
@@ -358,17 +451,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (action === 'guild_join') {
     const guildId = body.guildId as string;
     if (!guildId) return res.status(400).json({ error: 'guildId required' });
-    const guild = await prisma.guild.findUnique({ where: { id: guildId } });
-    if (!guild) return res.status(404).json({ error: 'Guild not found' });
-    await prisma.guildMember.deleteMany({ where: { playerId: player.playerId } });
-    await prisma.guildMember.create({ data: { guildId, playerId: player.playerId, role: 'member' } });
-    const updated = await prisma.guild.findUnique({ where: { id: guildId }, include: { members: true } });
-    return res.json({ guild: updated, myRole: 'member' });
+    try {
+      const updated = await prisma.$transaction(async tx => {
+        const guild = await tx.guild.findUnique({ where: { id: guildId }, include: { members: true } });
+        if (!guild) throw new Error('GUILD_NOT_FOUND');
+        const currentMembership = await tx.guildMember.findUnique({ where: { playerId: player.playerId } });
+        if (currentMembership?.guildId === guildId) return { guild, role: currentMembership.role };
+        if (guild.members.length >= MAX_GUILD_MEMBERS) throw new Error('GUILD_FULL');
+        await detachFromGuild(tx, player.playerId);
+        await tx.guildMember.create({ data: { guildId, playerId: player.playerId, role: 'member' } });
+        const joinedGuild = await tx.guild.findUniqueOrThrow({ where: { id: guildId }, include: { members: true } });
+        return { guild: joinedGuild, role: 'member' };
+      });
+      return res.json({ guild: updated.guild, myRole: updated.role });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'GUILD_NOT_FOUND') return res.status(404).json({ error: 'Guild not found' });
+      if (error instanceof Error && error.message === 'GUILD_FULL') return res.status(409).json({ error: 'ギルドの定員に達しています' });
+      throw error;
+    }
   }
 
   // ── ギルド脱退 ────────────────────────────────────────────
   if (action === 'guild_leave') {
-    await prisma.guildMember.deleteMany({ where: { playerId: player.playerId } });
+    await prisma.$transaction(tx => detachFromGuild(tx, player.playerId));
     return res.json({ success: true });
   }
 
@@ -376,7 +481,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (action === 'friend_request') {
     const arcanaId = (body.arcanaPlayerId as string | undefined)?.trim().toUpperCase();
     if (!arcanaId) return res.status(400).json({ error: 'arcanaPlayerId が必要です' });
-    if (!arcanaId.startsWith('ARC-')) return res.status(400).json({ error: 'IDの形式が正しくありません（ARC-xxxxx）' });
+    if (!isValidArcanaPlayerId(arcanaId)) return res.status(400).json({ error: 'IDの形式が正しくありません（ARC-xxxxx）' });
 
     const target = await prisma.player.findFirst({ where: { arcanaPlayerId: arcanaId } });
     if (!target) return res.status(404).json({ error: 'プレイヤーが見つかりません' });
@@ -384,6 +489,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const alreadyFriend = await prisma.friend.findUnique({ where: { playerId_friendId: { playerId: player.playerId, friendId: target.playerId } } });
     if (alreadyFriend) return res.status(409).json({ error: '既にフレンドです' });
+
+    const [friendCount, targetFriendCount, sentRequestCount] = await Promise.all([
+      prisma.friend.count({ where: { playerId: player.playerId } }),
+      prisma.friend.count({ where: { playerId: target.playerId } }),
+      prisma.friendRequest.count({ where: { fromPlayerId: player.playerId } }),
+    ]);
+    if (friendCount >= MAX_FRIENDS) return res.status(409).json({ error: 'フレンド上限に達しています' });
+    if (targetFriendCount >= MAX_FRIENDS) return res.status(409).json({ error: '相手のフレンド上限に達しています' });
+    if (sentRequestCount >= MAX_SENT_FRIEND_REQUESTS) return res.status(429).json({ error: '送信中の申請が多すぎます' });
 
     const alreadySent = await prisma.friendRequest.findUnique({ where: { fromPlayerId_toPlayerId: { fromPlayerId: player.playerId, toPlayerId: target.playerId } } });
     if (alreadySent) return res.status(409).json({ error: '既に申請済みです' });
@@ -414,15 +528,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const result = await prisma.$transaction(async tx => {
       const req2 = await tx.friendRequest.findFirst({ where: { id: requestId, toPlayerId: player.playerId } });
       if (!req2) return null;
+      const [myFriendCount, senderFriendCount] = await Promise.all([
+        tx.friend.count({ where: { playerId: player.playerId } }),
+        tx.friend.count({ where: { playerId: req2.fromPlayerId } }),
+      ]);
+      if (myFriendCount >= MAX_FRIENDS || senderFriendCount >= MAX_FRIENDS) return 'limit' as const;
       const deleted = await tx.friendRequest.deleteMany({ where: { id: requestId, toPlayerId: player.playerId } });
       if (deleted.count === 0) return null;
       await tx.friend.createMany({
         data: [{ playerId: player.playerId, friendId: req2.fromPlayerId }, { playerId: req2.fromPlayerId, friendId: player.playerId }],
         skipDuplicates: true,
       });
-      return true;
+      return 'accepted' as const;
     });
     if (!result) return res.status(404).json({ error: '申請が見つかりません（既に処理済みの可能性があります）' });
+    if (result === 'limit') return res.status(409).json({ error: 'どちらかのフレンド上限に達しています' });
     return res.json({ ok: true });
   }
 

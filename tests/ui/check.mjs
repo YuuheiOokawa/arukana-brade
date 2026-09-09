@@ -11,7 +11,10 @@ try {
   browser=await chromium.launch({executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   const report=[];
   const context=await browser.newContext();
-  await context.route('**/api/**',r=>r.fulfill({status:200,contentType:'application/json',body:'{}'}));
+  await context.route('**/api/**',r=>{
+    const isSummon=r.request().postData()?.includes('summon_save');
+    return r.fulfill({status:200,contentType:'application/json',body:isSummon?'{"ok":true}':'{}'});
+  });
   const fontDir=process.env.QA_FONT_DIR;
   if(fontDir) await context.route('**/__qa-fonts/**',r=>r.fulfill({body:readFileSync(path.join(fontDir,'files',r.request().url().split('/').pop())),contentType:'font/woff2'}));
   const page=await context.newPage();

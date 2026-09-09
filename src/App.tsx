@@ -1,37 +1,6 @@
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { BottomNav } from './components/layout/BottomNav';
-import { HomePage } from './features/home/HomePage';
-import { UnitsPage } from './features/units/UnitsPage';
-import { UnitDetailPage } from './features/units/UnitDetailPage';
-import { PartyPage } from './features/party/PartyPage';
-import { QuestsPage } from './features/quests/QuestsPage';
-import { FriendSelectPage } from './features/friends/FriendSelectPage';
-import { BattlePage } from './features/battle/BattlePage';
-import { EnhancePage } from './features/enhance/EnhancePage';
-import { SummonPage } from './features/summon/SummonPage';
-import { ItemsPage } from './features/items/ItemsPage';
-import { EquipmentPage } from './features/equipment/EquipmentPage';
-import { MissionsPage } from './features/missions/MissionsPage';
-import { RaidPage } from './features/raid/RaidPage';
-import { GuildPage } from './features/guild/GuildPage';
-import { FriendPage } from './features/social/FriendPage';
-import { PvPPage } from './features/pvp/PvPPage';
-import { TitleScreen } from './features/tutorial/TitleScreen';
-import { TutorialIntroScreen } from './features/tutorial/TutorialIntroScreen';
-import { PlayerNameInputScreen } from './features/tutorial/PlayerNameInputScreen';
-import { HeroSelectScreen } from './features/tutorial/HeroSelectScreen';
-import { TutorialBattleScreen } from './features/tutorial/TutorialBattleScreen';
-import { TutorialCompleteScreen } from './features/tutorial/TutorialCompleteScreen';
-import { TutorialGachaScreen } from './features/tutorial/TutorialGachaScreen';
-import { ScenarioScreen } from './features/scenario/ScenarioScreen';
-import { ProfilePage } from './features/profile/ProfilePage';
-import { CollectionPage } from './features/collection/CollectionPage';
-import { GiftBoxPage } from './features/gifts/GiftBoxPage';
-import { ShopPage } from './features/shop/ShopPage';
-import { LoginPage } from './features/auth/LoginPage';
-import { RegisterPage } from './features/auth/RegisterPage';
-import { UIShowcasePage } from './features/debug/UIShowcasePage';
 import { useAuthStore } from './stores/authStore';
 import { useTutorialStore } from './stores/tutorialStore';
 import type { TutorialPhase } from './types';
@@ -42,6 +11,44 @@ import { populateImageCache } from './lib/unitImage';
 import { ADMIN_EMAIL } from './utils/admin';
 
 const LAST_USER_KEY = 'arcana-last-user-id';
+
+const HomePage = lazy(() => import('./features/home/HomePage').then(module => ({ default: module.HomePage })));
+const UnitsPage = lazy(() => import('./features/units/UnitsPage').then(module => ({ default: module.UnitsPage })));
+const UnitDetailPage = lazy(() => import('./features/units/UnitDetailPage').then(module => ({ default: module.UnitDetailPage })));
+const PartyPage = lazy(() => import('./features/party/PartyPage').then(module => ({ default: module.PartyPage })));
+const QuestsPage = lazy(() => import('./features/quests/QuestsPage').then(module => ({ default: module.QuestsPage })));
+const FriendSelectPage = lazy(() => import('./features/friends/FriendSelectPage').then(module => ({ default: module.FriendSelectPage })));
+const BattlePage = lazy(() => import('./features/battle/BattlePage').then(module => ({ default: module.BattlePage })));
+const EnhancePage = lazy(() => import('./features/enhance/EnhancePage').then(module => ({ default: module.EnhancePage })));
+const SummonPage = lazy(() => import('./features/summon/SummonPage').then(module => ({ default: module.SummonPage })));
+const ItemsPage = lazy(() => import('./features/items/ItemsPage').then(module => ({ default: module.ItemsPage })));
+const EquipmentPage = lazy(() => import('./features/equipment/EquipmentPage').then(module => ({ default: module.EquipmentPage })));
+const MissionsPage = lazy(() => import('./features/missions/MissionsPage').then(module => ({ default: module.MissionsPage })));
+const RaidPage = lazy(() => import('./features/raid/RaidPage').then(module => ({ default: module.RaidPage })));
+const GuildPage = lazy(() => import('./features/guild/GuildPage').then(module => ({ default: module.GuildPage })));
+const FriendPage = lazy(() => import('./features/social/FriendPage').then(module => ({ default: module.FriendPage })));
+const PvPPage = lazy(() => import('./features/pvp/PvPPage').then(module => ({ default: module.PvPPage })));
+const TitleScreen = lazy(() => import('./features/tutorial/TitleScreen').then(module => ({ default: module.TitleScreen })));
+const TutorialIntroScreen = lazy(() => import('./features/tutorial/TutorialIntroScreen').then(module => ({ default: module.TutorialIntroScreen })));
+const PlayerNameInputScreen = lazy(() => import('./features/tutorial/PlayerNameInputScreen').then(module => ({ default: module.PlayerNameInputScreen })));
+const HeroSelectScreen = lazy(() => import('./features/tutorial/HeroSelectScreen').then(module => ({ default: module.HeroSelectScreen })));
+const TutorialBattleScreen = lazy(() => import('./features/tutorial/TutorialBattleScreen').then(module => ({ default: module.TutorialBattleScreen })));
+const TutorialCompleteScreen = lazy(() => import('./features/tutorial/TutorialCompleteScreen').then(module => ({ default: module.TutorialCompleteScreen })));
+const TutorialGachaScreen = lazy(() => import('./features/tutorial/TutorialGachaScreen').then(module => ({ default: module.TutorialGachaScreen })));
+const ScenarioScreen = lazy(() => import('./features/scenario/ScenarioScreen').then(module => ({ default: module.ScenarioScreen })));
+const ProfilePage = lazy(() => import('./features/profile/ProfilePage').then(module => ({ default: module.ProfilePage })));
+const CollectionPage = lazy(() => import('./features/collection/CollectionPage').then(module => ({ default: module.CollectionPage })));
+const GiftBoxPage = lazy(() => import('./features/gifts/GiftBoxPage').then(module => ({ default: module.GiftBoxPage })));
+const ShopPage = lazy(() => import('./features/shop/ShopPage').then(module => ({ default: module.ShopPage })));
+const LoginPage = lazy(() => import('./features/auth/LoginPage').then(module => ({ default: module.LoginPage })));
+const RegisterPage = lazy(() => import('./features/auth/RegisterPage').then(module => ({ default: module.RegisterPage })));
+const UIShowcasePage = lazy(() => import('./features/debug/UIShowcasePage').then(module => ({ default: module.UIShowcasePage })));
+
+const RouteFallback = () => (
+  <div className="fixed inset-0 flex items-center justify-center" style={{ background: '#08081a' }} role="status" aria-label="画面を読み込み中">
+    <div className="w-10 h-10 rounded-full border-2 border-purple-500 border-t-transparent animate-spin" />
+  </div>
+);
 
 // 認証済みでないと通過できないガード
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
@@ -206,6 +213,7 @@ const AppContent = () => {
           ✓ 保存済み
         </div>
       )}
+      <Suspense fallback={<RouteFallback />}>
       <Routes>
         {/* 認証不要 */}
         <Route path="/title"    element={<TitleScreen />} />
@@ -246,6 +254,7 @@ const AppContent = () => {
 
         <Route path="*" element={<Navigate to="/title" replace />} />
       </Routes>
+      </Suspense>
       {showNav && <BottomNav />}
     </div>
   );

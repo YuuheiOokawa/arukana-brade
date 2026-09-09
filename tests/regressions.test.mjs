@@ -15,6 +15,12 @@ const {useRaidStore, getDefaultRaidStates} = await import('../src/stores/raidSto
 const {useQuestStore} = await import('../src/stores/questStore.ts');
 const {resolvePlayableStage} = await import('../src/utils/stageResolver.ts');
 const {characterAssets} = await import('../src/data/assets/characterAssets.ts');
+const {RAID_BOSSES} = await import('../src/data/events.ts');
+const {SUMMON_POOLS} = await import('../src/data/summons.ts');
+const {PRESET_GUILDS, useGuildStore} = await import('../src/stores/guildStore.ts');
+const {useMissionStore} = await import('../src/stores/missionStore.ts');
+const {useLoginBonusStore} = await import('../src/stores/loginBonusStore.ts');
+const {GUILD_EMBLEMS, RAID_BOSS_MAX_HP, SUMMON_SERVER_RULES, UNIT_IDS_BY_RARITY, UNIT_RARITY_BY_ID, isValidArcanaPlayerId, toIntegerInRange} = await import('../lib/gameRules.ts');
 
 test('Replacing or moving a party leader keeps the leader in a unique occupied slot', () => {
   const store = usePartyStore.getState();
@@ -125,6 +131,18 @@ test('Equipment enhancement consumes large EXP across levels and rejects invalid
   assert.deepEqual(useEquipmentStore.getState().ownedEquipments[0], snapshot);
 });
 
+test('Unequipping one slot preserves the other equipment slots', () => {
+  useEquipmentStore.setState({ownedEquipments:[]});
+  const weaponId = useEquipmentStore.getState().addEquipment('equip_sword_iron');
+  const armorId = useEquipmentStore.getState().addEquipment('equip_leather_armor');
+  useEquipmentStore.getState().equipToUnit(weaponId, 'unit-instance', 'weapon');
+  useEquipmentStore.getState().equipToUnit(armorId, 'unit-instance', 'armor');
+  useEquipmentStore.getState().unequipFromUnit('unit-instance', 'weapon');
+  const equipments = useEquipmentStore.getState().ownedEquipments;
+  assert.equal(equipments.find(e => e.instanceId === weaponId).equippedTo, undefined);
+  assert.equal(equipments.find(e => e.instanceId === armorId).equippedTo, 'unit-instance');
+});
+
 test('Raid damage cannot heal a boss and overkill is clamped', () => {
   const defaults = getDefaultRaidStates();
   useRaidStore.setState({raidStates:defaults});
@@ -149,9 +167,73 @@ test('Every playable stage type resolves and star ratings stay within 1-3', () =
   assert.equal(useQuestStore.getState().getStars('stage_1_1_2'), 0);
 });
 
+test('Area rewards cannot be duplicated or recorded with malformed keys', () => {
+  useQuestStore.setState({claimedAreaRewards:[]});
+  useQuestStore.getState().claimAreaReward('1_2');
+  useQuestStore.getState().claimAreaReward('1_2');
+  useQuestStore.getState().claimAreaReward('../admin');
+  assert.deepEqual(useQuestStore.getState().claimedAreaRewards, ['1_2']);
+});
+
+test('Invalid mission and guild progress cannot reduce or corrupt counters', () => {
+  const dailyBefore = structuredClone(useMissionStore.getState().daily);
+  const weeklyBefore = structuredClone(useMissionStore.getState().weeklyProgresses);
+  for (const count of [-1, 0, NaN, Infinity]) {
+    useMissionStore.getState().addDailyProgress('battle', count);
+    useMissionStore.getState().addWeeklyProgress('battle', count);
+  }
+  assert.deepEqual(useMissionStore.getState().daily, dailyBefore);
+  assert.deepEqual(useMissionStore.getState().weeklyProgresses, weeklyBefore);
+
+  useGuildStore.getState().createGuild('test', '⚔️', 'player');
+  const guildBefore = structuredClone(useGuildStore.getState().guild);
+  const guildMissionsBefore = structuredClone(useGuildStore.getState().guildMissions);
+  for (const count of [-1, 0, NaN, Infinity]) {
+    useGuildStore.getState().addGuildExp(count);
+    useGuildStore.getState().updateGuildMissionProgress('battle', count);
+  }
+  assert.deepEqual(useGuildStore.getState().guild, guildBefore);
+  assert.deepEqual(useGuildStore.getState().guildMissions, guildMissionsBefore);
+});
+
+test('Corrupt login bonus days are normalized before granting rewards', () => {
+  useLoginBonusStore.setState({currentDay: 99, claimedDays: [], lastClaimedDate: null});
+  const reward = useLoginBonusStore.getState().claimToday();
+  assert.equal(reward.day, 30);
+  assert.equal(useLoginBonusStore.getState().currentDay, 1);
+  assert.deepEqual(useLoginBonusStore.getState().claimedDays, []);
+});
+
 test('Every character asset in the central manifest is adopted and exists', () => {
   for (const asset of Object.values(characterAssets)) {
     assert.equal(asset.status, 'adopted', asset.id);
     assert.ok(existsSync(`public${asset.path}`), asset.path);
   }
+});
+
+test('Shared server rules match every unit, summon pool, raid boss, and guild emblem', () => {
+  const catalogIds = Object.values(UNIT_IDS_BY_RARITY).flat();
+  assert.equal(catalogIds.length, 150);
+  assert.equal(new Set(catalogIds).size, 150);
+  for (const unit of UNIT_MASTER) assert.equal(UNIT_RARITY_BY_ID.get(unit.id), unit.rarity, unit.id);
+  for (const pool of SUMMON_POOLS) {
+    const rule = SUMMON_SERVER_RULES[pool.id];
+    assert.ok(rule, pool.id);
+    assert.equal(rule.cost1, pool.cost1);
+    assert.equal(rule.cost10, pool.cost10);
+    for (const rate of pool.rates) {
+      for (const unitId of rate.unitIds) assert.equal(UNIT_RARITY_BY_ID.get(unitId), rate.rarity, `${pool.id}/${unitId}`);
+    }
+  }
+  for (const boss of RAID_BOSSES) assert.equal(RAID_BOSS_MAX_HP[boss.id], boss.totalHp, boss.id);
+  for (const guild of PRESET_GUILDS) assert.ok(GUILD_EMBLEMS.includes(guild.emblem), guild.id);
+});
+
+test('External integer and player ID validators reject ambiguous input', () => {
+  assert.equal(toIntegerInRange(3, 1, 10), 3);
+  assert.equal(toIntegerInRange('3', 1, 10), 3);
+  for (const value of [0, 1.5, NaN, Infinity, 11, 'oops']) assert.equal(toIntegerInRange(value, 1, 10), null);
+  assert.equal(isValidArcanaPlayerId('ARC-MTTKI3WL'), true);
+  assert.equal(isValidArcanaPlayerId('arc-MTTKI3WL'), false);
+  assert.equal(isValidArcanaPlayerId('ARC-../../'), false);
 });

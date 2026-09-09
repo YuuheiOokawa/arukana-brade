@@ -54,6 +54,9 @@ interface LoginBonusStore {
 }
 
 const today = () => localDateStr();
+const normalizeDay = (day: number) => Number.isFinite(day)
+  ? Math.max(1, Math.min(30, Math.floor(day)))
+  : 1;
 
 export const useLoginBonusStore = create<LoginBonusStore>()(
   persist(
@@ -78,15 +81,16 @@ export const useLoginBonusStore = create<LoginBonusStore>()(
       claimToday: () => {
         const { canClaim, currentDay, claimedDays } = get();
         if (!canClaim()) return null;
-        const reward = LOGIN_BONUS_SCHEDULE.find(d => d.day === currentDay) ?? LOGIN_BONUS_SCHEDULE[0];
-        const cycleEnds = currentDay >= 30;
-        const nextDay = cycleEnds ? 1 : currentDay + 1;
+        const safeDay = normalizeDay(currentDay);
+        const reward = LOGIN_BONUS_SCHEDULE[safeDay - 1];
+        const cycleEnds = safeDay >= 30;
+        const nextDay = cycleEnds ? 1 : safeDay + 1;
         set({
           lastClaimedDate: today(),
           // 30日サイクルが終わったら claimedDays をリセットする。
           // リセットしないと2周目以降、カレンダーの1〜30日目が(前周期分の記録のせいで)
           // 常に「受取済み」表示になり、当日マスも含めて全マス済マークが付いてしまっていた。
-          claimedDays: cycleEnds ? [] : [...claimedDays, currentDay],
+          claimedDays: cycleEnds ? [] : [...new Set([...claimedDays.filter(day => day >= 1 && day <= 30), safeDay])],
           currentDay: nextDay,
         });
         return reward;
@@ -94,7 +98,7 @@ export const useLoginBonusStore = create<LoginBonusStore>()(
 
       getNextReward: () => {
         const { currentDay } = get();
-        return LOGIN_BONUS_SCHEDULE.find(d => d.day === currentDay) ?? LOGIN_BONUS_SCHEDULE[0];
+        return LOGIN_BONUS_SCHEDULE[normalizeDay(currentDay) - 1];
       },
     }),
     { name: 'arcana-login-bonus' }

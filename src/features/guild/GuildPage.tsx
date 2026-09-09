@@ -6,6 +6,7 @@ import { TopBar } from '../../components/layout/TopBar';
 import { GuildEmblem, MemberIcon, RewardIcon } from '../../components/ui/GameGlyphs';
 import { getItemMaster } from '../../data/items';
 import { Icon } from '../../components/ui/Icon';
+import { GUILD_EMBLEMS } from '../../../lib/gameRules';
 
 type Tab = 'home' | 'members' | 'mission' | 'chat';
 
@@ -79,7 +80,10 @@ export const GuildPage = () => {
 
   const handleCreateGuild = async () => {
     const name = newGuildName.trim();
-    if (!name) return;
+    if (name.length < 2 || name.length > 20) {
+      setApiError('ギルド名は2〜20文字で入力してください');
+      return;
+    }
     setApiLoading(true);
     setApiError(null);
     try {
@@ -92,8 +96,6 @@ export const GuildPage = () => {
       const data = await res.json() as { guild?: ApiGuild; error?: string };
       if (!res.ok || data.error) {
         setApiError(data.error ?? 'ギルド作成に失敗しました');
-        // APIが失敗してもローカルには保存する
-        createGuild(name, newGuildEmblem, player.name);
       } else if (data.guild) {
         createGuild(data.guild.name, data.guild.emblem, player.name);
       }
@@ -118,8 +120,8 @@ export const GuildPage = () => {
         body: JSON.stringify({ action: 'guild_create', name: pg.name, emblem: pg.emblem }),
       });
       if (!createRes.ok) {
-        // APIエラーでもローカルには参加
-        createGuild(pg.name, pg.emblem, player.name);
+        const errorData = await createRes.json().catch(() => null) as { error?: string } | null;
+        setApiError(errorData?.error ?? 'ギルド参加に失敗しました');
         return;
       }
       const data = await createRes.json() as { guild?: ApiGuild };
@@ -143,8 +145,6 @@ export const GuildPage = () => {
     } catch { /* offline時はローカルのみ */ }
     leaveGuild();
   };
-
-  const EMBLEMS = ['⚔️', '🛡️', '🔥', '💧', '🌿', '⚡', '🌑', '🌟', '🐉', '👑'];
 
   if (!guild) {
     return (
@@ -195,21 +195,22 @@ export const GuildPage = () => {
               <input
                 type="text" value={newGuildName} onChange={e => setNewGuildName(e.target.value)}
                 placeholder="ギルド名を入力..."
+                minLength={2} maxLength={20}
                 className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm outline-none focus:border-purple-500"
               />
             </div>
             <div className="mb-4">
               <p className="text-gray-500 text-xs mb-2">エンブレム</p>
               <div className="flex gap-2 flex-wrap">
-                {EMBLEMS.map(e => (
+                {GUILD_EMBLEMS.map(e => (
                   <button key={e} onClick={() => setNewGuildEmblem(e)}
-                    aria-label={`エンブレム ${EMBLEMS.indexOf(e) + 1}`}
+                    aria-label={`エンブレム ${GUILD_EMBLEMS.indexOf(e) + 1}`}
                     className="rounded-xl flex items-center justify-center transition-all"><GuildEmblem emblem={e} size={40} selected={newGuildEmblem === e}/></button>
                 ))}
               </div>
             </div>
             <GameButton variant="primary" fullWidth
-              disabled={!newGuildName.trim() || apiLoading}
+              disabled={newGuildName.trim().length < 2 || apiLoading}
               onClick={() => void handleCreateGuild()}>
               {apiLoading ? '作成中...' : 'ギルドを作成'}
             </GameButton>
