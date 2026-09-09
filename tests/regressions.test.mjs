@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
+import sharp from 'sharp';
 const memory = new Map();
 Object.defineProperty(globalThis, 'localStorage', {value: { getItem: k => memory.get(k) ?? null, setItem: (k,v) => memory.set(k,v), removeItem: k => memory.delete(k) }, configurable:true});
 globalThis.window = {localStorage:globalThis.localStorage};
@@ -100,6 +101,26 @@ test('Every character has existing art at every rarity and valid clipping bounds
   assert.equal(getUnitImagePath('unknown',1),null);
   const generated=JSON.parse(readFileSync('src/data/generated-character-art.json','utf8'));
   assert.equal(Object.keys(generated).length,100);
+});
+
+test('Every referenced character image fully decodes with its catalog dimensions', async () => {
+  const checked = new Set();
+  for (const master of UNIT_MASTER) for (const rarity of [1,2,3,4,5,6,7,'CROWN']) {
+    const src = getUnitImagePath(master.id, rarity);
+    if (!src || checked.has(src)) continue;
+    checked.add(src);
+    const art = getCharacterArt(src, master.id);
+    assert.ok(art, src);
+    const image = sharp(`public${src}`);
+    const metadata = await image.metadata();
+    assert.equal(metadata.format, 'webp', src);
+    assert.equal(metadata.width, art.width, src);
+    assert.equal(metadata.height, art.height, src);
+    // metadata() only reads the header. Force a pixel decode so truncated/corrupt
+    // WebP files cannot pass merely because their RIFF header still exists.
+    await image.resize(1, 1).raw().toBuffer();
+  }
+  assert.equal(checked.size, 410);
 });
 
 test('Arena prestige styles and progress remain correct from entry to ARCANA', () => {
