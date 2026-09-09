@@ -133,10 +133,10 @@ export const HeroSelectScreen = () => {
               {/* キャラクター画像（大） */}
               <div className="relative"
                 style={{
-                  height: 220,
+                  height: 288,
                   background: ELEMENT_GRADIENT[selectedHero.element],
                 }}>
-                <div className="flex justify-center"><UnitIcon src={resolveUnitImage(selectedHero.unitMasterId, 3)} masterId={selectedHero.unitMasterId} unitRarity={3} element={selectedHero.element} fallbackEmoji={selectedHero.emoji} size={220} height={220} variant="full" alt={selectedHero.name}/></div>
+                <div className="flex justify-center"><UnitIcon src={resolveUnitImage(selectedHero.unitMasterId, 3)} masterId={selectedHero.unitMasterId} unitRarity={3} element={selectedHero.element} fallbackEmoji={selectedHero.emoji} size={192} height={288} variant="full" alt={selectedHero.name}/></div>
                 {/* 属性バッジ */}
                 <div className="absolute top-2 right-2 px-2 py-0.5 rounded-lg text-xs font-bold"
                   style={{

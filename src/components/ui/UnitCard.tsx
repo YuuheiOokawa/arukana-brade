@@ -119,11 +119,11 @@ export const UnitIcon = ({ src, masterId, unitRarity=1, element, size=56, height
   const source = [src,staticSource].find((s):s is string=>!!s && s!==UNIT_IMAGE_FALLBACK && !failed.has(s));
   const art = source ? getCharacterArt(source,masterId) : null;
   const onError = () => { if(source) setFailed(prev=>new Set([...prev,source])); };
-  if(!source) return <div role="img" aria-label={`${label}（画像未登録）`} className={`unit-portrait unit-portrait-fallback ${className}`} style={{width:size,height:h}}><Icon name={element in {fire:1,water:1,wind:1,earth:1,light:1,dark:1,thunder:1} ? element as IconName : 'unknown'} size={Math.min(size*.4,40)}/><small>{label.slice(0,6)}</small></div>;
-  if(!art) return <div className={`unit-portrait ${className}`} style={{width:size,height:h}}><img src={source} alt={label} loading="lazy" decoding="async" onError={onError} style={{objectFit:mode==='full'?'contain':'cover',objectPosition:'50% 20%'}}/></div>;
+  if(!source) return <div role="img" aria-label={`${label}（画像未登録）`} className={`unit-portrait unit-portrait-fallback ${className}`} style={{width:size,maxWidth:'100%',aspectRatio:`${size} / ${h}`}}><Icon name={element in {fire:1,water:1,wind:1,earth:1,light:1,dark:1,thunder:1} ? element as IconName : 'unknown'} size={Math.min(size*.4,40)}/><small>{label.slice(0,6)}</small></div>;
+  if(!art) return <div className={`unit-portrait ${className}`} style={{width:size,maxWidth:'100%',aspectRatio:`${size} / ${h}`}}><img src={source} alt={label} loading="lazy" decoding="async" onError={onError} style={{objectFit:mode==='full'?'contain':'cover',objectPosition:'50% 20%'}}/></div>;
   const [x,y,w,fullHeight]=art.crop;
   const cropHeight=mode==='portrait' ? Math.min(fullHeight,w*1.15) : fullHeight;
-  return <div className={`unit-portrait ${className}`} style={{width:size,height:h}}>
+  return <div className={`unit-portrait ${className}`} style={{width:size,maxWidth:'100%',aspectRatio:`${size} / ${h}`}}>
     <svg className="unit-art" role="img" aria-label={label} viewBox={`0 0 ${w} ${cropHeight}`} preserveAspectRatio={mode==='full'?'xMidYMid meet':'xMidYMin slice'}>
       <defs><clipPath id={clipId}><rect width={w} height={cropHeight}/></clipPath></defs>
       <image href={source} x={-x} y={-y} width={art.width} height={art.height} clipPath={`url(#${clipId})`} onError={onError}/>

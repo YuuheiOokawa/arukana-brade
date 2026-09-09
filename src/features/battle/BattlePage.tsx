@@ -676,8 +676,9 @@ export const BattlePage = () => {
                   unitRarity={a.currentRarity}
                   fallbackEmoji={a.emoji}
                   element={a.element}
-                  size={24}
-                  height={36}
+                  size={32}
+                  height={40}
+                  variant="portrait"
                 />
                 <span className={`text-xs w-28 truncate ${a.isFriend ? 'text-purple-300' : 'text-gray-200'}`}>
                   {a.name}

@@ -337,7 +337,7 @@ export const ItemsPage = () => {
                     disabled={isMax}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${isMax ? 'opacity-40' : 'active:scale-98'}`}
                     style={{ background: 'rgba(40,20,80,0.6)', border: '1px solid rgba(139,92,246,0.2)' }}>
-                    <UnitIcon src={resolveUnitImage(u.masterId, u.currentRarity)} masterId={u.masterId} unitRarity={u.currentRarity} fallbackEmoji={m.emoji} element={m.element} size={42} height={50} variant="portrait" alt={m.name}/>
+                    <UnitIcon src={resolveUnitImage(u.masterId, u.currentRarity)} masterId={u.masterId} unitRarity={u.currentRarity} fallbackEmoji={m.emoji} element={m.element} size={48} height={60} variant="portrait" alt={m.name}/>
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-bold text-sm truncate">{m.name}</p>
                       <p className="text-gray-500 text-xs">Lv.{u.level} / {cap}{isMax ? ' (MAX)' : ''}</p>

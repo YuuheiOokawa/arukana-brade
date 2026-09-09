@@ -151,7 +151,7 @@ export const FriendSelectPage = () => {
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    {leaderMaster ? <UnitIcon masterId={leaderMaster.id} src={resolveUnitImage(leaderMaster.id, 1)} unitRarity={1} fallbackEmoji={leaderMaster.emoji} element={leaderMaster.element} size={56} height={70} className="flex-shrink-0"/> : <div className="flex-shrink-0 w-14 h-14 rounded-lg flex items-center justify-center"><Icon name="unknown"/></div>}
+                    {leaderMaster ? <UnitIcon masterId={leaderMaster.id} src={resolveUnitImage(leaderMaster.id, 1)} unitRarity={1} fallbackEmoji={leaderMaster.emoji} element={leaderMaster.element} size={64} height={80} className="flex-shrink-0"/> : <div className="flex-shrink-0 w-14 h-14 rounded-lg flex items-center justify-center"><Icon name="unknown"/></div>}
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">

@@ -542,8 +542,9 @@ export const SummonPage = () => {
                       unitRarity={RARITY_TYPE_TO_STAR[currentUnit.rarity] ?? 1}
                       fallbackEmoji={currentUnit.emoji}
                       element={currentUnit.element}
-                      size={90}
-                      height={150}
+                      size={120}
+                      height={180}
+                      variant="full"
                     />
                   </div>
                   <div className="font-black text-white text-base mb-1 text-center">{currentUnit.name}</div>
@@ -625,8 +626,9 @@ export const SummonPage = () => {
                     unitRarity={RARITY_TYPE_TO_STAR[best.u.rarity] ?? 1}
                     fallbackEmoji={best.u.emoji}
                     element={best.u.element}
-                    size={100}
-                    height={170}
+                    size={144}
+                    height={216}
+                    variant="full"
                   />
                 </div>
                 <p className="text-white font-black text-lg">{best.u.name}</p>
@@ -657,8 +659,9 @@ export const SummonPage = () => {
                         unitRarity={RARITY_TYPE_TO_STAR[u.rarity] ?? 1}
                         fallbackEmoji={u.emoji}
                         element={u.element}
-                        size={64}
-                        height={96}
+                        size={80}
+                        height={112}
+                        variant="portrait"
                       />
                     </div>
                     <div className="summon-result-name text-white font-bold leading-tight mb-0.5">{u.name}</div>

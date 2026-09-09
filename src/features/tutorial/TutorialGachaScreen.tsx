@@ -393,8 +393,9 @@ export const TutorialGachaScreen = () => {
                           unitRarity={RARITY_TYPE_TO_STAR[results[revealIndex].rarity] ?? 1}
                           fallbackEmoji={results[revealIndex].emoji}
                           element={results[revealIndex].element}
-                          size={90}
-                          height={160}
+                          size={120}
+                          height={180}
+                          variant="full"
                         />
                       </div>
                       <div className="font-black text-white text-base mb-1">{results[revealIndex].name}</div>
@@ -500,8 +501,9 @@ export const TutorialGachaScreen = () => {
                       unitRarity={RARITY_TYPE_TO_STAR[u.rarity] ?? 1}
                       fallbackEmoji={u.emoji}
                       element={u.element}
-                      size={44}
-                      height={66}
+                      size={48}
+                      height={64}
+                      variant="portrait"
                     />
                   </div>
                   <div className="text-white font-bold text-[9px] leading-tight mb-0.5 truncate">{u.name}</div>

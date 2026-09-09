@@ -208,15 +208,16 @@ export const ProfilePage = () => {
                   unitRarity={favRarity}
                   fallbackEmoji={favMaster.emoji}
                   element={favMaster.element}
-                  size={64}
-                  height={96}
+                  size={108}
+                  height={144}
+                  variant="portrait"
                   className="rounded-xl flex-shrink-0"
                 />
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <RarityBadge rarity={favRarity} size="sm" />
                   <p className="text-white font-bold mt-1">{favMaster.name}</p>
                   <p className="text-gray-400 text-xs">{favMaster.title}</p>
-                  <div className="flex gap-3 mt-1 text-xs text-gray-500">
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-gray-500">
                     <span>Lv.{favUnit.level}</span>
                     <span>覚醒 {favUnit.awakeningCount ?? 0}/4</span>
                     <span style={{ color: getStarColor(favRarity) }}>{getStarDisplay(favRarity)}</span>
@@ -419,8 +420,9 @@ export const ProfilePage = () => {
                           unitRarity={r}
                           fallbackEmoji={m.emoji}
                           element={m.element}
-                          size={36}
-                          height={54}
+                          size={48}
+                          height={60}
+                          variant="portrait"
                         />
                         <div className="flex-1 min-w-0">
                           <span className="text-white text-xs font-bold truncate block">{m.name}</span>

@@ -216,8 +216,9 @@ export const PartyPage = () => {
                     unitRarity={unit.currentRarity ?? RARITY_TYPE_TO_STAR[master.rarity] ?? 1}
                     fallbackEmoji={master.emoji}
                     element={master.element}
-                    size={44}
-                    height={64}
+                    size={56}
+                    height={72}
+                    variant="portrait"
                   />
 
                   {/* 情報 */}
