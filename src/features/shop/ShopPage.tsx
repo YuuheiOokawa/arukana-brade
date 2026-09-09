@@ -44,6 +44,7 @@ export const ShopPage = () => {
   const buyStamina = async (pack: typeof STAMINA_PACKS[0]) => {
     if (buying) return;
     if (player.diamond < pack.diamondCost) { showMsg('ダイヤが不足しています'); return; }
+    if (player.stamina >= player.maxStamina) { showMsg('スタミナは既に最大です'); return; }
     setBuying(true);
     try {
       const res = await fetch('/api/actions', {
@@ -71,23 +72,16 @@ export const ShopPage = () => {
     const hasEnough = shop.diamondCost > 0 ? player.diamond >= totalCost : player.gold >= totalCost;
     if (!hasEnough) { showMsg(shop.diamondCost > 0 ? 'ダイヤが不足しています' : 'ゴールドが不足しています'); return; }
     setBuying(true);
-    let totalQty = 0;
     try {
-      for (let i = 0; i < qty; i++) {
-        const res = await fetch('/api/actions', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'shop_item', packId: shop.id }),
-        });
-        const data = await res.json() as { ok?: boolean; error?: string; diamond?: number; gold?: number; itemId?: string; quantityAdded?: number };
-        if (!res.ok || !data.ok) { showMsg(data.error ?? '購入に失敗しました'); return; }
-        usePlayerStore.setState(s => ({
-          player: { ...s.player, diamond: data.diamond ?? s.player.diamond, gold: data.gold ?? s.player.gold },
-        }));
-        if (data.itemId && data.quantityAdded) { addItem(data.itemId, data.quantityAdded); totalQty += data.quantityAdded; }
-      }
-      showMsg(`${shop.label} ×${totalQty}を購入しました`);
+      const res = await fetch('/api/actions', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'shop_item', packId: shop.id, purchaseCount: qty }),
+      });
+      const data = await res.json() as { ok?: boolean; error?: string; diamond?: number; gold?: number; itemId?: string; quantityAdded?: number };
+      if (!res.ok || !data.ok) { showMsg(data.error ?? '購入に失敗しました'); return; }
+      usePlayerStore.setState(s => ({ player: { ...s.player, diamond: data.diamond ?? s.player.diamond, gold: data.gold ?? s.player.gold } }));
+      if (data.itemId && data.quantityAdded) addItem(data.itemId, data.quantityAdded);
+      showMsg(`${shop.label} ×${data.quantityAdded ?? 0}を購入しました`);
     } catch {
       showMsg('通信エラーが発生しました');
     } finally {

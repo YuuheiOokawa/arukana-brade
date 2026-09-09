@@ -10,6 +10,11 @@ const {useUnitStore} = await import('../src/stores/unitStore.ts');
 const {UNIT_MASTER} = await import('../src/data/units.ts');
 const {getUnitImagePath, getCharacterArt, starRarityToImageRarity} = await import('../src/lib/unitImage.ts');
 const {RANK_TITLES, getArenaFrameStyle, getRankProgressPct, getPointsToNextRank} = await import('../src/data/arenaRank.ts');
+const {useEquipmentStore, EXP_PER_LEVEL} = await import('../src/stores/equipmentStore.ts');
+const {useRaidStore, getDefaultRaidStates} = await import('../src/stores/raidStore.ts');
+const {useQuestStore} = await import('../src/stores/questStore.ts');
+const {resolvePlayableStage} = await import('../src/utils/stageResolver.ts');
+const {characterAssets} = await import('../src/data/assets/characterAssets.ts');
 
 test('Replacing or moving a party leader keeps the leader in a unique occupied slot', () => {
   const store = usePartyStore.getState();
@@ -38,6 +43,21 @@ test('Negative and non-finite spending cannot mint currency or stamina', () => {
   assert.equal(usePlayerStore.getState().player.stamina,10);
   assert.equal(s.spendGold(101),false); assert.equal(s.spendGold(100),true);
   assert.equal(usePlayerStore.getState().player.gold,0);
+});
+
+test('Invalid and excessive reward additions cannot corrupt currency or EXP', () => {
+  const before = structuredClone(usePlayerStore.getState().player);
+  for (const amount of [-1, 0, NaN, Infinity]) {
+    usePlayerStore.getState().addGold(amount);
+    usePlayerStore.getState().addDiamond(amount);
+    usePlayerStore.getState().addExp(amount);
+  }
+  assert.deepEqual(usePlayerStore.getState().player, before);
+  usePlayerStore.setState({player:{...before,gold:999_999_998,diamond:999_998}});
+  usePlayerStore.getState().addGold(100);
+  usePlayerStore.getState().addDiamond(100);
+  assert.equal(usePlayerStore.getState().player.gold,999_999_999);
+  assert.equal(usePlayerStore.getState().player.diamond,999_999);
 });
 
 test('Invalid inventory quantities do not create or consume items', () => {
@@ -89,4 +109,49 @@ test('Arena prestige styles and progress remain correct from entry to ARCANA', (
   assert.equal(getPointsToNextRank(apexThreshold), null);
   assert.ok(getRankProgressPct(50) > 0 && getRankProgressPct(50) < 100);
   assert.equal(getPointsToNextRank(50), 50);
+});
+
+test('Equipment enhancement consumes large EXP across levels and rejects invalid input', () => {
+  useEquipmentStore.setState({ownedEquipments:[]});
+  assert.equal(useEquipmentStore.getState().addEquipment('missing'), '');
+  const id = useEquipmentStore.getState().addEquipment('equip_sword_iron');
+  assert.ok(id);
+  const needed = EXP_PER_LEVEL(1) + EXP_PER_LEVEL(2) + 1;
+  useEquipmentStore.getState().levelUpEquipment(id, needed);
+  assert.equal(useEquipmentStore.getState().ownedEquipments[0].level, 3);
+  const snapshot = structuredClone(useEquipmentStore.getState().ownedEquipments[0]);
+  useEquipmentStore.getState().levelUpEquipment(id, -1);
+  useEquipmentStore.getState().levelUpEquipmentBy(id, -2);
+  assert.deepEqual(useEquipmentStore.getState().ownedEquipments[0], snapshot);
+});
+
+test('Raid damage cannot heal a boss and overkill is clamped', () => {
+  const defaults = getDefaultRaidStates();
+  useRaidStore.setState({raidStates:defaults});
+  const boss = defaults[0];
+  const before = structuredClone(useRaidStore.getState().raidStates);
+  assert.deepEqual(useRaidStore.getState().dealDamage(boss.bossId, -100), []);
+  assert.deepEqual(useRaidStore.getState().raidStates, before);
+  useRaidStore.getState().dealDamage(boss.bossId, boss.currentHp + 1000);
+  const after = useRaidStore.getState().raidStates.find(r=>r.bossId===boss.bossId);
+  assert.equal(after.currentHp, 0);
+  assert.equal(after.totalDamageDealt, boss.currentHp);
+});
+
+test('Every playable stage type resolves and star ratings stay within 1-3', () => {
+  assert.ok(resolvePlayableStage('stage_1_1_1'));
+  assert.ok(resolvePlayableStage('event_dark_1'));
+  assert.ok(resolvePlayableStage('raid_raid_dark_lord_stage'));
+  useQuestStore.setState({stageStars:{}});
+  useQuestStore.getState().recordStars('stage_1_1_1', 99);
+  assert.equal(useQuestStore.getState().getStars('stage_1_1_1'), 3);
+  useQuestStore.getState().recordStars('stage_1_1_2', NaN);
+  assert.equal(useQuestStore.getState().getStars('stage_1_1_2'), 0);
+});
+
+test('Every character asset in the central manifest is adopted and exists', () => {
+  for (const asset of Object.values(characterAssets)) {
+    assert.equal(asset.status, 'adopted', asset.id);
+    assert.ok(existsSync(`public${asset.path}`), asset.path);
+  }
 });

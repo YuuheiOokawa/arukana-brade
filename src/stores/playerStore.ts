@@ -4,6 +4,8 @@ import type { PlayerData, OwnedItem } from '../types';
 import { ITEM_MASTER } from '../data/items';
 
 const STAMINA_RECOVERY_INTERVAL = 5 * 60 * 1000; // 5分で1回復
+const MAX_GOLD = 999_999_999;
+const MAX_DIAMOND = 999_999;
 
 interface AuthPlayerSnapshot {
   playerName: string;
@@ -174,7 +176,10 @@ export const usePlayerStore = create<PlayerStore>()(
         }));
       },
 
-      addGold: (amount) => set(s => ({ player: { ...s.player, gold: s.player.gold + amount } })),
+      addGold: (amount) => {
+        if (!Number.isFinite(amount) || amount <= 0) return;
+        set(s => ({ player: { ...s.player, gold: Math.min(MAX_GOLD, s.player.gold + Math.floor(amount)) } }));
+      },
 
       spendGold: (amount) => {
         if (!Number.isFinite(amount) || amount < 0) return false;
@@ -184,7 +189,10 @@ export const usePlayerStore = create<PlayerStore>()(
         return true;
       },
 
-      addDiamond: (amount) => set(s => ({ player: { ...s.player, diamond: s.player.diamond + amount } })),
+      addDiamond: (amount) => {
+        if (!Number.isFinite(amount) || amount <= 0) return;
+        set(s => ({ player: { ...s.player, diamond: Math.min(MAX_DIAMOND, s.player.diamond + Math.floor(amount)) } }));
+      },
 
       spendDiamond: (amount) => {
         if (!Number.isFinite(amount) || amount < 0) return false;
@@ -195,9 +203,10 @@ export const usePlayerStore = create<PlayerStore>()(
       },
 
       addExp: (amount) => {
+        if (!Number.isFinite(amount) || amount <= 0) return;
         set(s => {
           let { exp, rank, maxStamina, stamina } = s.player;
-          exp += amount;
+          exp += Math.floor(amount);
           let ranked = false;
           while (rank < RANK_EXP_TABLE.length && exp >= RANK_EXP_TABLE[rank - 1]) {
             exp -= RANK_EXP_TABLE[rank - 1];

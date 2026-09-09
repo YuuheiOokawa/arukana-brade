@@ -28,6 +28,7 @@ export const useEquipmentStore = create<EquipmentStore>()(
       ownedEquipments: [],
 
       addEquipment: (masterId) => {
+        if (!getEquipmentMaster(masterId)) return '';
         const id = newInstId();
         set(s => ({
           ownedEquipments: [...s.ownedEquipments, { instanceId: id, masterId, level: 1, exp: 0 }],
@@ -75,18 +76,19 @@ export const useEquipmentStore = create<EquipmentStore>()(
       },
 
       levelUpEquipment: (equipInstanceId, expGain) => {
+        if (!Number.isFinite(expGain) || expGain <= 0) return;
         set(s => ({
           ownedEquipments: s.ownedEquipments.map(eq => {
             if (eq.instanceId !== equipInstanceId) return eq;
             const master = getEquipmentMaster(eq.masterId);
             const maxLevel = master ? getEffectiveMaxLevel(master, eq.evolveRank ?? 0) : 80;
             let { level, exp } = eq;
-            exp += expGain;
-            const needed = EXP_PER_LEVEL(level);
-            if (exp >= needed && level < maxLevel) {
-              exp -= needed;
+            exp += Math.floor(expGain);
+            while (level < maxLevel && exp >= EXP_PER_LEVEL(level)) {
+              exp -= EXP_PER_LEVEL(level);
               level++;
             }
+            if (level >= maxLevel) exp = 0;
             return { ...eq, level, exp };
           }),
         }));
@@ -94,6 +96,7 @@ export const useEquipmentStore = create<EquipmentStore>()(
 
       // 一括レベルアップ（ゴールド消費の確認は呼び出し側で行う）
       levelUpEquipmentBy: (equipInstanceId, levels) => {
+        if (!Number.isInteger(levels) || levels <= 0) return;
         set(s => ({
           ownedEquipments: s.ownedEquipments.map(eq => {
             if (eq.instanceId !== equipInstanceId) return eq;

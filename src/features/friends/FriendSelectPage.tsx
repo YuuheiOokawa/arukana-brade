@@ -5,8 +5,7 @@ import { FRIEND_CANDIDATES } from '../../data/friends';
 import { UNIT_MASTER } from '../../data/units';
 import { useQuestStore } from '../../stores/questStore';
 import { usePlayerStore } from '../../stores/playerStore';
-import { getStage } from '../../data/quests';
-import { getEventStage, getRaidStage } from '../../data/events';
+import { resolvePlayableStage } from '../../utils/stageResolver';
 import { ElementBadge } from '../../components/ui/ElementBadge';
 import { TopBar } from '../../components/layout/TopBar';
 import type { FriendCandidate } from '../../types';
@@ -39,7 +38,7 @@ export const FriendSelectPage = () => {
   // (以前は getStage のみだったため、イベントクエストを選ぶと該当ステージが
   //  見つからず即座にクエスト画面へ戻されてしまっていた)
   const stage = pendingStageId
-    ? getStage(pendingStageId) ?? getEventStage(pendingStageId) ?? getRaidStage(pendingStageId)
+    ? resolvePlayableStage(pendingStageId)
     : null;
 
   // DBフレンドを取得してFriendCandidate形式に変換
