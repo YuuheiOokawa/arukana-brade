@@ -91,6 +91,7 @@ export const useQuestStore = create<QuestStore>()(
       },
 
       claimAreaReward: (areaKey) => {
+        if (!/^\d+_\d+$/.test(areaKey) || get().claimedAreaRewards.includes(areaKey)) return;
         set(s => ({ claimedAreaRewards: [...s.claimedAreaRewards, areaKey] }));
       },
     }),

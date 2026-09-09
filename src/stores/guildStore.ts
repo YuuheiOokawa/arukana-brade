@@ -126,17 +126,19 @@ export const useGuildStore = create<GuildStore>()(
       leaveGuild: () => set({ guild: null }),
 
       addGuildExp: (amount) => {
+        if (!Number.isFinite(amount) || amount <= 0) return;
+        const safeAmount = Math.floor(amount);
         set(s => {
           if (!s.guild) return {};
           let { level, exp } = s.guild;
-          exp += amount;
+          exp += safeAmount;
           let needed = level * 1000;
           while (exp >= needed && level < 20) { exp -= needed; level++; needed = level * 1000; }
           return {
             guild: { ...s.guild, level, exp },
             guildMissions: s.guildMissions.map(m =>
               m.type === 'exp' && !m.claimed && m.progress < m.target
-                ? { ...m, progress: Math.min(m.target, m.progress + amount) }
+                ? { ...m, progress: Math.min(m.target, m.progress + safeAmount) }
                 : m
             ),
           };
@@ -144,6 +146,8 @@ export const useGuildStore = create<GuildStore>()(
       },
 
       updateGuildMissionProgress: (type, count = 1) => {
+        if (!Number.isFinite(count) || count <= 0) return;
+        const safeCount = Math.floor(count);
         set(s => {
           // addGuildExp 同様、ギルド未所属なら進捗を進めない
           // (以前はガードがなく、ギルドに入る前に達成したクエスト/バトル回数が
@@ -153,7 +157,7 @@ export const useGuildStore = create<GuildStore>()(
           return {
             guildMissions: s.guildMissions.map(m =>
               m.type === type && !m.claimed && m.progress < m.target
-                ? { ...m, progress: Math.min(m.target, m.progress + count) }
+                ? { ...m, progress: Math.min(m.target, m.progress + safeCount) }
                 : m
             ),
           };
@@ -170,10 +174,13 @@ export const useGuildStore = create<GuildStore>()(
       },
 
       sendChatMessage: (playerName, text) => {
+        const safeText = text.trim().slice(0, 200);
+        if (!safeText) return;
+        const safeName = playerName.trim().slice(0, 20) || '勇者';
         set(s => ({
           guildChatMessages: [
             ...s.guildChatMessages,
-            { sender: playerName, text, timestamp: Date.now() },
+            { sender: safeName, text: safeText, timestamp: Date.now() },
           ].slice(-50),
         }));
       },

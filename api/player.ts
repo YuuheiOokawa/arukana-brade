@@ -21,6 +21,10 @@ const clamp = (v: unknown, min: number, max: number): number => {
 };
 
 const STAGE_RE = /^stage_\d+_\d+_\d+$/;
+const AREA_RE = /^\d+_\d+$/;
+const WORLD_RE = /^world_\d+$/;
+const ITEM_RE = /^item_[a-z0-9_]{1,80}$/;
+const EQUIPMENT_RE = /^equip_[a-z0-9_]{1,80}$/;
 const isValidStageId = (id: string) => STAGE_RE.test(id);
 
 function validateStageProgression(incoming: string[], dbCleared: Set<string>): string[] {
@@ -195,6 +199,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         };
       });
     };
+    const loginDaysArray = (v: unknown): number[] => Array.isArray(v)
+      ? [...new Set(v.filter((day): day is number => Number.isInteger(day) && day >= 1 && day <= 30))]
+      : [];
+    const nullableDateString = (v: unknown): string | null =>
+      typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null;
+    const arenaHistoryArray = (v: unknown): object[] => Array.isArray(v)
+      ? v.filter((entry): entry is object => Boolean(entry) && typeof entry === 'object' && !Array.isArray(entry)).slice(-100)
+      : [];
 
     const prevMisc = (player.miscData ?? {}) as Record<string, unknown>;
     const p = state.player as P | undefined;
@@ -215,6 +227,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (invalidUnit || new Set(units.map(unit => unit.instanceId)).size !== units.length) {
         return res.status(400).json({ error: 'invalid unit records' });
       }
+    }
+    if (hasItems) {
+      const invalidItem = items.length > 5000 || items.some(item =>
+        !item || typeof item.itemId !== 'string' || !ITEM_RE.test(item.itemId)
+        || typeof item.quantity !== 'number' || !Number.isInteger(item.quantity) || item.quantity < 0,
+      );
+      if (invalidItem || new Set(items.map(item => item.itemId)).size !== items.length) {
+        return res.status(400).json({ error: 'invalid item records' });
+      }
+    }
+    if (hasEquips) {
+      const invalidEquipment = equips.length > 2000 || equips.some(equip =>
+        !equip || typeof equip.instanceId !== 'string' || equip.instanceId.length < 1 || equip.instanceId.length > 100
+        || typeof equip.masterId !== 'string' || !EQUIPMENT_RE.test(equip.masterId)
+        || (equip.equippedTo !== undefined && equip.equippedTo !== null && typeof equip.equippedTo !== 'string'),
+      );
+      if (invalidEquipment || new Set(equips.map(equip => equip.instanceId)).size !== equips.length) {
+        return res.status(400).json({ error: 'invalid equipment records' });
+      }
+    }
+    if (hasParties) {
+      const invalidParty = parties.length > 20 || parties.some(party => {
+        if (!party || typeof party.id !== 'string' || party.id.length < 1 || party.id.length > 80 || !Array.isArray(party.slots) || party.slots.length > 5) return true;
+        const slots = party.slots;
+        if (slots.some(slot => slot !== null && typeof slot !== 'string')) return true;
+        const occupied = slots.filter((slot): slot is string => typeof slot === 'string');
+        return new Set(occupied).size !== occupied.length
+          || (party.leaderId !== undefined && party.leaderId !== null && (typeof party.leaderId !== 'string' || !occupied.includes(party.leaderId)));
+      });
+      if (invalidParty || new Set(parties.map(party => party.id)).size !== parties.length) {
+        return res.status(400).json({ error: 'invalid party records' });
+      }
+    }
+    const ownedUnitIds = new Set(hasUnits
+      ? units.map(unit => unit.instanceId)
+      : (hasEquips || hasParties)
+        ? (await prisma.ownedUnit.findMany({ where: { playerId: player.playerId }, select: { instanceId: true } })).map(unit => unit.instanceId)
+        : []);
+    if (hasEquips && equips.some(equip => typeof equip.equippedTo === 'string' && !ownedUnitIds.has(equip.equippedTo))) {
+      return res.status(400).json({ error: 'equipment references an unowned unit' });
+    }
+    if (hasParties && parties.some(party => (party.slots ?? []).some(slot => typeof slot === 'string' && !ownedUnitIds.has(slot)))) {
+      return res.status(400).json({ error: 'party references an unowned unit' });
     }
     if (p && Object.hasOwn(p, 'favoriteUnitInstanceId') && typeof p.favoriteUnitInstanceId === 'string') {
       const ownsFavorite = hasUnits
@@ -289,20 +344,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await tx.ownedEquipment.createMany({ data: equips.filter(e => e.instanceId && e.masterId).map(e => ({ instanceId: String(e.instanceId), playerId: player.playerId, masterId: String(e.masterId), level: clamp(e.level, 1, 999), exp: clamp(e.exp, 0, 999_999_999), equippedTo: e.equippedTo ?? null })), skipDuplicates: true });
       }
 
-      if (Array.isArray(state.clearedStageIds)) {
-        const rawCleared = (state.clearedStageIds as string[]).filter(isValidStageId);
+      const hasQuestProgress = state.clearedStageIds !== undefined || state.claimedAreaRewards !== undefined || state.lastSelectedWorldId !== undefined;
+      if (hasQuestProgress) {
         const existing = await tx.playerQuestProgress.findUnique({ where: { playerId: player.playerId } });
-        const validatedCleared = validateStageProgression(rawCleared, new Set(existing?.clearedStageIds ?? []));
+        const validatedCleared = Array.isArray(state.clearedStageIds)
+          ? validateStageProgression((state.clearedStageIds as unknown[]).filter((id): id is string => typeof id === 'string' && isValidStageId(id)), new Set(existing?.clearedStageIds ?? []))
+          : existing?.clearedStageIds ?? [];
+        const claimedAreaRewards = state.claimedAreaRewards !== undefined
+          ? [...new Set(strArray(state.claimedAreaRewards).filter(area => AREA_RE.test(area)))]
+          : existing?.claimedAreaRewards ?? [];
+        const lastSelectedWorldId = state.lastSelectedWorldId !== undefined
+          ? (typeof state.lastSelectedWorldId === 'string' && WORLD_RE.test(state.lastSelectedWorldId) ? state.lastSelectedWorldId : null)
+          : existing?.lastSelectedWorldId ?? null;
         await tx.playerQuestProgress.upsert({
         where: { playerId: player.playerId },
-        update: { clearedStageIds: validatedCleared, claimedAreaRewards: (state.claimedAreaRewards as string[]) ?? [], lastSelectedWorldId: (state.lastSelectedWorldId as string) ?? null },
-        create: { playerId: player.playerId, clearedStageIds: validatedCleared, claimedAreaRewards: (state.claimedAreaRewards as string[]) ?? [], lastSelectedWorldId: (state.lastSelectedWorldId as string) ?? null },
+        update: { clearedStageIds: validatedCleared, claimedAreaRewards, lastSelectedWorldId },
+        create: { playerId: player.playerId, clearedStageIds: validatedCleared, claimedAreaRewards, lastSelectedWorldId },
         });
       }
 
       if (hasParties) await tx.playerParty.deleteMany({ where: { playerId: player.playerId } });
       if (hasParties && parties.length > 0) {
-        await tx.playerParty.createMany({ data: parties.map(party => ({ id: `${player.playerId}_${party.id}`, playerId: player.playerId, partyId: String(party.id), name: typeof party.name === 'string' ? party.name : 'パーティ', slots: (party.slots ?? []) as (string | null)[], leaderId: party.leaderId ?? null, isActive: party.id === (state.activePartyId as string) })) });
+        await tx.playerParty.createMany({ data: parties.map(party => ({ id: `${player.playerId}_${party.id}`, playerId: player.playerId, partyId: String(party.id), name: typeof party.name === 'string' ? party.name.trim().slice(0, 30) || 'パーティ' : 'パーティ', slots: [...(party.slots ?? []).slice(0, 5), ...Array(5).fill(null)].slice(0, 5) as (string | null)[], leaderId: party.leaderId ?? null, isActive: party.id === (state.activePartyId as string) })) });
       }
 
       const md = state.missionDaily as { date?: string; progresses?: unknown } | undefined;
@@ -318,16 +381,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const existingLogin = hasLoginBonus ? await tx.playerLoginBonus.findUnique({ where: { playerId: player.playerId } }) : null;
       if (hasLoginBonus) await tx.playerLoginBonus.upsert({
         where: { playerId: player.playerId },
-        update: { lastClaimedDate: state.loginBonusLastClaimedDate !== undefined ? (state.loginBonusLastClaimedDate as string) : existingLogin?.lastClaimedDate, lastLoginDate: state.loginBonusLastLoginDate !== undefined ? (state.loginBonusLastLoginDate as string) : existingLogin?.lastLoginDate, claimedDays: (state.loginBonusClaimedDays as number[]) ?? existingLogin?.claimedDays ?? [], currentDay: typeof state.loginBonusCurrentDay === 'number' ? clamp(state.loginBonusCurrentDay, 1, 30) : existingLogin?.currentDay ?? 1 },
-        create: { playerId: player.playerId, lastClaimedDate: (state.loginBonusLastClaimedDate as string) ?? null, lastLoginDate: (state.loginBonusLastLoginDate as string) ?? null, claimedDays: (state.loginBonusClaimedDays as number[]) ?? [], currentDay: typeof state.loginBonusCurrentDay === 'number' ? state.loginBonusCurrentDay : 1 },
+        update: { lastClaimedDate: state.loginBonusLastClaimedDate !== undefined ? nullableDateString(state.loginBonusLastClaimedDate) : existingLogin?.lastClaimedDate, lastLoginDate: state.loginBonusLastLoginDate !== undefined ? nullableDateString(state.loginBonusLastLoginDate) : existingLogin?.lastLoginDate, claimedDays: state.loginBonusClaimedDays !== undefined ? loginDaysArray(state.loginBonusClaimedDays) : existingLogin?.claimedDays ?? [], currentDay: typeof state.loginBonusCurrentDay === 'number' ? clamp(state.loginBonusCurrentDay, 1, 30) : existingLogin?.currentDay ?? 1 },
+        create: { playerId: player.playerId, lastClaimedDate: nullableDateString(state.loginBonusLastClaimedDate), lastLoginDate: nullableDateString(state.loginBonusLastLoginDate), claimedDays: loginDaysArray(state.loginBonusClaimedDays), currentDay: typeof state.loginBonusCurrentDay === 'number' ? clamp(state.loginBonusCurrentDay, 1, 30) : 1 },
       });
 
       const ar = state.arenaRecord as { wins?: number; losses?: number; rank?: number; points?: number; season?: number } | undefined;
-      const existingArena = ar ? await tx.playerArenaRecord.findUnique({ where: { playerId: player.playerId } }) : null;
-      if (ar) await tx.playerArenaRecord.upsert({
+      const hasArena = Boolean(ar) || state.arenaBattleHistory !== undefined;
+      const existingArena = hasArena ? await tx.playerArenaRecord.findUnique({ where: { playerId: player.playerId } }) : null;
+      if (hasArena) await tx.playerArenaRecord.upsert({
         where: { playerId: player.playerId },
-        update: { wins: ar.wins !== undefined ? clamp(ar.wins, 0, 1_000_000) : existingArena?.wins ?? 0, losses: ar.losses !== undefined ? clamp(ar.losses, 0, 1_000_000) : existingArena?.losses ?? 0, rank: ar.rank !== undefined ? clamp(ar.rank, 1, 999_999) : existingArena?.rank ?? 999, points: ar.points !== undefined ? clamp(ar.points, 0, 10_000_000) : existingArena?.points ?? 1000, season: ar.season !== undefined ? clamp(ar.season, 1, 10_000) : existingArena?.season ?? 1, battleHistory: (state.arenaBattleHistory ?? existingArena?.battleHistory ?? []) as object[] },
-        create: { playerId: player.playerId, wins: ar?.wins ?? 0, losses: ar?.losses ?? 0, rank: ar?.rank ?? 999, points: ar?.points ?? 1000, season: ar?.season ?? 1, battleHistory: (state.arenaBattleHistory ?? []) as object[] },
+        update: { wins: ar?.wins !== undefined ? clamp(ar.wins, 0, 1_000_000) : existingArena?.wins ?? 0, losses: ar?.losses !== undefined ? clamp(ar.losses, 0, 1_000_000) : existingArena?.losses ?? 0, rank: ar?.rank !== undefined ? clamp(ar.rank, 1, 999_999) : existingArena?.rank ?? 999, points: ar?.points !== undefined ? clamp(ar.points, 0, 10_000_000) : existingArena?.points ?? 1000, season: ar?.season !== undefined ? clamp(ar.season, 1, 10_000) : existingArena?.season ?? 1, battleHistory: state.arenaBattleHistory !== undefined ? arenaHistoryArray(state.arenaBattleHistory) : arenaHistoryArray(existingArena?.battleHistory) },
+        create: { playerId: player.playerId, wins: clamp(ar?.wins ?? 0, 0, 1_000_000), losses: clamp(ar?.losses ?? 0, 0, 1_000_000), rank: clamp(ar?.rank ?? 999, 1, 999_999), points: clamp(ar?.points ?? 1000, 0, 10_000_000), season: clamp(ar?.season ?? 1, 1, 10_000), battleHistory: arenaHistoryArray(state.arenaBattleHistory) },
       });
     });
 

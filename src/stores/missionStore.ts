@@ -80,12 +80,14 @@ export const useMissionStore = create<MissionStore>()(
       },
 
       addDailyProgress: (type, count = 1) => {
+        if (!Number.isFinite(count) || count <= 0) return;
+        const safeCount = Math.floor(count);
         get().checkDailyReset();
         set(s => {
           const newProgresses = s.daily.progresses.map(prog => {
             const mission = DAILY_MISSIONS.find(m => m.id === prog.missionId);
             if (!mission || mission.type !== type || prog.completed) return prog;
-            const newProgress = Math.min(prog.progress + count, mission.target);
+            const newProgress = Math.min(prog.progress + safeCount, mission.target);
             const completed = newProgress >= mission.target;
             return { ...prog, progress: newProgress, completed };
           });
@@ -94,12 +96,14 @@ export const useMissionStore = create<MissionStore>()(
       },
 
       addWeeklyProgress: (type, count = 1) => {
+        if (!Number.isFinite(count) || count <= 0) return;
+        const safeCount = Math.floor(count);
         get().checkWeeklyReset();
         set(s => ({
           weeklyProgresses: s.weeklyProgresses.map(prog => {
             const mission = WEEKLY_MISSIONS.find(m => m.id === prog.missionId);
             if (!mission || mission.type !== type || prog.completed) return prog;
-            const newProgress = Math.min(prog.progress + count, mission.target);
+            const newProgress = Math.min(prog.progress + safeCount, mission.target);
             const completed = newProgress >= mission.target;
             return { ...prog, progress: newProgress, completed };
           }),
