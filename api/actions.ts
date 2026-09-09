@@ -164,6 +164,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const updated = await prisma.$transaction(async tx => {
         const fresh = await tx.player.findUniqueOrThrow({ where: { playerId: player.playerId } });
         if (fresh.diamond < pack.diamondCost) throw new Error('INSUFFICIENT_DIAMOND');
+        if (fresh.stamina >= fresh.maxStamina) throw new Error('STAMINA_FULL');
         const staminaAdd = pack.amount === -1
           ? Math.max(0, fresh.maxStamina - fresh.stamina)
           : pack.amount;
@@ -177,6 +178,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ ok: true, diamond: updated.diamond, stamina: updated.stamina, staminaAdded: updated.staminaAdded });
     } catch (e) {
       if (e instanceof Error && e.message === 'INSUFFICIENT_DIAMOND') return res.status(400).json({ error: 'ダイヤが不足しています' });
+      if (e instanceof Error && e.message === 'STAMINA_FULL') return res.status(400).json({ error: 'スタミナは既に最大です' });
       throw e;
     }
   }
@@ -186,30 +188,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const packId = body.packId as string;
     const shop = ITEM_SHOP.find(s => s.id === packId);
     if (!shop) return res.status(400).json({ error: 'Invalid pack' });
+    const purchaseCount = clamp(body.purchaseCount ?? 1, 1, 10);
+    const diamondCost = shop.diamondCost * purchaseCount;
+    const goldCost = shop.goldCost * purchaseCount;
+    const quantity = shop.quantity * purchaseCount;
 
     try {
       const result = await prisma.$transaction(async tx => {
         const fresh = await tx.player.findUniqueOrThrow({ where: { playerId: player.playerId } });
-        if (shop.diamondCost > 0) {
-          if (fresh.diamond < shop.diamondCost) throw new Error('INSUFFICIENT_DIAMOND');
-        } else if (shop.goldCost > 0) {
-          if (fresh.gold < shop.goldCost) throw new Error('INSUFFICIENT_GOLD');
+        if (diamondCost > 0) {
+          if (fresh.diamond < diamondCost) throw new Error('INSUFFICIENT_DIAMOND');
+        } else if (goldCost > 0) {
+          if (fresh.gold < goldCost) throw new Error('INSUFFICIENT_GOLD');
         }
         const updated = await tx.player.update({
           where: { playerId: player.playerId },
           data: {
-            diamond: shop.diamondCost > 0 ? { decrement: shop.diamondCost } : undefined,
-            gold: shop.goldCost > 0 ? { decrement: shop.goldCost } : undefined,
+            diamond: diamondCost > 0 ? { decrement: diamondCost } : undefined,
+            gold: goldCost > 0 ? { decrement: goldCost } : undefined,
           },
         });
         await tx.playerItem.upsert({
           where: { playerId_itemId: { playerId: player.playerId, itemId: shop.itemId } },
-          update: { quantity: { increment: shop.quantity } },
-          create: { playerId: player.playerId, itemId: shop.itemId, quantity: shop.quantity },
+          update: { quantity: { increment: quantity } },
+          create: { playerId: player.playerId, itemId: shop.itemId, quantity },
         });
         return updated;
       });
-      return res.status(200).json({ ok: true, diamond: result.diamond, gold: result.gold, itemId: shop.itemId, quantityAdded: shop.quantity });
+      return res.status(200).json({ ok: true, diamond: result.diamond, gold: result.gold, itemId: shop.itemId, quantityAdded: quantity });
     } catch (e) {
       if (e instanceof Error && e.message === 'INSUFFICIENT_DIAMOND') return res.status(400).json({ error: 'ダイヤが不足しています' });
       if (e instanceof Error && e.message === 'INSUFFICIENT_GOLD') return res.status(400).json({ error: 'ゴールドが不足しています' });
@@ -221,15 +227,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (action === 'arena_battle') {
     const won = Boolean(body.won);
     const pointsGained = clamp(Number(body.pointsGained) || 0, 0, MAX_ARENA_POINTS_PER_WIN);
-    const goldReward   = clamp(Number(body.goldReward)   || 0, 0, MAX_ARENA_GOLD_PER_WIN);
-    const diamondReward = clamp(Number(body.diamondReward) || 0, 0, MAX_ARENA_DIAMOND_WIN);
+    const goldReward   = won ? clamp(Number(body.goldReward) || 0, 0, MAX_ARENA_GOLD_PER_WIN) : 0;
+    const diamondReward = won ? clamp(Number(body.diamondReward) || 0, 0, MAX_ARENA_DIAMOND_WIN) : 0;
 
     await prisma.$transaction(async tx => {
+      const currentArena = won ? null : await tx.playerArenaRecord.findUnique({ where: { playerId: player.playerId } });
+      const lossPenalty = Math.min(ARENA_LOSS_PENALTY, Math.max(0, currentArena?.points ?? 0));
       await tx.playerArenaRecord.upsert({
         where: { playerId: player.playerId },
         update: won
           ? { wins: { increment: 1 }, points: { increment: pointsGained } }
-          : { losses: { increment: 1 }, points: { decrement: ARENA_LOSS_PENALTY } },
+          : { losses: { increment: 1 }, points: { decrement: lossPenalty } },
         create: { playerId: player.playerId, wins: won ? 1 : 0, losses: won ? 0 : 1, points: won ? pointsGained : 0 },
       });
       if (goldReward > 0 || diamondReward > 0) {

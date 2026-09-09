@@ -163,10 +163,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const prevMisc = (player.miscData ?? {}) as Record<string, unknown>;
     const p = state.player as P | undefined;
-    const units = (Array.isArray(state.ownedUnits) ? state.ownedUnits : []) as U[];
-    const items = (Array.isArray(state.items) ? state.items : []) as I[];
-    const equips = (Array.isArray(state.ownedEquipments) ? state.ownedEquipments : []) as E[];
-    const parties = (Array.isArray(state.parties) ? state.parties : []) as Party[];
+    const hasUnits = Array.isArray(state.ownedUnits);
+    const hasItems = Array.isArray(state.items);
+    const hasEquips = Array.isArray(state.ownedEquipments);
+    const hasParties = Array.isArray(state.parties);
+    const units = (hasUnits ? state.ownedUnits : []) as U[];
+    const items = (hasItems ? state.items : []) as I[];
+    const equips = (hasEquips ? state.ownedEquipments : []) as E[];
+    const parties = (hasParties ? state.parties : []) as Party[];
 
     await prisma.$transaction(async tx => {
       await tx.player.update({
@@ -179,11 +183,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           diamond: p?.diamond !== undefined ? clamp(p.diamond, 0, MAX_DIAMOND) : undefined,
           stamina: p?.stamina !== undefined ? clamp(p.stamina, 0, MAX_STAMINA) : undefined,
           maxStamina: p?.maxStamina !== undefined ? clamp(p.maxStamina, 1, MAX_STAMINA) : undefined,
-          staminaRecoveryTime: p?.staminaRecoveryTime !== undefined ? BigInt(p.staminaRecoveryTime) : undefined,
+          staminaRecoveryTime: typeof p?.staminaRecoveryTime === 'number' && Number.isFinite(p.staminaRecoveryTime) ? BigInt(Math.floor(p.staminaRecoveryTime)) : undefined,
           title: typeof p?.title === 'string' ? p.title.slice(0, 50) : undefined,
           bio: typeof p?.bio === 'string' ? p.bio.slice(0, 200) : undefined,
-          favoriteUnitId: p?.favoriteUnitInstanceId ?? null,
-          loginDays: typeof p?.loginDays === 'number' ? p.loginDays : undefined,
+          favoriteUnitId: p && Object.hasOwn(p, 'favoriteUnitInstanceId') ? p.favoriteUnitInstanceId ?? null : undefined,
+          loginDays: typeof p?.loginDays === 'number' ? clamp(p.loginDays, 1, 100_000) : undefined,
           // arcanaPlayerId はここで更新しない: 登録時(/api/auth)にサーバー側で一度だけ発行される
           // 不変の識別子であり、フレンド申請/削除がこれを検索キーに使う。
           // 以前はクライアントの player.playerId をそのまま書き戻していたため、
@@ -193,8 +197,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           tutorialCompleted: state.tutorialCompleted === true ? true : undefined,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           miscData: JSON.parse(JSON.stringify({
-            awakeningCrystals: (state.awakeningCrystals as Record<string, number>) ?? {},
-            raidStates: (state.raidStates as unknown[]) ?? [],
+            awakeningCrystals: state.awakeningCrystals !== undefined ? (state.awakeningCrystals as Record<string, number>) : (prevMisc.awakeningCrystals ?? {}),
+            raidStates: state.raidStates !== undefined ? (state.raidStates as unknown[]) : (prevMisc.raidStates ?? []),
             // 旧バージョンのクライアントがキーを送らない場合は既存のDB値を保持する
             achievementsClaimed: state.achievementsClaimed !== undefined ? strArray(state.achievementsClaimed) : strArray(prevMisc.achievementsClaimed),
             collectionDiscovered: state.collectionDiscovered !== undefined ? strArray(state.collectionDiscovered) : strArray(prevMisc.collectionDiscovered),
@@ -209,8 +213,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         },
       });
 
-      await tx.ownedUnit.deleteMany({ where: { playerId: player.playerId } });
-      if (units.length > 0) {
+      if (hasUnits) await tx.ownedUnit.deleteMany({ where: { playerId: player.playerId } });
+      if (hasUnits && units.length > 0) {
         await tx.ownedUnit.createMany({
           data: units.filter(u => u.instanceId && u.masterId).map(u => ({
             instanceId: String(u.instanceId), playerId: player.playerId, masterId: String(u.masterId),
@@ -224,47 +228,54 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      await tx.playerItem.deleteMany({ where: { playerId: player.playerId } });
-      if (items.length > 0) {
+      if (hasItems) await tx.playerItem.deleteMany({ where: { playerId: player.playerId } });
+      if (hasItems && items.length > 0) {
         await tx.playerItem.createMany({ data: items.filter(i => i.itemId).map(i => ({ playerId: player.playerId, itemId: String(i.itemId), quantity: clamp(i.quantity, 0, 999_999) })), skipDuplicates: true });
       }
 
-      await tx.ownedEquipment.deleteMany({ where: { playerId: player.playerId } });
-      if (equips.length > 0) {
+      if (hasEquips) await tx.ownedEquipment.deleteMany({ where: { playerId: player.playerId } });
+      if (hasEquips && equips.length > 0) {
         await tx.ownedEquipment.createMany({ data: equips.filter(e => e.instanceId && e.masterId).map(e => ({ instanceId: String(e.instanceId), playerId: player.playerId, masterId: String(e.masterId), level: clamp(e.level, 1, 999), exp: clamp(e.exp, 0, 999_999_999), equippedTo: e.equippedTo ?? null })), skipDuplicates: true });
       }
 
-      const rawCleared = ((state.clearedStageIds as string[]) ?? []).filter(isValidStageId);
-      const existing = await tx.playerQuestProgress.findUnique({ where: { playerId: player.playerId } });
-      const validatedCleared = validateStageProgression(rawCleared, new Set(existing?.clearedStageIds ?? []));
-      await tx.playerQuestProgress.upsert({
+      if (Array.isArray(state.clearedStageIds)) {
+        const rawCleared = (state.clearedStageIds as string[]).filter(isValidStageId);
+        const existing = await tx.playerQuestProgress.findUnique({ where: { playerId: player.playerId } });
+        const validatedCleared = validateStageProgression(rawCleared, new Set(existing?.clearedStageIds ?? []));
+        await tx.playerQuestProgress.upsert({
         where: { playerId: player.playerId },
         update: { clearedStageIds: validatedCleared, claimedAreaRewards: (state.claimedAreaRewards as string[]) ?? [], lastSelectedWorldId: (state.lastSelectedWorldId as string) ?? null },
         create: { playerId: player.playerId, clearedStageIds: validatedCleared, claimedAreaRewards: (state.claimedAreaRewards as string[]) ?? [], lastSelectedWorldId: (state.lastSelectedWorldId as string) ?? null },
-      });
+        });
+      }
 
-      await tx.playerParty.deleteMany({ where: { playerId: player.playerId } });
-      if (parties.length > 0) {
+      if (hasParties) await tx.playerParty.deleteMany({ where: { playerId: player.playerId } });
+      if (hasParties && parties.length > 0) {
         await tx.playerParty.createMany({ data: parties.map(party => ({ id: `${player.playerId}_${party.id}`, playerId: player.playerId, partyId: String(party.id), name: typeof party.name === 'string' ? party.name : 'パーティ', slots: (party.slots ?? []) as (string | null)[], leaderId: party.leaderId ?? null, isActive: party.id === (state.activePartyId as string) })) });
       }
 
       const md = state.missionDaily as { date?: string; progresses?: unknown } | undefined;
-      await tx.playerMissionProgress.upsert({
+      const existingMission = md || state.missionWeeklyProgresses !== undefined
+        ? await tx.playerMissionProgress.findUnique({ where: { playerId: player.playerId } }) : null;
+      if (md || state.missionWeeklyProgresses !== undefined) await tx.playerMissionProgress.upsert({
         where: { playerId: player.playerId },
-        update: { dailyDate: md?.date ?? '', dailyData: (md?.progresses ?? []) as object[], weeklyData: (state.missionWeeklyProgresses ?? []) as object[], weekStr: (state.missionWeekStr as string) ?? '' },
+        update: { dailyDate: md?.date ?? existingMission?.dailyDate ?? '', dailyData: (md?.progresses ?? existingMission?.dailyData ?? []) as object[], weeklyData: (state.missionWeeklyProgresses ?? existingMission?.weeklyData ?? []) as object[], weekStr: (state.missionWeekStr as string) ?? existingMission?.weekStr ?? '' },
         create: { playerId: player.playerId, dailyDate: md?.date ?? '', dailyData: (md?.progresses ?? []) as object[], weeklyData: (state.missionWeeklyProgresses ?? []) as object[], weekStr: (state.missionWeekStr as string) ?? '' },
       });
 
-      await tx.playerLoginBonus.upsert({
+      const hasLoginBonus = state.loginBonusCurrentDay !== undefined || state.loginBonusLastClaimedDate !== undefined || state.loginBonusLastLoginDate !== undefined || state.loginBonusClaimedDays !== undefined;
+      const existingLogin = hasLoginBonus ? await tx.playerLoginBonus.findUnique({ where: { playerId: player.playerId } }) : null;
+      if (hasLoginBonus) await tx.playerLoginBonus.upsert({
         where: { playerId: player.playerId },
-        update: { lastClaimedDate: (state.loginBonusLastClaimedDate as string) ?? null, lastLoginDate: (state.loginBonusLastLoginDate as string) ?? null, claimedDays: (state.loginBonusClaimedDays as number[]) ?? [], currentDay: typeof state.loginBonusCurrentDay === 'number' ? state.loginBonusCurrentDay : 1 },
+        update: { lastClaimedDate: state.loginBonusLastClaimedDate !== undefined ? (state.loginBonusLastClaimedDate as string) : existingLogin?.lastClaimedDate, lastLoginDate: state.loginBonusLastLoginDate !== undefined ? (state.loginBonusLastLoginDate as string) : existingLogin?.lastLoginDate, claimedDays: (state.loginBonusClaimedDays as number[]) ?? existingLogin?.claimedDays ?? [], currentDay: typeof state.loginBonusCurrentDay === 'number' ? clamp(state.loginBonusCurrentDay, 1, 30) : existingLogin?.currentDay ?? 1 },
         create: { playerId: player.playerId, lastClaimedDate: (state.loginBonusLastClaimedDate as string) ?? null, lastLoginDate: (state.loginBonusLastLoginDate as string) ?? null, claimedDays: (state.loginBonusClaimedDays as number[]) ?? [], currentDay: typeof state.loginBonusCurrentDay === 'number' ? state.loginBonusCurrentDay : 1 },
       });
 
       const ar = state.arenaRecord as { wins?: number; losses?: number; rank?: number; points?: number; season?: number } | undefined;
-      await tx.playerArenaRecord.upsert({
+      const existingArena = ar ? await tx.playerArenaRecord.findUnique({ where: { playerId: player.playerId } }) : null;
+      if (ar) await tx.playerArenaRecord.upsert({
         where: { playerId: player.playerId },
-        update: { wins: ar?.wins ?? 0, losses: ar?.losses ?? 0, rank: ar?.rank ?? 999, points: ar?.points ?? 1000, season: ar?.season ?? 1, battleHistory: (state.arenaBattleHistory ?? []) as object[] },
+        update: { wins: ar.wins !== undefined ? clamp(ar.wins, 0, 1_000_000) : existingArena?.wins ?? 0, losses: ar.losses !== undefined ? clamp(ar.losses, 0, 1_000_000) : existingArena?.losses ?? 0, rank: ar.rank !== undefined ? clamp(ar.rank, 1, 999_999) : existingArena?.rank ?? 999, points: ar.points !== undefined ? clamp(ar.points, 0, 10_000_000) : existingArena?.points ?? 1000, season: ar.season !== undefined ? clamp(ar.season, 1, 10_000) : existingArena?.season ?? 1, battleHistory: (state.arenaBattleHistory ?? existingArena?.battleHistory ?? []) as object[] },
         create: { playerId: player.playerId, wins: ar?.wins ?? 0, losses: ar?.losses ?? 0, rank: ar?.rank ?? 999, points: ar?.points ?? 1000, season: ar?.season ?? 1, battleHistory: (state.arenaBattleHistory ?? []) as object[] },
       });
     });

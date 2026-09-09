@@ -8,8 +8,7 @@ import { useEquipmentStore } from '../../stores/equipmentStore';
 import { useMissionStore } from '../../stores/missionStore';
 import { useGuildStore } from '../../stores/guildStore';
 import { saveImmediately } from '../../lib/syncService';
-import { getStage } from '../../data/quests';
-import { getEventStage, getRaidStage } from '../../data/events';
+import { resolvePlayableStage } from '../../utils/stageResolver';
 import { useRaidStore } from '../../stores/raidStore';
 import { getScenario } from '../../data/scenarios';
 import { getWorldBgStyle, getWorldIdFromStageId } from '../../utils/worldTheme';
@@ -61,6 +60,8 @@ export const BattlePage = () => {
   const [logQueue, setLogQueue] = useState<string[]>([]);
   const isLogAnimatingRef = useRef(false);
   const totalDamageRef = useRef(0);
+  const battleSettledRef = useRef(false);
+  const processingRoundRef = useRef(false);
   const leaderInstanceIdRef = useRef<string | null>(null);
   const [phase, setPhase] = useState<Phase>('battle');
   const [leaderBbGauge, setLeaderBbGauge] = useState(0);
@@ -117,7 +118,7 @@ export const BattlePage = () => {
   // バトル初期化
   useEffect(() => {
     if (!pendingStageId) { navigate('/quests'); return; }
-    const s = getStage(pendingStageId) ?? getEventStage(pendingStageId) ?? getRaidStage(pendingStageId);
+    const s = resolvePlayableStage(pendingStageId);
     if (!s) { navigate('/quests'); return; }
 
     const party = getActiveParty();
@@ -247,6 +248,7 @@ export const BattlePage = () => {
     setLogs([`━━ Wave 1 開始！ ━━━━━━━━━━━━━━`]);
     setPhase('battle');
     setLeaderBbGauge(0);
+    battleSettledRef.current = false;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -276,7 +278,9 @@ export const BattlePage = () => {
 
   // ===== 1ラウンド処理 =====
   const processRound = useCallback((useSkill: boolean) => {
-    if (phase !== 'battle') return;
+    if (phase !== 'battle' || processingRoundRef.current || battleSettledRef.current) return;
+    processingRoundRef.current = true;
+    window.setTimeout(() => { processingRoundRef.current = false; }, 180 / battleSpeedRef.current);
 
     setAllies(curAllies => {
       setEnemies(curEnemies => {
@@ -344,8 +348,7 @@ export const BattlePage = () => {
                 });
               }
               // 残りの味方は通常攻撃
-              for (let i = 1; i < liveAllies.length; i++) {
-                const ally = liveAllies[i];
+              for (const ally of liveAllies.filter(a => a.instanceId !== leader.instanceId)) {
                 if (!updEnemies.some(e => e.currentHp > 0)) break;
                 const result = executeNormalAttack(ally, updEnemies.filter(e => e.currentHp > 0), updAllies, curRound);
                 applyEnemyResult(result);
@@ -410,6 +413,8 @@ export const BattlePage = () => {
                   setRound(r => r + 1);
                   addLogs([`━━ Wave ${nextWave + 1} 開始！ ━━━━━━━━━━━━━━`]);
                 } else {
+                  if (battleSettledRef.current) return curStage;
+                  battleSettledRef.current = true;
                   const isHard = isHardRef.current;
                   const gold = curStage.rewardGold * (isHard ? 2 : 1);
                   const exp = curStage.rewardExp * (isHard ? 2 : 1);
@@ -494,6 +499,8 @@ export const BattlePage = () => {
                 return curStage;
               });
             } else if (updAllies.every(a => a.currentHp <= 0)) {
+              if (battleSettledRef.current) return curBb;
+              battleSettledRef.current = true;
               // レイドは敗北しても、そこまでに与えたダメージ・報酬段階は記録する
               setStage(curStage => {
                 if (curStage?.id.startsWith('raid_')) {

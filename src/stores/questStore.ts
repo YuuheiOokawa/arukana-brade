@@ -53,10 +53,12 @@ export const useQuestStore = create<QuestStore>()(
       setPendingHard: (hard) => set({ pendingHard: hard }),
 
       recordStars: (stageKey, stars) => {
+        if (!stageKey || !Number.isFinite(stars)) return;
+        const safeStars = Math.max(1, Math.min(3, Math.floor(stars)));
         set(s => ({
           stageStars: {
             ...s.stageStars,
-            [stageKey]: Math.max(s.stageStars[stageKey] ?? 0, stars),
+            [stageKey]: Math.max(s.stageStars[stageKey] ?? 0, safeStars),
           },
         }));
       },

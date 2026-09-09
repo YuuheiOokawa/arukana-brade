@@ -34,13 +34,16 @@ export const useRaidStore = create<RaidStore>()(
       },
 
       dealDamage: (bossId, damage) => {
+        if (!Number.isFinite(damage) || damage <= 0) return [];
         const boss = RAID_BOSSES.find(b => b.id === bossId);
+        if (!boss) return [];
+        const safeDamage = Math.floor(damage);
         let newlyUnlockedItems: string[] = [];
         set(s => ({
-          raidStates: s.raidStates.map(rs => {
+          raidStates: (s.raidStates.some(rs => rs.bossId === bossId) ? s.raidStates : [...s.raidStates, initState(bossId)]).map(rs => {
             if (rs.bossId !== bossId) return rs;
             // オーバーキル分は総ダメージ表示・報酬段階の判定に含めない（残りHPを超えて加算されないようクランプ）
-            const appliedDamage = Math.min(damage, rs.currentHp);
+            const appliedDamage = Math.min(safeDamage, rs.currentHp);
             const totalDamageDealt = rs.totalDamageDealt + appliedDamage;
             // tier 0 (参加報酬) は毎回付与されるため対象外。tier 1以降は初到達時に一度だけ付与する
             // (highestClaimedTier は既存セーブデータに存在しない場合があるためフォールバック)
@@ -55,7 +58,7 @@ export const useRaidStore = create<RaidStore>()(
             }
             return {
               ...rs,
-              currentHp: Math.max(0, rs.currentHp - damage),
+              currentHp: Math.max(0, rs.currentHp - safeDamage),
               totalDamageDealt,
               // (currentHp は元の damage で減算する。appliedDamage は totalDamageDealt/報酬判定専用のクランプ値)
               entryCount: rs.entryCount + 1,

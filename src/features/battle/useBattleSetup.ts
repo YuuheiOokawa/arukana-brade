@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuestStore } from '../../stores/questStore';
 import { usePartyStore } from '../../stores/partyStore';
 import { useUnitStore } from '../../stores/unitStore';
-import { getStage } from '../../data/quests';
+import { resolvePlayableStage } from '../../utils/stageResolver';
 import { getEnemyMaster } from '../../data/enemies';
 import { UNIT_MASTER, calcUnitStats } from '../../data/units';
 import { FRIEND_CANDIDATES } from '../../data/friends';
@@ -21,7 +21,7 @@ export const useBattleSetup = () => {
 
   const buildBattleData = () => {
     if (!pendingStageId) return null;
-    const stage = getStage(pendingStageId);
+    const stage = resolvePlayableStage(pendingStageId);
     if (!stage) return null;
 
     const party = getActiveParty();
