@@ -239,10 +239,11 @@ export const SummonPage = () => {
   }, [phase, revealIndex, openedCards]);
 
   /* ---- 召喚アニメーション ---- */
-  const startSummon = (count: number, ticketType: 'normal' | 'sr' | 'ssr' | null = null) => {
+  const startSummon = async (count: number, ticketType: 'normal' | 'sr' | 'ssr' | null = null) => {
     if (phase !== 'idle' || summonLock.current) return;
 
     let diamondSpent = 0;
+    let ticketItemId: string | null = null;
     let pool = selectedPool;
 
     if (ticketType === 'normal') {
@@ -250,25 +251,25 @@ export const SummonPage = () => {
         setToast({ msg: `チケットが足りません (所持: ${ticketCount})`, type: 'error' });
         return;
       }
-      consumeItem('item_summon_ticket', count);
+      ticketItemId = 'item_summon_ticket';
       pool = SR_POOL;
     } else if (ticketType === 'sr') {
       if (srTicketCount < 1) {
         setToast({ msg: 'SR確定チケットがありません', type: 'error' });
         return;
       }
-      consumeItem('item_summon_ticket_sr', 1);
+      ticketItemId = 'item_summon_ticket_sr';
       pool = SR_POOL;
     } else if (ticketType === 'ssr') {
       if (ssrTicketCount < 1) {
         setToast({ msg: 'SSR確定チケットがありません', type: 'error' });
         return;
       }
-      consumeItem('item_summon_ticket_ssr', 1);
+      ticketItemId = 'item_summon_ticket_ssr';
       pool = SSR_POOL;
     } else {
       const cost = count === 1 ? selectedPool.cost1 : selectedPool.cost10;
-      if (!spendDiamond(cost)) {
+      if (player.diamond < cost) {
         setToast({ msg: `ダイヤが足りません (必要: ${cost})`, type: 'error' });
         return;
       }
@@ -278,6 +279,20 @@ export const SummonPage = () => {
     summonLock.current = true;
     openLock.current = false;
     const summonedMasters = performSummon(pool, count);
+    const syncResult = await syncSummonResult(
+      pool.id,
+      summonedMasters.map(master => ({ masterId: master.id, rarity: master.rarity, resultType: 'new' })),
+      diamondSpent,
+      ticketItemId,
+    );
+    if (!syncResult.ok) {
+      summonLock.current = false;
+      setToast({ msg: syncResult.error ?? '召喚に失敗しました', type: 'error' });
+      return;
+    }
+    if (ticketItemId) consumeItem(ticketItemId, ticketItemId === 'item_summon_ticket' ? count : 1);
+    else if (diamondSpent > 0) spendDiamond(diamondSpent);
+
     const maxStar = Math.max(...summonedMasters.map(u => RARITY_TO_STAR[u.rarity])) as GachaStar;
     setCurrentStar(maxStar);
     setSummonResults(summonedMasters);
@@ -294,16 +309,6 @@ export const SummonPage = () => {
     useMissionStore.getState().addWeeklyProgress('summon');
     recordSummon(summonedMasters.length);
     useCollectionStore.getState().registerDiscovered(summonedMasters.map(m => m.id));
-
-    void syncSummonResult(
-      pool.id,
-      summonedMasters.map((m, i) => ({
-        masterId: m.id,
-        rarity: m.rarity,
-        resultType: gachaResults[i]?.type ?? 'new',
-      })),
-      diamondSpent,
-    );
 
     setPortalState('charge');
     setPhase('summon');

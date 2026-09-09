@@ -7,6 +7,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { prisma } from '../lib/prisma.js';
 import { getTokenFromRequest, verifyToken } from '../lib/auth.js';
+import { RAID_BOSS_MAX_HP, UNIT_RARITY_BY_ID } from '../lib/gameRules.js';
 
 const MAX_GOLD        = 999_999_999;
 const MAX_DIAMOND     = 999_999;
@@ -45,6 +46,36 @@ function validateStageProgression(incoming: string[], dbCleared: Set<string>): s
   return Array.from(confirmed);
 }
 
+const awakeningCrystalsRecord = (value: unknown): Record<string, number> => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  const result: Record<string, number> = {};
+  for (const [masterId, count] of Object.entries(value as Record<string, unknown>)) {
+    if (!UNIT_RARITY_BY_ID.has(masterId)) continue;
+    result[masterId] = clamp(count, 0, 999_999);
+  }
+  return result;
+};
+
+const raidStatesArray = (value: unknown): Array<Record<string, number | string>> => {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  return value.flatMap(rawState => {
+    if (!rawState || typeof rawState !== 'object') return [];
+    const state = rawState as Record<string, unknown>;
+    const bossId = typeof state.bossId === 'string' ? state.bossId : '';
+    const maxHp = RAID_BOSS_MAX_HP[bossId];
+    if (!maxHp || seen.has(bossId)) return [];
+    seen.add(bossId);
+    return [{
+      bossId,
+      currentHp: clamp(state.currentHp, 0, maxHp),
+      totalDamageDealt: clamp(state.totalDamageDealt, 0, maxHp),
+      entryCount: clamp(state.entryCount, 0, 1_000_000),
+      highestClaimedTier: clamp(state.highestClaimedTier, -1, 100),
+    }];
+  });
+};
+
 async function getPlayer(req: VercelRequest) {
   const token = getTokenFromRequest(req.headers.cookie);
   if (!token) return null;
@@ -69,9 +100,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       updateData.playerName = body.playerName.trim().slice(0, 12);
     if (typeof body.tutorialCompleted === 'boolean')
       updateData.tutorialCompleted = body.tutorialCompleted;
-    if (typeof body.title === 'string') updateData.title = body.title;
+    if (typeof body.title === 'string') updateData.title = body.title.slice(0, 50);
     if (typeof body.bio === 'string') updateData.bio = body.bio.slice(0, 100);
-    if (typeof body.favoriteUnitId === 'string') updateData.favoriteUnitId = body.favoriteUnitId;
+    if (typeof body.favoriteUnitId === 'string') {
+      const ownedFavorite = await prisma.ownedUnit.findFirst({ where: { playerId: player.playerId, instanceId: body.favoriteUnitId } });
+      if (!ownedFavorite) return res.status(400).json({ error: '所持していないユニットです' });
+      updateData.favoriteUnitId = body.favoriteUnitId;
+    } else if (body.favoriteUnitId === null) updateData.favoriteUnitId = null;
 
     if (Object.keys(updateData).length === 0)
       return res.status(400).json({ error: '更新するデータがありません' });
@@ -172,6 +207,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const equips = (hasEquips ? state.ownedEquipments : []) as E[];
     const parties = (hasParties ? state.parties : []) as Party[];
 
+    if (hasUnits) {
+      const invalidUnit = units.some(unit =>
+        !unit || typeof unit.instanceId !== 'string' || unit.instanceId.length < 1 || unit.instanceId.length > 100
+        || typeof unit.masterId !== 'string' || !UNIT_RARITY_BY_ID.has(unit.masterId),
+      );
+      if (invalidUnit || new Set(units.map(unit => unit.instanceId)).size !== units.length) {
+        return res.status(400).json({ error: 'invalid unit records' });
+      }
+    }
+    if (p && Object.hasOwn(p, 'favoriteUnitInstanceId') && typeof p.favoriteUnitInstanceId === 'string') {
+      const ownsFavorite = hasUnits
+        ? units.some(unit => unit.instanceId === p.favoriteUnitInstanceId)
+        : Boolean(await prisma.ownedUnit.findFirst({ where: { playerId: player.playerId, instanceId: p.favoriteUnitInstanceId } }));
+      if (!ownsFavorite) return res.status(400).json({ error: 'favorite unit is not owned' });
+    }
+
     await prisma.$transaction(async tx => {
       await tx.player.update({
         where: { playerId: player.playerId },
@@ -197,8 +248,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           tutorialCompleted: state.tutorialCompleted === true ? true : undefined,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           miscData: JSON.parse(JSON.stringify({
-            awakeningCrystals: state.awakeningCrystals !== undefined ? (state.awakeningCrystals as Record<string, number>) : (prevMisc.awakeningCrystals ?? {}),
-            raidStates: state.raidStates !== undefined ? (state.raidStates as unknown[]) : (prevMisc.raidStates ?? []),
+            awakeningCrystals: state.awakeningCrystals !== undefined ? awakeningCrystalsRecord(state.awakeningCrystals) : awakeningCrystalsRecord(prevMisc.awakeningCrystals),
+            raidStates: state.raidStates !== undefined ? raidStatesArray(state.raidStates) : raidStatesArray(prevMisc.raidStates),
             // 旧バージョンのクライアントがキーを送らない場合は既存のDB値を保持する
             achievementsClaimed: state.achievementsClaimed !== undefined ? strArray(state.achievementsClaimed) : strArray(prevMisc.achievementsClaimed),
             collectionDiscovered: state.collectionDiscovered !== undefined ? strArray(state.collectionDiscovered) : strArray(prevMisc.collectionDiscovered),
@@ -216,7 +267,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (hasUnits) await tx.ownedUnit.deleteMany({ where: { playerId: player.playerId } });
       if (hasUnits && units.length > 0) {
         await tx.ownedUnit.createMany({
-          data: units.filter(u => u.instanceId && u.masterId).map(u => ({
+          data: units.filter(u => u.instanceId && UNIT_RARITY_BY_ID.has(u.masterId)).map(u => ({
             instanceId: String(u.instanceId), playerId: player.playerId, masterId: String(u.masterId),
             level: clamp(u.level, 1, 999), exp: clamp(u.exp, 0, 999_999_999),
             awakenRank: clamp(u.awakenRank, 0, 10), awakeningCount: clamp(u.awakeningCount, 0, 10),

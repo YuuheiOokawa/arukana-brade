@@ -97,6 +97,8 @@ export const TutorialGachaScreen = () => {
   const [whiteFlash, setWhiteFlash] = useState(false);
   const [shake, setShake] = useState(false);
   const [currentStar, setCurrentStar] = useState<GachaStar>(1);
+  const [isStarting, setIsStarting] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const skipRef = useRef(false);
   const mountedRef = useRef(true);
   const openingRef = useRef(false);
@@ -182,11 +184,25 @@ export const TutorialGachaScreen = () => {
 
   const startGacha = async () => {
     // 既に実行済みなら再ロールしない（連打やStrictMode二重実行等への防御）
-    if (useTutorialStore.getState().initialGachaDone) return;
+    if (useTutorialStore.getState().initialGachaDone || isStarting) return;
+    setIsStarting(true);
+    setSyncError(null);
     setInitialGachaDone(true);
 
     skipRef.current = false;
     const summonedMasters = performTutorialSummon();
+    const syncResult = await syncSummonResult(
+      'tutorial_free',
+      summonedMasters.map(master => ({ masterId: master.id, rarity: master.rarity, resultType: 'new' })),
+      0,
+    );
+    if (!syncResult.ok) {
+      setInitialGachaDone(false);
+      setIsStarting(false);
+      setSyncError(syncResult.error ?? '初回召喚に失敗しました');
+      return;
+    }
+
     const maxStar = Math.max(...summonedMasters.map(u => RARITY_TO_STAR[u.rarity])) as GachaStar;
     setCurrentStar(maxStar);
     setResults(summonedMasters);
@@ -200,16 +216,7 @@ export const TutorialGachaScreen = () => {
       if (result.type === 'crystal') addAwakeningCrystal(result.masterId);
     });
 
-    // [DB SAVE] 初回ガチャ結果を DB に保存（無料なのでダイヤ消費は 0）
-    void syncSummonResult(
-      'tutorial_free',
-      summonedMasters.map((m, i) => ({
-        masterId: m.id,
-        rarity: m.rarity,
-        resultType: gachaResults[i]?.type ?? 'new',
-      })),
-      0,
-    );
+    setIsStarting(false);
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setPhase('results'); return; }
     setPhase('summon');
@@ -449,6 +456,7 @@ export const TutorialGachaScreen = () => {
             <div className="mt-8 px-8 w-full max-w-sm animate-fade-in">
               <button
                 onClick={startGacha}
+                disabled={isStarting}
                 className="w-full py-5 rounded-2xl font-black text-white text-lg active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
                 style={{
                   background: 'linear-gradient(135deg, #f0c040, #d97706)',
@@ -457,8 +465,9 @@ export const TutorialGachaScreen = () => {
                 }}>
                 <img src="/assets/images/items/currency/item_ticket_summon.webp"
                   alt="" width={24} height={24} style={{ objectFit: 'contain' }} />
-                10連召喚（無料）
+                {isStarting ? '召喚準備中…' : '10連召喚（無料）'}
               </button>
+              {syncError && <p className="text-center text-xs mt-3 text-red-300" role="alert">{syncError}</p>}
               <p className="text-center text-xs mt-3" style={{ color: '#6b7280' }}>
                 ★2（RARE）以上 1体確定　★3（ARCANA）排出あり
               </p>

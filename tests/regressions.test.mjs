@@ -15,6 +15,10 @@ const {useRaidStore, getDefaultRaidStates} = await import('../src/stores/raidSto
 const {useQuestStore} = await import('../src/stores/questStore.ts');
 const {resolvePlayableStage} = await import('../src/utils/stageResolver.ts');
 const {characterAssets} = await import('../src/data/assets/characterAssets.ts');
+const {RAID_BOSSES} = await import('../src/data/events.ts');
+const {SUMMON_POOLS} = await import('../src/data/summons.ts');
+const {PRESET_GUILDS} = await import('../src/stores/guildStore.ts');
+const {GUILD_EMBLEMS, RAID_BOSS_MAX_HP, SUMMON_SERVER_RULES, UNIT_IDS_BY_RARITY, UNIT_RARITY_BY_ID, isValidArcanaPlayerId, toIntegerInRange} = await import('../lib/gameRules.ts');
 
 test('Replacing or moving a party leader keeps the leader in a unique occupied slot', () => {
   const store = usePartyStore.getState();
@@ -154,4 +158,31 @@ test('Every character asset in the central manifest is adopted and exists', () =
     assert.equal(asset.status, 'adopted', asset.id);
     assert.ok(existsSync(`public${asset.path}`), asset.path);
   }
+});
+
+test('Shared server rules match every unit, summon pool, raid boss, and guild emblem', () => {
+  const catalogIds = Object.values(UNIT_IDS_BY_RARITY).flat();
+  assert.equal(catalogIds.length, 150);
+  assert.equal(new Set(catalogIds).size, 150);
+  for (const unit of UNIT_MASTER) assert.equal(UNIT_RARITY_BY_ID.get(unit.id), unit.rarity, unit.id);
+  for (const pool of SUMMON_POOLS) {
+    const rule = SUMMON_SERVER_RULES[pool.id];
+    assert.ok(rule, pool.id);
+    assert.equal(rule.cost1, pool.cost1);
+    assert.equal(rule.cost10, pool.cost10);
+    for (const rate of pool.rates) {
+      for (const unitId of rate.unitIds) assert.equal(UNIT_RARITY_BY_ID.get(unitId), rate.rarity, `${pool.id}/${unitId}`);
+    }
+  }
+  for (const boss of RAID_BOSSES) assert.equal(RAID_BOSS_MAX_HP[boss.id], boss.totalHp, boss.id);
+  for (const guild of PRESET_GUILDS) assert.ok(GUILD_EMBLEMS.includes(guild.emblem), guild.id);
+});
+
+test('External integer and player ID validators reject ambiguous input', () => {
+  assert.equal(toIntegerInRange(3, 1, 10), 3);
+  assert.equal(toIntegerInRange('3', 1, 10), 3);
+  for (const value of [0, 1.5, NaN, Infinity, 11, 'oops']) assert.equal(toIntegerInRange(value, 1, 10), null);
+  assert.equal(isValidArcanaPlayerId('ARC-MTTKI3WL'), true);
+  assert.equal(isValidArcanaPlayerId('arc-MTTKI3WL'), false);
+  assert.equal(isValidArcanaPlayerId('ARC-../../'), false);
 });

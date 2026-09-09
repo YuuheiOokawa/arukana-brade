@@ -104,6 +104,12 @@ interface SummonUnitForSync {
   resultType: string;
 }
 
+interface SummonSyncResult {
+  ok: boolean;
+  error?: string;
+  resultTypes?: Array<'new' | 'crystal'>;
+}
+
 interface AuthStore {
   user: AuthUser | null;
   player: AuthPlayer | null;
@@ -121,7 +127,7 @@ interface AuthStore {
   // [DB SAVE] /api/player/currency — ゴールド・ダイヤ・EXP・スタミナ
   syncCurrency: (data: { gold?: number; diamond?: number; exp?: number; playerRank?: number; stamina?: number }) => Promise<void>;
   // [DB SAVE] /api/summon/save — ガチャ結果（OwnedUnit + SummonHistory + diamond消費）
-  syncSummonResult: (poolId: string, units: SummonUnitForSync[], diamondSpent: number) => Promise<void>;
+  syncSummonResult: (poolId: string, units: SummonUnitForSync[], diamondSpent: number, ticketItemId?: string | null) => Promise<SummonSyncResult>;
   // [DB SAVE] /api/units/sync — 所持ユニット全件同期
   syncUnits: (units: Array<{ masterId: string; level: number; exp: number; awakenRank: number; awakeningCount: number; currentRarity: number; isLocked: boolean }>) => Promise<void>;
 }
@@ -225,17 +231,20 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     }
   },
 
-  syncSummonResult: async (poolId, units, diamondSpent) => {
+  syncSummonResult: async (poolId, units, diamondSpent, ticketItemId = null) => {
     try {
       // [DB SAVE] OwnedUnit (new のみ) + SummonHistory 全件 + Player.diamond 減算
-      await fetch('/api/actions', {
+      const response = await fetch('/api/actions', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'summon_save', poolId, units, diamondSpent }),
+        body: JSON.stringify({ action: 'summon_save', poolId, units, diamondSpent, ticketItemId }),
       });
+      const data = await response.json().catch(() => null) as SummonSyncResult | null;
+      if (!response.ok || !data?.ok) return { ok: false, error: data?.error ?? '召喚結果を保存できませんでした' };
+      return data;
     } catch {
-      // ネットワークエラーは無視（localStorage が source of truth）
+      return { ok: false, error: '通信エラーが発生しました' };
     }
   },
 
