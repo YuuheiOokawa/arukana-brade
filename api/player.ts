@@ -94,6 +94,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const player = await getPlayer(req);
   if (!player) return res.status(401).json({ error: 'Unauthorized' });
 
+  // Record only fixed validation reasons, never the player's submitted data.
+  const badRequest = (error: string) => {
+    console.warn('[player] request rejected', { reason: error });
+    return res.status(400).json({ error });
+  };
+  if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body))
+    return badRequest('request body must be an object');
   const body = req.body as Record<string, unknown>;
   const action = body.action as string | undefined;
 
@@ -108,15 +115,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (typeof body.bio === 'string') updateData.bio = body.bio.slice(0, 100);
     if (typeof body.favoriteUnitId === 'string') {
       const ownedFavorite = await prisma.ownedUnit.findFirst({ where: { playerId: player.playerId, instanceId: body.favoriteUnitId } });
-      if (!ownedFavorite) return res.status(400).json({ error: '所持していないユニットです' });
+      if (!ownedFavorite) return badRequest('所持していないユニットです');
       updateData.favoriteUnitId = body.favoriteUnitId;
     } else if (body.favoriteUnitId === null) updateData.favoriteUnitId = null;
 
     if (Object.keys(updateData).length === 0)
-      return res.status(400).json({ error: '更新するデータがありません' });
+      return badRequest('更新するデータがありません');
 
     const updated = await prisma.player.update({ where: { playerId: player.playerId }, data: updateData });
-    return res.status(200).json({ player: updated });
+    return res.status(200).json({ player: { ...updated, staminaRecoveryTime: Number(updated.staminaRecoveryTime) } });
   }
 
   // ── currency: 通貨・スタミナ同期 ─────────────────────────────────
@@ -135,16 +142,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (stamina    !== undefined) updateData.stamina    = stamina;
     if (maxStamina !== undefined) updateData.maxStamina = maxStamina;
     if (Object.keys(updateData).length === 0)
-      return res.status(400).json({ error: '更新するデータがありません' });
+      return badRequest('更新するデータがありません');
     const updated = await prisma.player.update({ where: { playerId: player.playerId }, data: updateData });
-    return res.status(200).json({ player: updated });
+    return res.status(200).json({ player: { ...updated, staminaRecoveryTime: Number(updated.staminaRecoveryTime) } });
   }
 
   // ── saveAll: 全ゲーム状態保存 ────────────────────────────────────
   if (action === 'saveAll') {
     const state = body.state as Record<string, unknown> | undefined;
     if (!state || typeof state !== 'object' || Array.isArray(state))
-      return res.status(400).json({ error: 'state object required' });
+      return badRequest('state object required');
     if (JSON.stringify(state).length > MAX_STATE_BYTES)
       return res.status(413).json({ error: 'state too large' });
 
@@ -225,7 +232,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         || typeof unit.masterId !== 'string' || !UNIT_RARITY_BY_ID.has(unit.masterId),
       );
       if (invalidUnit || new Set(units.map(unit => unit.instanceId)).size !== units.length) {
-        return res.status(400).json({ error: 'invalid unit records' });
+        return badRequest('invalid unit records');
       }
     }
     if (hasItems) {
@@ -234,7 +241,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         || typeof item.quantity !== 'number' || !Number.isInteger(item.quantity) || item.quantity < 0,
       );
       if (invalidItem || new Set(items.map(item => item.itemId)).size !== items.length) {
-        return res.status(400).json({ error: 'invalid item records' });
+        return badRequest('invalid item records');
       }
     }
     if (hasEquips) {
@@ -244,7 +251,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         || (equip.equippedTo !== undefined && equip.equippedTo !== null && typeof equip.equippedTo !== 'string'),
       );
       if (invalidEquipment || new Set(equips.map(equip => equip.instanceId)).size !== equips.length) {
-        return res.status(400).json({ error: 'invalid equipment records' });
+        return badRequest('invalid equipment records');
       }
     }
     if (hasParties) {
@@ -257,7 +264,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           || (party.leaderId !== undefined && party.leaderId !== null && (typeof party.leaderId !== 'string' || !occupied.includes(party.leaderId)));
       });
       if (invalidParty || new Set(parties.map(party => party.id)).size !== parties.length) {
-        return res.status(400).json({ error: 'invalid party records' });
+        return badRequest('invalid party records');
       }
     }
     const ownedUnitIds = new Set(hasUnits
@@ -266,16 +273,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ? (await prisma.ownedUnit.findMany({ where: { playerId: player.playerId }, select: { instanceId: true } })).map(unit => unit.instanceId)
         : []);
     if (hasEquips && equips.some(equip => typeof equip.equippedTo === 'string' && !ownedUnitIds.has(equip.equippedTo))) {
-      return res.status(400).json({ error: 'equipment references an unowned unit' });
+      return badRequest('equipment references an unowned unit');
     }
     if (hasParties && parties.some(party => (party.slots ?? []).some(slot => typeof slot === 'string' && !ownedUnitIds.has(slot)))) {
-      return res.status(400).json({ error: 'party references an unowned unit' });
+      return badRequest('party references an unowned unit');
     }
     if (p && Object.hasOwn(p, 'favoriteUnitInstanceId') && typeof p.favoriteUnitInstanceId === 'string') {
       const ownsFavorite = hasUnits
         ? units.some(unit => unit.instanceId === p.favoriteUnitInstanceId)
         : Boolean(await prisma.ownedUnit.findFirst({ where: { playerId: player.playerId, instanceId: p.favoriteUnitInstanceId } }));
-      if (!ownsFavorite) return res.status(400).json({ error: 'favorite unit is not owned' });
+      if (!ownsFavorite) return badRequest('favorite unit is not owned');
     }
 
     await prisma.$transaction(async tx => {
@@ -398,5 +405,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ ok: true });
   }
 
-  return res.status(400).json({ error: 'Unknown action' });
+  return badRequest('Unknown action');
 }
