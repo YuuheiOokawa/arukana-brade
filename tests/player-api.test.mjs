@@ -17,8 +17,9 @@ globalThis.prisma = {
     },
   },
 };
-const { default: handler } = await import('../api/player.ts');
+const { default: handler, normalizeOwnedUnitReferences } = await import('../api/player.ts');
 const { signToken } = await import('../lib/auth.ts');
+const { isRetryableSaveStatus } = await import('../src/lib/syncService.ts');
 const cookie = `arcana_session=${signToken({ userId: 'test-user', email: 'test@example.invalid' })}`;
 async function request(body, authenticated = true) {
   const response = {
@@ -62,4 +63,26 @@ test('unauthenticated saves remain unauthorized and never write', async () => {
   const response = await request({ action: 'currency', gold: 250 }, false);
   assert.equal(response.statusCode, 401);
   assert.equal(writes.length, 0);
+});
+
+test('stale unit references are healed without removing valid party members', () => {
+  const result = normalizeOwnedUnitReferences(
+    [
+      { instanceId: 'eq-valid', masterId: 'equip_sword_iron', equippedTo: 'owned-1' },
+      { instanceId: 'eq-stale', masterId: 'equip_sword_iron', equippedTo: 'removed' },
+    ],
+    [{ id: 'party', slots: ['owned-1', 'removed', 'owned-1', null], leaderId: 'removed' }],
+    'removed',
+    new Set(['owned-1']),
+  );
+  assert.equal(result.normalizedEquips[0].equippedTo, 'owned-1');
+  assert.equal(result.normalizedEquips[1].equippedTo, null);
+  assert.deepEqual(result.normalizedParties[0].slots, ['owned-1', null, null, null]);
+  assert.equal(result.normalizedParties[0].leaderId, 'owned-1');
+  assert.equal(result.favoriteUnitId, null);
+});
+
+test('only transient save failures retain a snapshot for retry', () => {
+  for (const status of [400, 401, 403, 404, 413, 422]) assert.equal(isRetryableSaveStatus(status), false);
+  for (const status of [408, 429, 500, 502, 503]) assert.equal(isRetryableSaveStatus(status), true);
 });
