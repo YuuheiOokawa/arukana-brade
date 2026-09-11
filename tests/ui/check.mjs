@@ -36,6 +36,22 @@ try {
       }
     }
   }
+  await go('ShopPage');
+  await page.getByRole('button',{name:'アイテム',exact:true}).click();
+  await page.getByRole('button',{name:/経験値の雫\(小\)/}).click();
+  await page.getByRole('dialog',{name:'購入内容の確認'}).waitFor();
+  assert.equal(await page.getByText('購入後の残高',{exact:true}).count(),1);
+  await page.keyboard.press('Escape');
+  assert.equal(await page.getByRole('dialog').count(),0);
+  await go('ProfilePage');
+  await page.getByRole('button',{name:'プロフィール編集',exact:true}).click();
+  const nameInput = page.getByPlaceholder('プレイヤー名 (最大16文字)');
+  const savedName = await nameInput.inputValue();
+  await nameInput.fill('キャンセルする名前');
+  await page.getByRole('button',{name:'キャンセル',exact:true}).click();
+  await page.getByRole('button',{name:'プロフィール編集',exact:true}).click();
+  assert.equal(await nameInput.inputValue(),savedName);
+  await page.getByRole('button',{name:'キャンセル',exact:true}).click();
   await go('UnitsPage');
   await page.getByRole('textbox',{name:'ユニットを検索'}).fill('アルカナード');
   assert.equal(await page.locator('.unit-library-grid .unit-card').count(),1);

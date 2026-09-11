@@ -49,6 +49,26 @@ input::placeholder { color:#8796ac; }
 .guild-emblem { --emblem:#b9c8dc; display:inline-flex; align-items:center; justify-content:center; flex:none; color:var(--emblem); border:1px solid color-mix(in srgb,var(--emblem) 38%,transparent); border-radius:18px; background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--emblem) 25%,transparent),#111b2a 68%); box-shadow:inset 0 1px #fff2,0 8px 24px #0004; }.guild-emblem-fire{--emblem:#ff9a72}.guild-emblem-azure{--emblem:#8bd9ff}.guild-emblem-emerald{--emblem:#82dbb4}.guild-emblem-gold{--emblem:#f1d080}.guild-emblem-violet{--emblem:#c6adff}.guild-emblem-steel{--emblem:#b9c8dc}.guild-emblem.is-selected{outline:2px solid var(--emblem);outline-offset:3px}
 .member-glyph { display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; flex:none; border-radius:50%; color:#9db0c8; background:#182536; border:1px solid #ffffff12; }.member-glyph.is-self{color:#e2c887;border-color:#d8ba7040;background:#2e291d}
 .profile-page { --arena-accent:#9ca3af; --arena-secondary:#64748b; }
+.commerce-hero { margin:16px; padding:26px 22px; border:1px solid #d5b87538; border-radius:20px; background:radial-gradient(ellipse at 90% 0,#bca25c30,transparent 60%),linear-gradient(135deg,#192537,#0c1523); box-shadow:inset 0 1px #fff1,0 12px 36px #0003; }
+.commerce-eyebrow { color:#d5bc83; font-size:10px; letter-spacing:.22em; font-weight:700; }
+.commerce-hero h1 { font-size:clamp(20px,4vw,28px); font-weight:800; margin:10px 0; color:#f5f0e6; }
+.commerce-hero p { font-size:12px; color:#a5b1c2; }
+.commerce-wallet { display:flex; gap:12px; flex-wrap:wrap; margin-top:20px; }
+.commerce-wallet>span { display:flex; gap:8px; align-items:center; padding:9px 14px; background:#03091380; border:1px solid #ffffff18; border-radius:12px; font-variant-numeric:tabular-nums; color:#f0e5cb; }
+.commerce-page>div.px-4,.commerce-page>.commerce-hero { max-width:900px; margin-left:auto; margin-right:auto; }
+.commerce-page button:disabled { opacity:.45; cursor:not-allowed; }
+.commerce-dialog { width:min(440px,calc(100vw - 32px)); max-height:calc(100dvh - 40px); overflow:auto; margin:auto; padding:26px; border:1px solid #c9af7955; border-radius:22px; background:linear-gradient(150deg,#1b293c,#0a1220); color:#e8edf5; box-shadow:0 24px 100px #0009; }
+.commerce-dialog::backdrop { background:#020611bb; backdrop-filter:blur(7px); }
+.commerce-dialog-heading { display:flex; align-items:center; gap:12px; }.commerce-dialog-heading h2{font-size:19px;font-weight:800;}
+.commerce-product-name { margin:24px 0 16px; font-weight:700; }
+.commerce-receipt { padding:16px; border:1px solid #ffffff12; border-radius:12px; background:#03091366; }
+.commerce-receipt>div { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:6px 0; }.commerce-receipt dt{font-size:12px;color:#99abc1;}.commerce-receipt dd{display:flex;align-items:center;gap:7px;font-variant-numeric:tabular-nums;}
+.commerce-note { color:#99abc1; font-size:11px; line-height:1.8; margin:14px 0 24px; }
+.commerce-dialog-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; }.commerce-dialog-actions button{padding:13px 8px;border-radius:10px;border:1px solid #ffffff20;font-size:13px;font-weight:700;}.commerce-dialog-actions .commerce-primary{background:linear-gradient(135deg,#e0c590,#b3965b);color:#181b22;border-color:#e0c590;}.commerce-dialog-actions button:disabled{opacity:.5;cursor:wait;}
+.commerce-source { display:flex; align-items:center; gap:14px; width:100%; text-align:left; padding:18px; background:linear-gradient(120deg,#193044,#111a2a); border:1px solid #89bcdc30; border-radius:14px; }.commerce-source>span:nth-child(2){flex:1;min-width:0}.commerce-source strong{display:block;color:#e7eef8;font-size:14px}.commerce-source small{display:block;color:#9eafc4;font-size:11px;margin-top:5px}
+.commerce-source:hover { border-color:#89bcdc88; }
+.commerce-page button:focus-visible,.commerce-dialog button:focus-visible,.profile-page button:focus-visible { outline:2px solid #e0c590; outline-offset:4px; }
+@media(max-width:600px){.commerce-page>.commerce-hero{margin:12px 16px}.commerce-dialog{padding:20px}}
 .profile-page-content { width:min(100%,760px); margin:0 auto; }
 .profile-identity-card { isolation:isolate; background:radial-gradient(circle at 18% 0%,color-mix(in srgb,var(--arena-accent) 20%,transparent),transparent 44%),linear-gradient(145deg,#172538,#0c1522); }
 .profile-identity-card::after { content:''; position:absolute; inset:0; z-index:-1; pointer-events:none; border-radius:inherit; background:linear-gradient(115deg,transparent 12%,color-mix(in srgb,var(--arena-secondary) 10%,transparent) 48%,transparent 72%); }

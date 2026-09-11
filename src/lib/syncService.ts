@@ -165,6 +165,7 @@ export const saveAllToServer = async () => {
 
 // ページ離脱時専用保存 (keepalive=true でブラウザが強制終了しても送信完了させる)
 export const saveBeforeUnload = () => {
+  if (isHydrating) return;
   // visibilitychange と pagehide は連続して発火するため、同一スナップショットを
   // 並行送信して全置換トランザクション同士を競合させない。
   const now = Date.now();
@@ -173,15 +174,15 @@ export const saveBeforeUnload = () => {
   const state = collectGameState();
   const body = JSON.stringify({ action: 'saveAll', state });
   // keepalive の制限は 64KB。超える場合は通常のセーブに任せる
-  if (body.length > 60_000) return;
+  if (new TextEncoder().encode(body).byteLength > 60_000) return;
   try {
-    fetch('/api/player', {
+    void fetch('/api/player', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body,
       keepalive: true,
-    });
+    }).catch(() => { hasRetryableSave = true; });
   } catch { /* ignore */ }
 };
 

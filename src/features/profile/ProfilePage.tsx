@@ -50,6 +50,22 @@ export const ProfilePage = () => {
   const [editTitle, setEditTitle] = useState(player.title ?? '駆け出しの勇者');
   const [editBio, setEditBio] = useState(player.bio ?? '');
   const [editFav, setEditFav] = useState(player.favoriteUnitInstanceId ?? '');
+  const openEditor = () => {
+    setEditName(player.name);
+    setEditTitle(player.title ?? '駆け出しの勇者');
+    setEditBio(player.bio ?? '');
+    setEditFav(player.favoriteUnitInstanceId ?? '');
+    setEditing(true);
+  };
+  const copyPlayerId = async () => {
+    try {
+      await navigator.clipboard.writeText(player.playerId ?? '');
+      setAchToast('プレイヤーIDをコピーしました');
+    } catch {
+      setAchToast('コピーできませんでした。表示中のIDを選択してコピーしてください。');
+    }
+    setTimeout(() => setAchToast(''), 2500);
+  };
 
   // 推しユニット
   const favUnit = ownedUnits.find(u => u.instanceId === (player.favoriteUnitInstanceId ?? ''));
@@ -127,7 +143,7 @@ export const ProfilePage = () => {
                 </div>
               </div>
               {/* ID */}
-              <div className="profile-id-plate"><Icon name="copy" size={11}/>{playerId}</div>
+              <button className="profile-id-plate" onClick={() => void copyPlayerId()} aria-label={`プレイヤーID ${playerId} をコピー`}><Icon name="copy" size={11}/>{playerId}</button>
             </div>
 
             <div className="px-4 pb-4">
@@ -198,7 +214,7 @@ export const ProfilePage = () => {
 
               {/* プロフィール編集ボタン */}
               <button
-                onClick={() => setEditing(true)}
+                onClick={openEditor}
                 className="w-full py-2.5 rounded-xl text-sm font-bold transition-all"
                 style={{
                   background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(109,40,217,0.3))',
