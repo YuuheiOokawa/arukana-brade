@@ -82,7 +82,7 @@ test('stale unit references are healed without removing valid party members', ()
   assert.equal(result.favoriteUnitId, null);
 });
 
-test('only transient save failures retain a snapshot for retry', () => {
+test('only transient save failures are queued for retry', () => {
   for (const status of [400, 401, 403, 404, 413, 422]) assert.equal(isRetryableSaveStatus(status), false);
   for (const status of [408, 429, 500, 502, 503]) assert.equal(isRetryableSaveStatus(status), true);
 });

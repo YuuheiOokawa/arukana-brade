@@ -19,6 +19,10 @@ interface AuthPlayerSnapshot {
   bio: string | null;
   loginDays: number;
   staminaRecoveryTime?: number;
+  arcanaPlayerId?: string;
+  favoriteUnitId?: string | null;
+  createdAt?: string;
+  lastLoginAt?: string;
 }
 
 interface PlayerStore {
@@ -115,6 +119,10 @@ export const usePlayerStore = create<PlayerStore>()(
               title: p.title ?? s.player.title,
               bio: p.bio ?? s.player.bio,
               loginDays: p.loginDays,
+              playerId: p.arcanaPlayerId || s.player.playerId,
+              favoriteUnitInstanceId: p.favoriteUnitId ?? null,
+              createdAt: p.createdAt ? Date.parse(p.createdAt) : s.player.createdAt,
+              lastLoginAt: p.lastLoginAt ? Date.parse(p.lastLoginAt) : s.player.lastLoginAt,
               staminaRecoveryTime,
             },
           };

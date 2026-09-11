@@ -5,7 +5,7 @@ import { useAuthStore } from './stores/authStore';
 import { useTutorialStore } from './stores/tutorialStore';
 import type { TutorialPhase } from './types';
 import { usePlayerStore } from './stores/playerStore';
-import { hydrateFromGameState, resetAllStores, initAutoSave, saveImmediately, saveBeforeUnload, setSaveErrorHandler, setSaveSuccessHandler, initCrossTabClaimSync } from './lib/syncService';
+import { hydrateFromGameState, resetAllStores, initAutoSave, saveBeforeUnload, setSaveErrorHandler, setSaveSuccessHandler, initCrossTabClaimSync } from './lib/syncService';
 import { fetchAndPopulateMasterData } from './lib/masterDataCache';
 import { populateImageCache } from './lib/unitImage';
 import { ADMIN_EMAIL } from './utils/admin';
@@ -128,8 +128,8 @@ const AppContent = () => {
       resetAllStores();
     }
     localStorage.setItem(LAST_USER_KEY, user.id);
-    if (gameData) {
-      hydrateFromGameState(gameData, authPlayer?.miscData ?? undefined, authPlayer?.tutorialCompleted);
+    if (gameData || authPlayer) {
+      hydrateFromGameState(gameData, authPlayer?.miscData ?? undefined, authPlayer?.tutorialCompleted, authPlayer);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, gameData]);
@@ -167,8 +167,6 @@ const AppContent = () => {
     // 同一アカウントを複数タブで開いた場合の報酬二重受け取り防止
     const stopCrossTabSync = initCrossTabClaimSync();
 
-    // フォーカスロス時に即時保存
-    window.addEventListener('blur', saveImmediately);
     // ページ離脱時は keepalive 付き専用関数で保存
     window.addEventListener('beforeunload', saveBeforeUnload);
     // beforeunload はモバイル(特にiOS Safari・ホーム画面追加のPWA)では
@@ -188,7 +186,6 @@ const AppContent = () => {
     return () => {
       stopAutoSave();
       stopCrossTabSync();
-      window.removeEventListener('blur', saveImmediately);
       window.removeEventListener('beforeunload', saveBeforeUnload);
       document.removeEventListener('visibilitychange', handleHidden);
       window.removeEventListener('pagehide', saveBeforeUnload);

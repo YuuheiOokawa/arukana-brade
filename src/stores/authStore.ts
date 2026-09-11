@@ -21,6 +21,7 @@ export interface AuthPlayer {
   favoriteUnitId: string | null;
   loginDays: number;
   lastLoginAt: string;
+  createdAt?: string;
   staminaRecoveryTime: number;
   arcanaPlayerId: string;
   miscData: Record<string, unknown>;
@@ -52,6 +53,7 @@ export interface GameDataResponse {
     masterId: string;
     level: number;
     exp: number;
+    evolveRank: number;
     equippedTo: string | null;
   }>;
   questProgress: {
@@ -161,7 +163,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     } catch {
       if (myGen === authGeneration) set({ user: null, player: null, gameData: null });
     } finally {
-      set({ isLoading: false, isChecked: true });
+      if (myGen === authGeneration) set({ isLoading: false, isChecked: true });
     }
   },
 
@@ -186,12 +188,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     const { player } = get();
     if (!player) return;
     try {
-      await fetch('/api/player', {
+      const response = await fetch('/api/player', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'save', playerName: name }),
       });
+      if (!response.ok) throw new Error(`profile sync failed: ${response.status}`);
       set(state => ({
         player: state.player ? { ...state.player, playerName: name } : null,
       }));
@@ -203,12 +206,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   syncTutorialComplete: async () => {
     try {
       // [DB SAVE] Player.tutorialCompleted = true
-      await fetch('/api/player', {
+      const response = await fetch('/api/player', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'save', tutorialCompleted: true }),
       });
+      if (!response.ok) throw new Error(`tutorial sync failed: ${response.status}`);
       set(state => ({
         player: state.player ? { ...state.player, tutorialCompleted: true } : null,
       }));
@@ -220,12 +224,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   syncCurrency: async (data) => {
     try {
       // [DB SAVE] Player.gold / diamond / exp / playerRank / stamina
-      await fetch('/api/player', {
+      const response = await fetch('/api/player', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'currency', ...data }),
       });
+      if (!response.ok) throw new Error(`currency sync failed: ${response.status}`);
     } catch {
       // ネットワークエラーは無視（localStorage が source of truth）
     }
@@ -251,12 +256,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   syncUnits: async (units) => {
     try {
       // [DB SAVE] OwnedUnit 全件完全同期（DELETE + INSERT）
-      await fetch('/api/actions', {
+      const response = await fetch('/api/actions', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'units_sync', units }),
       });
+      if (!response.ok) throw new Error(`unit sync failed: ${response.status}`);
     } catch {
       // ネットワークエラーは無視（localStorage が source of truth）
     }

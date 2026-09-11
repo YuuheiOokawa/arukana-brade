@@ -21,12 +21,13 @@ import { useCollectionStore } from '../stores/collectionStore';
 import { useGiftStore } from '../stores/giftStore';
 import { useGuildStore, GUILD_MISSIONS } from '../stores/guildStore';
 import type { PlayerData, OwnedItem, OwnedUnit, OwnedEquipment } from '../types';
-import type { GameDataResponse } from '../stores/authStore';
+import type { AuthPlayer, GameDataResponse } from '../stores/authStore';
 import { getUnitMaster, calcUnitStats } from '../data/units';
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 let isSaving = false;
-let failedSaveState: ReturnType<typeof collectGameState> | null = null;
+let hasRetryableSave = false;
+let lastUnloadSaveAt = 0;
 // hydrateFromGameState / resetAllStores 実行中はセーブをスキップする（DBの古いデータで上書きを防ぐ）
 let isHydrating = false;
 
@@ -133,7 +134,9 @@ export const saveAllToServer = async () => {
   isSaving = true;
   let retryable = true;
   try {
-    const state = failedSaveState ?? collectGameState();
+    // 常に最新の状態を送る。失敗時の古いスナップショットを再送すると、
+    // その後に行った操作を成功レスポンスで上書きしてしまうため保持しない。
+    const state = collectGameState();
     const res = await fetch('/api/player', {
       method: 'POST',
       credentials: 'include',
@@ -145,15 +148,10 @@ export const saveAllToServer = async () => {
       const detail = await res.json().catch(() => null) as { error?: string } | null;
       throw new Error(`saveAll failed: ${res.status}${detail?.error ? ` (${detail.error})` : ''}`);
     }
-    failedSaveState = null;
+    hasRetryableSave = false;
     onSaveSuccess?.();
   } catch (err) {
-    // A rejected payload never becomes valid by resending that exact snapshot.
-    if (retryable) {
-      if (!failedSaveState) failedSaveState = collectGameState();
-    } else {
-      failedSaveState = null;
-    }
+    hasRetryableSave = retryable;
     console.error('[syncService] save failed:', err);
     onSaveError?.('データの保存に失敗しました。ネットワークを確認してください。');
   } finally {
@@ -167,7 +165,12 @@ export const saveAllToServer = async () => {
 
 // ページ離脱時専用保存 (keepalive=true でブラウザが強制終了しても送信完了させる)
 export const saveBeforeUnload = () => {
-  const state = failedSaveState ?? collectGameState();
+  // visibilitychange と pagehide は連続して発火するため、同一スナップショットを
+  // 並行送信して全置換トランザクション同士を競合させない。
+  const now = Date.now();
+  if (now - lastUnloadSaveAt < 1000) return;
+  lastUnloadSaveAt = now;
+  const state = collectGameState();
   const body = JSON.stringify({ action: 'saveAll', state });
   // keepalive の制限は 64KB。超える場合は通常のセーブに任せる
   if (body.length > 60_000) return;
@@ -207,7 +210,7 @@ export const initCrossTabClaimSync = () => {
 // オンライン復帰時に自動リトライ
 if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
-    if (failedSaveState) {
+    if (hasRetryableSave) {
       void saveAllToServer();
     }
   });
@@ -219,6 +222,8 @@ if (typeof window !== 'undefined') {
 //  次ユーザーのセッションで送信してしまう恐れがあった)
 export const cancelPendingSave = () => {
   if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+  hasRetryableSave = false;
+  saveAgainRequested = false;
 };
 
 // デバウンス保存
@@ -245,13 +250,26 @@ export const saveImmediately = () => {
  * 新フォーマット (GameDataResponse) と旧フォーマット (gameStateJson) の両方に対応。
  */
 export const hydrateFromGameState = (
-  gameStateOrData: Record<string, unknown> | GameDataResponse,
+  gameStateOrData: Record<string, unknown> | GameDataResponse | null,
   playerMiscData?: Record<string, unknown>,
   tutorialCompleted?: boolean,
+  authPlayer?: AuthPlayer | null,
 ) => {
-  if (!gameStateOrData || typeof gameStateOrData !== 'object') return;
+  if ((!gameStateOrData || typeof gameStateOrData !== 'object') && !authPlayer) return;
 
   isHydrating = true;
+
+  // DBのPlayer本体はgameDataとは別に返る。ここを反映しないと、再読込後に
+  // 名前・通貨・プロフィールID・推しキャラがlocalStorageの値へ戻って見える。
+  if (authPlayer) usePlayerStore.getState().syncFromAuth(authPlayer);
+
+  if (!gameStateOrData || typeof gameStateOrData !== 'object') {
+    if (tutorialCompleted === true) {
+      useTutorialStore.setState({ completed: true, phase: 'complete' });
+    }
+    setTimeout(() => { isHydrating = false; }, 300);
+    return;
+  }
 
   // 新フォーマット判定: GameDataResponse は ownedUnits / items / ownedEquipments を持つ
   const isNewFormat = 'ownedUnits' in gameStateOrData && Array.isArray((gameStateOrData as GameDataResponse).ownedUnits);
@@ -302,6 +320,7 @@ export const hydrateFromGameState = (
         masterId: e.masterId,
         level: e.level,
         exp: e.exp,
+        evolveRank: e.evolveRank ?? 0,
         equippedTo: e.equippedTo ?? undefined,
       }));
       useEquipmentStore.setState({ ownedEquipments: equipments });
@@ -400,6 +419,20 @@ export const hydrateFromGameState = (
             : [],
           lastGuildMissionReset: typeof playerMiscData.guildLastMissionReset === 'string' ? playerMiscData.guildLastMissionReset : '',
         });
+      }
+      const stats = playerMiscData.playerStats;
+      if (stats && typeof stats === 'object' && !Array.isArray(stats)) {
+        const saved = stats as Record<string, unknown>;
+        const safeCount = (value: unknown) => typeof value === 'number' && Number.isFinite(value)
+          ? Math.max(0, Math.floor(value)) : 0;
+        usePlayerStore.setState(s => ({
+          player: {
+            ...s.player,
+            battleWins: safeCount(saved.battleWins),
+            questClears: safeCount(saved.questClears),
+            summonCount: safeCount(saved.summonCount),
+          },
+        }));
       }
     }
 

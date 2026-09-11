@@ -18,6 +18,7 @@ import { getRankTitle, getArenaFrameStyle, getRankProgressPct, getPointsToNextRa
 import { AchievementIcon } from '../../components/ui/GameGlyphs';
 import { CurrencyIcon } from '../../components/ui/game/GameIcons';
 import { Icon } from '../../components/ui/Icon';
+import { saveImmediately } from '../../lib/syncService';
 
 const TITLES = [
   '駆け出しの勇者', '炎の剣士', '水の守護者', '風の疾走者',
@@ -66,6 +67,7 @@ export const ProfilePage = () => {
       bio: editBio,
       favoriteUnitInstanceId: editFav || null,
     });
+    saveImmediately();
     setEditing(false);
   };
 
@@ -90,7 +92,7 @@ export const ProfilePage = () => {
       )}
 
       {/* 背景デコレーション */}
-      <div className="relative overflow-hidden">
+      <div className="profile-page-content relative overflow-hidden">
         {/* 上部オーラリング */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 h-48 opacity-20 pointer-events-none"
           style={{ width: 'min(384px, 100vw)', background: 'radial-gradient(ellipse at 50% 0%, #8b5cf6, transparent 70%)' }} />
@@ -104,6 +106,8 @@ export const ProfilePage = () => {
             transition: 'border-color 0.4s, box-shadow 0.4s',
           }}>
             <div className="profile-radiance" aria-hidden="true"><i/><i/><i/></div>
+            <div className="profile-corner profile-corner-left" aria-hidden="true" />
+            <div className="profile-corner profile-corner-right" aria-hidden="true" />
             {/* カードヘッダー帯 */}
             <div className="profile-banner h-24 relative">
               <div className="profile-banner-grid absolute inset-0" />
@@ -123,19 +127,31 @@ export const ProfilePage = () => {
                 </div>
               </div>
               {/* ID */}
-              <div className="absolute right-16 top-2 text-xs text-gray-500">{playerId}</div>
+              <div className="profile-id-plate"><Icon name="copy" size={11}/>{playerId}</div>
             </div>
 
             <div className="px-4 pb-4">
               {/* アバター + 基本情報 */}
               <div className="flex items-end gap-4 -mt-8 mb-4">
                 {/* アバターフレーム (アリーナ階級の色で縁取り) */}
-                <div className={`profile-avatar w-24 h-24 rounded-2xl flex items-center justify-center text-3xl font-black relative flex-shrink-0 ${arenaFrame.rainbow ? 'is-arcana' : ''}`}
+                <div className={`profile-avatar w-24 h-28 rounded-2xl flex items-center justify-center text-3xl font-black relative flex-shrink-0 ${arenaFrame.rainbow ? 'is-arcana' : ''}`}
                   style={{
                     border: `2px solid ${arenaTitle.color}b0`,
                     boxShadow: `0 0 20px ${arenaTitle.color}66`,
                   }}>
-                  {(player.name[0] ?? '?').toUpperCase()}
+                  {favMaster && favUnit ? (
+                    <UnitIcon
+                      src={resolveUnitImage(favUnit.masterId, favRarity)}
+                      masterId={favUnit.masterId}
+                      unitRarity={favRarity}
+                      fallbackEmoji={favMaster.emoji}
+                      element={favMaster.element}
+                      size={96}
+                      height={112}
+                      variant="portrait"
+                      className="profile-avatar-image"
+                    />
+                  ) : (player.name[0] ?? '?').toUpperCase()}
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs"
                     style={{ background: 'rgba(255,200,80,0.9)', color: '#1a0a08', fontWeight: 'black' }}>
                     {player.rank}
@@ -175,9 +191,9 @@ export const ProfilePage = () => {
 
               {/* 自己紹介 */}
               {player.bio ? (
-                <p className="text-gray-400 text-sm leading-relaxed mb-4 px-1">{player.bio}</p>
+                <p className="profile-bio text-sm leading-relaxed mb-4 px-3 py-2.5">{player.bio}</p>
               ) : (
-                <p className="text-gray-600 text-sm mb-4 px-1 italic">自己紹介文がありません</p>
+                <p className="profile-bio text-gray-500 text-sm mb-4 px-3 py-2.5 italic">自己紹介文がありません</p>
               )}
 
               {/* プロフィール編集ボタン */}
@@ -243,21 +259,21 @@ export const ProfilePage = () => {
         <div className="px-4 mb-4">
           <div className="mb-2"><TitlePlate color="gold">統計情報</TitlePlate></div>
           <div className="grid grid-cols-3 gap-3">
-            <StatCard label="総戦力" value={formatNumber(totalPower)} accent="#f0c040" />
-            <StatCard label="ユニット数" value={`${ownedUnits.length}体`} accent="#a78bfa" />
-            <StatCard label="ログイン日数" value={`${loginDays}日`} accent="#34d399" />
+            <StatCard icon="sword" label="総戦力" value={formatNumber(totalPower)} accent="#f0c040" />
+            <StatCard icon="units" label="ユニット数" value={`${ownedUnits.length}体`} accent="#a78bfa" />
+            <StatCard icon="calendar" label="ログイン日数" value={`${loginDays}日`} accent="#34d399" />
           </div>
           <div className="grid grid-cols-3 gap-3 mt-3">
-            <StatCard label="バトル勝利" value={`${(player.battleWins ?? 0).toLocaleString()}回`} accent="#ef4444" />
-            <StatCard label="クエスト" value={`${(player.questClears ?? 0).toLocaleString()}回`} accent="#f97316" />
-            <StatCard label="召喚回数" value={`${(player.summonCount ?? 0).toLocaleString()}回`} accent="#8b5cf6" />
+            <StatCard icon="pvp" label="バトル勝利" value={`${(player.battleWins ?? 0).toLocaleString()}回`} accent="#ef4444" />
+            <StatCard icon="quest" label="クエスト" value={`${(player.questClears ?? 0).toLocaleString()}回`} accent="#f97316" />
+            <StatCard icon="summon" label="召喚回数" value={`${(player.summonCount ?? 0).toLocaleString()}回`} accent="#8b5cf6" />
           </div>
           <div className="grid grid-cols-2 gap-3 mt-3">
-            <StatCard label="プレイヤーランク" value={`Rank ${player.rank}`} accent="#f97316" />
-            <StatCard label="所持ゴールド" value={formatNumber(player.gold)} accent="#eab308" />
+            <StatCard icon="crown" label="プレイヤーランク" value={`Rank ${player.rank}`} accent="#f97316" />
+            <StatCard icon="gold" label="所持ゴールド" value={formatNumber(player.gold)} accent="#eab308" />
           </div>
           <div className="grid grid-cols-1 gap-3 mt-3">
-            <StatCard label="アリーナ階級" value={`${arenaTitle.label} (${arenaPoints.toLocaleString()}pt)`} accent={arenaTitle.color} />
+            <StatCard icon="medal" label="アリーナ階級" value={`${arenaTitle.label} (${arenaPoints.toLocaleString()}pt)`} accent={arenaTitle.color} />
           </div>
         </div>
 
@@ -469,12 +485,13 @@ export const ProfilePage = () => {
   );
 };
 
-const StatCard = ({ label, value, accent }: { label: string; value: string; accent: string }) => (
-  <div className="rounded-xl p-3 text-center" style={{
-    background: 'rgba(12,8,28,0.9)',
+const StatCard = ({ icon, label, value, accent }: { icon: Parameters<typeof Icon>[0]['name']; label: string; value: string; accent: string }) => (
+  <div className="profile-stat-card rounded-xl p-3 text-center" style={{
+    '--stat-accent': accent,
     border: `1px solid ${accent}22`,
     boxShadow: `0 0 12px ${accent}11`,
-  }}>
+  } as CSSProperties}>
+    <span className="profile-stat-icon"><Icon name={icon} size={16}/></span>
     <p className="text-xs text-gray-500 mb-1">{label}</p>
     <p className="font-black text-base" style={{ color: accent }}>{value}</p>
   </div>
