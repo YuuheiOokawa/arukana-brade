@@ -303,7 +303,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     );
     const { normalizedEquips, normalizedParties } = normalized;
     let favoriteUnitId: string | null | undefined;
-    if (p && Object.hasOwn(p, 'favoriteUnitInstanceId')) {
+    if (p && Object.prototype.hasOwnProperty.call(p, 'favoriteUnitInstanceId')) {
       favoriteUnitId = normalized.favoriteUnitId;
     }
 
