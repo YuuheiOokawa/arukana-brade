@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import sharp from 'sharp';
 const memory = new Map();
 Object.defineProperty(globalThis, 'localStorage', {value: { getItem: k => memory.get(k) ?? null, setItem: (k,v) => memory.set(k,v), removeItem: k => memory.delete(k) }, configurable:true});
-globalThis.window = {localStorage:globalThis.localStorage};
+globalThis.window = {localStorage:globalThis.localStorage, addEventListener:()=>{}, removeEventListener:()=>{}};
 const {usePartyStore} = await import('../src/stores/partyStore.ts');
 const {usePlayerStore} = await import('../src/stores/playerStore.ts');
 const {useUnitStore} = await import('../src/stores/unitStore.ts');
@@ -22,6 +22,34 @@ const {PRESET_GUILDS, useGuildStore} = await import('../src/stores/guildStore.ts
 const {useMissionStore} = await import('../src/stores/missionStore.ts');
 const {useLoginBonusStore} = await import('../src/stores/loginBonusStore.ts');
 const {GUILD_EMBLEMS, RAID_BOSS_MAX_HP, SUMMON_SERVER_RULES, UNIT_IDS_BY_RARITY, UNIT_RARITY_BY_ID, isValidArcanaPlayerId, toIntegerInRange} = await import('../lib/gameRules.ts');
+const {hydrateFromGameState} = await import('../src/lib/syncService.ts');
+
+test('Server hydration restores the complete player profile, counters, and equipment evolution', () => {
+  const authPlayer = {
+    playerId: 'database-id', playerName: '保存済み勇者', tutorialCompleted: true,
+    playerRank: 42, stamina: 31, maxStamina: 88, gold: 765432, diamond: 321,
+    exp: 9876, title: '天上の王者', bio: 'DBから復元した自己紹介',
+    favoriteUnitId: 'owned-hero', loginDays: 64, lastLoginAt: '2026-09-11T00:00:00.000Z',
+    createdAt: '2026-01-01T00:00:00.000Z', staminaRecoveryTime: 1800000000000,
+    arcanaPlayerId: 'ARC-SAVED01', miscData: {},
+  };
+  const gameData = {
+    ownedUnits: [{instanceId:'owned-hero',playerId:'database-id',masterId:'unit_001',level:20,exp:0,awakenRank:0,awakeningCount:0,currentRarity:'3',isLocked:true,acquiredAt:1}],
+    items: [],
+    ownedEquipments: [{instanceId:'evolved-sword',playerId:'database-id',masterId:'equip_sword_iron',level:12,exp:5,evolveRank:2,equippedTo:'owned-hero'}],
+    questProgress: null, parties: [], missionProgress: null, loginBonus: null, arenaRecord: null,
+  };
+
+  hydrateFromGameState(gameData, {playerStats:{battleWins:12,questClears:34,summonCount:56}}, true, authPlayer);
+
+  const restored = usePlayerStore.getState().player;
+  assert.equal(restored.name, '保存済み勇者');
+  assert.equal(restored.playerId, 'ARC-SAVED01');
+  assert.equal(restored.favoriteUnitInstanceId, 'owned-hero');
+  assert.equal(restored.gold, 765432);
+  assert.deepEqual([restored.battleWins, restored.questClears, restored.summonCount], [12,34,56]);
+  assert.equal(useEquipmentStore.getState().ownedEquipments[0].evolveRank, 2);
+});
 
 test('Replacing or moving a party leader keeps the leader in a unique occupied slot', () => {
   const store = usePartyStore.getState();

@@ -85,6 +85,7 @@ model OwnedEquipment {
   masterId   String
   level      Int     @default(1)
   exp        Int     @default(0)
+  evolveRank Int     @default(0)
   equippedTo String?
 
   @@index([playerId])

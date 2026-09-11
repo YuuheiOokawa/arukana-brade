@@ -27,7 +27,7 @@ const ITEM_RE = /^item_[a-z0-9_]{1,80}$/;
 const EQUIPMENT_RE = /^equip_[a-z0-9_]{1,80}$/;
 const isValidStageId = (id: string) => STAGE_RE.test(id);
 
-type SaveEquipment = { instanceId: string; masterId: string; level?: number; exp?: number; equippedTo?: string | null };
+type SaveEquipment = { instanceId: string; masterId: string; level?: number; exp?: number; evolveRank?: number; equippedTo?: string | null };
 type SaveParty = { id: string; name?: string; slots?: (string | null)[]; leaderId?: string | null };
 
 export function normalizeOwnedUnitReferences(
@@ -134,7 +134,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (action === 'save') {
     const updateData: Record<string, unknown> = {};
     if (typeof body.playerName === 'string' && body.playerName.trim())
-      updateData.playerName = body.playerName.trim().slice(0, 12);
+      updateData.playerName = body.playerName.trim().slice(0, 16);
     if (typeof body.tutorialCompleted === 'boolean')
       updateData.tutorialCompleted = body.tutorialCompleted;
     if (typeof body.title === 'string') updateData.title = body.title.slice(0, 50);
@@ -181,7 +181,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (JSON.stringify(state).length > MAX_STATE_BYTES)
       return res.status(413).json({ error: 'state too large' });
 
-    type P = { name?: string; rank?: number; exp?: number; gold?: number; diamond?: number; stamina?: number; maxStamina?: number; staminaRecoveryTime?: number; title?: string; bio?: string; favoriteUnitInstanceId?: string | null; loginDays?: number; playerId?: string };
+    type P = { name?: string; rank?: number; exp?: number; gold?: number; diamond?: number; stamina?: number; maxStamina?: number; staminaRecoveryTime?: number; title?: string; bio?: string; favoriteUnitInstanceId?: string | null; loginDays?: number; playerId?: string; battleWins?: number; questClears?: number; summonCount?: number };
     type U = { instanceId: string; masterId: string; level?: number; exp?: number; awakenRank?: number; awakeningCount?: number; currentRarity?: string | number; isLocked?: boolean; acquiredAt?: number };
     type I = { itemId: string; quantity?: number };
     type E = SaveEquipment;
@@ -311,7 +311,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await tx.player.update({
         where: { playerId: player.playerId },
         data: {
-          playerName: typeof p?.name === 'string' ? p.name.slice(0, 20).trim() || '勇者' : undefined,
+          playerName: typeof p?.name === 'string' ? p.name.slice(0, 16).trim() || '勇者' : undefined,
           playerRank: p?.rank !== undefined ? clamp(p.rank, 1, MAX_RANK) : undefined,
           exp: p?.exp !== undefined ? clamp(p.exp, 0, 999_999_999) : undefined,
           gold: p?.gold !== undefined ? clamp(p.gold, 0, MAX_GOLD) : undefined,
@@ -343,6 +343,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             guildMissions: state.guildMissions !== undefined ? guildMissionsArray(state.guildMissions) : (prevMisc.guildMissions ?? []),
             guildChatMessages: state.guildChatMessages !== undefined ? guildChatArray(state.guildChatMessages) : (prevMisc.guildChatMessages ?? []),
             guildLastMissionReset: typeof state.guildLastMissionReset === 'string' ? state.guildLastMissionReset.slice(0, 20) : (prevMisc.guildLastMissionReset ?? ''),
+            playerStats: {
+              battleWins: clamp(p?.battleWins ?? (prevMisc.playerStats as Record<string, unknown> | undefined)?.battleWins, 0, 999_999_999),
+              questClears: clamp(p?.questClears ?? (prevMisc.playerStats as Record<string, unknown> | undefined)?.questClears, 0, 999_999_999),
+              summonCount: clamp(p?.summonCount ?? (prevMisc.playerStats as Record<string, unknown> | undefined)?.summonCount, 0, 999_999_999),
+            },
           })) as any,
           updatedAt: new Date(),
         },
@@ -370,7 +375,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       if (hasEquips) await tx.ownedEquipment.deleteMany({ where: { playerId: player.playerId } });
       if (hasEquips && normalizedEquips.length > 0) {
-        await tx.ownedEquipment.createMany({ data: normalizedEquips.filter(e => e.instanceId && e.masterId).map(e => ({ instanceId: String(e.instanceId), playerId: player.playerId, masterId: String(e.masterId), level: clamp(e.level, 1, 999), exp: clamp(e.exp, 0, 999_999_999), equippedTo: e.equippedTo ?? null })), skipDuplicates: true });
+        await tx.ownedEquipment.createMany({ data: normalizedEquips.filter(e => e.instanceId && e.masterId).map(e => ({ instanceId: String(e.instanceId), playerId: player.playerId, masterId: String(e.masterId), level: clamp(e.level, 1, 999), exp: clamp(e.exp, 0, 999_999_999), evolveRank: clamp(e.evolveRank, 0, 3), equippedTo: e.equippedTo ?? null })), skipDuplicates: true });
       }
 
       const hasQuestProgress = state.clearedStageIds !== undefined || state.claimedAreaRewards !== undefined || state.lastSelectedWorldId !== undefined;
