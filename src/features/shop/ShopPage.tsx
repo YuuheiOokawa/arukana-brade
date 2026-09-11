@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { usePlayerStore } from '../../stores/playerStore';
 import { TopBar } from '../../components/layout/TopBar';
 import { ItemIcon } from '../../components/ui/GameGlyphs';
@@ -25,14 +27,16 @@ const ITEM_SHOP = [
   { id: 'is8', label: '魔法結晶',       itemId: 'item_magic_crystal', quantity: 5, diamondCost: 0, goldCost: 30000, emoji: '🔮' },
 ];
 
-const DIAMOND_PACKS = [
-  { id: 'dp1', label: 'お試しパック',    amount: 60,   price: '¥120',   emoji: '💎', bonus: '' },
-  { id: 'dp2', label: 'スタートパック',  amount: 330,  price: '¥490',   emoji: '💎', bonus: '+30 bonus' },
-  { id: 'dp3', label: 'スタンダード',    amount: 980,  price: '¥1,490', emoji: '💎', bonus: '+80 bonus' },
-  { id: 'dp4', label: 'バリューパック',  amount: 1980, price: '¥2,980', emoji: '💎', bonus: '+200 bonus' },
-];
+const DIAMOND_SOURCES = [
+  { path: '/missions', label: 'ミッション', description: '日々の目標を達成して報酬を受け取る', icon: 'missions' },
+  { path: '/profile', label: '実績報酬', description: '冒険の積み重ねをダイヤに変える', icon: 'medal' },
+  { path: '/quests', label: 'クエスト', description: 'エリアを攻略してクリア報酬を獲得する', icon: 'quest' },
+] as const;
 
 export const ShopPage = () => {
+  const navigate = useNavigate();
+  const purchaseLock = useRef(false);
+  const [pending, setPending] = useState<{ label: string; cost: number; currency: 'gold' | 'diamond'; run: () => Promise<void> } | null>(null);
   const { player, addItem } = usePlayerStore();
   const [tab, setTab] = useState<ShopTab>('stamina');
   const [message, setMessage] = useState('');
@@ -42,9 +46,10 @@ export const ShopPage = () => {
   const showMsg = (msg: string) => { setMessage(msg); setTimeout(() => setMessage(''), 2500); };
 
   const buyStamina = async (pack: typeof STAMINA_PACKS[0]) => {
-    if (buying) return;
+    if (purchaseLock.current) return;
     if (player.diamond < pack.diamondCost) { showMsg('ダイヤが不足しています'); return; }
     if (player.stamina >= player.maxStamina) { showMsg('スタミナは既に最大です'); return; }
+    purchaseLock.current = true;
     setBuying(true);
     try {
       const res = await fetch('/api/actions', {
@@ -62,15 +67,18 @@ export const ShopPage = () => {
     } catch {
       showMsg('通信エラーが発生しました');
     } finally {
+      purchaseLock.current = false;
       setBuying(false);
+      setPending(null);
     }
   };
 
   const buyItem = async (shop: typeof ITEM_SHOP[0], qty = 1) => {
-    if (buying) return;
+    if (purchaseLock.current) return;
     const totalCost = shop.diamondCost > 0 ? shop.diamondCost * qty : shop.goldCost * qty;
     const hasEnough = shop.diamondCost > 0 ? player.diamond >= totalCost : player.gold >= totalCost;
     if (!hasEnough) { showMsg(shop.diamondCost > 0 ? 'ダイヤが不足しています' : 'ゴールドが不足しています'); return; }
+    purchaseLock.current = true;
     setBuying(true);
     try {
       const res = await fetch('/api/actions', {
@@ -85,17 +93,28 @@ export const ShopPage = () => {
     } catch {
       showMsg('通信エラーが発生しました');
     } finally {
+      purchaseLock.current = false;
       setBuying(false);
+      setPending(null);
     }
   };
 
   return (
-    <div className="game-page min-h-screen pb-24" style={{ background: 'radial-gradient(ellipse at 50% 0%, #1a0820 0%, #080818 60%)' }}>
+    <div className="game-page commerce-page min-h-screen pb-24" style={{ background: 'radial-gradient(ellipse at 50% 0%, #1a0820 0%, #080818 60%)' }}>
       <TopBar title="ショップ" />
+      <section className="commerce-hero"><span className="commerce-eyebrow">ARCANA EMPORIUM</span><h1>冒険の準備を、ここで。</h1><p>育成素材と回復アイテムを、必要な分だけ。</p>
+        <div className="commerce-wallet"><span><CurrencyIcon type="diamond" size={25}/>{player.diamond.toLocaleString()}</span><span><CurrencyIcon type="gold" size={25}/>{player.gold.toLocaleString()}</span></div>
+      </section>
+      {pending && <ConfirmDialog title="購入内容の確認" busy={buying} onCancel={() => setPending(null)} onConfirm={() => void pending.run()}>
+        <p className="commerce-product-name">{pending.label}</p>
+        <dl className="commerce-receipt"><div><dt>お支払い</dt><dd><CurrencyIcon type={pending.currency} size={20}/>{pending.cost.toLocaleString()}</dd></div>
+          <div><dt>購入後の残高</dt><dd>{Math.max(0, player[pending.currency] - pending.cost).toLocaleString()}</dd></div></dl>
+        <p className="commerce-note">ゲーム内通貨を使用します。実際のお支払いは発生しません。</p>
+      </ConfirmDialog>}
 
       {/* トースト */}
       {message && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl font-bold text-sm text-white"
+        <div role="status" className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl font-bold text-sm text-white"
           style={{ background: 'rgba(139,92,246,0.9)', boxShadow: '0 4px 20px rgba(139,92,246,0.5)' }}>
           {message}
         </div>
@@ -128,7 +147,7 @@ export const ShopPage = () => {
             {STAMINA_PACKS.map(pack => {
               const canAfford = player.diamond >= pack.diamondCost;
               return (
-                <button key={pack.id} onClick={() => buyStamina(pack)} disabled={buying}
+                <button key={pack.id} onClick={() => setPending({label: pack.label, cost: pack.diamondCost, currency: 'diamond', run: () => buyStamina(pack)})} disabled={buying || !canAfford || player.stamina >= player.maxStamina}
                   className={`w-full flex items-center gap-3 p-4 rounded-xl text-left transition-all ${canAfford ? 'active:scale-98' : 'opacity-50'}`}
                   style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${canAfford ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)'}` }}>
                   <span className="action-icon"><Icon name="thunder" size={22}/></span>
@@ -188,7 +207,7 @@ export const ShopPage = () => {
                 const totalCost = shop.diamondCost > 0 ? shop.diamondCost : shop.goldCost * qty;
                 const canAfford = shop.diamondCost > 0 ? player.diamond >= shop.diamondCost : player.gold >= totalCost;
                 return (
-                  <button key={shop.id} onClick={() => buyItem(shop, qty)} disabled={buying}
+                  <button key={shop.id} onClick={() => setPending({label: `${shop.label} ×${shop.quantity * qty}`, cost: totalCost, currency: shop.diamondCost > 0 ? 'diamond' : 'gold', run: () => buyItem(shop, qty)})} disabled={buying || !canAfford}
                     className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${canAfford ? 'active:scale-95' : 'opacity-50'}`}
                     style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${canAfford ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)'}` }}>
                     {item && <ItemIcon item={item} size={54}/>}
@@ -221,24 +240,15 @@ export const ShopPage = () => {
             </div>
             <div className="rounded-xl p-4 mb-2 text-center"
               style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.25)' }}>
-              <p className="text-purple-300 font-bold text-sm mb-1 inline-flex items-center gap-1.5"><Icon name="lock" size={15}/>近日公開予定</p>
-              <p className="text-gray-500 text-xs">課金機能は現在準備中です。<br />リリース後にお使いいただけます。</p>
+              <p className="text-purple-300 font-bold text-sm mb-1 inline-flex items-center gap-1.5"><Icon name="gifts" size={15}/>プレイしてダイヤを獲得</p>
+              <p className="text-gray-400 text-xs">有料販売は現在提供していません。<br />ミッションや冒険の報酬から入手できます。</p>
             </div>
-            {DIAMOND_PACKS.map(pack => (
-              <div key={pack.id} className="flex items-center gap-3 p-4 rounded-xl opacity-50 pointer-events-none select-none"
-                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(96,165,250,0.1)' }}>
-                <CurrencyIcon type="diamond" size={38}/>
-                <div className="flex-1">
-                  <p className="text-gray-400 font-bold text-sm">{pack.label}</p>
-                  <p className="text-gray-500 text-xs font-bold inline-flex items-center gap-1"><CurrencyIcon type="diamond" size={14}/>{pack.amount.toLocaleString()}
-                    {pack.bonus && <span className="text-gray-600 ml-1">{pack.bonus}</span>}
-                  </p>
-                </div>
-                <div className="px-3 py-2 rounded-xl text-xs font-bold text-gray-500"
-                  style={{ background: 'rgba(55,65,81,0.5)', border: '1px solid rgba(75,85,99,0.4)' }}>
-                  準備中
-                </div>
-              </div>
+            {DIAMOND_SOURCES.map(source => (
+              <button key={source.path} className="commerce-source" onClick={() => navigate(source.path)}>
+                <span className="action-icon"><Icon name={source.icon}/></span>
+                <span><strong>{source.label}</strong><small>{source.description}</small></span>
+                <Icon name="next" size={18}/>
+              </button>
             ))}
           </>
         )}
